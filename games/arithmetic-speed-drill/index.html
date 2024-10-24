@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#1f1f1f">
+  <title>Arithmetic Speed Drill</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" integrity="sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+
+<body>
+  <h3>Arithmetic Speed Drill v2.3 &nbsp; <a href="https://github.com/n-ce/Arithmetic-Speed-Drill"><i class="fab fa-github"></i></a>
+  </h3>
+  <span>
+    <h4>Score: <b>0</b></h4>
+    <button onclick="values()"><i class="fas fa-forward"></i></button>
+    <button onclick="restart()"><i class="fas fa-redo-alt"></i></button>
+    <h4>Time Left: <b></b></h4>
+  </span>
+  <div>
+    <p></p>
+    <p onclick="difficulty(2, 3, 4)">Click To Start</p>
+    <p></p>
+  </div>
+  <input type="number" placeholder="Type Answer Here">
+  <br>
+  <div>
+    <button onclick="difficulty(2,3,4)">Easy</button>
+    <button onclick="difficulty(3,4,2)">Medium</button>
+    <button onclick="difficulty(4,3,2)">Hard</button>
+  </div>
+  <br>
+  <section>
+    <b>Scoreboard</b>
+    <ol></ol>
+  </section>
+  <script src="script.js"></script>
+</body>
+
+</html>
