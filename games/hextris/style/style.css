@@ -16,7 +16,7 @@
 	overflow:visible;
 	margin-left:-175px;
 	font-family:Exo;
-
+color: #ECE4D9;
 }
 #container {
 	color:#232323;
@@ -366,7 +366,7 @@ button:focus {
 body {
 	color:#ecf0f1;
 	font-family:'Exo', sans-serif;
-	background-color:#ecf0f1;
+	background-color:#ECE4D9;
 }
 
 #clickToExit {
@@ -380,7 +380,7 @@ body {
 	right:0;
 	height:100%;
 	width:100%;
-	background-color:#ecf0f1;
+	background-color:#ECE4D9;
 	z-index:0;
 }
 #title {

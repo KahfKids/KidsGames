@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, sans-serif;
+      }
+
+      body {
+        background: #ece4d9;
+        color: #333;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+        line-height: 1.4;
+      }
+
+      .quiz-container {
+        background-color: #eadabe;
+        border-radius: 24px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        width: 90%;
+        max-width: 600px;
+        padding: 40px;
+        margin: 20px;
+        position: relative;
+      }
+
+      .quiz-header {
+        text-align: center;
+        margin-bottom: 30px;
+        position: relative;
+      }
+
+      .quiz-header h1 {
+        color: #006666;
+        font-size: 2.5em;
+        margin-bottom: 20px;
+        font-weight: 700;
+        letter-spacing: -0.5px;
+      }
+
+      .progress-bar {
+        width: 100%;
+        height: 8px;
+        background-color: #eadabe;
+        border-radius: 10px;
+        margin: 20px 0;
+        overflow: hidden;
+      }
+
+      .progress {
+        height: 100%;
+        background: linear-gradient(90deg, #006666, #008080);
+        transition: width 0.5s ease;
+        border-radius: 10px;
+        width: 0%;
+      }
+
+      .settings-button {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 8px;
+        z-index: 100;
+        transition: transform 0.3s ease;
+      }
+
+      .settings-button:hover {
+        transform: rotate(90deg);
+      }
+
+      .settings-icon {
+        width: 24px;
+        height: 24px;
+        fill: #006666;
+      }
+
+      .settings-modal {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: white;
+        border-radius: 20px;
+        padding: 30px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        width: 90%;
+        max-width: 400px;
+        z-index: 1000;
+      }
+
+      .settings-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+      }
+
+      .settings-header h3 {
+        color: #006666;
+        font-size: 1.5em;
+        font-weight: 600;
+        letter-spacing: -0.5px;
+      }
+
+      .settings-close {
+        background: none;
+        border: none;
+        font-size: 24px;
+        cursor: pointer;
+        color: #006666;
+        padding: 5px;
+      }
+
+      .settings-option {
+        margin-bottom: 20px;
+      }
+
+      .settings-option label {
+        display: block;
+        margin-bottom: 10px;
+        color: #2c3e50;
+        font-weight: 500;
+        font-size: 0.9em;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .settings-option select {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #e0e0e0;
+        border-radius: 12px;
+        font-size: 1em;
+        color: #2c3e50;
+        background-color: #fff;
+        transition: all 0.3s ease;
+        font-family: "Inter", sans-serif;
+      }
+
+      .settings-option select:focus {
+        border-color: #006666;
+        outline: none;
+      }
+
+      .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(5px);
+        z-index: 999;
+      }
+
+      .options {
+        list-style: none;
+        padding: 0;
+        margin: 25px 0;
+      }
+
+      .option {
+        background-color: #ffffff;
+        border: 2px solid #e0e0e0;
+        border-radius: 16px;
+        padding: 16px 20px;
+        margin: 12px 0;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        font-size: 1.1em;
+        color: #2c3e50;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        opacity: 0;
+        animation: fadeIn 0.3s ease forwards;
+        animation-delay: calc(var(--animation-order) * 0.1s);
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .option:hover {
+        background-color: #f8f9fa;
+        border-color: #006666;
+        transform: translateX(5px);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .option.selected {
+        background-color: #e8f4f4;
+        border-color: #006666;
+        color: #006666;
+        font-weight: 500;
+      }
+
+      .option.correct {
+        background-color: #e3fcef;
+        border-color: #2ecc71;
+        color: #2ecc71;
+        font-weight: 500;
+      }
+
+      .option.incorrect {
+        background-color: #fee7e7;
+        border-color: #e74c3c;
+        color: #e74c3c;
+        font-weight: 500;
+      }
+
+      .question {
+        font-size: 1.3em;
+        margin: 25px 0;
+        color: #2c3e50;
+        text-align: center;
+        line-height: 1.5;
+        font-weight: 500;
+        letter-spacing: -0.3px;
+      }
+
+      button {
+        background-color: #006666;
+        color: white;
+        border: none;
+        padding: 14px 28px;
+        border-radius: 12px;
+        cursor: pointer;
+        font-size: 1.1em;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0, 102, 102, 0.2);
+        font-family: "Inter", sans-serif;
+      }
+
+      button:hover {
+        background-color: #005555;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 102, 102, 0.3);
+      }
+
+      button:disabled {
+        background-color: #cccccc;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
+
+      #start-screen {
+        text-align: center;
+        padding: 20px;
+      }
+
+      #start-screen h2 {
+        color: #006666;
+        font-size: 2em;
+        margin-bottom: 20px;
+        font-weight: 700;
+        letter-spacing: -0.5px;
+      }
+
+      #start-screen p {
+        margin-bottom: 30px;
+        line-height: 1.6;
+        color: #2c3e50;
+        font-size: 1.1em;
+      }
+
+      #result {
+        text-align: center;
+        display: none;
+      }
+
+      .statistics {
+        background-color: #f8f9fa;
+        border-radius: 16px;
+        padding: 15px;
+        margin: 15px 0;
+      }
+
+      .statistics h3 {
+        color: #006666;
+        margin-bottom: 12px;
+        text-align: center;
+        font-size: 1.2em;
+        font-weight: 600;
+        letter-spacing: -0.5px;
+      }
+
+      .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+      }
+
+      .stat-item {
+        background: white;
+        padding: 12px;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        transition: transform 0.2s ease;
+      }
+
+      .stat-item:hover {
+        transform: translateY(-2px);
+      }
+
+      .stat-label {
+        font-size: 0.75em;
+        color: #666;
+        margin-bottom: 4px;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .stat-value {
+        font-size: 1.1em;
+        color: #006666;
+        font-weight: 600;
+        letter-spacing: -0.5px;
+      }
+
+      .result-item {
+        background-color: #f8f9fa;
+        border-radius: 12px;
+        padding: 15px;
+        margin: 10px 0;
+        font-size: 0.95em;
+        line-height: 1.4;
+        text-align: left;
+      }
+
+      .result-item p {
+        margin: 5px 0;
+      }
+
+      .result-item strong {
+        color: #006666;
+        font-weight: 600;
+      }
+
+      .correct-answer {
+        color: #2ecc71;
+        font-weight: 600;
+      }
+
+      .wrong-answer {
+        color: #e74c3c;
+        font-weight: 600;
+      }
+
+      /* Responsive Design */
+      @media (max-width: 768px) {
+        .quiz-container {
+          padding: 30px;
+          margin: 15px;
+        }
+
+        .quiz-header h1 {
+          font-size: 2em;
+        }
+
+        .question {
+          font-size: 1.2em;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .quiz-container {
+          padding: 20px;
+          margin: 10px;
+        }
+
+        .quiz-header h1 {
+          font-size: 1.8em;
+        }
+
+        .question {
+          font-size: 1.1em;
+        }
+
+        .option {
+          padding: 14px 16px;
+          font-size: 1em;
+        }
+
+        button {
+          padding: 12px 24px;
+          font-size: 1em;
+        }
+
+        .statistics {
+          padding: 12px;
+          margin: 10px 0;
+        }
+
+        .statistics h3 {
+          font-size: 1.1em;
+          margin-bottom: 10px;
+        }
+
+        .stat-grid {
+          grid-template-columns: 1fr 1fr;
+          gap: 8px;
+        }
+
+        .stat-item {
+          padding: 10px;
+        }
+
+        .stat-label {
+          font-size: 0.7em;
+        }
+
+        .stat-value {
+          font-size: 1em;
+        }
+
+        .result-item {
+          padding: 12px;
+          font-size: 0.9em;
+        }
+      }
+
+      @media (max-width: 360px) {
+        .quiz-container {
+          padding: 15px;
+        }
+
+        .quiz-header h1 {
+          font-size: 1.6em;
+        }
+
+        .stat-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .stat-item {
+          text-align: center;
+        }
+
+        .option {
+          padding: 12px 14px;
+          font-size: 0.95em;
+        }
+      }
+    </style>
+    <div class="modal-overlay" id="modalOverlay"></div>
+    <div class="quiz-container">
+      <button
+        class="settings-button"
+        onclick="toggleSettings()"
+        aria-label="Settings"
+      >
+        <svg class="settings-icon" viewBox="0 0 24 24">
+          <path
+            d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"
+          />
+        </svg>
+      </button>
+
+      <div class="settings-modal" id="settingsModal">
+        <div class="settings-header">
+          <h3>Quiz Settings</h3>
+          <button
+            class="settings-close"
+            onclick="toggleSettings()"
+            aria-label="Close Settings"
+          >
+            ×
+          </button>
+        </div>
+        <div class="settings-option">
+          <label for="questionCount">Number of Questions:</label>
+          <select id="questionCount">
+            <option value="5">5 Questions</option>
+            <option value="10" selected>10 Questions</option>
+            <option value="15">15 Questions</option>
+            <option value="20">20 Questions</option>
+          </select>
+        </div>
+        <div class="settings-option">
+          <label for="difficulty">Difficulty Level:</label>
+          <select id="difficulty">
+            <option value="easy">Easy</option>
+            <option value="medium" selected>Medium</option>
+            <option value="hard">Hard</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="quiz-header">
+        <h1>Quran Quest</h1>
+        <div class="progress-bar">
+          <div class="progress" id="progress"></div>
+        </div>
+      </div>
+
+      <div id="start-screen">
+        <h2>Welcome to Quran Quest!</h2>
+        <p>
+          Test your knowledge of the Holy Quran with this interactive quiz.
+          Answer questions quickly for bonus points!
+        </p>
+        <div class="quiz-info">
+          <p>🎯 100 points for each correct answer</p>
+          <p>⚡ Speed bonuses:</p>
+          <ul>
+            <li>+50 points: Under 5 seconds</li>
+            <li>+25 points: Under 10 seconds</li>
+            <li>+10 points: Under 15 seconds</li>
+          </ul>
+        </div>
+        <button onclick="startQuiz()" style="margin-top: 20px">
+          Start Quiz
+        </button>
+      </div>
+
+      <div id="quiz" style="display: none">
+        <div class="question" id="question"></div>
+        <ul class="options" id="options"></ul>
+        <div class="controls">
+          <button id="next-button" onclick="nextQuestion()" disabled>
+            Next Question
+          </button>
+        </div>
+      </div>
+
+      <div id="result" style="display: none">
+        <h2 class="result-header">Quiz Complete!</h2>
+        <div id="score"></div>
+        <div class="detailed-results" id="detailed-results"></div>
+        <div class="result-controls">
+          <button onclick="restartQuiz()">Try Again</button>
+          <button onclick="shareResults()" class="share-button">
+            Share Results
+          </button>
+        </div>
+      </div>
+    </div>
+    <script>
+      // Quiz Questions
+      const allQuestions = [
+        {
+          question: "Which Surah is known as the heart of the Quran?",
+          options: ["Al-Fatiha", "Yaseen", "Al-Baqarah", "Al-Ikhlas"],
+          answer: "Yaseen",
+        },
+        {
+          question: "How many Surahs are there in the Quran?",
+          options: ["114", "110", "112", "116"],
+          answer: "114",
+        },
+        {
+          question: "Which Surah was revealed first?",
+          options: ["Al-Fatiha", "Al-Alaq", "Al-Muzzammil", "Al-Muddathir"],
+          answer: "Al-Alaq",
+        },
+        {
+          question: "What is the longest Surah in the Quran?",
+          options: ["Al-Baqarah", "An-Nisa", "Al-Maidah", "Al-Araf"],
+          answer: "Al-Baqarah",
+        },
+        {
+          question: "How many Juz are there in the Quran?",
+          options: ["30", "29", "31", "28"],
+          answer: "30",
+        },
+        {
+          question: "Which Surah is known as the mother of the Quran?",
+          options: ["Al-Fatiha", "Al-Ikhlas", "Al-Baqarah", "An-Nas"],
+          answer: "Al-Fatiha",
+        },
+        {
+          question: "How many verses (ayat) are there in Surah Al-Fatiha?",
+          options: ["7", "6", "5", "8"],
+          answer: "7",
+        },
+        {
+          question: "Which is the shortest Surah in the Quran?",
+          options: ["Al-Kawthar", "Al-Asr", "Al-Ikhlas", "An-Nasr"],
+          answer: "Al-Kawthar",
+        },
+        {
+          question: "In which month was the Quran first revealed?",
+          options: ["Ramadan", "Shaban", "Rajab", "Muharram"],
+          answer: "Ramadan",
+        },
+        {
+          question:
+            "Which angel brought the divine revelation to Prophet Muhammad (PBUH)?",
+          options: ["Jibreel", "Mikael", "Israfil", "Izrael"],
+          answer: "Jibreel",
+        },
+        // Additional questions
+        {
+          question: "What is the first word revealed in the Quran?",
+          options: ["Read", "Write", "Pray", "Believe"],
+          answer: "Read",
+        },
+        {
+          question: "Which Surah contains the Ayat al-Kursi?",
+          options: ["Al-Baqarah", "Al-Imran", "An-Nisa", "Al-Maidah"],
+          answer: "Al-Baqarah",
+        },
+        {
+          question: "What is the main theme of Surah Al-Fatiha?",
+          options: ["Guidance", "Worship", "Prayer", "All of the above"],
+          answer: "All of the above",
+        },
+        {
+          question: "Which Surah is named after a woman?",
+          options: ["Maryam", "An-Nisa", "Al-Baqarah", "Al-Mumtahanah"],
+          answer: "Maryam",
+        },
+        {
+          question:
+            "How many times is the word 'Allah' mentioned in the Quran?",
+          options: ["200", "1000", "300", "500"],
+          answer: "500",
+        },
+        {
+          question: "Which Surah is known as the 'Surah of Light'?",
+          options: ["An-Nur", "Al-Baqarah", "Al-Imran", "Al-Maidah"],
+          answer: "An-Nur",
+        },
+        {
+          question: "What is the last Surah of the Quran?",
+          options: ["Al-Falaq", "An-Nas", "Al-Baqarah", "Al-Ikhlas"],
+          answer: "An-Nas",
+        },
+        {
+          question: "Which Surah was revealed in Medina?",
+          options: ["Al-Baqarah", "Al-Fatiha", "Al-Ikhlas", "Al-Muddathir"],
+          answer: "Al-Baqarah",
+        },
+        {
+          question: "What is the Arabic term for the chapters of the Quran?",
+          options: ["Surah", "Ayah", "Juz", "Hizb"],
+          answer: "Surah",
+        },
+        {
+          question: "Which Surah mentions the story of Prophet Yusuf?",
+          options: ["Al-Baqarah", "Yusuf", "Al-Imran", "An-Nisa"],
+          answer: "Yusuf",
+        },
+        {
+          question: "Which Surah discusses the story of the Prophet Musa?",
+          options: ["Al-Baqarah", "Al-A'raf", "Al-Imran", "Al-Maidah"],
+          answer: "Al-A'raf",
+        },
+        {
+          question: "What is the Arabic term for the recitation of the Quran?",
+          options: ["Tilawah", "Qira'at", "Hifz", "Tafsir"],
+          answer: "Tilawah",
+        },
+        {
+          question:
+            "Which Surah is known for its emphasis on the Day of Judgment?",
+          options: ["Al-Mulk", "Al-Baqarah", "An-Nas", "Al-Falaq"],
+          answer: "Al-Mulk",
+        },
+        {
+          question: "What is the significance of the month of Ramadan?",
+          options: [
+            "Revelation of the Quran",
+            "Fasting",
+            "Prayer",
+            "All of the above",
+          ],
+          answer: "All of the above",
+        },
+        {
+          question: "Which Surah is known as the 'Surah of the Cave'?",
+          options: ["Al-Kahf", "Al-Baqarah", "An-Nas", "Al-Falaq"],
+          answer: "Al-Kahf",
+        },
+        {
+          question: "What is the main message of the Quran?",
+          options: ["Guidance for mankind", "History", "Science", "Philosophy"],
+          answer: "Guidance for mankind",
+        },
+        {
+          question: "Which Surah is known for its beautiful prose?",
+          options: ["Al-Baqarah", "Al-Fatiha", "Al-Ikhlas", "An-Nas"],
+          answer: "Al-Baqarah",
+        },
+        {
+          question: "What is the Arabic term for the verses of the Quran?",
+          options: ["Ayah", "Surah", "Juz", "Hizb"],
+          answer: "Ayah",
+        },
+        {
+          question: "Which Surah is known for its stories of the Prophets?",
+          options: ["Al-Anbiya", "Al-Baqarah", "An-Nas", "Al-Falaq"],
+          answer: "Al-Anbiya",
+        },
+        {
+          question: "What is the significance of the Quran in Islam?",
+          options: ["Final revelation", "Guidance", "Law", "All of the above"],
+          answer: "All of the above",
+        },
+        {
+          question: "Which Surah is known for its emphasis on charity?",
+          options: ["Al-Baqarah", "Al-Maidah", "An-Nisa", "Al-Ikhlas"],
+          answer: "An-Nisa",
+        },
+        {
+          question: "What is the Arabic term for the chapters of the Quran?",
+          options: ["Surah", "Ayah", "Juz", "Hizb"],
+          answer: "Surah",
+        },
+        {
+          question:
+            "Which Surah is known for its emphasis on the importance of prayer?",
+          options: ["Al-Baqarah", "An-Nisa", "Al-Maidah", "Al-Fatiha"],
+          answer: "Al-Baqarah",
+        },
+        {
+          question: "What is the Arabic term for the importance of community?",
+          options: ["Ummah", "Hifz", "Tilawah", "Tafsir"],
+          answer: "Ummah",
+        },
+        {
+          question:
+            "Which Surah is known for its emphasis on the importance of knowledge?",
+          options: ["Al-Baqarah", "An-Nisa", "Al-Maidah", "Al-Fatiha"],
+          answer: "Al-Baqarah",
+        },
+        {
+          question: "What is the Arabic term for the importance of honesty?",
+          options: ["Sidq", "Hifz", "Tilawah", "Tafsir"],
+          answer: "Sidq",
+        },
+        {
+          question:
+            "Which Surah is known for its emphasis on the importance of gratitude?",
+          options: ["Al-Baqarah", "An-Nisa", "Al-Maidah", "Al-Fatiha"],
+          answer: "Al-Fatiha",
+        },
+        {
+          question: "What is the Arabic term for the importance of charity?",
+          options: ["Zakat", "Hifz", "Tilawah", "Tafsir"],
+          answer: "Zakat",
+        },
+        {
+          question:
+            "Which Surah is known for its emphasis on the importance of patience?",
+          options: ["Al-Baqarah", "An-Nisa", "Al-Maidah", "Al-Fatiha"],
+          answer: "Al-Baqarah",
+        },
+        {
+          question: "What is the Arabic term for the importance of prayer?",
+          options: ["Salah", "Hifz", "Tilawah", "Tafsir"],
+          answer: "Salah",
+        },
+      ];
+
+      // Global Variables
+      let currentQuestionIndex = 0;
+      let score = 0;
+      let userAnswers = [];
+      let questions = [];
+      let selectedOption = null;
+      let startTime;
+      let endTime;
+      let points = 0;
+      let questionStartTime;
+      let questionTimes = [];
+
+      // Local Storage Functions
+      function saveHighScore(newScore) {
+        const highScores = JSON.parse(
+          localStorage.getItem("quranQuestHighScores") || "[]"
+        );
+        highScores.push({
+          score: newScore,
+          date: new Date().toISOString(),
+          points: points,
+        });
+        highScores.sort((a, b) => b.points - a.points);
+        const top10Scores = highScores.slice(0, 10);
+        localStorage.setItem(
+          "quranQuestHighScores",
+          JSON.stringify(top10Scores)
+        );
+      }
+
+      function getHighScores() {
+        return JSON.parse(localStorage.getItem("quranQuestHighScores") || "[]");
+      }
+
+      // Utility Functions
+      function formatTime(milliseconds) {
+        const seconds = Math.floor(milliseconds / 1000);
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = seconds % 60;
+        return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
+      }
+
+      function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+      }
+
+      // UI Control Functions
+      function toggleSettings() {
+        const modal = document.getElementById("settingsModal");
+        const overlay = document.getElementById("modalOverlay");
+        if (modal.style.display === "block") {
+          modal.style.display = "none";
+          overlay.style.display = "none";
+        } else {
+          modal.style.display = "block";
+          overlay.style.display = "block";
+        }
+      }
+
+      function updateProgressBar() {
+        const progress = document.getElementById("progress");
+        const percentage = (currentQuestionIndex / questions.length) * 100;
+        progress.style.width = `${percentage}%`;
+      }
+
+      // Quiz Control Functions
+      function startQuiz() {
+        document.getElementById("start-screen").style.display = "none";
+        document.getElementById("quiz").style.display = "block";
+        document.getElementById("result").style.display = "none";
+        startTime = new Date();
+        questionStartTime = new Date();
+        initializeQuiz();
+      }
+
+      function initializeQuiz() {
+        const questionCount = parseInt(
+          document.getElementById("questionCount").value
+        );
+        currentQuestionIndex = 0;
+        score = 0;
+        points = 0;
+        userAnswers = [];
+        questionTimes = [];
+        questions = getRandomQuestions(questionCount);
+        updateProgressBar();
+        loadQuestion();
+      }
+
+      function getRandomQuestions(count) {
+        return shuffleArray([...allQuestions]).slice(0, count);
+      }
+
+      function loadQuestion() {
+        selectedOption = null;
+        const currentQuestion = questions[currentQuestionIndex];
+        document.getElementById("question").textContent = `Question ${
+          currentQuestionIndex + 1
+        }: ${currentQuestion.question}`;
+
+        const optionsList = document.getElementById("options");
+        optionsList.innerHTML = "";
+
+        shuffleArray([...currentQuestion.options]).forEach((option, index) => {
+          const li = document.createElement("li");
+          li.className = "option";
+          li.textContent = option;
+          li.style.setProperty("--animation-order", index);
+          li.onclick = () => selectOption(li, option);
+          optionsList.appendChild(li);
+        });
+
+        document.getElementById("next-button").disabled = true;
+        updateProgressBar();
+      }
+
+      function selectOption(optionElement, selectedAnswer) {
+        if (selectedOption !== null) return;
+
+        const questionEndTime = new Date();
+        const timeForQuestion = questionEndTime - questionStartTime;
+        questionTimes.push(timeForQuestion);
+
+        selectedOption = selectedAnswer;
+        const currentQuestion = questions[currentQuestionIndex];
+
+        document.querySelectorAll(".option").forEach((option) => {
+          option.classList.remove("selected", "correct", "incorrect");
+        });
+
+        optionElement.classList.add("selected");
+
+        // Calculate points for this question
+        let questionPoints = 0;
+        const isCorrect = selectedAnswer === currentQuestion.answer;
+
+        if (isCorrect) {
+          optionElement.classList.add("correct");
+          score++;
+
+          // Points calculation
+          questionPoints = 100; // Base points
+          if (timeForQuestion < 5000) {
+            // Under 5 seconds
+            questionPoints += 50;
+          } else if (timeForQuestion < 10000) {
+            // Under 10 seconds
+            questionPoints += 25;
+          } else if (timeForQuestion < 15000) {
+            // Under 15 seconds
+            questionPoints += 10;
+          }
+        } else {
+          optionElement.classList.add("incorrect");
+          document.querySelectorAll(".option").forEach((option) => {
+            if (option.textContent === currentQuestion.answer) {
+              option.classList.add("correct");
+            }
+          });
+        }
+
+        points += questionPoints;
+
+        userAnswers.push({
+          question: currentQuestion.question,
+          userAnswer: selectedAnswer,
+          correctAnswer: currentQuestion.answer,
+          timeTaken: timeForQuestion,
+          points: questionPoints,
+        });
+
+        document.getElementById("next-button").disabled = false;
+      }
+
+      function nextQuestion() {
+        currentQuestionIndex++;
+
+        if (currentQuestionIndex < questions.length) {
+          questionStartTime = new Date();
+          loadQuestion();
+        } else {
+          endTime = new Date();
+          showResults();
+        }
+      }
+
+      function showResults() {
+        document.getElementById("quiz").style.display = "none";
+        document.getElementById("result").style.display = "block";
+
+        const totalTime = endTime - startTime;
+        const averageTime =
+          questionTimes.reduce((a, b) => a + b, 0) / questionTimes.length;
+        const scorePercentage = Math.round((score / questions.length) * 100);
+
+        // Save score
+        saveHighScore(scorePercentage);
+
+        // Create statistics HTML
+        const statisticsHtml = `
+    <div class="statistics">
+        <h3>Quiz Results</h3>
+        <div class="stat-grid">
+            <div class="stat-item">
+                <div class="stat-label">Total Time</div>
+                <div class="stat-value">${formatTime(totalTime)}</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Avg Time/Q</div>
+                <div class="stat-value">${formatTime(averageTime)}</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Score</div>
+                <div class="stat-value">${scorePercentage}%</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Points</div>
+                <div class="stat-value">${points}</div>
+            </div>
+        </div>
+    </div>
+`;
+
+        document.getElementById("score").innerHTML = statisticsHtml;
+
+        // Show detailed results
+        const detailedResults = document.getElementById("detailed-results");
+        detailedResults.innerHTML = "";
+
+        userAnswers.forEach((answer, index) => {
+          const resultItem = document.createElement("div");
+          resultItem.className = "result-item";
+          resultItem.innerHTML = `
+        <p><strong>Question ${index + 1}:</strong> ${answer.question}</p>
+        <p>Your answer: <span class="${
+          answer.userAnswer === answer.correctAnswer
+            ? "correct-answer"
+            : "wrong-answer"
+        }">${answer.userAnswer}</span></p>
+        ${
+          answer.userAnswer !== answer.correctAnswer
+            ? `<p>Correct answer: <span class="correct-answer">${answer.correctAnswer}</span></p>`
+            : ""
+        }
+        <p>Time taken: ${formatTime(answer.timeTaken)}</p>
+        <p>Points earned: ${answer.points}</p>
+    `;
+          detailedResults.appendChild(resultItem);
+        });
+
+        // Show high scores
+        const highScores = getHighScores();
+        if (highScores.length > 0) {
+          const highScoresList = document.createElement("div");
+          highScoresList.className = "high-scores";
+          highScoresList.innerHTML = `
+        <h3>High Scores</h3>
+        <div class="scores-list">
+            ${highScores
+              .map(
+                (score, index) => `
+                <div class="score-item">
+                    <span class="score-rank">#${index + 1}</span>
+                    <span class="score-points">${score.points} points</span>
+                    <span class="score-date">${new Date(
+                      score.date
+                    ).toLocaleDateString()}</span>
+                </div>
+            `
+              )
+              .join("")}
+        </div>
+    `;
+          detailedResults.appendChild(highScoresList);
+        }
+      }
+
+      function restartQuiz() {
+        document.getElementById("result").style.display = "none";
+        startQuiz();
+      }
+
+      // Share functionality
+      function shareResults() {
+        const scorePercentage = Math.round((score / questions.length) * 100);
+        const text = `I scored ${scorePercentage}% (${points} points) on Quran Quest! Can you beat my score?`;
+
+        if (navigator.share) {
+          navigator
+            .share({
+              title: "My Quran Quest Score",
+              text: text,
+              url: window.location.href,
+            })
+            .catch((error) => console.log("Error sharing:", error));
+        } else {
+          const dummy = document.createElement("textarea");
+          document.body.appendChild(dummy);
+          dummy.value = text;
+          dummy.select();
+          document.execCommand("copy");
+          document.body.removeChild(dummy);
+          alert("Results copied to clipboard!");
+        }
+      }
+
+      // Initialize event listeners when document loads
+      document.addEventListener("DOMContentLoaded", function () {
+        // Load saved settings if any
+        const savedSettings = localStorage.getItem("quranQuestSettings");
+        if (savedSettings) {
+          const settings = JSON.parse(savedSettings);
+          document.getElementById("questionCount").value =
+            settings.questionCount;
+          document.getElementById("difficulty").value = settings.difficulty;
+        }
+
+        // Save settings when changed
+        document
+          .getElementById("questionCount")
+          .addEventListener("change", function () {
+            localStorage.setItem(
+              "quranQuestSettings",
+              JSON.stringify({
+                questionCount: this.value,
+                difficulty: document.getElementById("difficulty").value,
+              })
+            );
+          });
+
+        document
+          .getElementById("difficulty")
+          .addEventListener("change", function () {
+            localStorage.setItem(
+              "quranQuestSettings",
+              JSON.stringify({
+                questionCount: document.getElementById("questionCount").value,
+                difficulty: this.value,
+              })
+            );
+          });
+      });
+    </script>
+  </body>
+</html>

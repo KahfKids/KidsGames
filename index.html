@@ -1,239 +1,325 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
   <head>
-    <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Games Collection</title>
     <style>
-      :root {
-        --primary-color: #2563eb;
-        --bg-color: #ffffff;
-        --card-bg: #ffffff;
-        --text-color: #1f2937;
-        --border-color: #e5e7eb;
-        --hover-color: #f8fafc;
-        --shadow-color: rgba(0, 0, 0, 0.1);
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
       }
 
       body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-          sans-serif;
-        line-height: 1.6;
-        margin: 0;
-        padding: 20px;
-        background: var(--bg-color);
-        color: var(--text-color);
+        background: #f5f5f5;
       }
 
-      .container {
-        max-width: 1200px;
-        margin: 0 auto;
+      .app-container {
+        width: 100%;
+        min-height: 100vh;
+        background: #ece4d9;
       }
 
       .header {
-        text-align: center;
-        margin-bottom: 40px;
-        padding: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 24px;
+        background: #ece4d9;
+        top: 0;
+      }
+
+      .title-container {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .game-icon {
+        width: 24px;
+        height: 24px;
       }
 
       .header h1 {
-        margin: 0;
-        font-size: 2.5em;
-        color: var(--text-color);
-        font-weight: 700;
+        font-size: 24px;
+        color: #4f391a;
       }
 
-      .header p {
-        color: #6b7280;
-        margin-top: 8px;
+      .search-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #ffd8d8;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
       }
 
-      .grid {
+      .search-icon {
+        color: #ff6b6b;
+        width: 20px;
+        height: 20px;
+      }
+
+      .content-container {
+        background: #eed9bb;
+        border-top-left-radius: 40px;
+        border-top-right-radius: 40px;
+        padding: 24px 0;
+        min-height: calc(100vh - 72px);
+      }
+
+      .games-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-        gap: 24px;
-        padding: 20px 0;
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 16px;
+        padding: 0 24px 24px 24px;
+        width: 100%;
+      }
+
+      .game-link {
+        text-decoration: none;
+        color: inherit;
+        display: block;
+        transform: translateY(0);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        width: 100%;
+      }
+
+      .game-link:hover {
+        transform: translateY(-4px);
+      }
+
+      .game-link:active {
+        transform: translateY(0);
       }
 
       .game-card {
-        background: var(--card-bg);
-        border: 1px solid var(--border-color);
-        border-radius: 12px;
-        padding: 20px;
-        transition: all 0.3s ease;
+        aspect-ratio: 1;
+        border-radius: 16px;
+        border: 2px solid #000;
+        overflow: hidden;
+        position: relative;
+        background: white;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        transition: box-shadow 0.2s ease;
+        width: 100%;
       }
 
-      .game-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 12px 24px var(--shadow-color);
+      .game-link:hover .game-card {
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+      }
+
+      .game-link:active .game-card {
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
       }
 
       .game-thumbnail {
         width: 100%;
-        height: 160px;
-        background: #f3f4f6;
-        border-radius: 8px;
-        margin-bottom: 16px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #9ca3af;
-        font-size: 0.875rem;
+        height: 100%;
+        object-fit: cover;
       }
 
-      .game-card h3 {
-        margin: 0 0 8px 0;
-        color: var(--text-color);
-        font-size: 1.25rem;
-      }
-
-      .game-card p {
-        margin: 0 0 16px 0;
-        color: #6b7280;
-        font-size: 0.875rem;
-      }
-
-      .game-link {
-        display: inline-block;
-        text-decoration: none;
-        color: var(--primary-color);
-        font-weight: 500;
-        font-size: 0.875rem;
-        padding: 8px 16px;
-        border: 1px solid var(--primary-color);
-        border-radius: 8px;
-        transition: all 0.3s ease;
-      }
-
-      .game-link:hover {
-        background: var(--primary-color);
+      .game-title {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        text-align: left;
+        font-weight: bold;
+        text-transform: uppercase;
+        font-size: 14px;
         color: white;
+        padding: 16px;
+        z-index: 2;
+        text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000,
+          1px 1px 0 #000;
       }
 
-      .stats {
-        display: flex;
-        justify-content: space-between;
-        margin-top: 16px;
-        padding-top: 16px;
-        border-top: 1px solid var(--border-color);
-        color: #6b7280;
-        font-size: 0.75rem;
+      .game-card::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 40%;
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.4), transparent);
+        pointer-events: none;
       }
 
-      @media (max-width: 640px) {
-        .grid {
-          grid-template-columns: 1fr;
+      /* Responsive breakpoints */
+      @media (min-width: 700px) {
+        .game-icon {
+          width: 32px;
+          height: 32px;
         }
 
         .header h1 {
-          font-size: 2rem;
+          font-size: 32px;
         }
 
-        body {
-          padding: 16px;
+        .header {
+          background: #eed9bb;
+          border-top-left-radius: 40px;
+          border-top-right-radius: 40px;
+        }
+
+        .content-container {
+          border-radius: 0;
+        }
+
+        .games-grid {
+          grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+          gap: 24px;
+        }
+      }
+
+      @media (min-width: 1024px) {
+        .games-grid {
+          grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+          gap: 32px;
+          padding: 0 32px 32px 32px;
+        }
+
+        .header {
+          padding: 16px 32px;
+        }
+      }
+
+      @media (max-width: 380px) {
+        .games-grid {
+          grid-template-columns: repeat(2, 1fr);
+          gap: 12px;
+          padding: 0 12px 24px 12px;
+        }
+
+        .header {
+          padding: 16px 12px;
+        }
+
+        .game-title {
+          font-size: 12px;
+          padding: 12px;
         }
       }
     </style>
   </head>
   <body>
-    <div class="container">
-      <header class="header">
-        <h1>Games Collection</h1>
-        <p>Browse and Play Games</p>
-      </header>
+    <div class="app-container">
+      <div class="header">
+        <div class="title-container">
+          <svg
+            class="game-icon"
+            width="22"
+            height="16"
+            viewBox="0 0 22 16"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M16 0C19.3137 0 22 2.68629 22 6V10C22 13.3137 19.3137 16 16 16H6C2.68629 16 0 13.3137 0 10V6C0 2.68629 2.68629 0 6 0H16ZM9 5H7V7H5V9H6.999L7 11H9L8.999 9H11V7H9V5ZM17 9H15V11H17V9ZM15 5H13V7H15V5Z"
+              fill="#4F391A"
+            />
+          </svg>
+          <h1>Games</h1>
+        </div>
+      </div>
 
-      <div class="grid">
-        <!-- Game 1 -->
-        <div class="game-card">
-          <div class="game-thumbnail">Game Preview</div>
-          <h3>Tower Blocks</h3>
-          <p>Embark on an epic journey through mysterious lands</p>
-          <a href="./games/tower-blocks/index.html" class="game-link"
-            >Play Now →</a
-          >
-          <div class="stats">
-            <span>Single Player</span>
-            <span>Updated Oct 2024</span>
-          </div>
-        </div>
-        <!-- Game 3 -->
-        <div class="game-card">
-          <div class="game-thumbnail">Game Preview</div>
-          <h3>Chess</h3>
-          <p>Challenge your brain with intricate puzzles</p>
-          <a href="./games/chess/index.html" class="game-link">Play Now →</a>
-          <div class="stats">
-            <span>Brain Teaser</span>
-            <span>100+ Levels</span>
-          </div>
-        </div>
-        <div class="game-card">
-          <div class="game-thumbnail">Game Preview</div>
-          <h3>Islamic Checkers</h3>
-          <p>Challenge your brain with intricate puzzles</p>
-          <a href="./games/islamic-checkers/index.html" class="game-link"
-            >Play Now →</a
-          >
-          <div class="stats">
-            <span>Brain Teaser</span>
-            <span>100+ Levels</span>
-          </div>
-        </div>
-        <div class="game-card">
-          <div class="game-thumbnail">Game Preview</div>
-          <h3>30 Seconds Challenge</h3>
-          <p>Challenge your brain with intricate puzzles</p>
-          <a href="./games/30-seconds-challenge/index.html" class="game-link"
-            >Play Now →</a
-          >
-          <div class="stats">
-            <span>Brain Teaser</span>
-            <span>100+ Levels</span>
-          </div>
-        </div>
-        <div class="game-card">
-          <div class="game-thumbnail">Game Preview</div>
-          <h3>Tic Tac Toe</h3>
-          <p>Challenge your brain with intricate puzzles</p>
-          <a href="./games/tic-tac-toe/index.html" class="game-link"
-            >Play Now →</a
-          >
-          <div class="stats">
-            <span>Brain Teaser</span>
-            <span>100+ Levels</span>
-          </div>
-        </div>
-        <div class="game-card">
-          <div class="game-thumbnail">Game Preview</div>
-          <h3>Arithmetic Speed Drill</h3>
-          <p>Challenge your brain with intricate puzzles</p>
-          <a href="./games/arithmetic-speed-drill/index.html" class="game-link"
-            >Play Now →</a
-          >
-          <div class="stats">
-            <span>Brain Teaser</span>
-            <span>100+ Levels</span>
-          </div>
-        </div>
-        <div class="game-card">
-          <div class="game-thumbnail">Game Preview</div>
-          <h3>2048</h3>
-          <p>Challenge your brain with intricate puzzles</p>
-          <a href="./games/2048/index.html" class="game-link">Play Now →</a>
-          <div class="stats">
-            <span>Brain Teaser</span>
-            <span>100+ Levels</span>
-          </div>
-        </div>
-        <div class="game-card">
-          <div class="game-thumbnail">Game Preview</div>
-          <h3>Hextris</h3>
-          <p>Challenge your brain with intricate puzzles</p>
-          <a href="./games/hextris/index.html" class="game-link">Play Now →</a>
-          <div class="stats">
-            <span>Brain Teaser</span>
-            <span>100+ Levels</span>
-          </div>
+      <div class="content-container">
+        <div class="games-grid">
+          <a href="./games/tower-blocks/index.html" class="game-link">
+            <div class="game-card">
+              <img
+                src="/api/placeholder/200/200"
+                alt="Tower Blocks"
+                class="game-thumbnail"
+              />
+              <div class="game-title">Tower Blocks</div>
+            </div>
+          </a>
+          <a href="./games/chess/index.html" class="game-link">
+            <div class="game-card">
+              <img
+                src="/api/placeholder/200/200"
+                alt="Chess"
+                class="game-thumbnail"
+              />
+              <div class="game-title">Chess</div>
+            </div>
+          </a>
+          <a href="./games/islamic-checkers/index.html" class="game-link">
+            <div class="game-card">
+              <img
+                src="/api/placeholder/200/200"
+                alt="Islamic Checkers"
+                class="game-thumbnail"
+              />
+              <div class="game-title">Islamic Checkers</div>
+            </div>
+          </a>
+          <a href="./games/30-seconds-challenge/index.html" class="game-link">
+            <div class="game-card">
+              <img
+                src="/api/placeholder/200/200"
+                alt="30 Seconds Challenge"
+                class="game-thumbnail"
+              />
+              <div class="game-title">30 Seconds Challenge</div>
+            </div>
+          </a>
+          <a href="./games/tic-tac-toe/index.html" class="game-link">
+            <div class="game-card">
+              <img
+                src="/api/placeholder/200/200"
+                alt="Tic Tac Toe"
+                class="game-thumbnail"
+              />
+              <div class="game-title">Tic Tac Toe</div>
+            </div>
+          </a>
+          <a href="./games/arithmetic-speed-drill/index.html" class="game-link">
+            <div class="game-card">
+              <img
+                src="/api/placeholder/200/200"
+                alt="Arithmetic Speed Drill"
+                class="game-thumbnail"
+              />
+              <div class="game-title">Arithmetic Speed Drill</div>
+            </div>
+          </a>
+          <a href="./games/2048/index.html" class="game-link">
+            <div class="game-card">
+              <img
+                src="/api/placeholder/200/200"
+                alt="2048"
+                class="game-thumbnail"
+              />
+              <div class="game-title">2048</div>
+            </div>
+          </a>
+          <a href="./games/hextris/index.html" class="game-link">
+            <div class="game-card">
+              <img
+                src="/api/placeholder/200/200"
+                alt="Hextris"
+                class="game-thumbnail"
+              />
+              <div class="game-title">Hextris</div>
+            </div>
+          </a>
+          <a href="./games/quran-quest/index.html" class="game-link">
+            <div class="game-card">
+              <img
+                src="/api/placeholder/200/200"
+                alt="Quran Quest"
+                class="game-thumbnail"
+              />
+              <div class="game-title">Quran Quest</div>
+            </div>
+          </a>
         </div>
       </div>
     </div>
