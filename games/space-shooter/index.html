@@ -2,292 +2,276 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Untitled</title>
+    <title>Space Shooter</title>
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <style>
+      * {
+        touch-action: none;
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        user-select: none;
+      }
+
+      body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        background: #111;
+        overflow: hidden;
+        position: fixed;
+        width: 100%;
+      }
+
+      #gameArea {
+        border: 2px solid white;
+        background: black;
+        cursor: crosshair;
+        max-width: 100%;
+        max-height: 80vh;
+        touch-action: none;
+      }
+
+      .score {
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        color: white;
+        font-family: Arial, sans-serif;
+        z-index: 100;
+      }
+
+      .instructions {
+        position: fixed;
+        top: 40px;
+        left: 10px;
+        color: white;
+        font-family: Arial, sans-serif;
+        font-size: 14px;
+        z-index: 100;
+      }
+
+      #restartButton {
+        display: none;
+        position: fixed;
+        padding: 10px 20px;
+        font-size: 18px;
+        background: lime;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-family: Arial, sans-serif;
+        z-index: 100;
+        left: 50%;
+        transform: translateX(-50%);
+      }
+
+      /* Mobile Controls */
+      #mobileControls {
+        display: none;
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 100;
+      }
+
+      .control-button {
+        width: 60px;
+        height: 60px;
+        background: rgba(255, 255, 255, 0.2);
+        border: 2px solid white;
+        border-radius: 10px;
+        color: white;
+        font-size: 24px;
+        margin: 0 10px;
+        cursor: pointer;
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      #shootButton {
+        background: rgba(0, 255, 0, 0.2);
+        width: 80px;
+        height: 80px;
+        font-size: 16px;
+      }
+
+      @media (max-width: 1024px) {
+        #mobileControls {
+          display: block;
+        }
+
+        #gameArea {
+          width: 100%;
+          height: auto;
+        }
+
+        .instructions {
+          font-size: 12px;
+        }
+      }
+    </style>
   </head>
   <body>
-    <!-- partial:index.partial.html -->
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <meta
-          name="viewport"
-          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
-        />
-        <style>
-          * {
-            touch-action: none;
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
-            user-select: none;
-          }
+    <div class="score">Score: <span id="scoreElement">0</span></div>
+    <div class="instructions">
+      Use arrows to move, SHOOT button to fire<br />
+      Or use mouse/touch controls
+    </div>
+    <svg
+      id="gameArea"
+      width="600"
+      height="400"
+      preserveAspectRatio="xMidYMid meet"
+      viewBox="0 0 600 400"
+    >
+      <defs>
+        <!-- Player Spaceship -->
+        <g id="playerShip">
+          <path
+            d="M0,-15 L-5,-5 L-20,10 L-15,15 L-5,12 L0,15 L5,12 L15,15 L20,10 L5,-5 Z"
+            fill="lime"
+          />
+          <ellipse cx="0" cy="-5" rx="3" ry="5" fill="#00ff00" />
+          <rect x="-15" y="10" width="6" height="3" fill="#00cc00" />
+          <rect x="9" y="10" width="6" height="3" fill="#00cc00" />
+          <circle cx="-12" cy="11.5" r="2" fill="#ffff00" opacity="0.7" />
+          <circle cx="12" cy="11.5" r="2" fill="#ffff00" opacity="0.7" />
+        </g>
 
-          body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            background: #111;
-            overflow: hidden;
-            position: fixed;
-            width: 100%;
-          }
+        <!-- Enemy Ship -->
+        <g id="enemyShip">
+          <path d="M-15,-15 L15,-15 L15,-5 L5,15 L-5,15 L-15,-5 Z" fill="red" />
+          <circle cx="-8" cy="-5" r="3" fill="white" />
+          <circle cx="8" cy="-5" r="3" fill="white" />
+        </g>
 
-          #gameArea {
-            border: 2px solid white;
-            background: black;
-            cursor: crosshair;
-            max-width: 100%;
-            max-height: 80vh;
-            touch-action: none;
-          }
+        <!-- Bullet -->
+        <rect id="bullet" width="8" height="20" fill="#00ff00" />
+      </defs>
+    </svg>
+    <div id="mobileControls">
+      <button class="control-button" id="leftButton">←</button>
+      <button class="control-button" id="shootButton">SHOOT</button>
+      <button class="control-button" id="rightButton">→</button>
+    </div>
+    <button id="restartButton">Restart Game</button>
+    <script>
+      const svg = document.getElementById("gameArea");
+      const scoreElement = document.getElementById("scoreElement");
+      const restartButton = document.getElementById("restartButton");
+      const leftButton = document.getElementById("leftButton");
+      const rightButton = document.getElementById("rightButton");
+      const shootButton = document.getElementById("shootButton");
 
-          .score {
-            position: fixed;
-            top: 10px;
-            left: 10px;
-            color: white;
-            font-family: Arial, sans-serif;
-            z-index: 100;
-          }
+      // Get SVG dimensions and scaling
+      let svgRect = svg.getBoundingClientRect();
+      const viewBox = {
+        width: 600,
+        height: 400,
+      };
 
-          .instructions {
-            position: fixed;
-            top: 40px;
-            left: 10px;
-            color: white;
-            font-family: Arial, sans-serif;
-            font-size: 14px;
-            z-index: 100;
-          }
+      let player = {
+        x: 300,
+        y: 370,
+        element: null,
+        reloadTime: 200,
+        speed: 5,
+      };
 
-          #restartButton {
-            display: none;
-            position: fixed;
-            padding: 10px 20px;
-            font-size: 18px;
-            background: lime;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-family: Arial, sans-serif;
-            z-index: 100;
-            left: 50%;
-            transform: translateX(-50%);
-          }
+      let bullet = {
+        x: 0,
+        y: 0,
+        element: null,
+        active: false,
+        speed: 10,
+        width: 8,
+        height: 20,
+      };
 
-          /* Mobile Controls */
-          #mobileControls {
-            display: none;
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 100;
-          }
+      let lastShotTime = 0;
+      let enemies = [];
+      const enemyRows = 3;
+      const enemiesPerRow = 8;
+      const enemyWidth = 30;
+      const enemyHeight = 30;
+      const enemyPadding = 20;
 
-          .control-button {
-            width: 60px;
-            height: 60px;
-            background: rgba(255, 255, 255, 0.2);
-            border: 2px solid white;
-            border-radius: 10px;
-            color: white;
-            font-size: 24px;
-            margin: 0 10px;
-            cursor: pointer;
-            display: inline-flex;
-            justify-content: center;
-            align-items: center;
-          }
+      let score = 0;
+      let gameLoop;
+      let moveRight = true;
+      let enemySpeed = 1;
+      let gameIsOver = false;
 
-          #shootButton {
-            background: rgba(0, 255, 0, 0.2);
-            width: 80px;
-            height: 80px;
-            font-size: 16px;
-          }
+      // Control states
+      let isLeftPressed = false;
+      let isRightPressed = false;
 
-          @media (max-width: 1024px) {
-            #mobileControls {
-              display: block;
-            }
+      function createSVGElement(type, attributes) {
+        const elem = document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          type
+        );
+        for (let key in attributes) {
+          elem.setAttribute(key, attributes[key]);
+        }
+        return elem;
+      }
 
-            #gameArea {
-              width: 100%;
-              height: auto;
-            }
+      function getScaledPosition(clientX) {
+        const rect = svg.getBoundingClientRect();
+        const scale = viewBox.width / rect.width;
+        return (clientX - rect.left) * scale;
+      }
 
-            .instructions {
-              font-size: 12px;
-            }
-          }
-        </style>
-      </head>
-      <body>
-        <div class="score">Score: <span id="scoreElement">0</span></div>
-        <div class="instructions">
-          Use arrows to move, SHOOT button to fire<br />
-          Or use mouse/touch controls
-        </div>
-        <svg
-          id="gameArea"
-          width="600"
-          height="400"
-          preserveAspectRatio="xMidYMid meet"
-          viewBox="0 0 600 400"
-        >
-          <defs>
-            <!-- Player Spaceship -->
-            <g id="playerShip">
-              <path
-                d="M0,-15 L-5,-5 L-20,10 L-15,15 L-5,12 L0,15 L5,12 L15,15 L20,10 L5,-5 Z"
-                fill="lime"
-              />
-              <ellipse cx="0" cy="-5" rx="3" ry="5" fill="#00ff00" />
-              <rect x="-15" y="10" width="6" height="3" fill="#00cc00" />
-              <rect x="9" y="10" width="6" height="3" fill="#00cc00" />
-              <circle cx="-12" cy="11.5" r="2" fill="#ffff00" opacity="0.7" />
-              <circle cx="12" cy="11.5" r="2" fill="#ffff00" opacity="0.7" />
-            </g>
+      function initGame() {
+        while (svg.lastChild) {
+          if (svg.lastChild.tagName === "defs") break;
+          svg.removeChild(svg.lastChild);
+        }
 
-            <!-- Enemy Ship -->
-            <g id="enemyShip">
-              <path
-                d="M-15,-15 L15,-15 L15,-5 L5,15 L-5,15 L-15,-5 Z"
-                fill="red"
-              />
-              <circle cx="-8" cy="-5" r="3" fill="white" />
-              <circle cx="8" cy="-5" r="3" fill="white" />
-            </g>
+        enemies = [];
+        score = 0;
+        moveRight = true;
+        enemySpeed = 1;
+        gameIsOver = false;
+        scoreElement.textContent = "0";
+        restartButton.style.display = "none";
+        lastShotTime = 0;
 
-            <!-- Bullet -->
-            <rect id="bullet" width="8" height="20" fill="#00ff00" />
-          </defs>
-        </svg>
-        <div id="mobileControls">
-          <button class="control-button" id="leftButton">←</button>
-          <button class="control-button" id="shootButton">SHOOT</button>
-          <button class="control-button" id="rightButton">→</button>
-        </div>
-        <button id="restartButton">Restart Game</button>
-        <script>
-          const svg = document.getElementById("gameArea");
-          const scoreElement = document.getElementById("scoreElement");
-          const restartButton = document.getElementById("restartButton");
-          const leftButton = document.getElementById("leftButton");
-          const rightButton = document.getElementById("rightButton");
-          const shootButton = document.getElementById("shootButton");
+        player.x = 300;
+        player.y = 370;
+        player.element = createSVGElement("use", {
+          href: "#playerShip",
+          transform: `translate(${player.x},${player.y})`,
+        });
+        svg.appendChild(player.element);
 
-          // Get SVG dimensions and scaling
-          let svgRect = svg.getBoundingClientRect();
-          const viewBox = {
-            width: 600,
-            height: 400,
-          };
+        createEnemies();
 
-          let player = {
-            x: 300,
-            y: 370,
-            element: null,
-            reloadTime: 200,
-            speed: 5,
-          };
+        if (gameLoop) clearInterval(gameLoop);
+        gameLoop = setInterval(update, 1000 / 60);
+      }
 
-          let bullet = {
-            x: 0,
-            y: 0,
-            element: null,
-            active: false,
-            speed: 10,
-            width: 8,
-            height: 20,
-          };
-
-          let lastShotTime = 0;
-          let enemies = [];
-          const enemyRows = 3;
-          const enemiesPerRow = 8;
-          const enemyWidth = 30;
-          const enemyHeight = 30;
-          const enemyPadding = 20;
-
-          let score = 0;
-          let gameLoop;
-          let moveRight = true;
-          let enemySpeed = 1;
-          let gameIsOver = false;
-
-          // Control states
-          let isLeftPressed = false;
-          let isRightPressed = false;
-
-          function createSVGElement(type, attributes) {
-            const elem = document.createElementNS(
-              "http://www.w3.org/2000/svg",
-              type
-            );
-            for (let key in attributes) {
-              elem.setAttribute(key, attributes[key]);
-            }
-            return elem;
-          }
-
-          function getScaledPosition(clientX) {
-            const rect = svg.getBoundingClientRect();
-            const scale = viewBox.width / rect.width;
-            return (clientX - rect.left) * scale;
-          }
-
-          function initGame() {
-            while (svg.lastChild) {
-              if (svg.lastChild.tagName === "defs") break;
-              svg.removeChild(svg.lastChild);
-            }
-
-            enemies = [];
-            score = 0;
-            moveRight = true;
-            enemySpeed = 1;
-            gameIsOver = false;
-            scoreElement.textContent = "0";
-            restartButton.style.display = "none";
-            lastShotTime = 0;
-
-            player.x = 300;
-            player.y = 370;
-            player.element = createSVGElement("use", {
-              href: "#playerShip",
-              transform: `translate(${player.x},${player.y})`,
-            });
-            svg.appendChild(player.element);
-
-            createEnemies();
-
-            if (gameLoop) clearInterval(gameLoop);
-            gameLoop = setInterval(update, 1000 / 60);
-          }
-
-          function createEnemies() {
-            for (let row = 0; row < enemyRows; row++) {
-              for (let col = 0; col < enemiesPerRow; col++) {
-                const enemy = {
-                  x:
-                    col * (enemyWidth + enemyPadding) +
-                    enemyPadding +
-                    enemyWidth,
-                  y:
-                    row * (enemyHeight + enemyPadding) +
-                    enemyPadding +
-                    enemyHeight,
-                  alive: true,
-                  element: createSVGElement("use", {
-                    href: "#enemyShip",
-                    transform: `translate(${
-                      col * (enemyWidth + enemyPadding) +
-                      enemyPadding +
-                      enemyWidth
-                    },
+      function createEnemies() {
+        for (let row = 0; row < enemyRows; row++) {
+          for (let col = 0; col < enemiesPerRow; col++) {
+            const enemy = {
+              x: col * (enemyWidth + enemyPadding) + enemyPadding + enemyWidth,
+              y:
+                row * (enemyHeight + enemyPadding) + enemyPadding + enemyHeight,
+              alive: true,
+              element: createSVGElement("use", {
+                href: "#enemyShip",
+                transform: `translate(${
+                  col * (enemyWidth + enemyPadding) + enemyPadding + enemyWidth
+                },
                                                 ${
                                                   row *
                                                     (enemyHeight +
@@ -295,269 +279,242 @@
                                                   enemyPadding +
                                                   enemyHeight
                                                 })`,
-                  }),
-                };
-                svg.appendChild(enemy.element);
-                enemies.push(enemy);
-              }
-            }
+              }),
+            };
+            svg.appendChild(enemy.element);
+            enemies.push(enemy);
           }
+        }
+      }
 
-          function shoot() {
-            const currentTime = Date.now();
-            if (
-              !bullet.active &&
-              !gameIsOver &&
-              currentTime - lastShotTime >= player.reloadTime
-            ) {
-              bullet.active = true;
-              bullet.x = player.x;
-              bullet.y = player.y - 10;
-              bullet.element = createSVGElement("use", {
-                href: "#bullet",
-                transform: `translate(${bullet.x - bullet.width / 2},${
-                  bullet.y
-                })`,
-              });
-              svg.appendChild(bullet.element);
-              lastShotTime = currentTime;
+      function shoot() {
+        const currentTime = Date.now();
+        if (
+          !bullet.active &&
+          !gameIsOver &&
+          currentTime - lastShotTime >= player.reloadTime
+        ) {
+          bullet.active = true;
+          bullet.x = player.x;
+          bullet.y = player.y - 10;
+          bullet.element = createSVGElement("use", {
+            href: "#bullet",
+            transform: `translate(${bullet.x - bullet.width / 2},${bullet.y})`,
+          });
+          svg.appendChild(bullet.element);
+          lastShotTime = currentTime;
+        }
+      }
+
+      function moveEnemies() {
+        let touchedEdge = false;
+
+        enemies.forEach((enemy) => {
+          if (enemy.alive) {
+            if (moveRight) {
+              enemy.x += enemySpeed;
+              if (enemy.x + enemyWidth / 2 > viewBox.width) touchedEdge = true;
+            } else {
+              enemy.x -= enemySpeed;
+              if (enemy.x - enemyWidth / 2 < 0) touchedEdge = true;
             }
-          }
-
-          function moveEnemies() {
-            let touchedEdge = false;
-
-            enemies.forEach((enemy) => {
-              if (enemy.alive) {
-                if (moveRight) {
-                  enemy.x += enemySpeed;
-                  if (enemy.x + enemyWidth / 2 > viewBox.width)
-                    touchedEdge = true;
-                } else {
-                  enemy.x -= enemySpeed;
-                  if (enemy.x - enemyWidth / 2 < 0) touchedEdge = true;
-                }
-                enemy.element.setAttribute(
-                  "transform",
-                  `translate(${enemy.x},${enemy.y})`
-                );
-              }
-            });
-
-            if (touchedEdge) {
-              moveRight = !moveRight;
-              enemies.forEach((enemy) => {
-                if (enemy.alive) {
-                  enemy.y += 20;
-                }
-              });
-            }
-          }
-
-          function checkCollisions() {
-            if (bullet.active) {
-              enemies.forEach((enemy) => {
-                if (enemy.alive) {
-                  const dx = bullet.x - enemy.x;
-                  const dy = bullet.y - enemy.y;
-                  if (
-                    Math.abs(dx) < enemyWidth / 2 + bullet.width / 2 &&
-                    Math.abs(dy) < enemyHeight / 2 + bullet.height / 2
-                  ) {
-                    enemy.alive = false;
-                    enemy.element.remove();
-                    bullet.active = false;
-                    bullet.element.remove();
-                    score += 10;
-                    scoreElement.textContent = score;
-                    checkWinCondition();
-                  }
-                }
-              });
-            }
-          }
-
-          function checkWinCondition() {
-            const allEnemiesDefeated = enemies.every((enemy) => !enemy.alive);
-            if (allEnemiesDefeated) {
-              clearInterval(gameLoop);
-              gameIsOver = true;
-
-              const winText = createSVGElement("text", {
-                x: "300",
-                y: "200",
-                "text-anchor": "middle",
-                "font-size": "48",
-                fill: "white",
-                "font-family": "Arial",
-              });
-              winText.textContent = "Congratulations, You win!";
-              svg.appendChild(winText);
-
-              restartButton.style.display = "block";
-              restartButton.style.top = `${
-                svg.getBoundingClientRect().top + 250
-              }px`;
-            }
-          }
-
-          function gameOver() {
-            enemies.forEach((enemy) => {
-              if (enemy.alive && enemy.y + enemyHeight / 2 >= player.y - 10) {
-                clearInterval(gameLoop);
-                gameIsOver = true;
-
-                const gameOverText = createSVGElement("text", {
-                  x: "300",
-                  y: "200",
-                  "text-anchor": "middle",
-                  "font-size": "48",
-                  fill: "white",
-                  "font-family": "Arial",
-                });
-                gameOverText.textContent = "GAME OVER";
-                svg.appendChild(gameOverText);
-
-                restartButton.style.display = "block";
-                restartButton.style.top = `${
-                  svg.getBoundingClientRect().top + 250
-                }px`;
-              }
-            });
-          }
-
-          function update() {
-            if (!gameIsOver) {
-              // Handle arrow button controls
-              if (isLeftPressed) {
-                player.x = Math.max(20, player.x - player.speed);
-              }
-              if (isRightPressed) {
-                player.x = Math.min(
-                  viewBox.width - 20,
-                  player.x + player.speed
-                );
-              }
-            }
-
-            player.element.setAttribute(
+            enemy.element.setAttribute(
               "transform",
-              `translate(${player.x},${player.y})`
+              `translate(${enemy.x},${enemy.y})`
             );
+          }
+        });
 
-            if (bullet.active) {
-              bullet.y -= bullet.speed;
-              bullet.element.setAttribute(
-                "transform",
-                `translate(${bullet.x - bullet.width / 2},${bullet.y})`
-              );
+        if (touchedEdge) {
+          moveRight = !moveRight;
+          enemies.forEach((enemy) => {
+            if (enemy.alive) {
+              enemy.y += 20;
+            }
+          });
+        }
+      }
 
-              if (bullet.y < 0) {
+      function checkCollisions() {
+        if (bullet.active) {
+          enemies.forEach((enemy) => {
+            if (enemy.alive) {
+              const dx = bullet.x - enemy.x;
+              const dy = bullet.y - enemy.y;
+              if (
+                Math.abs(dx) < enemyWidth / 2 + bullet.width / 2 &&
+                Math.abs(dy) < enemyHeight / 2 + bullet.height / 2
+              ) {
+                enemy.alive = false;
+                enemy.element.remove();
                 bullet.active = false;
                 bullet.element.remove();
+                score += 10;
+                scoreElement.textContent = score;
+                checkWinCondition();
               }
             }
+          });
+        }
+      }
 
-            moveEnemies();
-            checkCollisions();
-            gameOver();
+      function checkWinCondition() {
+        const allEnemiesDefeated = enemies.every((enemy) => !enemy.alive);
+        if (allEnemiesDefeated) {
+          clearInterval(gameLoop);
+          gameIsOver = true;
+
+          const winText = createSVGElement("text", {
+            x: "300",
+            y: "200",
+            "text-anchor": "middle",
+            "font-size": "48",
+            fill: "white",
+            "font-family": "Arial",
+          });
+          winText.textContent = "Congratulations, You win!";
+          svg.appendChild(winText);
+
+          restartButton.style.display = "block";
+          restartButton.style.top = `${
+            svg.getBoundingClientRect().top + 250
+          }px`;
+        }
+      }
+
+      function gameOver() {
+        enemies.forEach((enemy) => {
+          if (enemy.alive && enemy.y + enemyHeight / 2 >= player.y - 10) {
+            clearInterval(gameLoop);
+            gameIsOver = true;
+
+            const gameOverText = createSVGElement("text", {
+              x: "300",
+              y: "200",
+              "text-anchor": "middle",
+              "font-size": "48",
+              fill: "white",
+              "font-family": "Arial",
+            });
+            gameOverText.textContent = "GAME OVER";
+            svg.appendChild(gameOverText);
+
+            restartButton.style.display = "block";
+            restartButton.style.top = `${
+              svg.getBoundingClientRect().top + 250
+            }px`;
           }
+        });
+      }
 
-          // Mouse/Touch movement handler
-          function handleMove(e) {
-            if (!gameIsOver) {
-              const clientX = e.type.includes("touch")
-                ? e.touches[0].clientX
-                : e.clientX;
-              const scaledX = getScaledPosition(clientX);
-              player.x = Math.max(20, Math.min(viewBox.width - 20, scaledX));
-            }
+      function update() {
+        if (!gameIsOver) {
+          // Handle arrow button controls
+          if (isLeftPressed) {
+            player.x = Math.max(20, player.x - player.speed);
           }
-
-          // Mouse/Touch shoot handler
-          function handleShoot(e) {
-            if (!gameIsOver) {
-              e.preventDefault();
-              shoot();
-            }
+          if (isRightPressed) {
+            player.x = Math.min(viewBox.width - 20, player.x + player.speed);
           }
+        }
 
-          // Mobile Control Button Events
-          leftButton.addEventListener("touchstart", (e) => {
-            e.preventDefault();
-            isLeftPressed = true;
-          });
-          leftButton.addEventListener(
-            "touchend",
-            () => (isLeftPressed = false)
+        player.element.setAttribute(
+          "transform",
+          `translate(${player.x},${player.y})`
+        );
+
+        if (bullet.active) {
+          bullet.y -= bullet.speed;
+          bullet.element.setAttribute(
+            "transform",
+            `translate(${bullet.x - bullet.width / 2},${bullet.y})`
           );
 
-          rightButton.addEventListener("touchstart", (e) => {
-            e.preventDefault();
-            isRightPressed = true;
-          });
-          rightButton.addEventListener(
-            "touchend",
-            () => (isRightPressed = false)
-          );
+          if (bullet.y < 0) {
+            bullet.active = false;
+            bullet.element.remove();
+          }
+        }
 
-          shootButton.addEventListener("touchstart", (e) => {
-            e.preventDefault();
-            shoot();
-          });
+        moveEnemies();
+        checkCollisions();
+        gameOver();
+      }
 
-          // Mouse events for mobile controls (for testing on desktop)
-          leftButton.addEventListener(
-            "mousedown",
-            () => (isLeftPressed = true)
-          );
-          leftButton.addEventListener("mouseup", () => (isLeftPressed = false));
-          leftButton.addEventListener(
-            "mouseleave",
-            () => (isLeftPressed = false)
-          );
+      // Mouse/Touch movement handler
+      function handleMove(e) {
+        if (!gameIsOver) {
+          const clientX = e.type.includes("touch")
+            ? e.touches[0].clientX
+            : e.clientX;
+          const scaledX = getScaledPosition(clientX);
+          player.x = Math.max(20, Math.min(viewBox.width - 20, scaledX));
+        }
+      }
 
-          rightButton.addEventListener(
-            "mousedown",
-            () => (isRightPressed = true)
-          );
-          rightButton.addEventListener(
-            "mouseup",
-            () => (isRightPressed = false)
-          );
-          rightButton.addEventListener(
-            "mouseleave",
-            () => (isRightPressed = false)
-          );
+      // Mouse/Touch shoot handler
+      function handleShoot(e) {
+        if (!gameIsOver) {
+          e.preventDefault();
+          shoot();
+        }
+      }
 
-          shootButton.addEventListener("click", shoot);
+      // Mobile Control Button Events
+      leftButton.addEventListener("touchstart", (e) => {
+        e.preventDefault();
+        isLeftPressed = true;
+      });
+      leftButton.addEventListener("touchend", () => (isLeftPressed = false));
 
-          // Event Listeners
-          svg.addEventListener("mousemove", handleMove);
-          svg.addEventListener("touchmove", handleMove);
-          svg.addEventListener("mousedown", handleShoot);
-          svg.addEventListener("touchstart", handleShoot);
-          restartButton.addEventListener("click", initGame);
-          restartButton.addEventListener("touchstart", (e) => {
-            e.preventDefault();
-            initGame();
-          });
+      rightButton.addEventListener("touchstart", (e) => {
+        e.preventDefault();
+        isRightPressed = true;
+      });
+      rightButton.addEventListener("touchend", () => (isRightPressed = false));
 
-          // Prevent default touch behaviors
-          document.addEventListener("touchmove", (e) => e.preventDefault(), {
-            passive: false,
-          });
+      shootButton.addEventListener("touchstart", (e) => {
+        e.preventDefault();
+        shoot();
+      });
 
-          // Handle window resize
-          window.addEventListener("resize", () => {
-            svgRect = svg.getBoundingClientRect();
-          });
+      // Mouse events for mobile controls (for testing on desktop)
+      leftButton.addEventListener("mousedown", () => (isLeftPressed = true));
+      leftButton.addEventListener("mouseup", () => (isLeftPressed = false));
+      leftButton.addEventListener("mouseleave", () => (isLeftPressed = false));
 
-          // Initial game start
-          initGame();
-        </script>
-      </body>
-    </html>
-    <!-- partial -->
+      rightButton.addEventListener("mousedown", () => (isRightPressed = true));
+      rightButton.addEventListener("mouseup", () => (isRightPressed = false));
+      rightButton.addEventListener(
+        "mouseleave",
+        () => (isRightPressed = false)
+      );
+
+      shootButton.addEventListener("click", shoot);
+
+      // Event Listeners
+      svg.addEventListener("mousemove", handleMove);
+      svg.addEventListener("touchmove", handleMove);
+      svg.addEventListener("mousedown", handleShoot);
+      svg.addEventListener("touchstart", handleShoot);
+      restartButton.addEventListener("click", initGame);
+      restartButton.addEventListener("touchstart", (e) => {
+        e.preventDefault();
+        initGame();
+      });
+
+      // Prevent default touch behaviors
+      document.addEventListener("touchmove", (e) => e.preventDefault(), {
+        passive: false,
+      });
+
+      // Handle window resize
+      window.addEventListener("resize", () => {
+        svgRect = svg.getBoundingClientRect();
+      });
+
+      // Initial game start
+      initGame();
+    </script>
   </body>
 </html>
