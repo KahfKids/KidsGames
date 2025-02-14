@@ -72,12 +72,19 @@
 
       /* Mobile Controls */
       #mobileControls {
-        display: none;
         position: fixed;
         bottom: 20px;
-        left: 50%;
-        transform: translateX(-50%);
+        width: 100%;
         z-index: 100;
+        display: flex;
+        justify-content: space-between;
+        padding: 0 20px;
+        box-sizing: border-box;
+      }
+
+      .movement-controls {
+        display: flex;
+        gap: 10px;
       }
 
       .control-button {
@@ -88,29 +95,31 @@
         border-radius: 10px;
         color: white;
         font-size: 24px;
-        margin: 0 10px;
         cursor: pointer;
         display: inline-flex;
         justify-content: center;
         align-items: center;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+        user-select: none;
+        -webkit-user-select: none;
       }
 
       #shootButton {
         background: rgba(0, 255, 0, 0.2);
-        width: 80px;
-        height: 80px;
         font-size: 16px;
+        width: 80px;
       }
 
       @media (max-width: 1024px) {
-        #mobileControls {
+        /* #mobileControls {
           display: block;
-        }
+        } */
 
-        #gameArea {
+        /* #gameArea {
           width: 100%;
           height: auto;
-        }
+        } */
 
         .instructions {
           font-size: 12px;
@@ -157,9 +166,11 @@
       </defs>
     </svg>
     <div id="mobileControls">
-      <button class="control-button" id="leftButton">←</button>
+      <div class="movement-controls">
+        <button class="control-button" id="leftButton">←</button>
+        <button class="control-button" id="rightButton">→</button>
+      </div>
       <button class="control-button" id="shootButton">SHOOT</button>
-      <button class="control-button" id="rightButton">→</button>
     </div>
     <button id="restartButton">Restart Game</button>
     <script>
@@ -465,13 +476,27 @@
         e.preventDefault();
         isLeftPressed = true;
       });
-      leftButton.addEventListener("touchend", () => (isLeftPressed = false));
+      leftButton.addEventListener("touchend", (e) => {
+        e.preventDefault();
+        isLeftPressed = false;
+      });
+      leftButton.addEventListener("touchcancel", (e) => {
+        e.preventDefault();
+        isLeftPressed = false;
+      });
 
       rightButton.addEventListener("touchstart", (e) => {
         e.preventDefault();
         isRightPressed = true;
       });
-      rightButton.addEventListener("touchend", () => (isRightPressed = false));
+      rightButton.addEventListener("touchend", (e) => {
+        e.preventDefault();
+        isRightPressed = false;
+      });
+      rightButton.addEventListener("touchcancel", (e) => {
+        e.preventDefault();
+        isRightPressed = false;
+      });
 
       shootButton.addEventListener("touchstart", (e) => {
         e.preventDefault();
