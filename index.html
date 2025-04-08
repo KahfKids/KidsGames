@@ -16,7 +16,7 @@
         let bgColor = "#ece4d9";
         let contentBg = "#eed9bb";
         let textColor = "#4f391a";
-
+        let bottomPadding = "24px";
         if (brightness === "Dark") {
           if (theme === "Normal") {
             bgColor = "#564630";
@@ -26,18 +26,24 @@
             bgColor = "#0f0f0f";
             contentBg = "#0f0f0f";
             textColor = "#ffffff";
+            bottomPadding = "0px";
           }
         } else if (brightness === "Light") {
           if (theme === "Youtube") {
             bgColor = "#ffffff";
             contentBg = "#ffffff";
             textColor = "#000000";
+            bottomPadding = "0px";
           }
         }
 
         document.documentElement.style.setProperty("--main-bg", bgColor);
         document.documentElement.style.setProperty("--content-bg", contentBg);
         document.documentElement.style.setProperty("--text-color", textColor);
+        document.documentElement.style.setProperty(
+          "--bottom-padding",
+          bottomPadding
+        );
       }
 
       window.addEventListener("load", applyThemeColors);
@@ -47,6 +53,7 @@
         --main-bg: #ece4d9;
         --content-bg: #eed9bb;
         --text-color: #4f391a;
+        --bottom-padding: 24px;
       }
 
       * {
@@ -114,7 +121,10 @@
         background: var(--content-bg);
         border-top-left-radius: 40px;
         border-top-right-radius: 40px;
-        padding: 24px 0;
+        padding-top: 24px;
+        padding-bottom: var(--bottom-padding);
+        padding-left: 0;
+        padding-right: 0;
         min-height: calc(100vh - 72px);
       }
 
