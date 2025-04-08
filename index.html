@@ -1,8 +1,54 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
+    <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kahf KidsGames</title>
+    <script>
+      function getQueryParam(param) {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get(param);
+      }
+
+      function applyThemeColors() {
+        const brightness = getQueryParam("brightness") || "Light";
+        const theme = getQueryParam("theme") || "Normal";
+        let bgColor = "#ece4d9";
+        let contentBg = "#eed9bb";
+        let textColor = "#4f391a";
+
+        if (brightness === "Dark") {
+          if (theme === "Normal") {
+            bgColor = "#564630";
+            contentBg = "#382811";
+            textColor = "#ffffff";
+          } else if (theme === "Youtube") {
+            bgColor = "#0f0f0f";
+            contentBg = "#0f0f0f";
+            textColor = "#ffffff";
+          }
+        } else if (brightness === "Light") {
+          if (theme === "Youtube") {
+            bgColor = "#ffffff";
+            contentBg = "#ffffff";
+            textColor = "#000000";
+          }
+        }
+
+        document.documentElement.style.setProperty("--main-bg", bgColor);
+        document.documentElement.style.setProperty("--content-bg", contentBg);
+        document.documentElement.style.setProperty("--text-color", textColor);
+      }
+
+      window.addEventListener("load", applyThemeColors);
+    </script>
     <style>
+      :root {
+        --main-bg: #ece4d9;
+        --content-bg: #eed9bb;
+        --text-color: #4f391a;
+      }
+
       * {
         margin: 0;
         padding: 0;
@@ -18,7 +64,7 @@
       .app-container {
         width: 100%;
         min-height: 100vh;
-        background: #ece4d9;
+        background: var(--main-bg);
       }
 
       .header {
@@ -26,7 +72,7 @@
         justify-content: space-between;
         align-items: center;
         padding: 16px 24px;
-        background: #ece4d9;
+        background: var(--main-bg);
         top: 0;
       }
 
@@ -43,7 +89,7 @@
 
       .header h1 {
         font-size: 24px;
-        color: #4f391a;
+        color: var(--text-color);
       }
 
       .search-btn {
@@ -65,7 +111,7 @@
       }
 
       .content-container {
-        background: #eed9bb;
+        background: var(--content-bg);
         border-top-left-radius: 40px;
         border-top-right-radius: 40px;
         padding: 24px 0;
@@ -162,7 +208,7 @@
         }
 
         .header {
-          background: #eed9bb;
+          background: var(--content-bg);
           border-top-left-radius: 40px;
           border-top-right-radius: 40px;
         }
@@ -221,7 +267,7 @@
           >
             <path
               d="M16 0C19.3137 0 22 2.68629 22 6V10C22 13.3137 19.3137 16 16 16H6C2.68629 16 0 13.3137 0 10V6C0 2.68629 2.68629 0 6 0H16ZM9 5H7V7H5V9H6.999L7 11H9L8.999 9H11V7H9V5ZM17 9H15V11H17V9ZM15 5H13V7H15V5Z"
-              fill="#4F391A"
+              fill="var(--text-color)"
             />
           </svg>
           <h1>Games</h1>
