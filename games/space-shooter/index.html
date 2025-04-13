@@ -103,6 +103,9 @@
         touch-action: manipulation;
         user-select: none;
         -webkit-user-select: none;
+        -webkit-touch-callout: none;
+        position: relative;
+        z-index: 1000;
       }
 
       #shootButton {
@@ -472,50 +475,124 @@
       }
 
       // Mobile Control Button Events
-      leftButton.addEventListener("touchstart", (e) => {
-        e.preventDefault();
-        isLeftPressed = true;
-      });
-      leftButton.addEventListener("touchend", (e) => {
-        e.preventDefault();
-        isLeftPressed = false;
-      });
-      leftButton.addEventListener("touchcancel", (e) => {
-        e.preventDefault();
-        isLeftPressed = false;
-      });
-
-      rightButton.addEventListener("touchstart", (e) => {
-        e.preventDefault();
-        isRightPressed = true;
-      });
-      rightButton.addEventListener("touchend", (e) => {
-        e.preventDefault();
-        isRightPressed = false;
-      });
-      rightButton.addEventListener("touchcancel", (e) => {
-        e.preventDefault();
-        isRightPressed = false;
-      });
-
-      shootButton.addEventListener("touchstart", (e) => {
-        e.preventDefault();
-        shoot();
-      });
-
-      // Mouse events for mobile controls (for testing on desktop)
-      leftButton.addEventListener("mousedown", () => (isLeftPressed = true));
-      leftButton.addEventListener("mouseup", () => (isLeftPressed = false));
-      leftButton.addEventListener("mouseleave", () => (isLeftPressed = false));
-
-      rightButton.addEventListener("mousedown", () => (isRightPressed = true));
-      rightButton.addEventListener("mouseup", () => (isRightPressed = false));
-      rightButton.addEventListener(
-        "mouseleave",
-        () => (isRightPressed = false)
+      leftButton.addEventListener(
+        "touchstart",
+        (e) => {
+          e.preventDefault();
+          isLeftPressed = true;
+        },
+        { passive: false }
+      );
+      leftButton.addEventListener(
+        "touchend",
+        (e) => {
+          e.preventDefault();
+          isLeftPressed = false;
+        },
+        { passive: false }
+      );
+      leftButton.addEventListener(
+        "touchcancel",
+        (e) => {
+          e.preventDefault();
+          isLeftPressed = false;
+        },
+        { passive: false }
       );
 
-      shootButton.addEventListener("click", shoot);
+      rightButton.addEventListener(
+        "touchstart",
+        (e) => {
+          e.preventDefault();
+          isRightPressed = true;
+        },
+        { passive: false }
+      );
+      rightButton.addEventListener(
+        "touchend",
+        (e) => {
+          e.preventDefault();
+          isRightPressed = false;
+        },
+        { passive: false }
+      );
+      rightButton.addEventListener(
+        "touchcancel",
+        (e) => {
+          e.preventDefault();
+          isRightPressed = false;
+        },
+        { passive: false }
+      );
+
+      shootButton.addEventListener(
+        "touchstart",
+        (e) => {
+          e.preventDefault();
+          shoot();
+        },
+        { passive: false }
+      );
+
+      // Add pointer events for better touch support
+      leftButton.addEventListener(
+        "pointerdown",
+        (e) => {
+          e.preventDefault();
+          isLeftPressed = true;
+        },
+        { passive: false }
+      );
+      leftButton.addEventListener(
+        "pointerup",
+        (e) => {
+          e.preventDefault();
+          isLeftPressed = false;
+        },
+        { passive: false }
+      );
+      leftButton.addEventListener(
+        "pointercancel",
+        (e) => {
+          e.preventDefault();
+          isLeftPressed = false;
+        },
+        { passive: false }
+      );
+
+      rightButton.addEventListener(
+        "pointerdown",
+        (e) => {
+          e.preventDefault();
+          isRightPressed = true;
+        },
+        { passive: false }
+      );
+      rightButton.addEventListener(
+        "pointerup",
+        (e) => {
+          e.preventDefault();
+          isRightPressed = false;
+        },
+        { passive: false }
+      );
+      rightButton.addEventListener(
+        "pointercancel",
+        (e) => {
+          e.preventDefault();
+          isRightPressed = false;
+        },
+        { passive: false }
+      );
+
+      shootButton.addEventListener(
+        "pointerdown",
+        (e) => {
+          e.preventDefault();
+          shoot();
+        },
+        { passive: false }
+      );
 
       // Event Listeners
       svg.addEventListener("mousemove", handleMove);
