@@ -13,6 +13,7 @@
       function applyThemeColors() {
         const brightness = getQueryParam("brightness") || "Light";
         const theme = getQueryParam("theme") || "Normal";
+        const hideHeader = getQueryParam("hideHeader") || "false";
         let bgColor = "#ece4d9";
         let contentBg = "#eed9bb";
         let textColor = "#4f391a";
@@ -38,6 +39,10 @@
             bottomPadding = "0px";
             contentBottomPadding = "200px";
           }
+        }
+
+        if (hideHeader === "true") {
+          document.querySelector(".header").style.display = "none";
         }
 
         document.documentElement.style.setProperty("--main-bg", bgColor);
