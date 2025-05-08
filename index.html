@@ -5,6 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Kahf KidsGames</title>
     <script>
+      // Disable right click
+      document.addEventListener('contextmenu', (e) => e.preventDefault());
+
+      // Disable inspect element
+      document.addEventListener('keydown', function(e) {
+        // Disable F12
+        if(e.keyCode == 123) {
+          e.preventDefault();
+        }
+        // Disable Ctrl+Shift+I
+        if(e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) {
+          e.preventDefault();
+        }
+        // Disable Ctrl+Shift+J
+        if(e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) {
+          e.preventDefault();
+        }
+        // Disable Ctrl+U (View Source)
+        if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) {
+          e.preventDefault();
+        }
+      });
+
       function getQueryParam(param) {
         const urlParams = new URLSearchParams(window.location.search);
         return urlParams.get(param);
