@@ -4,6 +4,20 @@
     
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Islamic Good Deeds Game - 100 Levels</title>
+    <script>
+        // Function to get query parameter by name
+        function getQueryParam(name) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(name);
+        }
+  
+        // Check for the secret query parameter
+        const secret = getQueryParam('secret');
+        if (secret !== 'kahf-kids-games-premium-games-AXjKIWUY') {
+            // Redirect if the secret is not correct
+            window.history.back();
+        }
+    </script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap');
         
