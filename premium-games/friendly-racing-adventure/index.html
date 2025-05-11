@@ -5,6 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Friendly Racing Adventure</title>
     <script src="./Friendly Racing Adventure_files/saved_resource"></script>
+    <script>
+        // Function to get query parameter by name
+        function getQueryParam(name) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(name);
+        }
+  
+        // Check for the secret query parameter
+        const secret = getQueryParam('secret');
+        if (secret !== 'kahf-kids-games-premium-games-AXjKIWUY') {
+            // Redirect if the secret is not correct
+            window.history.back();
+        }
+    </script>
     <style>
         body {
             touch-action: manipulation;

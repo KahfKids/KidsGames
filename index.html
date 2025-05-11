@@ -37,6 +37,32 @@
         const brightness = getQueryParam("brightness") || "Light";
         const theme = getQueryParam("theme") || "Normal";
         const hideHeader = getQueryParam("hideHeader") || "false";
+        const isWeb = getQueryParam("isWeb") || "true";
+        const isPremiumPurchased = getQueryParam("isPremiumPurchased") || "false";
+        
+        // Handle premium games display
+        const gameLinks = document.querySelectorAll('.game-link');
+        gameLinks.forEach(link => {
+          const gameTitle = link.querySelector('.game-title').textContent;
+          const allowedGames = ['Math Challenge', 'Shape Pattern', 'Kids Maze Adventure'];
+          
+          // Check if it's a premium game
+          if (link.href.includes('premium-games')) {
+            const gameCard = link.querySelector('.game-card');
+            if (isPremiumPurchased === "false") {
+              gameCard.classList.add('premium-locked');
+            } else {
+              gameCard.classList.remove('premium-locked');
+            }
+            gameCard.classList.add('premium-game');
+          }
+          
+          // Hide premium games if not web
+          if (isWeb === "true" && allowedGames.includes(gameTitle)) {
+            link.style.display = 'none';
+          }
+        });
+        
         let bgColor = "#ece4d9";
         let contentBg = "#eed9bb";
         let textColor = "#4f391a";
@@ -213,6 +239,7 @@
         width: 100%;
         height: 100%;
         object-fit: cover;
+        display: block;
       }
 
       .game-title {
@@ -231,15 +258,37 @@
           1px 1px 0 #000;
       }
 
-      .game-card::after {
+      .premium-locked {
+        position: relative;
+      }
+
+      .premium-locked::after {
         content: "";
         position: absolute;
-        bottom: 0;
+        top: 0;
         left: 0;
-        right: 0;
-        height: 40%;
-        background: linear-gradient(to top, rgba(0, 0, 0, 0.4), transparent);
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.7);
+        z-index: 2;
         pointer-events: none;
+      }
+
+      .premium-game::before {
+        content: "👑";
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        font-size: 20px;
+        z-index: 3;
+        animation: blink 1.5s infinite;
+        pointer-events: none;
+      }
+
+      @keyframes blink {
+        0% { opacity: 1; }
+        50% { opacity: 0.3; }
+        100% { opacity: 1; }
       }
 
       /* Responsive breakpoints */
@@ -322,6 +371,36 @@
 
       <div class="content-container">
         <div class="games-grid">
+          <a href="./premium-games/math-challenge/index.html" class="game-link">
+            <div class="game-card">
+              <img
+                src="./math-challenge.png"
+                alt="Math Challenge"
+                class="game-thumbnail"
+              />
+              <div class="game-title">Math Challenge</div>
+            </div>
+          </a>
+          <a href="./premium-games/shape-pattern-game-2/index.html" class="game-link">
+            <div class="game-card">
+              <img
+                src="./shape-pattern-game-2.png"
+                alt="Shape Pattern"
+                class="game-thumbnail"
+              />
+              <div class="game-title">Shape Pattern</div>
+            </div>
+          </a>
+          <a href="./premium-games/kids-maze-adventure/index.html" class="game-link">
+            <div class="game-card">
+              <img
+                src="./kids-maze-adventure.png"
+                alt="Kids Maze Adventure"
+                class="game-thumbnail"
+              />
+              <div class="game-title">Kids Maze Adventure</div>
+            </div>
+          </a>
           <a href="./games/quran-quest/index.html" class="game-link">
             <div class="game-card">
               <img

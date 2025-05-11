@@ -5,6 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Interactive Surah Al-Fatiha for Kids</title>
     <script src="./Interactive Surah Al-Fatiha for Kids_files/saved_resource"></script>
+    <script>
+        // Function to get query parameter by name
+        function getQueryParam(name) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(name);
+        }
+  
+        // Check for the secret query parameter
+        const secret = getQueryParam('secret');
+        if (secret !== 'kahf-kids-games-premium-games-AXjKIWUY') {
+            // Redirect if the secret is not correct
+            window.history.back();
+        }
+    </script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700&family=Scheherazade+New:wght@400;700&display=swap');
         
