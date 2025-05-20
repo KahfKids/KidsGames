@@ -128,10 +128,6 @@
                         <div class="text-3xl">🕋</div>
                         <div class="text-xs text-center">Kaaba</div>
                     </button>
-                    <button class="template-btn min-w-[80px] h-[80px] flex flex-col items-center justify-center p-1" data-template="minaret">
-                        <div class="text-3xl">🏛️</div>
-                        <div class="text-xs text-center">Minaret</div>
-                    </button>
                     <button class="template-btn min-w-[80px] h-[80px] flex flex-col items-center justify-center p-1" data-template="palace">
                         <div class="text-3xl">🏰</div>
                         <div class="text-xs text-center">Palace</div>
@@ -145,7 +141,7 @@
                         <div class="text-xs text-center">Shield</div>
                     </button>
                     <button class="template-btn min-w-[80px] h-[80px] flex flex-col items-center justify-center p-1" data-template="dress">
-                        <div class="text-3xl">👘</div>
+                        <div class="text-3xl">👕</div>
                         <div class="text-xs text-center">Dress</div>
                     </button>
                     <button class="template-btn min-w-[80px] h-[80px] flex flex-col items-center justify-center p-1" data-template="blank">
@@ -379,26 +375,26 @@
                         ctx.stroke();
                         break;
                         
-                    case 'dress':
-                        // Draw traditional dress outline
+                        case 'dress':
+                        // Draw hijab outline
                         ctx.beginPath();
-                        // Collar
-                        ctx.moveTo(w*2/5, h/6);
-                        ctx.lineTo(w*3/5, h/6);
-                        // Shoulders
-                        ctx.lineTo(w*3/4, h/4);
-                        ctx.lineTo(w*3/4, h/3);
-                        // Body
-                        ctx.lineTo(w*2/3, h*3/4);
-                        ctx.lineTo(w/3, h*3/4);
-                        ctx.lineTo(w/4, h/3);
-                        ctx.lineTo(w/4, h/4);
-                        ctx.lineTo(w*2/5, h/6);
-                        // Pattern
+                        // Top of head
                         ctx.moveTo(w/2, h/6);
-                        ctx.lineTo(w/2, h/2);
-                        ctx.moveTo(w*2/5, h/3);
-                        ctx.lineTo(w*3/5, h/3);
+                        // Right side of hijab
+                        ctx.lineTo(w*3/4, h/4);
+                        ctx.lineTo(w*3/4, h/2);
+                        ctx.lineTo(w*2/3, h*3/4);
+                        // Bottom curve
+                        ctx.quadraticCurveTo(w/2, h*4/5, w/3, h*3/4);
+                        // Left side of hijab
+                        ctx.lineTo(w/4, h/2);
+                        ctx.lineTo(w/4, h/4);
+                        ctx.lineTo(w/2, h/6);
+                        // Add some folds/draping
+                        ctx.moveTo(w/2, h/6);
+                        ctx.quadraticCurveTo(w*3/5, h/3, w*2/3, h/2);
+                        ctx.moveTo(w/2, h/6);
+                        ctx.quadraticCurveTo(w*2/5, h/3, w/3, h/2);
                         ctx.stroke();
                         break;
                         
