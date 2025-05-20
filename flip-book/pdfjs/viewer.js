@@ -27,7 +27,7 @@
 
 'use strict';
 
-var DEFAULT_URL =  "Waiting-for-Fathers-Return.pdf";
+var DEFAULT_URL =  "https://kahfkids.github.io/KidsGames/flip-book/Waiting-for-Fathers-Return.pdf";
 var DEFAULT_SCALE_DELTA = 1.1;
 var MIN_SCALE = 0.25;
 var MAX_SCALE = 10.0;
