@@ -35,7 +35,7 @@ function getQueryParam(param) {
 function initFlipbook(elementId, pdfUrl, customConfig = {}) {
     const isPremiumPurchased = getQueryParam("isPremiumPurchased") || "false";
     const isWeb = getQueryParam("isWeb") || "true";
-    const allowedGames = [];
+    const allowedGames = ['Who is Allah?'];
     
     // Get the game title from the element
     const gameTitle = $(`#${elementId}`).find('.game-title').text();
