@@ -39,8 +39,6 @@ function initFlipbook(elementId, pdfUrl, customConfig = {}) {
     
     // Get the game title from the element
     const gameTitle = $(`#${elementId}`).find('.game-title').text();
-    console.log(gameTitle);
-    console.log(isPremiumPurchased);
     
     // Hide premium games if not web
     if (isWeb === "true" && allowedGames.includes(gameTitle)) {
@@ -57,7 +55,7 @@ function initFlipbook(elementId, pdfUrl, customConfig = {}) {
         pdfUrl: pdfUrl
     };
 
-    if (isPremiumPurchased === "true") {
+    if (isPremiumPurchased === "true" || !elementId.includes("premium")) {
       // Initialize flipbook
    $(`#${elementId}`).flipBook(config);
        
