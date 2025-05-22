@@ -126,10 +126,16 @@
 
   <script type="text/javascript">
       $(document).ready(function () {
-            initFlipbook('waiting-for-fathers-return', 'pdf/waiting-for-fathers-return.pdf');
-            initFlipbook('uncovering-earths-secrets', 'pdf/Uncovering-Earths-Secrets.pdf');
-        });
-    </script>
+          // Add click handlers for each book
+          $('#waiting-for-fathers-return').on('click', function() {
+              initFlipbook('waiting-for-fathers-return', 'pdf/waiting-for-fathers-return.pdf');
+          });
+          
+          $('#uncovering-earths-secrets').on('click', function() {
+              initFlipbook('uncovering-earths-secrets', 'pdf/Uncovering-Earths-Secrets.pdf');
+          });
+      });
+  </script>
       <style>
       :root {
         --main-bg: #ece4d9;
