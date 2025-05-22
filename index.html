@@ -44,7 +44,7 @@
         const gameLinks = document.querySelectorAll('.game-link');
         gameLinks.forEach(link => {
           const gameTitle = link.querySelector('.game-title').textContent;
-          const allowedGames = ['Math Challenge', 'Shape Pattern', 'Kids Maze Adventure', 'Islamic Shapes', 'Islamic Good Deeds', 'Baloon Pop'];
+          const allowedGames = ['Math Challenge', 'Shape Pattern', 'Kids Maze Adventure', 'Islamic Shapes', 'Islamic Good Deeds', 'Baloon Pop', 'Animal Memory Match'];
           
           // Check if it's a premium game
           if (link.href.includes('premium-games')) {
@@ -371,6 +371,16 @@
 
       <div class="content-container">
         <div class="games-grid">
+          <a href="./premium-games/animal-memory-match/index.html" class="game-link">
+            <div class="game-card">
+              <img
+                src="./animal-memory-match.png"
+                alt="Animal Memory Match"
+                class="game-thumbnail"
+              />
+              <div class="game-title">Animal Memory Match</div>
+            </div>
+          </a>
           <a href="./premium-games/balloon-pop-adventure/index.html" class="game-link">
             <div class="game-card">
               <img
