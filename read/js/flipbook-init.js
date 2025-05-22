@@ -35,7 +35,7 @@ function getQueryParam(param) {
 function initFlipbook(elementId, pdfUrl, customConfig = {}) {
     const isPremiumPurchased = getQueryParam("isPremiumPurchased") || "false";
     const isWeb = getQueryParam("isWeb") || "true";
-    const allowedGames = ['Waiting for fathers return'];
+    const allowedGames = [];
     
     // Get the game title from the element
     const gameTitle = $(`#${elementId}`).find('.game-title').text();
@@ -61,6 +61,8 @@ function initFlipbook(elementId, pdfUrl, customConfig = {}) {
       // Initialize flipbook
    $(`#${elementId}`).flipBook(config);
        
+   } else {
+    console.log("Premium not purchased");
    }
 
   
