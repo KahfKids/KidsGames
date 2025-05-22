@@ -44,7 +44,7 @@
         const gameLinks = document.querySelectorAll('.game-link');
         gameLinks.forEach(link => {
           const gameTitle = link.querySelector('.game-title').textContent;
-          const allowedGames = ['Amazing Science Adventures', 'Baby\'s First Science', 'Waiting for fathers return'];
+          const allowedGames = [];
           
           // Check if it's a premium game
           if (link.href.includes('premium-games') || link.id.includes('book-')) {
@@ -126,8 +126,8 @@
 
   <script type="text/javascript">
       $(document).ready(function () {
-            initFlipbook('book-waiting-for-fathers-return', 'pdf/waiting-for-fathers-return.pdf');
-            initFlipbook('book-uncovering-earths-secrets', 'pdf/Uncovering-Earths-Secrets.pdf');
+            initFlipbook('waiting-for-fathers-return', 'pdf/waiting-for-fathers-return.pdf');
+            initFlipbook('uncovering-earths-secrets', 'pdf/Uncovering-Earths-Secrets.pdf');
         });
     </script>
       <style>
@@ -389,7 +389,7 @@
 
       <div class="content-container">
         <div class="games-grid">
-          <a class="game-link" id="book-waiting-for-fathers-return">
+          <a class="game-link" id="waiting-for-fathers-return">
             <div class="game-card">
               <img
                 src="../waiting-for-fathers-return.png"
@@ -399,7 +399,7 @@
               <div class="game-title">Waiting for father's return</div>
             </div>
           </a>
-          <a class="game-link" id="book-uncovering-earths-secrets">
+          <a class="game-link" id="uncovering-earths-secrets">
             <div class="game-card">
               <img
                 src="../Uncovering-Earths-Secrets.png"
