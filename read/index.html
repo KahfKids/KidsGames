@@ -44,10 +44,10 @@
         const gameLinks = document.querySelectorAll('.game-link');
         gameLinks.forEach(link => {
           const gameTitle = link.querySelector('.game-title').textContent;
-          const allowedGames = [];
+          const allowedGames = ['Who is Allah?'];
           
           // Check if it's a premium game
-          if (link.href.includes('premium-games') || link.id.includes('book-')) {
+          if (link.href.includes('premium-games') || link.id.includes('premium-')) {
             const gameCard = link.querySelector('.game-card');
             if (isPremiumPurchased === "false") {
               gameCard.classList.add('premium-locked');
@@ -133,6 +133,10 @@
           
           $('#uncovering-earths-secrets').on('click', function() {
               initFlipbook('uncovering-earths-secrets', 'pdf/Uncovering-Earths-Secrets.pdf');
+          });
+
+          $('#premium-who-is-allah').on('click', function() {
+            initFlipbook('premium-who-is-allah', 'pdf/who-is-allah.pdf');
           });
       });
   </script>
@@ -395,6 +399,16 @@
 
       <div class="content-container">
         <div class="games-grid">
+          <a class="game-link" id="premium-who-is-allah">
+            <div class="game-card">
+              <img
+                src="../who-is-allah.png"
+                alt="Waiting for fathers return"
+                class="game-thumbnail"
+              />
+              <div class="game-title">Who is Allah?</div>
+            </div>
+          </a>
           <a class="game-link" id="waiting-for-fathers-return">
             <div class="game-card">
               <img
