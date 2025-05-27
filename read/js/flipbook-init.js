@@ -32,7 +32,7 @@ function getQueryParam(param) {
 }
 
 // Function to initialize flipbook with a specific PDF
-function initFlipbook(elementId, pdfUrl, customConfig = {}) {
+function initFlipbook(elementId, pdfUrl, customConfig = {}, showAlert = false) {
     const isPremiumPurchased = getQueryParam("isPremiumPurchased") || "false";
     const isWeb = getQueryParam("isWeb") || "true";
     const allowedGames = ['Who is Allah?'];
@@ -57,10 +57,16 @@ function initFlipbook(elementId, pdfUrl, customConfig = {}) {
 
     if (isPremiumPurchased === "true" || !elementId.includes("premium")) {
       // Initialize flipbook
-   $(`#${elementId}`).flipBook(config);
+      if(!showAlert){
+        $(`#${elementId}`).flipBook(config);
+      }
+
        
    } else {
-    console.log("Premium not purchased");
+    if(showAlert){
+        console.log("Premium not purchased");
+    }
+
    }
 
   
