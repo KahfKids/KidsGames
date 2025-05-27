@@ -159,6 +159,9 @@
         initFlipbook('721', 'pdf/721.pdf');
         initFlipbook('723', 'pdf/723.pdf');
         initFlipbook('724', 'pdf/724.pdf');
+        initFlipbook('bd_1', 'pdf/bd_1.pdf');
+        initFlipbook('bd_2', 'pdf/bd_2.pdf');
+        initFlipbook('bd_3', 'pdf/bd_3.pdf');
       });
   </script>
       <style>
@@ -242,12 +245,29 @@
         min-height: calc(100vh - 72px);
       }
 
-      .games-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      .language-section {
+        margin-bottom: 32px;
+      }
+
+      .language-title {
+        font-size: 24px;
+        font-weight: bold;
+        color: var(--text-color);
+        padding: 0 24px;
+        margin-bottom: 16px;
+      }
+
+      .games-scroll {
+        display: flex;
+        overflow-x: auto;
+        padding: 0 24px;
         gap: 16px;
-        padding: 0 24px 24px 24px;
-        width: 100%;
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* IE and Edge */
+      }
+
+      .games-scroll::-webkit-scrollbar {
+        display: none; /* Chrome, Safari, Opera */
       }
 
       .game-link {
@@ -256,7 +276,7 @@
         display: block;
         transform: translateY(0);
         transition: transform 0.2s ease, box-shadow 0.2s ease;
-        width: 100%;
+        flex: 0 0 140px;
       }
 
       .game-link:hover {
@@ -364,38 +384,44 @@
           border-radius: 0;
         }
 
-        .games-grid {
-          grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        .game-link {
+          flex: 0 0 180px;
+        }
+
+        .language-title {
+          font-size: 28px;
+          padding: 0 32px;
+        }
+
+        .games-scroll {
+          padding: 0 32px;
           gap: 24px;
         }
       }
 
       @media (min-width: 1024px) {
-        .games-grid {
-          grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-          gap: 32px;
-          padding: 0 32px 32px 32px;
+        .game-link {
+          flex: 0 0 200px;
         }
 
-        .header {
-          padding: 16px 32px;
+        .language-title {
+          font-size: 32px;
         }
       }
 
       @media (max-width: 380px) {
-        .games-grid {
-          grid-template-columns: repeat(2, 1fr);
+        .game-link {
+          flex: 0 0 120px;
+        }
+
+        .language-title {
+          font-size: 20px;
+          padding: 0 12px;
+        }
+
+        .games-scroll {
+          padding: 0 12px;
           gap: 12px;
-          padding: 0 12px 24px 12px;
-        }
-
-        .header {
-          padding: 16px 12px;
-        }
-
-        .game-title {
-          font-size: 12px;
-          padding: 12px;
         }
       }
     </style>
@@ -419,307 +445,323 @@
       </div>
 
       <div class="content-container">
-        <div class="games-grid">
-          <a class="game-link" id="premium-who-is-allah">
-            <div class="game-card">
-              <img
-                src="../who-is-allah.png"
-                alt="Waiting for fathers return"
-                class="game-thumbnail"
-              />
-              <div class="game-title">Who is Allah?</div>
-            </div>
-          </a>
-          <a class="game-link" id="waiting-for-fathers-return">
-            <div class="game-card">
-              <img
-                src="../waiting-for-fathers-return.png"
-                alt="Waiting for fathers return"
-                class="game-thumbnail"
-              />
-              <div class="game-title">Waiting for father's return</div>
-            </div>
-          </a>
-          <a class="game-link" id="uncovering-earths-secrets">
-            <div class="game-card">
-              <img
-                src="../Uncovering-Earths-Secrets.png"
-                alt="Waiting for fathers return"
-                class="game-thumbnail"
-              />
-              <div class="game-title">Uncovering Earth's Secrets</div>
-            </div>
-          </a>
-          <!-- <a class="game-link" id="1_text">
-            <div class="game-card">
-              <img
-                src="../1_text.png"
-                alt="Goodnight Stories from the Life of the Prophet Muhammad"
-                class="game-thumbnail"
-              />
-              <div class="game-title">Goodnight Stories from the Life of the Prophet Muhammad</div>
-            </div>
-          </a> -->
-          <a class="game-link" id="121">
-            <div class="game-card">
-              <img
-                src="../121.png"
-                alt="The Treasure House"
-                class="game-thumbnail"
-              />
-              <div class="game-title">The Treasure House</div>
-            </div>
-          </a>
-          <a class="game-link" id="501">
-            <div class="game-card">
-              <img
-                src="../501.png"
-                alt="Let's Perform Ablution"
-                class="game-thumbnail"
-              />
-              <div class="game-title">Let's Perform Ablution</div>
-            </div>
-          </a>
-          <a class="game-link" id="505">
-            <div class="game-card">
-              <img
-                src="../505.png"
-                alt="Let's Pray"
-                class="game-thumbnail"
-              />
-              <div class="game-title">Let's Pray</div>
-            </div>
-          </a>
-          <a class="game-link" id="601">
-            <div class="game-card">
-              <img
-                src="../601.png"
-                alt="My Palestinian Village"
-                class="game-thumbnail"
-              />
-              <div class="game-title">My Palestinian Village</div>
-            </div>
-          </a>
-          <a class="game-link" id="603">
-            <div class="game-card">
-              <img
-                src="../603.png"
-                alt="My Moroccan Village"
-                class="game-thumbnail"
-              />
-              <div class="game-title">My Moroccan Village</div>
-            </div>
-          </a>
-          <a class="game-link" id="606">
-            <div class="game-card">
-              <img
-                src="../606.png"
-                alt="My Hausa Village"
-                class="game-thumbnail"
-              />
-              <div class="game-title">My Hausa Village</div>
-            </div>
-          </a>
-          <a class="game-link" id="701">
-            <div class="game-card">
-              <img
-                src="../701.png"
-                alt="A Unique Miracle"
-                class="game-thumbnail"
-              />
-              <div class="game-title">A Unique Miracle</div>
-            </div>
-          </a>
-          <a class="game-link" id="702">
-            <div class="game-card">
-              <img
-                src="../702.png"
-                alt="Allah Made Them All"
-                class="game-thumbnail"
-              />
-              <div class="game-title">Allah Made Them All</div>
-            </div>
-          </a>
-          <a class="game-link" id="704">
-            <div class="game-card">
-              <img
-                src="../704.png"
-                alt="The Brave Boy"
-                class="game-thumbnail"
-              />
-              <div class="game-title">The Brave Boy</div>
-            </div>
-          </a>
-          <a class="game-link" id="705">
-            <div class="game-card">
-              <img
-                src="../705.png"
-                alt="The Builder of the Kabah"
-                class="game-thumbnail"
-              />
-              <div class="game-title">The Builder of the Kabah</div>
-            </div>
-          </a>
-          <a class="game-link" id="706">
-            <div class="game-card">
-              <img
-                src="../706.png"
-                alt="The Gardens of Saba"
-                class="game-thumbnail"
-              />
-              <div class="game-title">The Gardens of Saba</div>
-            </div>
-          </a>
-          <a class="game-link" id="707">
-            <div class="game-card">
-              <img
-                src="../707.png"
-                alt="The Honoured Guests"
-                class="game-thumbnail"
-              />
-              <div class="game-title">The Honoured Guests</div>
-            </div>
-          </a>
-          <a class="game-link" id="708">
-            <div class="game-card">
-              <img
-                src="../708.png"
-                alt="The King's Magicians"
-                class="game-thumbnail"
-              />
-              <div class="game-title">The King's Magicians</div>
-            </div>
-          </a>
-          <a class="game-link" id="709">
-            <div class="game-card">
-              <img
-                src="../709.png"
-                alt="The Light of Allah"
-                class="game-thumbnail"
-              />
-              <div class="game-title">The Light of Allah</div>
-            </div>
-          </a>
-          <a class="game-link" id="710">
-            <div class="game-card">
-              <img
-                src="../710.png"
-                alt="Love Your Parents"
-                class="game-thumbnail"
-              />
-              <div class="game-title">Love Your Parents</div>
-            </div>
-          </a>
-          <a class="game-link" id="711">
-            <div class="game-card">
-              <img
-                src="../711.png"
-                alt="Luqman's Advice to his Son"
-                class="game-thumbnail"
-              />
-              <div class="game-title">Luqman's Advice to his Son</div>
-            </div>
-          </a>
-          <a class="game-link" id="712">
-            <div class="game-card">
-              <img
-                src="../712.png"
-                alt="The Morals of Believers"
-                class="game-thumbnail"
-              />
-              <div class="game-title">The Morals of Believers</div>
-            </div>
-          </a>
-          <a class="game-link" id="713">
-            <div class="game-card">
-              <img
-                src="../713.png"
-                alt="The Old Man's Prayer"
-                class="game-thumbnail"
-              />
-              <div class="game-title">The Old Man's Prayer</div>
-            </div>
-          </a>
-          <a class="game-link" id="714">
-            <div class="game-card">
-              <img
-                src="../714.png"
-                alt="The Prophet and the Blind Man"
-                class="game-thumbnail"
-              />
-              <div class="game-title">The Prophet and the Blind Man</div>
-            </div>
-          </a>
-          <a class="game-link" id="715">
-            <div class="game-card">
-              <img
-                src="../715.png"
-                alt="The Prophet Shuayb and the Earthquake"
-                class="game-thumbnail"
-              />
-              <div class="game-title">The Prophet Shuayb and the Earthquake</div>
-            </div>
-          </a>
-          <a class="game-link" id="718">
-            <div class="game-card">
-              <img
-                src="../718.png"
-                alt="The Rivers of Milk and Honey"
-                class="game-thumbnail"
-              />
-              <div class="game-title">The Rivers of Milk and Honey</div>
-            </div>
-          </a>
-          <a class="game-link" id="719">
-            <div class="game-card">
-              <img
-                src="../719.png"
-                alt="The Sleepers in the Cave"
-                class="game-thumbnail"
-              />
-              <div class="game-title">The Sleepers in the Cave</div>
-            </div>
-          </a>
-          <a class="game-link" id="720">
-            <div class="game-card">
-              <img
-                src="../720.png"
-                alt="The Story of two gardens"
-                class="game-thumbnail"
-              />
-              <div class="game-title">The Story of two gardens</div>
-            </div>
-          </a>
-          <a class="game-link" id="721">
-            <div class="game-card">
-              <img
-                src="../721.png"
-                alt="The Traveller's Prayer"
-                class="game-thumbnail"
-              />
-              <div class="game-title">The Traveller's Prayer</div>
-            </div>
-          </a>
-          <a class="game-link" id="723">
-            <div class="game-card">
-              <img
-                src="../723.png"
-                alt="Uzary's Donkey"
-                class="game-thumbnail"
-              />
-              <div class="game-title">Uzary's Donkey</div>
-            </div>
-          </a>
-          <a class="game-link" id="724">
-            <div class="game-card">
-              <img
-                src="../724.png"
-                alt="The Wise man And The Prophet Musa"
-                class="game-thumbnail"
-              />
-              <div class="game-title">The Wise man And The Prophet Musa</div>
-            </div>
-          </a>
+        <div class="language-section">
+          <h2 class="language-title">English</h2>
+          <div class="games-scroll">
+            <a class="game-link" id="premium-who-is-allah">
+              <div class="game-card">
+                <img
+                  src="../who-is-allah.png"
+                  alt="Waiting for fathers return"
+                  class="game-thumbnail"
+                />
+                <div class="game-title">Who is Allah?</div>
+              </div>
+            </a>
+            <a class="game-link" id="waiting-for-fathers-return">
+              <div class="game-card">
+                <img
+                  src="../waiting-for-fathers-return.png"
+                  alt="Waiting for fathers return"
+                  class="game-thumbnail"
+                />
+                <div class="game-title">Waiting for father's return</div>
+              </div>
+            </a>
+            <a class="game-link" id="uncovering-earths-secrets">
+              <div class="game-card">
+                <img
+                  src="../Uncovering-Earths-Secrets.png"
+                  alt="Waiting for fathers return"
+                  class="game-thumbnail"
+                />
+                <div class="game-title">Uncovering Earth's Secrets</div>
+              </div>
+            </a>
+            <a class="game-link" id="121">
+              <div class="game-card">
+                <img
+                  src="../121.png"
+                  alt="The Treasure House"
+                  class="game-thumbnail"
+                />
+                <div class="game-title">The Treasure House</div>
+              </div>
+            </a>
+            <a class="game-link" id="501">
+              <div class="game-card">
+                <img
+                  src="../501.png"
+                  alt="Let's Perform Ablution"
+                  class="game-thumbnail"
+                />
+                <div class="game-title">Let's Perform Ablution</div>
+              </div>
+            </a>
+            <a class="game-link" id="505">
+              <div class="game-card">
+                <img
+                  src="../505.png"
+                  alt="Let's Pray"
+                  class="game-thumbnail"
+                />
+                <div class="game-title">Let's Pray</div>
+              </div>
+            </a>
+            <a class="game-link" id="601">
+              <div class="game-card">
+                <img
+                  src="../601.png"
+                  alt="My Palestinian Village"
+                  class="game-thumbnail"
+                />
+                <div class="game-title">My Palestinian Village</div>
+              </div>
+            </a>
+            <a class="game-link" id="603">
+              <div class="game-card">
+                <img
+                  src="../603.png"
+                  alt="My Moroccan Village"
+                  class="game-thumbnail"
+                />
+                <div class="game-title">My Moroccan Village</div>
+              </div>
+            </a>
+            <a class="game-link" id="606">
+              <div class="game-card">
+                <img
+                  src="../606.png"
+                  alt="My Hausa Village"
+                  class="game-thumbnail"
+                />
+                <div class="game-title">My Hausa Village</div>
+              </div>
+            </a>
+            <a class="game-link" id="701">
+              <div class="game-card">
+                <img
+                  src="../701.png"
+                  alt="A Unique Miracle"
+                  class="game-thumbnail"
+                />
+                <div class="game-title">A Unique Miracle</div>
+              </div>
+            </a>
+            <a class="game-link" id="702">
+              <div class="game-card">
+                <img
+                  src="../702.png"
+                  alt="Allah Made Them All"
+                  class="game-thumbnail"
+                />
+                <div class="game-title">Allah Made Them All</div>
+              </div>
+            </a>
+            <a class="game-link" id="704">
+              <div class="game-card">
+                <img
+                  src="../704.png"
+                  alt="The Brave Boy"
+                  class="game-thumbnail"
+                />
+                <div class="game-title">The Brave Boy</div>
+              </div>
+            </a>
+            <a class="game-link" id="705">
+              <div class="game-card">
+                <img
+                  src="../705.png"
+                  alt="The Builder of the Kabah"
+                  class="game-thumbnail"
+                />
+                <div class="game-title">The Builder of the Kabah</div>
+              </div>
+            </a>
+            <a class="game-link" id="706">
+              <div class="game-card">
+                <img
+                  src="../706.png"
+                  alt="The Gardens of Saba"
+                  class="game-thumbnail"
+                />
+                <div class="game-title">The Gardens of Saba</div>
+              </div>
+            </a>
+            <a class="game-link" id="707">
+              <div class="game-card">
+                <img
+                  src="../707.png"
+                  alt="The Honoured Guests"
+                  class="game-thumbnail"
+                />
+                <div class="game-title">The Honoured Guests</div>
+              </div>
+            </a>
+            <a class="game-link" id="708">
+              <div class="game-card">
+                <img
+                  src="../708.png"
+                  alt="The King's Magicians"
+                  class="game-thumbnail"
+                />
+                <div class="game-title">The King's Magicians</div>
+              </div>
+            </a>
+            <a class="game-link" id="709">
+              <div class="game-card">
+                <img
+                  src="../709.png"
+                  alt="The Light of Allah"
+                  class="game-thumbnail"
+                />
+                <div class="game-title">The Light of Allah</div>
+              </div>
+            </a>
+            <a class="game-link" id="710">
+              <div class="game-card">
+                <img
+                  src="../710.png"
+                  alt="Love Your Parents"
+                  class="game-thumbnail"
+                />
+                <div class="game-title">Love Your Parents</div>
+              </div>
+            </a>
+            <a class="game-link" id="711">
+              <div class="game-card">
+                <img
+                  src="../711.png"
+                  alt="Luqman's Advice to his Son"
+                  class="game-thumbnail"
+                />
+                <div class="game-title">Luqman's Advice to his Son</div>
+              </div>
+            </a>
+            <a class="game-link" id="712">
+              <div class="game-card">
+                <img
+                  src="../712.png"
+                  alt="The Morals of Believers"
+                  class="game-thumbnail"
+                />
+                <div class="game-title">The Morals of Believers</div>
+              </div>
+            </a>
+            <a class="game-link" id="713">
+              <div class="game-card">
+                <img
+                  src="../713.png"
+                  alt="The Old Man's Prayer"
+                  class="game-thumbnail"
+                />
+                <div class="game-title">The Old Man's Prayer</div>
+              </div>
+            </a>
+            <a class="game-link" id="714">
+              <div class="game-card">
+                <img
+                  src="../714.png"
+                  alt="The Prophet and the Blind Man"
+                  class="game-thumbnail"
+                />
+                <div class="game-title">The Prophet and the Blind Man</div>
+              </div>
+            </a>
+            <a class="game-link" id="715">
+              <div class="game-card">
+                <img
+                  src="../715.png"
+                  alt="The Prophet Shuayb and the Earthquake"
+                  class="game-thumbnail"
+                />
+                <div class="game-title">The Prophet Shuayb and the Earthquake</div>
+              </div>
+            </a>
+            <a class="game-link" id="718">
+              <div class="game-card">
+                <img
+                  src="../718.png"
+                  alt="The Rivers of Milk and Honey"
+                  class="game-thumbnail"
+                />
+                <div class="game-title">The Rivers of Milk and Honey</div>
+              </div>
+            </a>
+            <a class="game-link" id="719">
+              <div class="game-card">
+                <img
+                  src="../719.png"
+                  alt="The Sleepers in the Cave"
+                  class="game-thumbnail"
+                />
+                <div class="game-title">The Sleepers in the Cave</div>
+              </div>
+            </a>
+            <a class="game-link" id="720">
+              <div class="game-card">
+                <img
+                  src="../720.png"
+                  alt="The Story of two gardens"
+                  class="game-thumbnail"
+                />
+                <div class="game-title">The Story of two gardens</div>
+              </div>
+            </a>
+            <a class="game-link" id="721">
+              <div class="game-card">
+                <img
+                  src="../721.png"
+                  alt="The Traveller's Prayer"
+                  class="game-thumbnail"
+                />
+                <div class="game-title">The Traveller's Prayer</div>
+              </div>
+            </a>
+            <a class="game-link" id="723">
+              <div class="game-card">
+                <img
+                  src="../723.png"
+                  alt="Uzary's Donkey"
+                  class="game-thumbnail"
+                />
+                <div class="game-title">Uzary's Donkey</div>
+              </div>
+            </a>
+            <a class="game-link" id="724">
+              <div class="game-card">
+                <img
+                  src="../724.png"
+                  alt="The Wise man And The Prophet Musa"
+                  class="game-thumbnail"
+                />
+                <div class="game-title">The Wise man And The Prophet Musa</div>
+              </div>
+            </a>
+          </div>
+        </div>
+        <div class="language-section">
+          <h2 class="language-title">Bangla</h2>
+          <div class="games-scroll">
+            <a class="game-link" id="bd_1">
+              <div class="game-card">
+                <img src="../bd_1.png" alt="গল্পে আঁকা সীরাত হে মুহাম্মদ" class="game-thumbnail" />
+                <div class="game-title">গল্পে আঁকা সীরাত হে মুহাম্মদ</div>
+              </div>
+            </a>
+            <a class="game-link" id="bd_2">
+              <div class="game-card">
+                <img src="../bd_2.png" alt="শিশুদের জন্য আদম (আ:) এর কাহিনী" class="game-thumbnail" />
+                <div class="game-title">শিশুদের জন্য আদম (আ:) এর কাহিনী</div>
+              </div>
+            </a>
+            <a class="game-link" id="bd_3">
+              <div class="game-card">
+                <img src="../bd_3.png" alt="মাআল মুস্তফা" class="game-thumbnail" />
+                <div class="game-title">মাআল মুস্তফা</div>
+              </div>
+            </a>
+          </div>
         </div>
       </div>
     </div>
