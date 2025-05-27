@@ -13,6 +13,12 @@ def create_thumbnails():
             # Get the filename without extension
             filename = os.path.splitext(os.path.basename(pdf_path))[0]
             
+            # Check if thumbnail already exists
+            output_path = f'{filename}.png'
+            if os.path.exists(output_path):
+                print(f'Thumbnail already exists for {filename}, skipping...')
+                continue
+            
             # Convert first page of PDF to image
             images = convert_from_path(pdf_path, first_page=1, last_page=1)
             
@@ -24,7 +30,6 @@ def create_thumbnails():
                 thumbnail = first_page.resize((200, 200), Image.Resampling.LANCZOS)
                 
                 # Save as PNG in project root
-                output_path = f'{filename}.png'
                 thumbnail.save(output_path, 'PNG')
                 print(f'Created thumbnail for {filename}')
             
