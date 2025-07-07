@@ -33,6 +33,7 @@ function getQueryParam(param) {
 
 // Function to initialize flipbook with a specific PDF
 function initFlipbook(elementId, pdfUrl, customConfig = {}, showAlert = false) {
+    console.log("initFlipbook", elementId, pdfUrl, customConfig, showAlert);
     const isPremiumPurchased = getQueryParam("isPremiumPurchased") || "false";
     const isWeb = getQueryParam("isWeb") || "true";
     const allowedGames = ['Who is Allah?'];
