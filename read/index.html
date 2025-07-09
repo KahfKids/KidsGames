@@ -125,7 +125,7 @@
   <script src="js/flipbook.min.js"></script>
   <script src="js/flipbook-init.js"></script>
 
-                          <script type="text/javascript">
+                                      <script type="text/javascript">
     $(document).ready(function () {
         initFlipbook('book121', 'pdf/121.pdf');
         initFlipbook('book601', 'pdf/601.pdf');
@@ -181,6 +181,28 @@
         initFlipbook('islamicstudiestb1', 'pdf/islamicstudies_tb1.pdf');
         initFlipbook('islamicstudiestb2', 'pdf/islamicstudies_tb2.pdf');
         initFlipbook('islamicstudiestb3', 'pdf/islamicstudies_tb3.pdf');
+        initFlipbook('premium-Allahmadeeverything', 'pdf/Allah_made_everything.pdf');
+        initFlipbook('premium-Allahmademespecial', 'pdf/Allah_made_me_special.pdf');
+        initFlipbook('premium-IloveAllaheBookPremiumFinal', 'pdf/I_love_Allah_eBook_Premium_Final.pdf');
+
+        $(`#premium-Allahmadeeverything`).click(function () {
+          const isPremiumPurchased = getQueryParam("isPremiumPurchased") || "false";
+          if (isPremiumPurchased === "false") {
+            initFlipbook('premium-Allahmadeeverything', 'pdf/Allah_made_everything.pdf', {}, true);
+          }
+        });
+        $(`#premium-Allahmademespecial`).click(function () {
+          const isPremiumPurchased = getQueryParam("isPremiumPurchased") || "false";
+          if (isPremiumPurchased === "false") {
+            initFlipbook('premium-Allahmademespecial', 'pdf/Allah_made_me_special.pdf', {}, true);
+          }
+        });
+        $(`#premium-IloveAllaheBookPremiumFinal`).click(function () {
+          const isPremiumPurchased = getQueryParam("isPremiumPurchased") || "false";
+          if (isPremiumPurchased === "false") {
+            initFlipbook('premium-IloveAllaheBookPremiumFinal', 'pdf/I_love_Allah_eBook_Premium_Final.pdf', {}, true);
+          }
+        });
     });
   </script>
       <style>
@@ -279,14 +301,29 @@
       .games-scroll {
         display: flex;
         overflow-x: auto;
-        padding: 0 24px;
+        padding: 0 24px 8px 24px;
         gap: 16px;
-        scrollbar-width: none; /* Firefox */
-        -ms-overflow-style: none; /* IE and Edge */
+        scrollbar-width: thin; /* Firefox */
+        scrollbar-color: rgba(79, 57, 26, 0.3) transparent; /* Firefox */
       }
 
       .games-scroll::-webkit-scrollbar {
-        display: none; /* Chrome, Safari, Opera */
+        height: 6px;
+      }
+
+      .games-scroll::-webkit-scrollbar-track {
+        background: rgba(79, 57, 26, 0.1);
+        border-radius: 3px;
+      }
+
+      .games-scroll::-webkit-scrollbar-thumb {
+        background: rgba(79, 57, 26, 0.3);
+        border-radius: 3px;
+        transition: background 0.2s ease;
+      }
+
+      .games-scroll::-webkit-scrollbar-thumb:hover {
+        background: rgba(79, 57, 26, 0.5);
       }
 
       .game-link {
@@ -934,6 +971,33 @@
               <div class="game-card">
                 <img
                   src="../islamicstudies_tb3.png"
+                  alt="Islamic"
+                  class="game-thumbnail"
+                />
+              </div>
+            </a>
+            <a class="game-link premium-game" id="premium-Allahmadeeverything">
+              <div class="game-card">
+                <img
+                  src="../Allah_made_everything.png"
+                  alt="Islamic"
+                  class="game-thumbnail"
+                />
+              </div>
+            </a>
+            <a class="game-link premium-game" id="premium-Allahmademespecial">
+              <div class="game-card">
+                <img
+                  src="../Allah_made_me_special.png"
+                  alt="Islamic"
+                  class="game-thumbnail"
+                />
+              </div>
+            </a>
+            <a class="game-link premium-game" id="premium-IloveAllaheBookPremiumFinal">
+              <div class="game-card">
+                <img
+                  src="../I_love_Allah_eBook_Premium_Final.png"
                   alt="Islamic"
                   class="game-thumbnail"
                 />

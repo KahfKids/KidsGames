@@ -287,7 +287,7 @@ class BookUpdater:
         unique_id = f"{safe_id}-{url_hash}"
         return unique_id
     
-    def generate_safe_html_id(self, filename):
+    def generate_safe_html_id(self, filename, is_premium=False):
         """Generate a safe HTML ID by removing all special characters"""
         # Remove all special characters except letters and numbers
         safe_id = re.sub(r'[^a-zA-Z0-9]', '', filename)
@@ -299,6 +299,10 @@ class BookUpdater:
         # If empty after cleaning, use a default
         if not safe_id:
             safe_id = 'book'
+        
+        # Add premium prefix for premium books
+        if is_premium:
+            safe_id = 'premium-' + safe_id
         
         return safe_id
     
@@ -375,22 +379,24 @@ class BookUpdater:
         total_cleaned = 0
         
         for filename in removed_filenames:
-            # Generate safe HTML ID for this filename
-            safe_html_id = self.generate_safe_html_id(filename)
+            # Generate safe HTML IDs for both regular and premium versions
+            regular_html_id = self.generate_safe_html_id(filename, False)
+            premium_html_id = self.generate_safe_html_id(filename, True)
             
-            # Remove direct initFlipbook calls for this PDF (using safe ID)
-            js_pattern = rf"initFlipbook\('{re.escape(safe_html_id)}', 'pdf/[^']*\.pdf'\);?\s*"
-            js_matches = len(re.findall(js_pattern, cleaned_content, re.MULTILINE))
-            cleaned_content = re.sub(js_pattern, '', cleaned_content, flags=re.MULTILINE)
-            
-            # Remove HTML elements for this PDF (using safe ID)
-            html_pattern = rf'<a class="game-link" id="{re.escape(safe_html_id)}"[^>]*>.*?</a>\s*'
-            html_matches = len(re.findall(html_pattern, cleaned_content, re.DOTALL))
-            cleaned_content = re.sub(html_pattern, '', cleaned_content, flags=re.DOTALL)
-            
-            if js_matches > 0 or html_matches > 0:
-                print(f"  🗑️  Cleaned {filename}: {js_matches} JS + {html_matches} HTML references")
-                total_cleaned += js_matches + html_matches
+            for safe_html_id in [regular_html_id, premium_html_id]:
+                # Remove direct initFlipbook calls for this PDF (using safe ID)
+                js_pattern = rf"initFlipbook\('{re.escape(safe_html_id)}', 'pdf/[^']*\.pdf'\);?\s*"
+                js_matches = len(re.findall(js_pattern, cleaned_content, re.MULTILINE))
+                cleaned_content = re.sub(js_pattern, '', cleaned_content, flags=re.MULTILINE)
+                
+                # Remove HTML elements for this PDF (using safe ID)
+                html_pattern = rf'<a class="game-link[^"]*" id="{re.escape(safe_html_id)}"[^>]*>.*?</a>\s*'
+                html_matches = len(re.findall(html_pattern, cleaned_content, re.DOTALL))
+                cleaned_content = re.sub(html_pattern, '', cleaned_content, flags=re.DOTALL)
+                
+                if js_matches > 0 or html_matches > 0:
+                    print(f"  🗑️  Cleaned {filename} ({safe_html_id}): {js_matches} JS + {html_matches} HTML references")
+                    total_cleaned += js_matches + html_matches
         
         # Write updated HTML if changes were made
         if total_cleaned > 0:
@@ -454,14 +460,21 @@ class BookUpdater:
                 if not parsed_languages:
                     parsed_languages = ['English']
                 
+                # Check if book is premium based on Price column
+                price = book.get('Price', '').strip()
+                is_premium = price.lower() == 'premium'
+                
                 processed_books.append({
                     'id': actual_filename,  # Use actual filename from Drive
                     'title': title,
                     'languages': parsed_languages,
                     'category': book.get('Category', '').strip(),
-                    'sub_category': book.get('Sub-category', '').strip()
+                    'sub_category': book.get('Sub-category', '').strip(),
+                    'is_premium': is_premium,
+                    'price': price
                 })
-                print(f"  📚 {actual_filename} → Languages: {', '.join(parsed_languages)}")
+                premium_status = "Premium" if is_premium else "Free"
+                print(f"  📚 {actual_filename} → Languages: {', '.join(parsed_languages)} → {premium_status}")
                 successful_downloads += 1
             else:
                 failed_downloads += 1
@@ -514,18 +527,30 @@ class BookUpdater:
             safe_html_id = match.group(1)
             # Need to find the corresponding PDF file - this is more complex now
             # since we need to reverse-engineer the original filename from the safe ID
-            # For now, we'll check if any PDF file exists that would generate this safe ID
+            # Check if any PDF file exists that would generate this safe ID (regular or premium)
             found_pdf = False
             for pdf_file in self.pdf_dir.glob('*.pdf'):
-                if self.generate_safe_html_id(pdf_file.stem) == safe_html_id:
+                regular_id = self.generate_safe_html_id(pdf_file.stem, False)
+                premium_id = self.generate_safe_html_id(pdf_file.stem, True)
+                if safe_html_id in [regular_id, premium_id]:
                     found_pdf = True
                     break
             
             if not found_pdf:
-                print(f"🗑️  Removing HTML element for missing PDF: {safe_html_id}")
-                start, end = match.span()
-                cleaned_content = cleaned_content[:start] + cleaned_content[end:]
-                removed_count += 1
+                # Check if this might be a premium ID by checking both regular and premium versions
+                found_any_version = False
+                for pdf_file in self.pdf_dir.glob('*.pdf'):
+                    regular_id = self.generate_safe_html_id(pdf_file.stem, False)
+                    premium_id = self.generate_safe_html_id(pdf_file.stem, True)
+                    if safe_html_id in [regular_id, premium_id]:
+                        found_any_version = True
+                        break
+                
+                if not found_any_version:
+                    print(f"🗑️  Removing HTML element for missing PDF: {safe_html_id}")
+                    start, end = match.span()
+                    cleaned_content = cleaned_content[:start] + cleaned_content[end:]
+                    removed_count += 1
         
         if removed_count > 0:
             print(f"✅ Cleaned up {removed_count} total references to missing PDFs")
@@ -612,16 +637,32 @@ class BookUpdater:
         
         # Generate direct initFlipbook calls for books with PDFs
         js_calls = []
+        premium_click_handlers = []
         processed_ids = set()
+        premium_ids = []
+        
         for book in books_with_pdfs:
-            safe_html_id = self.generate_safe_html_id(book['id'])
+            is_premium = book.get('is_premium', False)
+            safe_html_id = self.generate_safe_html_id(book['id'], is_premium)
             normalized_id = self.normalize_filename(book['id'])  # Still use for file paths
+            
             if safe_html_id not in processed_ids:
-                # Add direct initFlipbook call
+                # ALL books get the global initFlipbook call
                 js_calls.append(f"        initFlipbook('{safe_html_id}', 'pdf/{normalized_id}.pdf');")
+                
+                if is_premium:
+                    # Premium books ALSO get click handler for when premium is not purchased
+                    premium_click_handlers.append(f"""        $(`#{safe_html_id}`).click(function () {{
+          const isPremiumPurchased = getQueryParam("isPremiumPurchased") || "false";
+          if (isPremiumPurchased === "false") {{
+            initFlipbook('{safe_html_id}', 'pdf/{normalized_id}.pdf', {{}}, true);
+          }}
+        }});""")
+                    premium_ids.append(safe_html_id)
+                
                 processed_ids.add(safe_html_id)
         
-        print(f"🔧 Generated {len(processed_ids)} direct initFlipbook calls")
+        print(f"🔧 Generated {len(js_calls)} total initFlipbook calls and {len(premium_click_handlers)} additional premium click handlers")
         
         # Completely clear and replace JavaScript section
         print("🔧 Replacing JavaScript section...")
@@ -640,15 +681,23 @@ class BookUpdater:
                 new_script_content = '  <script type="text/javascript">\n'
                 new_script_content += '    $(document).ready(function () {\n'
                 
+                # Add regular initFlipbook calls
                 if js_calls:
                     new_script_content += '\n'.join(js_calls) + '\n'
+                
+                # Add premium click handlers
+                if premium_click_handlers:
+                    if js_calls:  # Add extra newline if there were regular calls
+                        new_script_content += '\n'
+                    new_script_content += '\n'.join(premium_click_handlers) + '\n'
                 
                 new_script_content += '    });\n'
                 new_script_content += '  </script>'
                 
                 # Combine everything
                 html_content = before_script + new_script_content + after_script
-                print(f"✅ Successfully replaced JavaScript section with {len(js_calls)} initFlipbook calls")
+                total_js_items = len(js_calls) + len(premium_click_handlers)
+                print(f"✅ Successfully replaced JavaScript section with {len(js_calls)} initFlipbook calls + {len(premium_click_handlers)} premium click handlers = {total_js_items} total")
             else:
                 print("❌ Could not find closing script tag")
         else:
@@ -668,8 +717,17 @@ class BookUpdater:
             new_sections = []
             for language, lang_books in books_by_language.items():
                 if lang_books:  # Only add sections that have books
-                    section_html = self.generate_language_section(language, lang_books)
+                    # Separate premium and regular books
+                    regular_books = [book for book in lang_books if not book.get('is_premium', False)]
+                    premium_books = [book for book in lang_books if book.get('is_premium', False)]
+                    
+                    # Combine regular books first, then premium books
+                    ordered_books = regular_books + premium_books
+                    
+                    section_html = self.generate_language_section(language, ordered_books)
                     new_sections.append(section_html)
+                    
+                    print(f"  📂 {language}: {len(regular_books)} free + {len(premium_books)} premium books")
             
             new_content = f'''<div class="content-container">
 {chr(10).join(new_sections)}
@@ -689,9 +747,14 @@ class BookUpdater:
         games_html = []
         
         for book in books:
-            safe_html_id = self.generate_safe_html_id(book['id'])
+            is_premium = book.get('is_premium', False)
+            safe_html_id = self.generate_safe_html_id(book['id'], is_premium)
             normalized_id = self.normalize_filename(book['id'])  # Still use for file paths
-            game_html = f'''            <a class="game-link" id="{safe_html_id}">
+            
+            # Add premium class for styling if needed
+            premium_class = ' premium-game' if is_premium else ''
+            
+            game_html = f'''            <a class="game-link{premium_class}" id="{safe_html_id}">
               <div class="game-card">
                 <img
                   src="../{normalized_id}.png"
