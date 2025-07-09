@@ -36,18 +36,15 @@ function initFlipbook(elementId, pdfUrl, customConfig = {}, showAlert = false) {
     console.log("initFlipbook", elementId, pdfUrl, customConfig, showAlert);
     const isPremiumPurchased = getQueryParam("isPremiumPurchased") || "false";
     const isWeb = getQueryParam("isWeb") || "true";
-    const allowedGames = ['Who is Allah?'];
     
-    // Get the game title from the element
-    const gameTitle = $(`#${elementId}`).find('.game-title').text();
+    // All premium game IDs (automatically include all IDs that start with "premium-")
+    const isPremiumBook = elementId.startsWith("premium-");
     
-    // Hide premium games if not web
-    if (isWeb === "true" && allowedGames.includes(gameTitle)) {
+    // Hide premium games if web and not in allowed games
+    if (isWeb === "true" && isPremiumBook) {
         $(`#${elementId}`).hide();
         return;
     }
-
-
 
     // Merge default config with custom config
     const config = {
@@ -56,21 +53,17 @@ function initFlipbook(elementId, pdfUrl, customConfig = {}, showAlert = false) {
         pdfUrl: pdfUrl
     };
 
-    if (isPremiumPurchased === "true" || !elementId.includes("premium")) {
-      // Initialize flipbook
-      if(!showAlert){
-        $(`#${elementId}`).flipBook(config);
-      }
-
-       
-   } else {
-    if(showAlert){
-        console.log("Premium not purchased");
+    if (isPremiumPurchased === "true" || !isPremiumBook) {
+        // Initialize flipbook for free books or when premium is purchased
+        if (!showAlert) {
+            $(`#${elementId}`).flipBook(config);
+        }
+    } else {
+        // Premium book but premium not purchased
+        if (showAlert) {
+            console.log("Premium not purchased"); // For Flutter app communication
+        }
     }
-
-   }
-
-  
 }
 
 // Example usage:
