@@ -843,8 +843,8 @@ class BookUpdater:
                     else:
                         premium_title = f"{category} (Premium)"
                     
-                    premium_subsection_html = f'''          <div class="category-subsection">
-            <h3 class="category-title">{premium_title}</h3>
+                    premium_subsection_html = f'''          <div class="category-subsection premium">
+            <h3 class="category-title premium">{premium_title}</h3>
             <div class="games-scroll">
 {chr(10).join(premium_games_html)}
             </div>

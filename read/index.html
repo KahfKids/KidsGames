@@ -313,6 +313,14 @@
         margin-bottom: 24px;
       }
 
+      .category-subsection.premium {
+        background: rgba(255, 215, 0, 0.08);
+        border-radius: 12px;
+        padding: 12px 0;
+        margin-bottom: 28px;
+        border: 1px solid rgba(255, 215, 0, 0.2);
+      }
+
       .category-title {
         font-size: 18px;
         font-weight: 600;
@@ -320,6 +328,21 @@
         padding: 0 24px;
         margin-bottom: 12px;
         opacity: 0.8;
+      }
+
+      .category-title.premium {
+        color: #B8860B;
+        font-weight: 650;
+        opacity: 1;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .category-title.premium::before {
+        content: "👑";
+        font-size: 16px;
+        opacity: 0.7;
       }
 
       .games-scroll {
@@ -417,10 +440,21 @@
         position: absolute;
         top: 8px;
         right: 8px;
-        font-size: 20px;
+        font-size: 18px;
         z-index: 3;
-        animation: blink 1.5s infinite;
+        animation: blink 2s infinite;
         pointer-events: none;
+        opacity: 0.8;
+      }
+
+      .premium-game .game-card {
+        border: 2px solid #D4AF37;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2), 0 0 8px rgba(212, 175, 55, 0.15);
+        background: linear-gradient(135deg, #ffffff 0%, #fefcf5 100%);
+      }
+
+      .premium-game:hover .game-card {
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3), 0 0 12px rgba(212, 175, 55, 0.25);
       }
 
       @keyframes blink {
@@ -464,6 +498,10 @@
           padding: 0 32px;
         }
 
+        .category-title.premium::before {
+          font-size: 18px;
+        }
+
         .games-scroll {
           padding: 0 32px;
           gap: 24px;
@@ -482,6 +520,10 @@
         .category-title {
           font-size: 22px;
         }
+
+        .category-title.premium::before {
+          font-size: 20px;
+        }
       }
 
       @media (max-width: 380px) {
@@ -497,6 +539,10 @@
         .category-title {
           font-size: 16px;
           padding: 0 12px;
+        }
+
+        .category-title.premium::before {
+          font-size: 14px;
         }
 
         .games-scroll {
@@ -975,8 +1021,8 @@
             </a>
             </div>
           </div>
-          <div class="category-subsection">
-            <h3 class="category-title">Educational - Islamic (Premium)</h3>
+          <div class="category-subsection premium">
+            <h3 class="category-title premium">Educational - Islamic (Premium)</h3>
             <div class="games-scroll">
             <a class="game-link premium-game" id="premium-Allahmadeeverything">
               <div class="game-card">
