@@ -83,10 +83,24 @@ class BookUpdater:
         return None
     
     def normalize_filename(self, filename):
-        """Normalize filename by replacing spaces with underscores"""
+        """Normalize filename by replacing spaces with underscores and handling long Unicode names"""
         if not filename:
             return filename
-        return filename.replace(' ', '_')
+        
+        # Replace spaces with underscores
+        normalized = filename.replace(' ', '_')
+        
+        # If filename is too long (over 200 characters), truncate it and add a hash
+        if len(normalized) > 200:
+            # Take first 100 characters and add a hash of the full name
+            truncated = normalized[:100]
+            # Remove any trailing incomplete Unicode characters
+            truncated = truncated.encode('utf-8')[:100].decode('utf-8', errors='ignore')
+            # Add hash for uniqueness
+            name_hash = hashlib.md5(normalized.encode()).hexdigest()[:8]
+            normalized = f"{truncated}-{name_hash}"
+        
+        return normalized
     
     def get_pdf_filename_from_drive(self, drive_url):
         """Get the actual PDF filename from Google Drive and normalize it"""
@@ -145,38 +159,39 @@ class BookUpdater:
             print(f"Could not get filename from Drive, using fallback: {fallback_filename}")
             actual_filename = fallback_filename
         
-        # Check if PDF already exists with the normalized name
-        pdf_path = self.pdf_dir / f"{actual_filename}.pdf"
+        # Always normalize the filename for id
+        normalized_id = self.normalize_filename(actual_filename)
+        pdf_path = self.pdf_dir / f"{normalized_id}.pdf"
         if pdf_path.exists():
-            print(f"📄 PDF already exists, skipping download: {actual_filename}.pdf")
-            return True, actual_filename
+            print(f"📄 PDF already exists, skipping download: {normalized_id}.pdf")
+            return True, normalized_id
         
         # Check if there's an old version with spaces and rename it
         original_filename = actual_filename.replace('_', ' ')
         if original_filename != actual_filename:
             old_pdf_path = self.pdf_dir / f"{original_filename}.pdf"
             if old_pdf_path.exists():
-                print(f"🔄 Renaming existing PDF: {original_filename}.pdf → {actual_filename}.pdf")
+                print(f"🔄 Renaming existing PDF: {original_filename}.pdf → {normalized_id}.pdf")
                 old_pdf_path.rename(pdf_path)
                 
                 # Also rename corresponding thumbnail if it exists
                 old_thumbnail_path = Path(f"{original_filename}.png")
-                new_thumbnail_path = Path(f"{actual_filename}.png")
+                new_thumbnail_path = Path(f"{normalized_id}.png")
                 if old_thumbnail_path.exists():
                     old_thumbnail_path.rename(new_thumbnail_path)
-                    print(f"🔄 Renamed thumbnail: {original_filename}.png → {actual_filename}.png")
+                    print(f"🔄 Renamed thumbnail: {original_filename}.png → {normalized_id}.png")
                 
-                return True, actual_filename
+                return True, normalized_id
         
         download_url = f"https://drive.google.com/uc?export=download&id={file_id}"
         
         try:
-            print(f"Downloading: {actual_filename}")
+            print(f"Downloading: {normalized_id}")
             response = requests.get(download_url)
             
             # Handle Google Drive's virus scan warning
             if 'virus scan warning' in response.text.lower() or 'download anyway' in response.text.lower():
-                print(f"  Handling virus scan warning for {actual_filename}")
+                print(f"  Handling virus scan warning for {normalized_id}")
                 
                 # Extract confirm token from the HTML form
                 confirm_token = None
@@ -213,12 +228,12 @@ class BookUpdater:
                     print(f"  Using confirm token: {confirm_token}")
                     response = requests.get(download_url)
                 else:
-                    print(f"  Could not find confirm token for {actual_filename}")
+                    print(f"  Could not find confirm token for {normalized_id}")
                     return False, None
             
             # Check if we got HTML instead of PDF content
             if response.text.startswith('<!DOCTYPE html') or response.text.startswith('<html'):
-                print(f"  Still getting HTML response for {actual_filename}, download may have failed")
+                print(f"  Still getting HTML response for {normalized_id}, download may have failed")
                 # Try one more time with a different approach
                 download_url = f"https://drive.usercontent.google.com/download?id={file_id}&export=download&authuser=0&confirm=t"
                 response = requests.get(download_url)
@@ -227,19 +242,19 @@ class BookUpdater:
             
             # Verify we got binary content (PDF)
             if len(response.content) < 1000 or response.content.startswith(b'<!DOCTYPE html'):
-                print(f"  Warning: Downloaded content for {actual_filename} may not be a valid PDF")
+                print(f"  Warning: Downloaded content for {normalized_id} may not be a valid PDF")
                 return False, None
             
             # Save the PDF
-            pdf_path = self.pdf_dir / f"{actual_filename}.pdf"
+            pdf_path = self.pdf_dir / f"{normalized_id}.pdf"
             with open(pdf_path, 'wb') as f:
                 f.write(response.content)
             
-            print(f"Successfully downloaded: {actual_filename}.pdf ({len(response.content)} bytes)")
-            return True, actual_filename
+            print(f"Successfully downloaded: {normalized_id}.pdf ({len(response.content)} bytes)")
+            return True, normalized_id
             
         except Exception as e:
-            print(f"Error downloading {actual_filename}: {e}")
+            print(f"Error downloading {normalized_id}: {e}")
             return False, None
     
     def clean_pdf_directory(self):
@@ -446,6 +461,8 @@ class BookUpdater:
             # Download PDF
             success, actual_filename = self.download_pdf(drive_url, safe_id)
             if success and actual_filename:
+                # Always normalize the filename for id
+                normalized_id = self.normalize_filename(actual_filename)
                 # Parse and normalize languages
                 parsed_languages = []
                 if languages:
@@ -455,17 +472,14 @@ class BookUpdater:
                             # Normalize language names (capitalize first letter)
                             normalized_lang = lang.capitalize()
                             parsed_languages.append(normalized_lang)
-                
                 # Default to English if no languages specified
                 if not parsed_languages:
                     parsed_languages = ['English']
-                
                 # Check if book is premium based on Price column
                 price = book.get('Price', '').strip()
                 is_premium = price.lower() == 'premium'
-                
                 processed_books.append({
-                    'id': actual_filename,  # Use actual filename from Drive
+                    'id': normalized_id,  # Always use normalized filename for id
                     'title': title,
                     'languages': parsed_languages,
                     'category': book.get('Category', '').strip(),
@@ -474,7 +488,7 @@ class BookUpdater:
                     'price': price
                 })
                 premium_status = "Premium" if is_premium else "Free"
-                print(f"  📚 {actual_filename} → Languages: {', '.join(parsed_languages)} → {premium_status}")
+                print(f"  📚 {normalized_id} → Languages: {', '.join(parsed_languages)} → {premium_status}")
                 successful_downloads += 1
             else:
                 failed_downloads += 1
