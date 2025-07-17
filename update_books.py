@@ -20,6 +20,7 @@ import time
 import hashlib
 from dotenv import load_dotenv
 from pdf_to_thumbnail import create_thumbnails
+import unicodedata
 
 # Load environment variables from .env file
 load_dotenv()
@@ -83,23 +84,25 @@ class BookUpdater:
         return None
     
     def normalize_filename(self, filename):
-        """Normalize filename by replacing spaces with underscores and handling long Unicode names"""
+        """Normalize filename: ASCII-only, safe, short"""
         if not filename:
             return filename
-        
+
+        # Normalize Unicode characters to closest ASCII (e.g., বাংলা → bangla)
+        normalized = unicodedata.normalize('NFKD', filename).encode('ascii', 'ignore').decode('ascii')
+
         # Replace spaces with underscores
-        normalized = filename.replace(' ', '_')
-        
-        # If filename is too long (over 200 characters), truncate it and add a hash
-        if len(normalized) > 200:
-            # Take first 100 characters and add a hash of the full name
-            truncated = normalized[:100]
-            # Remove any trailing incomplete Unicode characters
-            truncated = truncated.encode('utf-8')[:100].decode('utf-8', errors='ignore')
-            # Add hash for uniqueness
+        normalized = normalized.replace(' ', '_')
+
+        # Remove any remaining unsafe characters
+        normalized = re.sub(r'[^a-zA-Z0-9_\-]', '', normalized)
+
+        # Limit filename length
+        if len(normalized) > 100:
+            truncated = normalized[:80]
             name_hash = hashlib.md5(normalized.encode()).hexdigest()[:8]
             normalized = f"{truncated}-{name_hash}"
-        
+
         return normalized
     
     def get_pdf_filename_from_drive(self, drive_url):
