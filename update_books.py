@@ -438,7 +438,7 @@ class BookUpdater:
         
         for book in books_data:
             drive_url = book.get('Books', '').strip()
-            title = book.get('Sub-category', '').strip() or book.get('Category', '').strip()
+            title = book.get('Category', '').strip()
             languages = book.get('Language', '').strip()
             
             if not drive_url or not title:
@@ -486,7 +486,6 @@ class BookUpdater:
                     'title': title,
                     'languages': parsed_languages,
                     'category': book.get('Category', '').strip(),
-                    'sub_category': book.get('Sub-category', '').strip(),
                     'is_premium': is_premium,
                     'price': price
                 })
@@ -637,44 +636,41 @@ class BookUpdater:
         # Clean up ALL existing JavaScript content before adding new ones
         html_content = self.cleanup_all_javascript(html_content)
         
-        # Group books by language -> category -> subcategory -> premium status
+        # Group books by language -> category (for regular books) and premium (separate)
         books_by_language = {}
         for book in books_with_pdfs:
             print(f"📖 Processing {book['id']} with languages: {book['languages']}")
             category = book.get('category', '').strip() or 'General'
-            sub_category = book.get('sub_category', '').strip() or 'General'
             is_premium = book.get('is_premium', False)
             
             for lang in book['languages']:
                 if lang not in books_by_language:
-                    books_by_language[lang] = {}
+                    books_by_language[lang] = {'categories': {}, 'premium': []}
                     print(f"  🆕 Created new language section: {lang}")
                 
-                if category not in books_by_language[lang]:
-                    books_by_language[lang][category] = {}
-                    print(f"    🆕 Created category: {category}")
-                
-                if sub_category not in books_by_language[lang][category]:
-                    books_by_language[lang][category][sub_category] = {'regular': [], 'premium': []}
-                    print(f"      🆕 Created subcategory: {sub_category}")
-                
-                # Add to appropriate list based on premium status
                 if is_premium:
-                    books_by_language[lang][category][sub_category]['premium'].append(book)
-                    print(f"  ➕ Added {book['id']} to {lang} > {category} > {sub_category} > Premium")
+                    # Premium books go to separate premium section (no category)
+                    books_by_language[lang]['premium'].append(book)
+                    print(f"  ➕ Added {book['id']} to {lang} > Premium")
                 else:
-                    books_by_language[lang][category][sub_category]['regular'].append(book)
-                    print(f"  ➕ Added {book['id']} to {lang} > {category} > {sub_category} > Regular")
+                    # Regular books go to categories
+                    if category not in books_by_language[lang]['categories']:
+                        books_by_language[lang]['categories'][category] = []
+                        print(f"    🆕 Created category: {category}")
+                    
+                    books_by_language[lang]['categories'][category].append(book)
+                    print(f"  ➕ Added {book['id']} to {lang} > {category}")
         
-        print(f"\n📊 Book Organization by Language > Category > Subcategory:")
-        for lang, categories in books_by_language.items():
+        print(f"\n📊 Book Organization by Language:")
+        for lang, structure in books_by_language.items():
             total_books = 0
-            for category, subcategories in categories.items():
-                for subcategory, book_types in subcategories.items():
-                    regular_count = len(book_types['regular'])
-                    premium_count = len(book_types['premium'])
-                    total_books += regular_count + premium_count
-                    print(f"  {lang} > {category} > {subcategory}: {regular_count} regular + {premium_count} premium")
+            for category, books in structure['categories'].items():
+                total_books += len(books)
+                print(f"  {lang} > {category}: {len(books)} books")
+            premium_count = len(structure['premium'])
+            total_books += premium_count
+            if premium_count > 0:
+                print(f"  {lang} > Premium: {premium_count} books")
             print(f"  📚 Total for {lang}: {total_books} books")
         
         # Generate direct initFlipbook calls for books with PDFs
@@ -685,11 +681,12 @@ class BookUpdater:
         
         # Flatten the nested structure to process all books
         all_books_flattened = []
-        for lang, categories in books_by_language.items():
-            for category, subcategories in categories.items():
-                for subcategory, book_types in subcategories.items():
-                    all_books_flattened.extend(book_types['regular'])
-                    all_books_flattened.extend(book_types['premium'])
+        for lang, structure in books_by_language.items():
+            # Add regular books from categories
+            for category, books in structure['categories'].items():
+                all_books_flattened.extend(books)
+            # Add premium books
+            all_books_flattened.extend(structure['premium'])
         
         for book in all_books_flattened:
             is_premium = book.get('is_premium', False)
@@ -765,18 +762,14 @@ class BookUpdater:
             
             # Build new content with language sections (only for languages with books)
             new_sections = []
-            for language, categories in books_by_language.items():
-                if categories:  # Only add sections that have books
-                    section_html = self.generate_language_section(language, categories)
+            for language, structure in books_by_language.items():
+                if structure['categories'] or structure['premium']:  # Only add sections that have books
+                    section_html = self.generate_language_section(language, structure)
                     new_sections.append(section_html)
                     
                     # Count books for logging
-                    total_regular = 0
-                    total_premium = 0
-                    for category, subcategories in categories.items():
-                        for subcategory, book_types in subcategories.items():
-                            total_regular += len(book_types['regular'])
-                            total_premium += len(book_types['premium'])
+                    total_regular = sum(len(books) for books in structure['categories'].values())
+                    total_premium = len(structure['premium'])
                     
                     print(f"  📂 {language}: {total_regular} free + {total_premium} premium books")
             
@@ -793,25 +786,23 @@ class BookUpdater:
         print(f"✅ Updated HTML file with {len(books_with_pdfs)} books that have PDF files")
         print(f"📊 Language sections: {list(books_by_language.keys())}")
     
-    def generate_language_section(self, language, categories):
-        """Generate HTML for a language section with category/subcategory subsections"""
+    def generate_language_section(self, language, structure):
+        """Generate HTML for a language section with categories and premium books"""
         all_subsections = []
         
         # Add main language title
         language_header = f'''        <div class="language-section">
           <h2 class="language-title">{language}</h2>'''
         
-        # Generate subsections for each category/subcategory combination
-        for category, subcategories in categories.items():
-            for subcategory, book_types in subcategories.items():
-                # Generate regular books subsection if there are any
-                if book_types['regular']:
-                    regular_games_html = []
-                    for book in book_types['regular']:
-                        safe_html_id = self.generate_safe_html_id(book['id'], False)
-                        normalized_id = self.normalize_filename(book['id'])
-                        
-                        game_html = f'''            <a class="game-link" id="{safe_html_id}">
+        # Generate subsections for each category
+        for category, books in structure['categories'].items():
+            if books:
+                regular_games_html = []
+                for book in books:
+                    safe_html_id = self.generate_safe_html_id(book['id'], False)
+                    normalized_id = self.normalize_filename(book['id'])
+                    
+                    game_html = f'''            <a class="game-link" id="{safe_html_id}">
               <div class="game-card">
                 <img
                   src="../{normalized_id}.png"
@@ -820,30 +811,30 @@ class BookUpdater:
                 />
               </div>
             </a>'''
-                        regular_games_html.append(game_html)
-                    
-                    # Create title for this subsection
-                    if subcategory != category and subcategory != 'General':
-                        subsection_title = f"{category} - {subcategory}"
-                    else:
-                        subsection_title = category
-                    
-                    subsection_html = f'''          <div class="category-subsection">
+                    regular_games_html.append(game_html)
+                
+                # Create title for this subsection
+                if category != 'General':
+                    subsection_title = category
+                else:
+                    subsection_title = 'General'
+                
+                subsection_html = f'''          <div class="category-subsection">
             <h3 class="category-title">{subsection_title}</h3>
             <div class="games-scroll">
 {chr(10).join(regular_games_html)}
             </div>
           </div>'''
-                    all_subsections.append(subsection_html)
+                all_subsections.append(subsection_html)
+        
+        # Generate premium books subsection if there are any
+        if structure['premium']:
+            premium_games_html = []
+            for book in structure['premium']:
+                safe_html_id = self.generate_safe_html_id(book['id'], True)
+                normalized_id = self.normalize_filename(book['id'])
                 
-                # Generate premium books subsection if there are any
-                if book_types['premium']:
-                    premium_games_html = []
-                    for book in book_types['premium']:
-                        safe_html_id = self.generate_safe_html_id(book['id'], True)
-                        normalized_id = self.normalize_filename(book['id'])
-                        
-                        game_html = f'''            <a class="game-link premium-game" id="{safe_html_id}">
+                game_html = f'''            <a class="game-link premium-game" id="{safe_html_id}">
               <div class="game-card">
                 <img
                   src="../{normalized_id}.png"
@@ -852,21 +843,18 @@ class BookUpdater:
                 />
               </div>
             </a>'''
-                        premium_games_html.append(game_html)
-                    
-                    # Create title for premium subsection
-                    if subcategory != category and subcategory != 'General':
-                        premium_title = f"{category} - {subcategory} (Premium)"
-                    else:
-                        premium_title = f"{category} (Premium)"
-                    
-                    premium_subsection_html = f'''          <div class="category-subsection premium">
+                premium_games_html.append(game_html)
+            
+            # Create title for premium subsection
+            premium_title = 'Premium'
+            
+            premium_subsection_html = f'''          <div class="category-subsection premium">
             <h3 class="category-title premium">{premium_title}</h3>
             <div class="games-scroll">
 {chr(10).join(premium_games_html)}
             </div>
           </div>'''
-                    all_subsections.append(premium_subsection_html)
+            all_subsections.append(premium_subsection_html)
         
         # Combine header with all subsections and close the language section
         complete_section = language_header + '\n' + '\n'.join(all_subsections) + '\n        </div>'
