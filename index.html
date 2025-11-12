@@ -19,7 +19,7 @@
     <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
 
     <!-- PWA Manifest -->
-    <link rel="manifest" href="/manifest.json" />
+    <link rel="manifest" href="/KidsGames/manifest.json" />
 
     <!-- Favicon -->
     <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32x32.png" />
@@ -138,7 +138,7 @@
       // PWA Service Worker Registration
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js')
+          navigator.serviceWorker.register('/KidsGames/sw.js')
             .then(registration => {
               console.log('[PWA] Service Worker registered successfully:', registration.scope);
 

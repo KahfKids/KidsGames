@@ -4,11 +4,11 @@
     <meta charset="utf-8" />
     <title>2048</title>
     <!-- KidsGames PWA Support -->
-    <link rel="manifest" href="/manifest.json" />
+    <link rel="manifest" href="/KidsGames/manifest.json" />
     <meta name="theme-color" content="#4f391a" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+    <link rel="apple-touch-icon" href="/KidsGames/icons/icon-192x192.png" />
 
     <link href="style/main.css" rel="stylesheet" type="text/css" />
     <link rel="shortcut icon" href="favicon.ico" />
@@ -111,7 +111,7 @@
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {
           navigator.serviceWorker
-            .register("/sw.js")
+            .register("/KidsGames/sw.js")
             .then((registration) => {
               console.log("[PWA] Service Worker registered for free game");
             })

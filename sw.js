@@ -5,19 +5,19 @@ const PREMIUM_CACHE = 'kidsgames-premium-v1.0.1';
 
 // Core files that should be cached immediately
 const STATIC_ASSETS = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/sw.js',
+  '/KidsGames/',
+  '/KidsGames/index.html',
+  '/KidsGames/manifest.json',
+  '/KidsGames/sw.js',
   // CSS files will be added dynamically
   // JS files will be added dynamically
 ];
 
 // Game directories to cache on-demand
 const GAME_PATHS = [
-  '/games/',
-  '/premium-games/',
-  '/read/'
+  '/KidsGames/games/',
+  '/KidsGames/premium-games/',
+  '/KidsGames/read/'
 ];
 
 // Premium games secret pattern
@@ -94,18 +94,18 @@ self.addEventListener('fetch', (event) => {
 // Determine if request is for game assets
 function isGameAsset(pathname) {
   return GAME_PATHS.some(gamePath => pathname.startsWith(gamePath)) ||
-         pathname.match(/\.(js|css|png|jpg|jpeg|gif|svg|webp|ico|woff2?)$/i);
+         (pathname.startsWith('/KidsGames/') && pathname.match(/\.(js|css|png|jpg|jpeg|gif|svg|webp|ico|woff2?)$/i));
 }
 
 // Determine if request is for premium game assets
 function isPremiumGameAsset(pathname) {
-  return pathname.includes('/premium-games/') ||
-         pathname.match(/premium-games/i);
+  return pathname.includes('/KidsGames/premium-games/') ||
+         pathname.match(/KidsGames.*premium-games/i);
 }
 
 // Determine appropriate cache for game assets
 function getGameCache(url) {
-  if (url.pathname.includes('/premium-games/')) {
+  if (url.pathname.includes('/KidsGames/premium-games/')) {
     return PREMIUM_CACHE;
   }
   return GAMES_CACHE;
@@ -276,11 +276,11 @@ self.addEventListener('push', (event) => {
     const data = event.data.json();
     const options = {
       body: data.body,
-      icon: '/icons/icon-192x192.png',
-      badge: '/icons/badge-72x72.png',
+      icon: '/KidsGames/icons/icon-192x192.png',
+      badge: '/KidsGames/icons/badge-72x72.png',
       tag: 'kidsgames-update',
       data: {
-        url: data.url || '/'
+        url: data.url || '/KidsGames/'
       }
     };
 
