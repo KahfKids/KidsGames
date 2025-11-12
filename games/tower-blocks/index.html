@@ -9,6 +9,13 @@
     <!-- partial:index.partial.html -->
     <meta name="viewport" content="width=device-width,user-scalable=no" />
 
+    <!-- KidsGames PWA Support -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#4f391a" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+
     <div id="container">
       <div id="game"></div>
       <div id="score">0</div>
@@ -29,5 +36,20 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r83/three.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/latest/TweenMax.min.js"></script>
     <script src="./script.js"></script>
+
+    <!-- KidsGames PWA Service Worker -->
+    <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then(registration => {
+            console.log('[PWA] Service Worker registered for free game');
+          })
+          .catch(error => {
+            console.log('[PWA] Service Worker registration failed:', error);
+          });
+      });
+    }
+    </script>
   </body>
 </html>

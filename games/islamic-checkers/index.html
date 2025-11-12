@@ -5,6 +5,12 @@
       name="viewport"
       content="width=device-width, target-densitydpi=160dpi, initial-scale=1.0, maximum-scale=1, user-scalable=no, minimal-ui"
     />
+    <!-- KidsGames PWA Support -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#4f391a" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
     <meta charset="UTF-8" />
     <title>Islamic Pattern Checkers</title>
     <style>
@@ -482,6 +488,22 @@
 
       // Initialize the game
       initializeBoard();
+    </script>
+
+    <!-- KidsGames PWA Service Worker -->
+    <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker
+            .register("/sw.js")
+            .then((registration) => {
+              console.log("[PWA] Service Worker registered for free game");
+            })
+            .catch((error) => {
+              console.log("[PWA] Service Worker registration failed:", error);
+            });
+        });
+      }
     </script>
   </body>
 </html>

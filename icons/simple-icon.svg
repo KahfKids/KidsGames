@@ -1,0 +1,40 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="512" height="512" rx="80" fill="#4f391a"/>
+
+  <!-- Game Controller Symbol -->
+  <g transform="translate(256, 230)">
+    <!-- Main body -->
+    <rect x="-120" y="-40" width="240" height="80" rx="20" fill="#ffffff"/>
+
+    <!-- D-Pad -->
+    <g transform="translate(-80, 0)">
+      <rect x="-15" y="-30" width="30" height="60" fill="#4f391a"/>
+      <rect x="-30" y="-15" width="60" height="30" fill="#4f391a"/>
+    </g>
+
+    <!-- Action buttons -->
+    <g transform="translate(80, 0)">
+      <circle cx="0" cy="-20" r="8" fill="#ff6b6b"/>
+      <circle cx="-20" cy="0" r="8" fill="#4CAF50"/>
+      <circle cx="20" cy="0" r="8" fill="#2196F3"/>
+      <circle cx="0" cy="20" r="8" fill="#FF9800"/>
+    </g>
+
+    <!-- Center buttons -->
+    <rect x="-8" y="-5" width="16" height="10" rx="3" fill="#9C27B0"/>
+    <circle cx="0" cy="25" r="3" fill="#795548"/>
+  </g>
+
+  <!-- Text -->
+  <text x="256" y="320" font-family="Arial Black, sans-serif" font-size="42" font-weight="bold" text-anchor="middle" fill="#ffffff">KIDS</text>
+  <text x="256" y="360" font-family="Arial, sans-serif" font-size="32" font-weight="bold" text-anchor="middle" fill="#ff6b6b">GAMES</text>
+
+  <!-- Decorative elements -->
+  <g opacity="0.3">
+    <circle cx="100" cy="100" r="15" fill="#ffffff"/>
+    <rect x="390" y="85" width="30" height="30" rx="5" fill="#ffffff"/>
+    <polygon points="100,410 115,440 85,440" fill="#ffffff"/>
+    <circle cx="410" cy="420" r="12" fill="#ffffff"/>
+  </g>
+</svg>

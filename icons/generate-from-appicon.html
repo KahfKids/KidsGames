@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Generate PWA Icons from App Icon</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #ece4d9;
+            color: #4f391a;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .container {
+            background: #eed9bb;
+            border: 2px solid #4f391a;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .icon-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .icon-item {
+            background: white;
+            border: 2px solid #4f391a;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+        canvas {
+            border: 1px solid #4f391a;
+            border-radius: 8px;
+            margin: 10px 0;
+            max-width: 100%;
+            height: auto;
+            background: white;
+        }
+        button {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 5px;
+        }
+        button:hover {
+            background: #ff5252;
+        }
+        .download-all {
+            background: #4CAF50;
+            font-size: 18px;
+            padding: 12px 24px;
+        }
+        .download-all:hover {
+            background: #45a049;
+        }
+        .file-input {
+            margin: 20px 0;
+            padding: 15px;
+            background: white;
+            border: 2px dashed #4f391a;
+            border-radius: 8px;
+        }
+        .preview {
+            max-width: 300px;
+            margin: 20px auto;
+            text-align: center;
+        }
+        .preview img {
+            max-width: 100%;
+            border-radius: 12px;
+            border: 2px solid #4f391a;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 KidsGames PWA Icon Generator</h1>
+        <p>Upload your appicon.png to generate all required PWA icons automatically</p>
+
+        <div class="file-input">
+            <input type="file" id="fileInput" accept="image/png">
+            <p>Upload appicon.png (minimum 512x512 recommended)</p>
+        </div>
+
+        <div class="preview" id="preview" style="display: none;">
+            <h3>Original Image</h3>
+            <img id="originalImage" alt="App icon">
+        </div>
+
+        <button class="download-all" onclick="generateIcons()" id="generateBtn" style="display: none;">
+            ⚡ Generate All PWA Icons
+        </button>
+    </div>
+
+    <div class="icon-grid" id="iconContainer"></div>
+
+    <script>
+        let originalImageData = null;
+
+        // Icon configurations
+        const iconConfigs = [
+            // Standard icons
+            { size: 16, name: 'icon-16x16.png' },
+            { size: 32, name: 'icon-32x32.png' },
+            { size: 70, name: 'icon-70x70.png' },
+            { size: 72, name: 'icon-72x72.png' },
+            { size: 96, name: 'icon-96x96.png' },
+            { size: 114, name: 'icon-114x114.png' },
+            { size: 120, name: 'icon-120x120.png' },
+            { size: 128, name: 'icon-128x128.png' },
+            { size: 144, name: 'icon-144x144.png' },
+            { size: 150, name: 'icon-150x150.png' },
+            { size: 152, name: 'icon-152x152.png' },
+            { size: 167, name: 'icon-167x167.png' },
+            { size: 180, name: 'icon-180x180.png' },
+            { size: 192, name: 'icon-192x192.png' },
+            { size: 194, name: 'icon-194x194.png' },
+            { size: 195, name: 'icon-195x195.png' },
+            { size: 196, name: 'icon-196x196.png' },
+            { size: 216, name: 'icon-216x216.png' },
+            { size: 256, name: 'icon-256x256.png' },
+            { size: 310, name: 'icon-310x310.png' },
+            { size: 320, name: 'icon-320x320.png' },
+            { size: 384, name: 'icon-384x384.png' },
+            { size: 400, name: 'icon-400x400.png' },
+            { size: 512, name: 'icon-512x512.png' },
+            { size: 1024, name: 'icon-1024x1024.png' },
+
+            // Maskable icons (with padding for safe area)
+            { size: 192, name: 'maskable-icon-192x192.png', maskable: true },
+            { size: 512, name: 'maskable-icon-512x512.png', maskable: true },
+
+            // Monochrome icons
+            { size: 192, name: 'monochrome-icon-192x192.png', monochrome: true },
+            { size: 512, name: 'monochrome-icon-512x512.png', monochrome: true },
+
+            // Shortcut icons
+            { size: 96, name: 'shortcut-2048.png', shortcut: '2048' },
+            { size: 96, name: 'shortcut-quran.png', shortcut: 'quran' },
+            { size: 96, name: 'shortcut-hextris.png', shortcut: 'hextris' }
+        ];
+
+        // File input handler
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file && file.type === 'image/png') {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    originalImageData = event.target.result;
+                    document.getElementById('originalImage').src = originalImageData;
+                    document.getElementById('preview').style.display = 'block';
+                    document.getElementById('generateBtn').style.display = 'inline-block';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        function generateIcons() {
+            if (!originalImageData) {
+                alert('Please upload an image first');
+                return;
+            }
+
+            const img = new Image();
+            img.onload = function() {
+                const container = document.getElementById('iconContainer');
+                container.innerHTML = '';
+
+                iconConfigs.forEach((config, index) => {
+                    setTimeout(() => {
+                        const canvas = createIconFromImage(img, config);
+                        displayIcon(canvas, config, container);
+                    }, index * 50); // Stagger generation to prevent browser freezing
+                });
+            };
+            img.src = originalImageData;
+        }
+
+        function createIconFromImage(img, config) {
+            const canvas = document.createElement('canvas');
+            const size = config.size;
+
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+
+            if (config.maskable) {
+                // Maskable icon - fill entire area with background color
+                ctx.fillStyle = '#4f391a';
+                ctx.fillRect(0, 0, size, size);
+
+                // Add safe area indicator (subtle)
+                const safeAreaSize = size * 0.8;
+                const safeAreaX = (size - safeAreaSize) / 2;
+                const safeAreaY = (size - safeAreaSize) / 2;
+
+                // Draw image in safe area
+                ctx.drawImage(img, safeAreaX, safeAreaY, safeAreaSize, safeAreaSize);
+            } else if (config.monochrome) {
+                // Monochrome icon - convert to grayscale
+                ctx.fillStyle = '#000000';
+                ctx.fillRect(0, 0, size, size);
+
+                // Draw grayscale version
+                ctx.filter = 'grayscale(100%)';
+                ctx.drawImage(img, 0, 0, size, size);
+                ctx.filter = 'none';
+            } else if (config.shortcut) {
+                // Shortcut icon with game overlay
+                ctx.fillStyle = '#4f391a';
+                ctx.fillRect(0, 0, size, size);
+
+                // Draw scaled image
+                ctx.drawImage(img, 0, 0, size, size);
+
+                // Add shortcut label
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                ctx.fillRect(0, size * 0.7, size, size * 0.3);
+
+                ctx.fillStyle = '#4f391a';
+                ctx.font = `bold ${size * 0.15}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.fillText(config.shortcut.toUpperCase(), size / 2, size * 0.88);
+            } else {
+                // Standard icon with rounded corners
+                // Create rounded rectangle clipping
+                ctx.beginPath();
+                ctx.roundRect(0, 0, size, size, size * 0.15);
+                ctx.closePath();
+                ctx.clip();
+
+                // Draw image
+                ctx.drawImage(img, 0, 0, size, size);
+            }
+
+            return canvas;
+        }
+
+        function displayIcon(canvas, config, container) {
+            const item = document.createElement('div');
+            item.className = 'icon-item';
+
+            const title = document.createElement('h4');
+            title.textContent = config.name;
+            if (config.maskable) title.textContent += ' (Maskable)';
+            if (config.monochrome) title.textContent += ' (Monochrome)';
+            if (config.shortcut) title.textContent += ` (${config.shortcut})`;
+            item.appendChild(title);
+
+            const dimensions = document.createElement('div');
+            dimensions.style.fontSize = '12px';
+            dimensions.style.color = '#666';
+            dimensions.textContent = `${config.size}×${config.size}px`;
+            item.appendChild(dimensions);
+
+            canvas.style.width = '100px';
+            canvas.style.height = '100px';
+            item.appendChild(canvas);
+
+            const downloadBtn = document.createElement('button');
+            downloadBtn.textContent = `Download ${config.name}`;
+            downloadBtn.onclick = () => downloadCanvas(canvas, config.name);
+            item.appendChild(downloadBtn);
+
+            container.appendChild(item);
+        }
+
+        function downloadCanvas(canvas, filename) {
+            canvas.toBlob(blob => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 'image/png');
+        }
+
+        function downloadAllIcons() {
+            if (!originalImageData) {
+                alert('Please generate icons first');
+                return;
+            }
+
+            const img = new Image();
+            img.onload = function() {
+                iconConfigs.forEach((config, index) => {
+                    setTimeout(() => {
+                        const canvas = createIconFromImage(img, config);
+                        downloadCanvas(canvas, config.name);
+                    }, index * 100);
+                });
+            };
+            img.src = originalImageData;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>KidsGames Icon Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #ece4d9;
+            color: #4f391a;
+        }
+        .icon-preview {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .icon-item {
+            text-align: center;
+            padding: 15px;
+            background: #eed9bb;
+            border-radius: 12px;
+            border: 2px solid #4f391a;
+        }
+        canvas {
+            border: 1px solid #4f391a;
+            background: white;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        .download-btn {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .download-btn:hover {
+            background: #ff5252;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎮 KidsGames Icon Generator</h1>
+    <p>This tool generates PWA icons for the KidsGames application.</p>
+
+    <div class="icon-preview" id="iconContainer"></div>
+
+    <script>
+        const iconSizes = [
+            { size: 16, name: 'icon-16x16.png' },
+            { size: 32, name: 'icon-32x32.png' },
+            { size: 72, name: 'icon-72x72.png' },
+            { size: 96, name: 'icon-96x96.png' },
+            { size: 128, name: 'icon-128x128.png' },
+            { size: 144, name: 'icon-144x144.png' },
+            { size: 152, name: 'icon-152x152.png' },
+            { size: 192, name: 'icon-192x192.png' },
+            { size: 384, name: 'icon-384x384.png' },
+            { size: 512, name: 'icon-512x512.png' }
+        ];
+
+        function createIcon(size, name, isMaskable = false, isMonochrome = false) {
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+
+            // Background
+            if (isMaskable) {
+                // For maskable icons, use a solid color that extends to edges
+                ctx.fillStyle = '#4f391a';
+                ctx.fillRect(0, 0, size, size);
+            } else if (isMonochrome) {
+                // For monochrome icons, use white with transparency
+                ctx.fillStyle = '#000000';
+                ctx.fillRect(0, 0, size, size);
+            } else {
+                // Regular icon with rounded corners
+                const gradient = ctx.createLinearGradient(0, 0, size, size);
+                gradient.addColorStop(0, '#ece4d9');
+                gradient.addColorStop(1, '#eed9bb');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, size, size);
+
+                // Rounded corners effect
+                ctx.globalCompositeOperation = 'destination-in';
+                roundRect(ctx, 0, 0, size, size, size * 0.15);
+                ctx.fill();
+                ctx.globalCompositeOperation = 'source-over';
+            }
+
+            // Draw game controller icon
+            ctx.fillStyle = isMonochrome ? '#ffffff' : '#4f391a';
+            ctx.strokeStyle = isMonochrome ? '#ffffff' : '#4f391a';
+            ctx.lineWidth = Math.max(1, size / 32);
+
+            // Controller body
+            const padding = size * 0.15;
+            const bodyWidth = size * 0.7;
+            const bodyHeight = size * 0.4;
+            const centerX = size / 2;
+            const centerY = size / 2;
+
+            // Draw controller shape
+            ctx.beginPath();
+            ctx.roundRect(centerX - bodyWidth/2, centerY - bodyHeight/2, bodyWidth, bodyHeight, size * 0.1);
+            ctx.fill();
+
+            // Draw D-pad
+            const dpadSize = size * 0.08;
+            const dpadX = centerX - bodyWidth/2 + bodyWidth * 0.25;
+            const dpadY = centerY;
+
+            // D-pad cross
+            ctx.fillRect(dpadX - dpadSize/2, dpadY - dpadSize * 1.5, dpadSize, dpadSize * 3);
+            ctx.fillRect(dpadX - dpadSize * 1.5, dpadY - dpadSize/2, dpadSize * 3, dpadSize);
+
+            // Draw action buttons
+            const buttonSize = size * 0.06;
+            const buttonX = centerX + bodyWidth/2 - bodyWidth * 0.25;
+            const buttonY = centerY;
+
+            // A, B, X, Y buttons
+            ctx.beginPath();
+            ctx.arc(buttonX, buttonY - buttonSize, buttonSize, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.arc(buttonX - buttonSize, buttonY, buttonSize, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.arc(buttonX, buttonY + buttonSize, buttonSize, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.arc(buttonX + buttonSize, buttonY, buttonSize, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Add "KIDS" text for larger icons
+            if (size >= 192) {
+                ctx.font = `bold ${size * 0.08}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.fillText('KIDS', centerX, centerY + bodyHeight/2 + size * 0.08);
+            }
+
+            return canvas;
+        }
+
+        function roundRect(ctx, x, y, width, height, radius) {
+            ctx.beginPath();
+            ctx.moveTo(x + radius, y);
+            ctx.lineTo(x + width - radius, y);
+            ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+            ctx.lineTo(x + width, y + height - radius);
+            ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+            ctx.lineTo(x + radius, y + height);
+            ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+            ctx.lineTo(x, y + radius);
+            ctx.quadraticCurveTo(x, y, x + radius, y);
+            ctx.closePath();
+        }
+
+        function downloadCanvas(canvas, filename) {
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+
+        function createIconElement(iconSpec) {
+            const container = document.createElement('div');
+            container.className = 'icon-item';
+
+            const title = document.createElement('h3');
+            title.textContent = iconSpec.name;
+            container.appendChild(title);
+
+            const canvas = createIcon(iconSpec.size, iconSpec.name, iconSpec.maskable, iconSpec.monochrome);
+            container.appendChild(canvas);
+
+            const downloadBtn = document.createElement('button');
+            downloadBtn.className = 'download-btn';
+            downloadBtn.textContent = `Download ${iconSpec.name}`;
+            downloadBtn.onclick = () => downloadCanvas(canvas, iconSpec.name);
+            container.appendChild(downloadBtn);
+
+            return container;
+        }
+
+        // Generate all icons
+        const container = document.getElementById('iconContainer');
+
+        // Regular icons
+        iconSizes.forEach(iconSpec => {
+            const iconElement = createIconElement(iconSpec);
+            container.appendChild(iconElement);
+        });
+
+        // Maskable icons
+        const maskableSizes = [
+            { size: 192, name: 'maskable-icon-192x192.png', maskable: true },
+            { size: 512, name: 'maskable-icon-512x512.png', maskable: true }
+        ];
+
+        maskableSizes.forEach(iconSpec => {
+            const iconElement = createIconElement(iconSpec);
+            container.appendChild(iconElement);
+        });
+
+        // Monochrome icons
+        const monochromeSizes = [
+            { size: 192, name: 'monochrome-icon-192x192.png', monochrome: true },
+            { size: 512, name: 'monochrome-icon-512x512.png', monochrome: true }
+        ];
+
+        monochromeSizes.forEach(iconSpec => {
+            const iconElement = createIconElement(iconSpec);
+            container.appendChild(iconElement);
+        });
+
+        // Add shortcut icons
+        const shortcuts = [
+            { size: 96, name: 'shortcut-2048.png' },
+            { size: 96, name: 'shortcut-quran.png' },
+            { size: 96, name: 'shortcut-hextris.png' }
+        ];
+
+        shortcuts.forEach(iconSpec => {
+            const iconElement = createIconElement(iconSpec);
+            container.appendChild(iconElement);
+        });
+
+        // Download all button
+        const downloadAllBtn = document.createElement('button');
+        downloadAllBtn.className = 'download-btn';
+        downloadAllBtn.textContent = '⬇️ Download All Icons (Right-click and save each)';
+        downloadAllBtn.style.fontSize = '18px';
+        downloadAllBtn.style.padding = '12px 24px';
+        downloadAllBtn.style.margin = '20px 0';
+        container.parentNode.insertBefore(downloadAllBtn, container);
+    </script>
+</body>
+</html>

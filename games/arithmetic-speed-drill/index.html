@@ -3,6 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- KidsGames PWA Support -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#4f391a" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
     <meta name="theme-color" content="#1f1f1f" />
     <title>Arithmetic Speed Drill</title>
     <link rel="stylesheet" href="style.css" />
@@ -41,5 +48,20 @@
       <ol></ol>
     </section>
     <script src="script.js"></script>
+
+    <!-- KidsGames PWA Service Worker -->
+    <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then(registration => {
+            console.log('[PWA] Service Worker registered for free game');
+          })
+          .catch(error => {
+            console.log('[PWA] Service Worker registration failed:', error);
+          });
+      });
+    }
+    </script>
   </body>
 </html>
