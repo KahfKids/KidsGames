@@ -4,6 +4,12 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Follow the Lights!</title>
+    <!-- KidsGames PWA Support -->
+    <link rel="manifest" href="/KidsGames/manifest.json" />
+    <meta name="theme-color" content="#4f391a" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <link rel="apple-touch-icon" href="/KidsGames/icons/icon-192x192.png" />
     <!-- Tailwind CSS for styling -->
     <link
       href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css"
@@ -359,6 +365,22 @@
 
       // Initial setup when the page loads
       updateScore(); // Display initial score (0)
+    </script>
+
+    <!-- KidsGames PWA Service Worker -->
+    <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker
+            .register("/KidsGames/sw.js")
+            .then((registration) => {
+              console.log("[PWA] Service Worker registered for free game");
+            })
+            .catch((error) => {
+              console.log("[PWA] Service Worker registration failed:", error);
+            });
+        });
+      }
     </script>
   </body>
 </html>

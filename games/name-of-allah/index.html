@@ -4,6 +4,12 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Allah's 99 Names Game</title>
+    <!-- KidsGames PWA Support -->
+    <link rel="manifest" href="/KidsGames/manifest.json" />
+    <meta name="theme-color" content="#4f391a" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <link rel="apple-touch-icon" href="/KidsGames/icons/icon-192x192.png" />
     <!-- Tailwind CSS CDN for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts - Inter for general text, Amatic SC for display, and Noto Naskh Arabic for Arabic script -->
@@ -1178,6 +1184,22 @@
           namesGrid.appendChild(card);
         });
       });
+    </script>
+
+    <!-- KidsGames PWA Service Worker -->
+    <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker
+            .register("/KidsGames/sw.js")
+            .then((registration) => {
+              console.log("[PWA] Service Worker registered for free game");
+            })
+            .catch((error) => {
+              console.log("[PWA] Service Worker registration failed:", error);
+            });
+        });
+      }
     </script>
   </body>
 </html>
