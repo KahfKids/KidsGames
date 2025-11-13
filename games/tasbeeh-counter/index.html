@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Fun Tasbeeh Counter</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@700;900&display=swap"
+      rel="stylesheet"
+    />
+    <!-- Tone.js for sound effects -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+        background: linear-gradient(
+          135deg,
+          #a7e6ff,
+          #6dd5ed,
+          #2193b0
+        ); /* More dynamic blue gradient */
+        min-height: 100vh;
+        max-height: 100vh; /* Prevent content from exceeding viewport height */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.75rem; /* Base padding for very small screens */
+        overflow-x: hidden; /* Prevent horizontal scrolling */
+        overflow-y: auto; /* Allow vertical scrolling only if necessary */
+        /* Ensure content fits in viewport */
+        touch-action: manipulation; /* Optimize for touch */
+      }
+      .tasbeeh-container {
+        background: rgba(
+          255,
+          255,
+          255,
+          0.95
+        ); /* Slightly transparent white for a lighter feel */
+        backdrop-filter: blur(5px); /* Subtle blur effect */
+        border-radius: 2rem; /* Responsive rounded corners */
+        border: 5px solid #4a90e2; /* Thicker, more vibrant blue border */
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2),
+          0 10px 10px -5px rgba(0, 0, 0, 0.08); /* Stronger shadow */
+        width: 95%; /* Responsive width */
+        max-width: 28rem; /* Max width for larger screens */
+        max-height: 95vh; /* Ensure container fits in viewport height */
+        padding: 1.5rem; /* Base padding for small screens */
+        margin: 0 auto; /* Center container */
+        overflow-y: auto; /* Allow scrolling within container if needed */
+      }
+
+      /* Responsive breakpoints */
+      @media (min-width: 380px) {
+        .tasbeeh-container {
+          padding: 2rem;
+          border-radius: 2.25rem;
+          border-width: 6px;
+        }
+      }
+
+      @media (min-width: 768px) {
+        .tasbeeh-container {
+          padding: 2.5rem;
+          border-radius: 2.5rem;
+          max-width: 32rem; /* Slightly larger for tablets */
+        }
+      }
+
+      /* Large screens and desktops */
+      @media (min-width: 1024px) {
+        .tasbeeh-container {
+          max-width: 36rem; /* Larger for desktops */
+          padding: 3rem;
+        }
+        body {
+          padding: 1rem;
+        }
+      }
+
+      /* Extra large screens */
+      @media (min-width: 1280px) {
+        .tasbeeh-container {
+          max-width: 40rem; /* Even larger for big screens */
+          padding: 3.5rem;
+        }
+        body {
+          padding: 1.5rem;
+        }
+      }
+
+      /* Ultra wide screens */
+      @media (min-width: 1536px) {
+        .tasbeeh-container {
+          max-width: 44rem; /* Maximum width for ultra-wide */
+          padding: 4rem;
+          max-height: 90vh; /* Tighter height constraint for very large screens */
+        }
+        body {
+          padding: 2rem;
+        }
+
+        /* Ensure proper aspect ratio and sizing for very large screens */
+        .count-display {
+          max-width: min(20rem, 25vw);
+          max-height: min(20rem, 25vw);
+        }
+
+        .bead-button {
+          max-width: min(16rem, 20vw);
+          max-height: min(16rem, 20vw);
+        }
+      }
+
+      /* Super ultra wide screens (4K and above) */
+      @media (min-width: 1920px) {
+        .tasbeeh-container {
+          max-width: 48rem; /* Slightly larger but still contained */
+          padding: 4.5rem;
+        }
+
+        body {
+          padding: 2.5rem;
+        }
+      }
+
+      /* Extreme wide screens */
+      @media (min-width: 2560px) {
+        .tasbeeh-container {
+          max-width: 52rem; /* Maximum cap */
+          padding: 5rem;
+        }
+
+        body {
+          padding: 3rem;
+        }
+      }
+
+      @media (orientation: landscape) {
+        .tasbeeh-container {
+          max-width: min(90vw, 50rem); /* Constrain width in landscape */
+          padding: 1rem 2rem;
+          max-height: 90vh; /* Ensure it fits in viewport height */
+        }
+        body {
+          padding: 0.5rem;
+          min-height: 100vh;
+        }
+
+        /* Smaller elements in landscape to fit better */
+        .count-display {
+          max-width: min(8rem, 16vh);
+          max-height: min(8rem, 16vh);
+          padding: min(1rem, 2vh);
+        }
+
+        .bead-button {
+          max-width: min(7rem, 14vh);
+          max-height: min(7rem, 14vh);
+          padding: min(0.75rem, 1.5vh);
+        }
+      }
+
+      /* Very short landscape orientations */
+      @media (orientation: landscape) and (max-height: 600px) {
+        .tasbeeh-container {
+          padding: 0.75rem 1.5rem;
+          flex-direction: row;
+          flex-wrap: wrap;
+          justify-content: space-around;
+          align-items: center;
+          max-width: 95vw;
+        }
+
+        .tasbeeh-container > * {
+          flex: 0 0 auto;
+          margin: 0.25rem;
+        }
+
+        h1 {
+          order: 1;
+          flex: 0 0 100%;
+          text-align: center;
+          margin-bottom: 0.5rem;
+        }
+
+        .count-display {
+          order: 2;
+        }
+
+        .bead-button {
+          order: 3;
+        }
+
+        .controls {
+          order: 4;
+          flex: 0 0 100%;
+          margin-top: 0.5rem;
+        }
+      }
+      .bead-button {
+        transition: transform 0.1s ease-in-out,
+          background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        box-shadow: 0 15px 20px -5px rgba(255, 87, 34, 0.4),
+          0 8px 10px -4px rgba(255, 87, 34, 0.2); /* Orange glow shadow */
+        animation: pulse 2s infinite ease-in-out; /* Pulsing animation */
+        /* Touch-friendly size */
+        min-width: 80px; /* Minimum touch target */
+        min-height: 80px; /* Minimum touch target */
+      }
+      .bead-button:active {
+        transform: scale(0.92); /* More noticeable scale down on click */
+        box-shadow: 0 5px 10px -2px rgba(255, 87, 34, 0.3),
+          0 2px 4px -1px rgba(255, 87, 34, 0.1); /* Smaller shadow on active */
+      }
+
+      /* Responsive button sizes */
+      @media (min-width: 380px) {
+        .bead-button {
+          min-width: 100px;
+          min-height: 100px;
+        }
+      }
+
+      /* Ripple effect */
+      .ripple {
+        position: absolute;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.6);
+        transform: scale(0);
+        animation: ripple-animation 0.6s ease-out;
+        pointer-events: none;
+      }
+
+      @keyframes ripple-animation {
+        to {
+          transform: scale(4);
+          opacity: 0;
+        }
+      }
+      .target-button {
+        transition: all 0.2s ease-in-out;
+        border-radius: 1.5rem; /* More rounded target buttons */
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+          0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      }
+      .target-button:hover {
+        transform: translateY(-2px); /* Slight lift on hover */
+        box-shadow: 0 6px 10px -2px rgba(0, 0, 0, 0.15),
+          0 3px 6px -2px rgba(0, 0, 0, 0.08);
+      }
+      .milestone-message {
+        opacity: 0;
+        transform: translateY(-15px); /* More pronounced initial translateY */
+        transition: opacity 0.4s ease-out, transform 0.4s ease-out; /* Slower transition */
+        position: relative;
+        font-weight: 700; /* Bolder text for messages */
+        color: #33a233; /* A more vibrant green */
+      }
+      .milestone-message.show {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      /* Animation for milestone message */
+      @keyframes popIn {
+        0% {
+          transform: scale(0.4);
+          opacity: 0;
+        }
+        70% {
+          transform: scale(1.15);
+          opacity: 1;
+        }
+        100% {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+
+      .milestone-message.show span {
+        animation: popIn 0.5s ease-out forwards; /* Slower and more pronounced pop */
+        display: inline-block;
+      }
+
+      /* Confetti particle styling */
+      .confetti {
+        position: absolute;
+        background-color: transparent; /* Will be set by JS */
+        width: 12px; /* Slightly larger confetti */
+        height: 12px;
+        border-radius: 50%;
+        animation: confetti-fall 2.5s ease-out forwards; /* Longer fall duration */
+        pointer-events: none;
+        z-index: 1000;
+      }
+
+      /* Confetti animation keyframes */
+      @keyframes confetti-fall {
+        0% {
+          transform: translate(0, 0) rotate(0deg);
+          opacity: 1;
+        }
+        100% {
+          transform: translate(var(--x), var(--y)) rotate(900deg); /* More rotation */
+          opacity: 0;
+        }
+      }
+
+      /* Pulsing animation for the main bead button */
+      @keyframes pulse {
+        0% {
+          transform: scale(1);
+          box-shadow: 0 15px 20px -5px rgba(255, 87, 34, 0.4),
+            0 8px 10px -4px rgba(255, 87, 34, 0.2);
+        }
+        50% {
+          transform: scale(1.03); /* Slight growth */
+          box-shadow: 0 20px 30px -5px rgba(255, 87, 34, 0.6),
+            0 12px 15px -4px rgba(255, 87, 34, 0.3); /* Stronger glow */
+        }
+        100% {
+          transform: scale(1);
+          box-shadow: 0 15px 20px -5px rgba(255, 87, 34, 0.4),
+            0 8px 10px -4px rgba(255, 87, 34, 0.2);
+        }
+      }
+
+      /* Performance optimization for animations */
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+
+      /* Enhanced mobile interactions */
+      @media (hover: none) and (pointer: coarse) {
+        .bead-button:active {
+          transform: scale(0.88); /* More pronounced scale for touch */
+        }
+
+        .target-button:active {
+          transform: scale(0.92);
+        }
+      }
+
+      /* Screen reader accessibility */
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+
+      /* Loading state animation */
+      @keyframes shimmer {
+        0% {
+          background-position: -200% 0;
+        }
+        100% {
+          background-position: 200% 0;
+        }
+      }
+
+      .shimmer {
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+        background-size: 200% 100%;
+        animation: shimmer 2s infinite;
+      }
+
+      /* Flexible sizing with proper proportions */
+      .count-display {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        width: min(35vw, 25vh, 12rem);
+        height: min(35vw, 25vh, 12rem);
+        max-width: 50%;
+        max-height: 25vh;
+        margin: 0 auto;
+      }
+
+      #count {
+        line-height: 1;
+        word-break: break-all;
+        hyphens: auto;
+        max-width: 90%;
+        text-align: center;
+      }
+
+      .bead-button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        width: min(30vw, 20vh, 10rem);
+        height: min(30vw, 20vh, 10rem);
+        max-width: 45%;
+        max-height: 20vh;
+        margin: 0 auto;
+      }
+
+      .bead-button span {
+        line-height: 1;
+        text-align: center;
+        word-break: keep-all;
+        white-space: nowrap;
+      }
+
+      /* Mobile optimization - even smaller */
+      @media (max-width: 640px) {
+        .count-display {
+          width: min(30vw, 20vh, 8rem);
+          height: min(30vw, 20vh, 8rem);
+          max-width: 40%;
+          max-height: 20vh;
+        }
+
+        .bead-button {
+          width: min(25vw, 15vh, 6rem);
+          height: min(25vw, 15vh, 6rem);
+          max-width: 35%;
+          max-height: 15vh;
+        }
+      }
+
+      /* Ensure proper sizing on very large screens */
+      @media (min-width: 1536px) {
+        .count-display {
+          width: min(25vw, 20vh, 18rem);
+          height: min(25vw, 20vh, 18rem);
+        }
+
+        .bead-button {
+          width: min(20vw, 15vh, 15rem);
+          height: min(20vw, 15vh, 15rem);
+        }
+      }
+
+      /* Prevent text from being cut off in milestones */
+      .milestone-message {
+        line-height: 1.2;
+        word-wrap: break-word;
+        hyphens: auto;
+        max-width: 100%;
+        text-align: center;
+      }
+
+      /* Responsive text scaling based on container */
+      #count {
+        font-size: clamp(2rem, 5vw, 6rem);
+        line-height: 1;
+      }
+
+      .bead-button span:not(.sr-only) {
+        font-size: clamp(1.25rem, 3vw, 4rem);
+        line-height: 1;
+      }
+
+      /* Mobile text optimization */
+      @media (max-width: 640px) {
+        #count {
+          font-size: clamp(2rem, 8vw, 4rem);
+        }
+
+        .bead-button span:not(.sr-only) {
+          font-size: clamp(1.25rem, 5vw, 2.5rem);
+        }
+      }
+
+      /* Desktop text optimization */
+      @media (min-width: 1024px) {
+        #count {
+          font-size: clamp(3rem, 4vw, 8rem);
+        }
+
+        .bead-button span:not(.sr-only) {
+          font-size: clamp(2rem, 2.5vw, 5rem);
+        }
+      }
+
+      /* Large screen text optimization */
+      @media (min-width: 1536px) {
+        #count {
+          font-size: clamp(4rem, 3vw, 10rem);
+        }
+
+        .bead-button span:not(.sr-only) {
+          font-size: clamp(2.5rem, 2vw, 7rem);
+        }
+      }
+    </style>
+  </head>
+  <body class="flex flex-col items-center justify-center p-3 sm:p-4 md:p-6">
+    <div
+      class="tasbeeh-container bg-white text-center flex flex-col items-center relative"
+    >
+      <!-- Header -->
+      <h1 class="text-2xl sm:text-3xl md:text-4xl font-extrabold text-blue-900 mb-2 sm:mb-3">
+        Let's Count! 🥳
+      </h1>
+
+      <!-- Progress Bar (New) -->
+      <div class="w-full max-w-xs mb-2 sm:mb-3">
+        <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+          <div id="progressBar" class="h-full bg-gradient-to-r from-blue-400 to-green-400 rounded-full transition-all duration-300" style="width: 0%"></div>
+        </div>
+        <p class="text-xs sm:text-sm text-gray-600 mt-1 text-center">Progress to 99</p>
+      </div>
+
+      <!-- Milestone Message Display -->
+      <div
+        id="milestoneMessage"
+        class="milestone-message text-green-700 font-bold text-sm sm:text-base md:text-lg mb-2 sm:mb-3 h-6 sm:h-8 flex items-center justify-center"
+      >
+        <!-- Message will appear here -->
+      </div>
+
+      <!-- Current Count Display -->
+      <div
+        class="count-display bg-gradient-to-br from-blue-500 to-blue-700 text-white rounded-full flex items-center justify-center mb-4 sm:mb-6 md:mb-8 shadow-inner border-4 sm:border-6 border-blue-400 transform rotate-3 scale-105 relative overflow-hidden p-2 sm:p-3 md:p-4 lg:p-6 xl:p-8 2xl:p-10 aspect-square"
+        role="status"
+        aria-live="polite"
+        aria-label="Current count"
+      >
+        <span
+          id="count"
+          class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl 2xl:text-8xl font-extrabold drop-shadow-md transition-transform duration-200"
+          >0</span
+        >
+        <!-- Animated background effect -->
+        <div class="absolute inset-0 bg-gradient-to-br from-transparent to-white opacity-20 animate-pulse"></div>
+      </div>
+
+      <!-- Clickable Bead Button -->
+      <button
+        id="beadButton"
+        class="bead-button bg-gradient-to-br from-orange-400 to-red-500 hover:from-orange-500 hover:to-red-600 text-white font-extrabold text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl 2xl:text-6xl rounded-full flex items-center justify-center cursor-pointer transform active:scale-92 transition-all duration-150 ease-in-out border-4 sm:border-6 border-yellow-300 relative overflow-hidden p-2 sm:p-3 md:p-4 lg:p-5 xl:p-6 2xl:p-8 aspect-square"
+        aria-label="Tap to increase count"
+        role="button"
+        tabindex="0"
+      >
+        <span class="relative z-10">Tap!</span>
+        <span class="sr-only">Tap to increase the count by one</span>
+      </button>
+
+      <!-- Control Buttons -->
+      <div class="controls mt-4 sm:mt-6 md:mt-8 flex flex-col space-y-2 sm:space-y-3 md:space-y-4 w-full max-w-md">
+        <button
+          id="resetButton"
+          class="target-button bg-gradient-to-r from-gray-300 to-gray-400 text-gray-800 py-2 sm:py-3 px-3 rounded-lg sm:rounded-xl text-sm sm:text-base md:text-lg font-bold shadow-md hover:from-gray-400 hover:to-gray-500 transition-all duration-200 transform active:scale-95"
+          aria-label="Reset count to zero"
+          role="button"
+          tabindex="0"
+        >
+          🧹 Start Over!
+          <span class="sr-only">Reset the counter to zero</span>
+        </button>
+        <div
+          class="flex flex-col sm:flex-row justify-around space-y-2 sm:space-y-0 sm:space-x-2 md:space-x-3 w-full"
+        >
+          <button
+            id="target33Button"
+            class="target-button bg-gradient-to-r from-purple-300 to-purple-500 text-purple-900 py-2 sm:py-3 px-3 flex-1 rounded-lg sm:rounded-xl text-sm sm:text-base md:text-lg font-bold shadow-md hover:from-purple-400 hover:to-purple-600 transition-all duration-200 transform active:scale-95"
+            aria-label="Set goal to 33"
+            role="button"
+            tabindex="0"
+          >
+            ✨ Reach 33!
+            <span class="sr-only">Show goal to reach 33 counts</span>
+          </button>
+          <button
+            id="target99Button"
+            class="target-button bg-gradient-to-r from-green-300 to-green-500 text-green-900 py-2 sm:py-3 px-3 flex-1 rounded-lg sm:rounded-xl text-sm sm:text-base md:text-lg font-bold shadow-md hover:from-green-400 hover:to-green-600 transition-all duration-200 transform active:scale-95"
+            aria-label="Set goal to 99"
+            role="button"
+            tabindex="0"
+          >
+            🌟 Get to 99!
+            <span class="sr-only">Show goal to reach 99 counts</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Get references to HTML elements
+      const countDisplay = document.getElementById("count");
+      const beadButton = document.getElementById("beadButton");
+      const resetButton = document.getElementById("resetButton");
+      const target33Button = document.getElementById("target33Button");
+      const target99Button = document.getElementById("target99Button");
+      const milestoneMessage = document.getElementById("milestoneMessage");
+      const tasbeehContainer = document.querySelector(".tasbeeh-container");
+      const progressBar = document.getElementById("progressBar");
+
+      // Initialize the count
+      let count = 0;
+
+      // Haptic feedback function
+      function triggerHaptic(pattern = 'light') {
+        if ('vibrate' in navigator) {
+          switch(pattern) {
+            case 'light':
+              navigator.vibrate(10);
+              break;
+            case 'medium':
+              navigator.vibrate(20);
+              break;
+            case 'strong':
+              navigator.vibrate([30, 10, 30]);
+              break;
+            case 'celebration':
+              navigator.vibrate([50, 30, 50, 30, 100]);
+              break;
+            case 'reset':
+              navigator.vibrate(40);
+              break;
+          }
+        }
+      }
+
+      // Ripple effect function
+      function createRipple(event, button) {
+        const ripple = document.createElement('span');
+        ripple.classList.add('ripple');
+
+        const rect = button.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height);
+        const x = event.clientX - rect.left - size / 2;
+        const y = event.clientY - rect.top - size / 2;
+
+        ripple.style.width = ripple.style.height = size + 'px';
+        ripple.style.left = x + 'px';
+        ripple.style.top = y + 'px';
+
+        button.appendChild(ripple);
+
+        setTimeout(() => {
+          ripple.remove();
+        }, 600);
+      }
+
+      // Enhanced confetti with more variety
+      function launchEnhancedConfetti(isMajorMilestone = false) {
+        const numConfetti = isMajorMilestone ? 40 : 25;
+        const containerRect = tasbeehContainer.getBoundingClientRect();
+
+        // More colors for variety
+        const enhancedColors = [
+          "#ff6f69", "#ffcc5c", "#88d8b0", "#69e1ff", "#cf99ff",
+          "#ff5f9c", "#f72585", "#7209b7", "#3a0ca3", "#4361ee",
+          "#4cc9f0", "#ffd23f", "#ee6c4d", "#c9ada7", "#f2cc8f"
+        ];
+
+        for (let i = 0; i < numConfetti; i++) {
+          const confetti = document.createElement("div");
+          confetti.classList.add("confetti");
+          confetti.style.backgroundColor = enhancedColors[Math.floor(Math.random() * enhancedColors.length)];
+
+          // Random shapes
+          const shapeType = Math.random();
+          if (shapeType < 0.33) {
+            confetti.style.borderRadius = "50%"; // Circle
+          } else if (shapeType < 0.66) {
+            confetti.style.borderRadius = "0"; // Square
+          } else {
+            confetti.style.borderRadius = "2px"; // Rounded square
+          }
+
+          // Random size
+          const size = Math.random() * 8 + 8; // 8-16px
+          confetti.style.width = `${size}px`;
+          confetti.style.height = `${size}px`;
+
+          const startX = Math.random() * containerRect.width * 0.6 + containerRect.width * 0.2;
+          const startY = Math.random() * containerRect.height * 0.1 + containerRect.height * 0.1;
+          confetti.style.left = `${startX}px`;
+          confetti.style.top = `${startY}px`;
+
+          const endX = (Math.random() - 0.5) * containerRect.width * 1.2;
+          const endY = containerRect.height * 0.9 + Math.random() * containerRect.height * 0.3;
+
+          confetti.style.setProperty("--x", `${endX}px`);
+          confetti.style.setProperty("--y", `${endY}px`);
+
+          tasbeehContainer.appendChild(confetti);
+
+          confetti.addEventListener("animationend", () => {
+            confetti.remove();
+          });
+        }
+      }
+
+      // Update progress bar
+      function updateProgressBar() {
+        const progress = Math.min((count / 99) * 100, 100);
+        progressBar.style.width = `${progress}%`;
+
+        // Change color based on progress
+        if (progress < 33) {
+          progressBar.className = "h-full bg-gradient-to-r from-blue-400 to-blue-500 rounded-full transition-all duration-300";
+        } else if (progress < 66) {
+          progressBar.className = "h-full bg-gradient-to-r from-purple-400 to-purple-500 rounded-full transition-all duration-300";
+        } else if (progress < 100) {
+          progressBar.className = "h-full bg-gradient-to-r from-green-400 to-green-500 rounded-full transition-all duration-300";
+        } else {
+          progressBar.className = "h-full bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full transition-all duration-300 animate-pulse";
+        }
+      }
+
+      // Animate count display
+      function animateCount() {
+        countDisplay.style.transform = "scale(1.2)";
+        setTimeout(() => {
+          countDisplay.style.transform = "scale(1)";
+        }, 200);
+      }
+
+      // Array of fun colors for confetti
+      const confettiColors = [
+        "#ff6f69",
+        "#ffcc5c",
+        "#88d8b0",
+        "#69e1ff",
+        "#cf99ff",
+        "#ff5f9c",
+        "#f72585",
+        "#7209b7",
+        "#3a0ca3",
+        "#4361ee",
+        "#4cc9f0",
+      ];
+
+      // --- Tone.js Sound Setup ---
+      let clickSynth, milestoneSynth;
+
+      /**
+       * Initializes Tone.js AudioContext and synths on first user interaction.
+       */
+      function initializeAudio() {
+        if (Tone.context.state !== "running") {
+          Tone.start();
+          console.log("AudioContext started");
+        }
+
+        // Simple click sound for the bead button
+        clickSynth = new Tone.MembraneSynth({
+          pitchDecay: 0.05,
+          octaves: 8,
+          oscillator: { type: "sine" },
+          envelope: {
+            attack: 0.001,
+            decay: 0.4,
+            sustain: 0.01,
+            release: 0.2,
+          },
+        }).toDestination();
+
+        // More melodic sound for milestones
+        milestoneSynth = new Tone.PolySynth(Tone.Synth, {
+          oscillator: { type: "triangle" }, // Fixed syntax error here
+          envelope: {
+            attack: 0.05,
+            decay: 0.8,
+            sustain: 0.0,
+            release: 0.5,
+          },
+        }).toDestination();
+
+        // Prevent re-initialization
+        beadButton.removeEventListener("click", initializeAudio);
+      }
+
+      // Attach initializeAudio to the first click event to ensure AudioContext starts
+      beadButton.addEventListener("click", initializeAudio, { once: true });
+
+      /**
+       * Launches a small confetti burst.
+       */
+      function launchConfetti() {
+        const numConfetti = 25; // More confetti!
+        const containerRect = tasbeehContainer.getBoundingClientRect(); // Get container position
+
+        for (let i = 0; i < numConfetti; i++) {
+          const confetti = document.createElement("div");
+          confetti.classList.add("confetti");
+          confetti.style.backgroundColor =
+            confettiColors[Math.floor(Math.random() * confettiColors.length)];
+
+          // Random starting position near the top center of the container
+          const startX =
+            Math.random() * containerRect.width * 0.6 +
+            containerRect.width * 0.2;
+          const startY =
+            Math.random() * containerRect.height * 0.1 +
+            containerRect.height * 0.1;
+          confetti.style.left = `${startX}px`;
+          confetti.style.top = `${startY}px`;
+
+          // Random ending position (fall downwards, spread out)
+          const endX = (Math.random() - 0.5) * containerRect.width * 1.2; // Wider spread
+          const endY =
+            containerRect.height * 0.9 +
+            Math.random() * containerRect.height * 0.3; // Fall further
+
+          confetti.style.setProperty("--x", `${endX}px`);
+          confetti.style.setProperty("--y", `${endY}px`);
+
+          tasbeehContainer.appendChild(confetti);
+
+          // Remove confetti after animation completes
+          confetti.addEventListener("animationend", () => {
+            confetti.remove();
+          });
+        }
+      }
+
+      /**
+       * Updates the displayed count and checks for milestones.
+       */
+      function updateCountDisplay() {
+        countDisplay.textContent = count;
+        clearMilestoneMessage(); // Clear previous messages
+        updateProgressBar(); // Update progress bar
+        animateCount(); // Animate the count
+
+        // Play tap sound
+        if (clickSynth) {
+          clickSynth.triggerAttackRelease("C4", "8n");
+        }
+
+        // Trigger haptic feedback
+        triggerHaptic('light');
+
+        if (count === 33) {
+          showMilestoneMessage("Fantastic! You reached 33! 🎉");
+          launchEnhancedConfetti(false);
+          triggerHaptic('celebration');
+          if (milestoneSynth) {
+            milestoneSynth.triggerAttackRelease(["C5", "E5", "G5"], "2n");
+          }
+        } else if (count === 66) {
+          showMilestoneMessage("Amazing! Two-thirds there! 🌟");
+          launchEnhancedConfetti(false);
+          triggerHaptic('strong');
+          if (milestoneSynth) {
+            milestoneSynth.triggerAttackRelease(["D5", "F#5", "A5"], "2n");
+          }
+        } else if (count === 99) {
+          showMilestoneMessage("Superb! You reached 99! ✨");
+          launchEnhancedConfetti(true); // Major milestone
+          triggerHaptic('celebration');
+          if (milestoneSynth) {
+            milestoneSynth.triggerAttackRelease(["C5", "F5", "A5", "C6"], "1n");
+          }
+        } else if (count > 99 && count % 100 === 0) {
+          showMilestoneMessage(`Incredible! ${count} counts! 🏆`);
+          launchEnhancedConfetti(true);
+          triggerHaptic('celebration');
+          if (milestoneSynth) {
+            milestoneSynth.triggerAttackRelease(["C5", "E5", "G5", "B5", "D6"], "1n");
+          }
+        } else if (count % 10 === 0 && count > 0) {
+          // Small celebration every 10 counts
+          triggerHaptic('medium');
+          countDisplay.style.color = "#ffd700";
+          setTimeout(() => {
+            countDisplay.style.color = "";
+          }, 300);
+        }
+      }
+
+      /**
+       * Displays a temporary milestone message.
+       * @param {string} message - The message to display.
+       */
+      function showMilestoneMessage(message) {
+        milestoneMessage.innerHTML = `<span>${message}</span>`;
+        milestoneMessage.classList.add("show");
+        setTimeout(() => {
+          milestoneMessage.classList.remove("show");
+          setTimeout(() => (milestoneMessage.textContent = ""), 400); // Clear after animation
+        }, 3500); // Message disappears after 3.5 seconds
+      }
+
+      /**
+       * Clears any active milestone message.
+       */
+      function clearMilestoneMessage() {
+        milestoneMessage.classList.remove("show");
+        milestoneMessage.textContent = "";
+      }
+
+      // Event Listeners
+
+      // Increment count when the bead button is clicked
+      beadButton.addEventListener("click", (event) => {
+        count++;
+        updateCountDisplay();
+        createRipple(event, beadButton);
+      });
+
+      // Reset count when the reset button is clicked
+      resetButton.addEventListener("click", (event) => {
+        count = 0;
+        updateCountDisplay();
+        clearMilestoneMessage();
+        triggerHaptic('reset');
+        createRipple(event, resetButton);
+
+        // Visual feedback for reset
+        tasbeehContainer.style.transform = "scale(0.98)";
+        setTimeout(() => {
+          tasbeehContainer.style.transform = "scale(1)";
+        }, 200);
+      });
+
+      // Inform user about target 33
+      target33Button.addEventListener("click", (event) => {
+        showMilestoneMessage("Your goal is to reach 33! 🎯");
+        triggerHaptic('medium');
+        createRipple(event, target33Button);
+      });
+
+      // Inform user about target 99
+      target99Button.addEventListener("click", (event) => {
+        showMilestoneMessage("Your ultimate goal is to reach 99! 🏆");
+        triggerHaptic('medium');
+        createRipple(event, target99Button);
+      });
+
+      // Add touch feedback for better mobile experience
+      [beadButton, resetButton, target33Button, target99Button].forEach(button => {
+        button.addEventListener('touchstart', function(e) {
+          this.style.transform = 'scale(0.95)';
+        }, { passive: true });
+
+        button.addEventListener('touchend', function(e) {
+          this.style.transform = '';
+        }, { passive: true });
+      });
+
+      // Add swipe gesture support for reset (swipe down)
+      let touchStartY = 0;
+      let touchEndY = 0;
+
+      tasbeehContainer.addEventListener('touchstart', function(e) {
+        touchStartY = e.changedTouches[0].screenY;
+      }, { passive: true });
+
+      tasbeehContainer.addEventListener('touchend', function(e) {
+        touchEndY = e.changedTouches[0].screenY;
+        handleSwipe();
+      }, { passive: true });
+
+      function handleSwipe() {
+        if (touchEndY - touchStartY > 100) { // Swipe down
+          count = 0;
+          updateCountDisplay();
+          clearMilestoneMessage();
+          triggerHaptic('reset');
+          showMilestoneMessage("Reset! Let's start fresh! 🔄");
+        }
+      }
+
+      // Initialize display
+      updateCountDisplay();
+    </script>
+  </body>
+</html>

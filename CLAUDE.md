@@ -38,18 +38,37 @@ pip install -r requirements.txt
 
 # Update books from Google Sheets (requires .env setup)
 python update_books.py
+# Or use the user-friendly runner:
+python run_book_update.py
+
+# Test Google Sheets access before updating books
+python test_sheet_access.py
 
 # Generate thumbnails from PDFs
 python pdf_to_thumbnail.py
 
 # Fix long filenames (maintenance)
 python fix_long_filenames.py
+
+# Generate asset inventory for service worker caching
+python generate_asset_cache.py
 ```
 
 ### Icon Generation
 ```bash
 # Open in browser to generate PWA icons
 open icons/icon-generator.html
+
+# Create icons using shell script
+./icons/create-icons.sh
+```
+
+### Deployment Scripts
+```bash
+# Update all game HTML files for /KidsGames/ subdirectory deployment
+./update_game_paths.sh
+
+# Note: This script creates .backup files that can be removed after verification
 ```
 
 ### PWA Testing
@@ -71,9 +90,12 @@ open icons/icon-generator.html
 - `read/` - PDF book reader with audio support
 
 ### Content Management
-- `update_books.py` - Script to update books from Google Sheets API
+- `update_books.py` - Main script to update books from Google Sheets API
+- `run_book_update.py` - User-friendly wrapper for book updates
+- `test_sheet_access.py` - Test Google Sheets access before updates
 - `pdf_to_thumbnail.py` - Generate thumbnails from PDF files
-- `.env` - Environment variables (API keys, secrets)
+- `generate_asset_cache.py` - Generate asset inventory for service worker
+- `.env` - Environment variables (Google Sheets URL, secrets)
 
 ## Important Implementation Details
 
@@ -136,11 +158,19 @@ Themes are controlled via URL parameters:
 
 ### Development
 - Static site - no build process required
-- Local testing via any HTTP server
+- Local testing via any HTTP server (e.g., `python -m http.server 8000`)
 - Python scripts require virtual environment setup
 
+### Prerequisites for Python Scripts
+- Python 3.7 or higher
+- poppler-utils (for PDF processing):
+  - macOS: `brew install poppler`
+  - Ubuntu/Debian: `sudo apt-get install poppler-utils`
+  - Windows: Download from https://poppler.freedesktop.org/
+
 ### Deployment
-- Designed for GitHub Pages
+- Designed for GitHub Pages with `/KidsGames/` subdirectory
+- Use `./update_game_paths.sh` before deploying to ensure correct paths
 - All features work with static hosting
 - No server-side dependencies
 
@@ -156,6 +186,31 @@ Themes are controlled via URL parameters:
 - Service worker scope limited to origin
 - Content Security Policy handled by GitHub Pages
 
+## Book Management Workflow
+
+### Google Sheets Integration
+The book system integrates with Google Sheets for automated content management:
+- **Required columns**: Books (Google Drive links), Category, Sub-category (title), Language, Quality
+- **Quality filtering**: Only processes books marked as "High" quality
+- **Multi-language support**: Books appear in all specified language sections
+- **Unique naming**: Uses URL hashes to prevent filename conflicts
+
+### Book Update Process
+1. Test access: `python test_sheet_access.py`
+2. Run update: `python run_book_update.py`
+3. Script automatically:
+   - Downloads PDFs from Google Drive
+   - Handles virus scan warnings for large files
+   - Generates 200x200 PNG thumbnails
+   - Updates HTML with flipbook integration
+   - Skips books without valid PDF files
+
+### PDF Processing Features
+- **Smart download**: Handles various Google Drive URL formats
+- **Content verification**: Ensures downloaded files are actual PDFs
+- **Thumbnail preservation**: Only replaces thumbnails for updated books
+- **Error handling**: Detailed reporting of skipped/failed downloads
+
 ## Troubleshooting
 
 ### Common Issues
@@ -163,8 +218,12 @@ Themes are controlled via URL parameters:
 2. **Premium Access**: Check secret parameter and online verification
 3. **Icon Loading**: Verify all icon sizes exist in `icons/` directory
 4. **Offline Functionality**: Test with DevTools offline mode
+5. **Book Updates**: Check Google Sheets permissions and .env configuration
+6. **PDF Processing**: Verify poppler-utils installation
+7. **Path Issues**: Run `./update_game_paths.sh` for GitHub Pages deployment
 
 ### Debug Tools
 - Chrome DevTools Application tab for PWA debugging
 - Console logging for service worker events
 - Network tab for caching strategy verification
+- Book update test script: `python test_sheet_access.py`

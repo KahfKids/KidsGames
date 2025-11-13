@@ -1,0 +1,1254 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Emoji Memory Challenge!</title>
+    <!-- Tailwind CSS CDN for utilities -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tone.js CDN for sound effects -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800;900&family=Inter:wght@400;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* CSS Custom Properties for Kid-Friendly Theme */
+      :root {
+        --primary-color: #6B5B95; /* Soft Purple */
+        --secondary-color: #88B0D3; /* Gentle Blue */
+        --accent-color: #FFB6B9; /* Soft Coral */
+        --success-color: #90EE90; /* Light Green */
+        --error-color: #FF6B6B; /* Soft Red */
+        --warning-color: #FFB6B9; /* Soft Coral */
+        --bg-color: #F8E7E2; /* Cream */
+        --text-color: #2D3436;
+        --text-light: #636E72;
+        --border-color: #DDD6FE; /* Light Purple */
+        --shadow-color: rgba(107, 91, 149, 0.15);
+        --touch-target-min: 76px; /* 2cm minimum for children */
+        --spacing-unit: 12px;
+        --animation-duration: 300ms;
+        --border-radius-large: 1.5rem;
+        --border-radius-small: 1rem;
+      }
+
+      /* Custom CSS for kid-friendly design with modern fonts */
+      body {
+        font-family: "Nunito", "Inter", sans-serif;
+        background: var(--bg-color); /* Solid kid-friendly background */
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        color: var(--text-color);
+        overflow: hidden; /* Prevent scrolling */
+        position: fixed;
+        width: 100%;
+        height: 100%;
+        /* Safe area support for notched devices */
+        padding: env(safe-area-inset-top) env(safe-area-inset-right)
+                 env(safe-area-inset-bottom) env(safe-area-inset-left);
+      }
+
+      .main-wrapper {
+        display: flex;
+        justify-content: center;
+        width: 100%;
+        height: 100vh;
+        padding: 1rem;
+        box-sizing: border-box;
+        overflow: hidden; /* Prevent scrolling */
+      }
+
+      .screen-container {
+        background-color: #ffffff;
+        border-radius: var(--border-radius-large);
+        box-shadow: 0 20px 50px var(--shadow-color);
+        padding: 2rem;
+        width: 100%;
+        max-width: 480px; /* Mobile-friendly maximum width */
+        height: 100%;
+        max-height: calc(100vh - 2rem);
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        border: 4px solid var(--accent-color);
+        overflow-y: auto;
+        box-sizing: border-box;
+        margin: 0 auto;
+      }
+
+      /* FIX: Ensure hidden class robustly hides elements */
+      .hidden {
+        display: none !important;
+      }
+
+      /* Styling for the Category Selection Screen */
+      .category-screen {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+      }
+
+      .category-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr); /* 2 columns for categories */
+        gap: 1.5rem;
+      }
+
+      .category-button {
+        background: linear-gradient(145deg, var(--accent-color), var(--warning-color));
+        color: var(--text-color);
+        padding: 1.5rem 1rem;
+        min-height: var(--touch-target-min);
+        border-radius: var(--border-radius-large);
+        font-size: clamp(18px, 4.5vw, 24px);
+        font-weight: 700;
+        font-family: "Nunito", sans-serif;
+        cursor: pointer;
+        border: 3px solid var(--bg-color);
+        outline: none;
+        transition: transform var(--animation-duration) cubic-bezier(0.25, 0.46, 0.45, 0.94),
+          background 0.2s ease, border-color 0.2s ease,
+          box-shadow var(--animation-duration) ease;
+        box-shadow: 0 6px 16px var(--shadow-color);
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .category-button::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        transition: left 0.6s;
+      }
+
+      .category-button:hover::before {
+        left: 100%;
+      }
+
+      .category-button:hover {
+        transform: translateY(-4px) scale(1.03);
+        background: linear-gradient(145deg, var(--warning-color), var(--accent-color));
+        box-shadow: 0 8px 20px var(--shadow-color);
+      }
+
+      .category-button:active {
+        transform: translateY(-1px) scale(0.98);
+        transition: transform 100ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        box-shadow: 0 4px 12px var(--shadow-color);
+      }
+
+      h1 {
+        font-family: "Fredoka One", cursive;
+        color: var(--primary-color);
+        font-size: clamp(24px, 6vw, 36px); /* Responsive font sizing */
+        font-weight: 400; /* Fredoka One is single weight */
+        text-shadow: 2px 2px 4px var(--shadow-color);
+        letter-spacing: -0.02em;
+        margin: 0;
+        line-height: 1.2;
+      }
+
+      .level-info,
+      .game-message {
+        background: linear-gradient(135deg, rgba(136, 176, 211, 0.2), rgba(107, 91, 149, 0.1));
+        padding: 1rem 1.5rem;
+        border-radius: var(--border-radius-small);
+        font-size: clamp(14px, 3.5vw, 18px);
+        color: var(--text-color);
+        font-weight: 700;
+        border: 2px solid var(--border-color);
+        box-shadow: 0 4px 12px var(--shadow-color);
+      }
+
+      .sequence-display {
+        background-color: var(--bg-color);
+        color: var(--primary-color);
+        font-size: clamp(36px, 8vw, 60px);
+        font-weight: 800;
+        padding: 2rem;
+        border-radius: var(--border-radius-large);
+        min-height: 120px;
+        max-height: 200px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+        transition: opacity 0.3s ease-out, transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        border: 4px dashed var(--accent-color);
+        box-shadow: inset 0 4px 8px var(--shadow-color);
+      }
+
+      /* Keyframes for fun emoji animations */
+      @keyframes pulseAndGrow {
+        0% {
+          opacity: 0;
+          transform: scale(0.3) rotate(-10deg);
+        }
+        25% {
+          opacity: 0.5;
+          transform: scale(0.8) rotate(5deg);
+        }
+        50% {
+          opacity: 1;
+          transform: scale(1.2) rotate(0deg);
+        }
+        75% {
+          opacity: 0.8;
+          transform: scale(1.1) rotate(-3deg);
+        }
+        100% {
+          opacity: 0;
+          transform: scale(1) rotate(0deg);
+        }
+      }
+
+      @keyframes bounce {
+        0%, 20%, 53%, 80%, 100% {
+          transform: translate3d(0, 0, 0);
+        }
+        40%, 43% {
+          transform: translate3d(0, -8px, 0);
+        }
+        70% {
+          transform: translate3d(0, -4px, 0);
+        }
+        90% {
+          transform: translate3d(0, -2px, 0);
+        }
+      }
+
+      @keyframes wiggle {
+        0%, 100% {
+          transform: rotate(0deg);
+        }
+        25% {
+          transform: rotate(3deg);
+        }
+        75% {
+          transform: rotate(-3deg);
+        }
+      }
+
+      @keyframes shake-gentle {
+        0%, 100% {
+          transform: translateX(0);
+        }
+        10%, 30%, 50%, 70%, 90% {
+          transform: translateX(-3px);
+        }
+        20%, 40%, 60%, 80% {
+          transform: translateX(3px);
+        }
+      }
+
+      .sequence-display.animate-emoji {
+        animation: pulseAndGrow 1.2s ease-in-out forwards;
+      }
+
+      .input-area {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+      }
+
+      .player-sequence-display {
+        background-color: var(--bg-color);
+        border: 3px dashed var(--border-color);
+        border-radius: var(--border-radius-small);
+        min-height: 60px;
+        padding: 1rem;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: clamp(24px, 5vw, 36px);
+        color: var(--secondary-color);
+        font-weight: 700;
+        box-shadow: inset 0 2px 8px var(--shadow-color);
+      }
+
+      .emoji-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr); /* 3 columns for better touch targets */
+        gap: 1rem;
+        justify-content: center;
+        align-items: center;
+        padding: 1rem;
+      }
+
+      .emoji-button {
+        width: 100%;
+        aspect-ratio: 1; /* Square buttons */
+        min-height: var(--touch-target-min); /* Minimum touch target size */
+        min-width: var(--touch-target-min);
+        position: relative;
+        background: linear-gradient(145deg, var(--accent-color), var(--warning-color));
+        border-radius: var(--border-radius-large);
+        cursor: pointer;
+        border: 3px solid var(--bg-color);
+        outline: none;
+        transition: transform var(--animation-duration) cubic-bezier(0.25, 0.46, 0.45, 0.94),
+          background-color var(--animation-duration) ease,
+          border-color var(--animation-duration) ease,
+          box-shadow var(--animation-duration) ease;
+        box-shadow: 0 6px 16px var(--shadow-color),
+                    0 2px 4px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+      }
+
+      .emoji-button span {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: clamp(24px, 6vw, 36px);
+        filter: drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.2));
+      }
+
+      .emoji-button:hover {
+        transform: translateY(-4px) scale(1.05);
+        background: linear-gradient(145deg, var(--warning-color), var(--accent-color));
+        box-shadow: 0 8px 20px var(--shadow-color),
+                    0 4px 8px rgba(0, 0, 0, 0.15);
+      }
+
+      .emoji-button:active {
+        transform: translateY(-1px) scale(0.98);
+        transition: transform 100ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        box-shadow: 0 3px 8px var(--shadow-color),
+                    0 1px 3px rgba(0, 0, 0, 0.1);
+      }
+
+      .emoji-button.correct-choice {
+        background: linear-gradient(145deg, var(--success-color), #7FD87F);
+        border-color: var(--success-color);
+        box-shadow: 0 0 0 4px var(--success-color),
+                    0 6px 20px rgba(144, 238, 144, 0.4);
+        animation: bounce 0.6s ease-out;
+      }
+
+      .emoji-button.wrong-choice {
+        background: linear-gradient(145deg, var(--error-color), #FF8A8A);
+        border-color: var(--error-color);
+        box-shadow: 0 0 0 4px var(--error-color),
+                    0 6px 20px rgba(255, 107, 107, 0.4);
+        animation: shake-gentle 0.5s ease-out;
+      }
+
+      .game-buttons {
+        display: flex;
+        justify-content: center;
+        align-items: center; /* Align items vertically in the center */
+        flex-wrap: wrap; /* Allow wrapping on small screens */
+        gap: 1.2rem; /* Reduced gap for more elements */
+      }
+
+      .game-button {
+        background: linear-gradient(145deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        padding: 1rem 2rem;
+        min-height: var(--touch-target-min);
+        border-radius: var(--border-radius-large);
+        font-size: clamp(14px, 4vw, 18px);
+        font-weight: 700;
+        font-family: "Nunito", sans-serif;
+        cursor: pointer;
+        border: none;
+        outline: none;
+        transition: background 0.3s ease,
+          transform var(--animation-duration) cubic-bezier(0.25, 0.46, 0.45, 0.94),
+          box-shadow 0.3s ease;
+        box-shadow: 0 6px 16px var(--shadow-color);
+        white-space: nowrap;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .game-button::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        transition: left 0.5s;
+      }
+
+      .game-button:hover::before {
+        left: 100%;
+      }
+
+      .game-button:hover {
+        background: linear-gradient(145deg, var(--secondary-color), var(--primary-color));
+        transform: translateY(-3px);
+        box-shadow: 0 8px 24px var(--shadow-color);
+      }
+
+      .game-button:active {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px var(--shadow-color);
+        transition: transform 100ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      }
+
+      .game-button:disabled {
+        background: linear-gradient(145deg, #B8B8D0, #9B9BB3);
+        cursor: not-allowed;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        transform: translateY(0);
+        opacity: 0.6;
+      }
+
+      /* Message box styling */
+      .message-box-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(45, 52, 54, 0.8);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.4s ease, visibility 0.4s ease;
+        backdrop-filter: blur(4px);
+      }
+
+      .message-box-overlay.visible {
+        opacity: 1;
+        visibility: visible;
+      }
+
+      .message-box {
+        background: linear-gradient(135deg, var(--bg-color), #FFFFFF);
+        border-radius: var(--border-radius-large);
+        padding: 2.5rem;
+        text-align: center;
+        box-shadow: 0 15px 30px var(--shadow-color);
+        max-width: 90%;
+        width: 450px;
+        transform: translateY(-30px) scale(0.9) rotate(-2deg);
+        transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+          opacity 0.4s ease;
+        border: 4px solid var(--accent-color);
+      }
+
+      .message-box-overlay.visible .message-box {
+        transform: translateY(0) scale(1) rotate(0deg);
+        opacity: 1;
+      }
+
+      .message-box h3 {
+        font-family: "Fredoka One", cursive;
+        color: var(--primary-color);
+        font-size: clamp(24px, 6vw, 32px);
+        margin-bottom: 1.5rem;
+        font-weight: 400;
+        text-shadow: 2px 2px 4px var(--shadow-color);
+      }
+
+      .message-box p {
+        color: var(--text-color);
+        font-size: clamp(16px, 4vw, 20px);
+        margin-bottom: 2rem;
+        line-height: 1.5;
+      }
+
+      .message-box button {
+        background: linear-gradient(145deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        padding: 1rem 2.5rem;
+        min-height: var(--touch-target-min);
+        border-radius: var(--border-radius-large);
+        font-size: clamp(16px, 4vw, 20px);
+        font-weight: 700;
+        font-family: "Nunito", sans-serif;
+        cursor: pointer;
+        border: none;
+        outline: none;
+        transition: transform var(--animation-duration) cubic-bezier(0.25, 0.46, 0.45, 0.94),
+          box-shadow 0.3s ease;
+        box-shadow: 0 6px 16px var(--shadow-color);
+      }
+
+      .message-box button:hover {
+        background: linear-gradient(145deg, var(--secondary-color), var(--primary-color));
+        transform: translateY(-3px) scale(1.05);
+        box-shadow: 0 8px 20px var(--shadow-color);
+      }
+
+      /* Responsive adjustments for larger screens only */
+      @media (min-width: 768px) {
+        .screen-container {
+          padding: 2.5rem;
+          max-width: 600px;
+        }
+
+        .emoji-grid {
+          grid-template-columns: repeat(4, 1fr); /* 4 columns on larger screens */
+        }
+
+        .game-buttons {
+          gap: 1.5rem;
+        }
+      }
+
+      @media (min-width: 1024px) {
+        .screen-container {
+          padding: 3rem;
+          max-width: 700px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="main-wrapper">
+      <!-- Category Selection Screen -->
+      <div
+        id="category-selection-screen"
+        class="screen-container category-screen"
+      >
+        <h1 class="font-bold">Choose Your Challenge!</h1>
+        <div class="category-grid">
+          <button class="category-button" data-category="fruits">
+            🍎 Fruits
+          </button>
+          <button class="category-button" data-category="animals">
+            🐾 Animals
+          </button>
+          <button class="category-button" data-category="vegetables">
+            🥕 Vegetables
+          </button>
+          <button class="category-button" data-category="birds">
+            🐦 Birds
+          </button>
+          <button class="category-button" data-category="shapes">
+            🔺 Shapes
+          </button>
+          <button class="category-button" data-category="alphabet">
+            🔠 Alphabet
+          </button>
+          <button class="category-button" data-category="numbers">
+            🔢 Numbers
+          </button>
+          <button class="category-button" data-category="vehicles">
+            🚗 Vehicles
+          </button>
+          <button class="category-button" data-category="country">
+            🌍 Countries
+          </button>
+          <button class="category-button" data-category="sports">
+            ⚽ Sports
+          </button>
+        </div>
+      </div>
+
+      <!-- Main Game Screen (initially hidden) -->
+      <div id="game-screen" class="screen-container hidden">
+        <h1 class="font-bold mb-4">Emoji Sequence Challenge!</h1>
+        <div id="level-info" class="level-info">Level: 1 | Score: 0</div>
+        <div id="game-message" class="game-message hidden"></div>
+
+        <div id="sequence-display" class="sequence-display"></div>
+
+        <div id="input-area" class="input-area hidden">
+          <p class="text-gray-700 font-medium text-lg">
+            Tap the emojis in order:
+          </p>
+          <div id="player-sequence-display" class="player-sequence-display">
+            <!-- Selected emojis will appear here -->
+          </div>
+          <div id="emoji-grid" class="emoji-grid">
+            <!-- Dynamic emoji buttons will go here -->
+          </div>
+        </div>
+
+        <div class="game-buttons">
+          <button id="start-game-button" class="game-button">
+            Start Round
+          </button>
+          <button id="reset-game-button" class="game-button">Reset Game</button>
+          <button id="toggle-sound-button" class="game-button">
+            🔊 Sound ON
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Message Box HTML -->
+    <div id="message-box-overlay" class="message-box-overlay">
+      <div class="message-box">
+        <h3 id="message-box-title"></h3>
+        <p id="message-box-text"></p>
+        <button id="message-box-ok">Awesome!</button>
+      </div>
+    </div>
+
+    <script>
+      // --- DOM Elements ---
+      const categorySelectionScreen = document.getElementById(
+        "category-selection-screen"
+      );
+      const gameScreen = document.getElementById("game-screen");
+      const categoryButtons = document.querySelectorAll(".category-button");
+
+      const levelInfo = document.getElementById("level-info");
+      const gameMessage = document.getElementById("game-message");
+      const sequenceDisplay = document.getElementById("sequence-display");
+      const inputArea = document.getElementById("input-area");
+      const playerSequenceDisplay = document.getElementById(
+        "player-sequence-display"
+      );
+      const emojiGrid = document.getElementById("emoji-grid");
+      const startGameButton = document.getElementById("start-game-button");
+      const resetGameButton = document.getElementById("reset-game-button");
+      const toggleSoundButton = document.getElementById("toggle-sound-button"); // New sound button
+      const messageBoxOverlay = document.getElementById("message-box-overlay");
+      const messageBoxTitle = document.getElementById("message-box-title");
+      const messageBoxText = document.getElementById("message-box-text");
+      const messageBoxOK = document.getElementById("message-box-ok");
+
+      // --- Game State Variables ---
+      let currentSequence = [];
+      let playerSequence = [];
+      let level = 1;
+      let score = 0;
+      let sequenceLength = 3;
+      let emojiDisplayTimePerItem = 2000; // 2 seconds per emoji visible duration
+      const minEmojiDisplayTimePerItem = 1000; // Minimum 1 second per emoji
+      let gameActive = false;
+      let waitingForInput = false;
+      let soundEnabled = true; // Initial state for sound
+
+      // --- Tone.js Sound Synths ---
+      let correctSynth, wrongSynth, levelUpSynth, gameOverSynth;
+
+      window.addEventListener("load", () => {
+        // Initialize Tone.js synths
+        correctSynth = new Tone.Synth({
+          oscillator: { type: "sine" },
+          envelope: { attack: 0.01, decay: 0.1, sustain: 0.05, release: 0.5 },
+        }).toDestination();
+        correctSynth.volume.value = -10; // Softer volume
+
+        wrongSynth = new Tone.Synth({
+          oscillator: { type: "triangle" },
+          envelope: { attack: 0.01, decay: 0.2, sustain: 0.05, release: 0.5 },
+        }).toDestination();
+        wrongSynth.volume.value = -10; // Softer volume
+
+        levelUpSynth = new Tone.PolySynth(Tone.Synth, {
+          oscillator: { type: "sine" },
+          envelope: { attack: 0.01, decay: 0.1, sustain: 0.05, release: 0.5 },
+        }).toDestination();
+        levelUpSynth.volume.value = -10; // Softer volume
+
+        gameOverSynth = new Tone.PolySynth(Tone.Synth, {
+          oscillator: { type: "triangle" },
+          envelope: { attack: 0.01, decay: 0.3, sustain: 0.1, release: 1 },
+        }).toDestination();
+        gameOverSynth.volume.value = -10; // Softer volume
+
+        // Start Tone.js context on user interaction (important for some browsers)
+        document.documentElement.addEventListener("mousedown", () => {
+          if (Tone.context.state !== "running") {
+            Tone.start();
+          }
+        });
+        document.documentElement.addEventListener("touchstart", () => {
+          if (Tone.context.state !== "running") {
+            Tone.start();
+          }
+        });
+      });
+
+      /**
+       * Plays a specific sound effect if sound is enabled.
+       * @param {string} type - The type of sound to play ('correct', 'wrong', 'levelUp', 'gameOver', 'start').
+       */
+      function playSound(type) {
+        if (!soundEnabled || Tone.context.state !== "running") return;
+
+        try {
+          if (type === "correct") {
+            correctSynth.triggerAttackRelease("C5", "8n"); // Simple, clear tone
+          } else if (type === "wrong") {
+            wrongSynth.triggerAttackRelease("C3", "8n"); // Lower, distinct tone
+          } else if (type === "levelUp") {
+            levelUpSynth.triggerAttackRelease(["C5", "E5", "G5"], "4n"); // Ascending chord
+          } else if (type === "gameOver") {
+            gameOverSynth.triggerAttackRelease(["C4", "A3", "F3"], "2n"); // Descending, somber chord
+          } else if (type === "start") {
+            correctSynth.triggerAttackRelease("G4", "8n"); // Confirmation tone
+          }
+        } catch (e) {
+          console.error("Error playing sound:", e);
+          // Fallback or silently ignore if audio context issues
+        }
+      }
+
+      // --- Emoji Pools for Categories ---
+      const emojiCategories = {
+        fruits: [
+          "🍎",
+          "🍊",
+          "🍋",
+          "🍉",
+          "🍇",
+          "🍓",
+          "🍒",
+          "🍍",
+          "🥝",
+          "🥭",
+          "🍑",
+          "🍌",
+          "🍐",
+          "🥥",
+          "🫐",
+          "🍈",
+        ],
+        animals: [
+          "🐶",
+          "🐱",
+          "🐭",
+          "🐹",
+          "🐰",
+          "🐻",
+          "🐨",
+          "🐠",
+          "🦀",
+          "🦊",
+          "🦁",
+          "🐯",
+          "🐙",
+          "🦖",
+          "🦕",
+          "🦒",
+          "🐘",
+          "🐎",
+          "🦓",
+          "🐒",
+          "🐼",
+        ],
+        vegetables: [
+          "🥔",
+          "🧅",
+          "🧄",
+          "🌶️",
+          "🥕",
+          "🌽",
+          "🥦",
+          "🍆",
+          "🥒",
+          "🥬",
+          "🍄",
+          "🌰",
+          "🥜",
+          "🍅",
+          "🫑",
+          "🫛",
+        ],
+        birds: [
+          "🐦",
+          "🦉",
+          "🦅",
+          "🦆",
+          "🦢",
+          "🦜",
+          "🐧",
+          "🕊️",
+          "🦃",
+          "🐥",
+          "🐔",
+        ],
+        shapes: [
+          "🟥",
+          "🟧",
+          "🟨",
+          "🟩",
+          "🟦",
+          "🟪",
+          "⚫",
+          "⚪",
+          "🟫",
+          "🔷",
+          "🔶",
+          "🔺",
+          "⭐",
+          "❤️",
+          "💎",
+          "🟢",
+          "🔵",
+          "🟠",
+          "🔴",
+        ],
+        alphabet: [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F",
+          "G",
+          "H",
+          "I",
+          "J",
+          "K",
+          "L",
+          "M",
+          "N",
+          "O",
+          "P",
+          "Q",
+          "R",
+          "S",
+          "T",
+          "U",
+          "V",
+          "W",
+          "X",
+          "Y",
+          "Z",
+        ],
+        numbers: ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "🔟", "💯"],
+        vehicles: [
+          "🚗",
+          "🚌",
+          "🏎️",
+          "🚓",
+          "🚑",
+          "🚒",
+          "🚚",
+          "🚜",
+          "🛵",
+          "🚲",
+          "✈️",
+          "🚢",
+          "🚀",
+          "🚁",
+          "🚂",
+          "🚇",
+          "🚄",
+          "🚤",
+        ],
+        country: [
+          // New country flag emojis
+          "🇺🇸",
+          "🇬🇧",
+          "🇨🇦",
+          "🇫🇷",
+          "🇩🇪",
+          "🇮🇹",
+          "🇯🇵",
+          "🇨🇳",
+          "🇮🇳",
+          "🇦🇺",
+          "🇧🇷",
+          "🇲🇽",
+          "🇿🇦",
+          "🇰🇷",
+          "🇪🇸",
+          "🇸🇪",
+          "🇳🇴",
+          "🇫🇮",
+          "🇦🇷",
+          "🇪🇬",
+          "🇹🇷",
+        ],
+        sports: [
+          "⚽",
+          "🏀",
+          "🏈",
+          "⚾",
+          "🎾",
+          "🏐",
+          "🏉",
+          "🏓",
+          "🏸",
+          "🏒",
+          "⛳",
+          "🏊",
+          "🚴",
+          "🤸",
+          "🏅",
+          "🏆",
+        ],
+      };
+
+      let currentEmojiPool = [];
+
+      // --- Utility Functions ---
+
+      /**
+       * Shuffles an array in place.
+       * @param {Array} array - The array to shuffle.
+       * @returns {Array} The shuffled array.
+       */
+      function shuffle(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+      }
+
+      /**
+       * Generates a random sequence of unique emojis from the current pool.
+       * @param {number} length - The desired length of the sequence.
+       * @returns {string[]} An array of unique random emojis.
+       */
+      function generateSequence(length) {
+        const shuffledEmojis = shuffle([...currentEmojiPool]);
+        return shuffledEmojis.slice(
+          0,
+          Math.min(length, currentEmojiPool.length)
+        );
+      }
+
+      /**
+       * Displays a custom message box.
+       * @param {string} title - The title of the message box.
+       * @param {string} message - The message text.
+       * @param {Function} [callback] - Optional callback function to run when OK is clicked.
+       */
+      function showMessageBox(title, message, callback) {
+        messageBoxTitle.textContent = title;
+        messageBoxText.textContent = message;
+        messageBoxOK.onclick = () => {
+          hideMessageBox();
+          if (callback) callback();
+        };
+        messageBoxOverlay.classList.add("visible");
+      }
+
+      /**
+       * Hides the custom message box.
+       */
+      function hideMessageBox() {
+        messageBoxOverlay.classList.remove("visible");
+      }
+
+      // --- Game Logic Functions ---
+
+      /**
+       * Updates the display for current level and score.
+       */
+      function updateLevelInfo() {
+        levelInfo.textContent = `Level: ${level} | Score: ${score}`;
+      }
+
+      /**
+       * Displays a temporary game message.
+       * @param {string} message - The message to display.
+       * @param {string} type - 'success', 'error', or 'info' for styling.
+       */
+      function displayGameMessage(message, type) {
+        gameMessage.textContent = message;
+        gameMessage.classList.remove(
+          "hidden",
+          "bg-red-200",
+          "text-red-800",
+          "bg-green-200",
+          "text-green-800",
+          "bg-blue-200",
+          "text-blue-800"
+        );
+        if (type === "success") {
+          gameMessage.classList.add("bg-green-200", "text-green-800");
+        } else if (type === "error") {
+          gameMessage.classList.add("bg-red-200", "text-red-800");
+        } else {
+          // info
+          gameMessage.classList.add(
+            "bg-blue-200",
+            "text-blue-800"
+          ); /* FIX: Changed gameGame to gameMessage */
+        }
+        gameMessage.classList.remove("hidden");
+        setTimeout(() => {
+          gameMessage.classList.add("hidden");
+        }, 2000); // Hide message after 2 seconds
+      }
+
+      /**
+       * Initializes the game state for a new game or reset.
+       */
+      function initializeGame() {
+        level = 1;
+        score = 0;
+        sequenceLength = 3;
+        emojiDisplayTimePerItem = 2000; // Reset to initial slower speed (2 seconds per emoji)
+        gameActive = false;
+        waitingForInput = false;
+        currentSequence = [];
+        playerSequence = [];
+
+        updateLevelInfo();
+        sequenceDisplay.textContent = "";
+        sequenceDisplay.classList.remove("animate-emoji");
+        sequenceDisplay.classList.add("opacity-0"); // Keep hidden initially
+        inputArea.classList.add("hidden");
+        playerSequenceDisplay.innerHTML = ""; // Clear player sequence display
+        startGameButton.disabled = false;
+        resetGameButton.disabled = false;
+        emojiGrid.innerHTML = "";
+        hideMessageBox();
+        displayGameMessage('Tap "Start Round" to begin!', "info");
+
+        // Ensure only category selection screen is visible
+        gameScreen.classList.add("hidden");
+        categorySelectionScreen.classList.remove("hidden");
+      }
+
+      /**
+       * Starts a new round of the game.
+       */
+      function startRound() {
+        if (gameActive) {
+          displayGameMessage("A round is already in progress!", "info");
+          return;
+        }
+
+        gameActive = true;
+        waitingForInput = false;
+        startGameButton.disabled = true; // Disable start button during round
+        inputArea.classList.add("hidden");
+        emojiGrid.innerHTML = "";
+        playerSequence = [];
+        playerSequenceDisplay.innerHTML = "";
+
+        currentSequence = generateSequence(sequenceLength);
+        sequenceDisplay.textContent = "";
+        sequenceDisplay.classList.remove("opacity-0");
+
+        displayGameMessage("Watch the sequence!", "info");
+        playSound("start"); // Play sound when round starts
+
+        let i = 0;
+        const pauseBetweenEmojis = 200; // Small pause after an emoji fades out before the next appears
+
+        const displayNextEmoji = () => {
+          if (i < currentSequence.length) {
+            sequenceDisplay.textContent = currentSequence[i];
+            sequenceDisplay.classList.remove("opacity-0");
+            sequenceDisplay.classList.add("animate-emoji");
+
+            setTimeout(() => {
+              sequenceDisplay.classList.remove("animate-emoji");
+              sequenceDisplay.classList.add("opacity-0");
+              i++;
+
+              setTimeout(displayNextEmoji, pauseBetweenEmojis);
+            }, emojiDisplayTimePerItem);
+          } else {
+            sequenceDisplay.classList.add("opacity-0");
+            displayGameMessage("Now tap the emojis in order!", "info");
+            createEmojiButtons();
+            inputArea.classList.remove("hidden");
+            waitingForInput = true;
+          }
+        };
+
+        setTimeout(displayNextEmoji, 500); // Small initial delay before first emoji
+      }
+
+      /**
+       * Creates a grid of emoji buttons for user input.
+       */
+      function createEmojiButtons() {
+        emojiGrid.innerHTML = "";
+        const uniqueEmojisNeeded = Math.min(12, currentEmojiPool.length); // Max 12 buttons
+        let availableEmojisForButtons = [...currentEmojiPool];
+        shuffle(availableEmojisForButtons);
+
+        let buttonEmojis = new Set(currentSequence);
+        let count = 0;
+        while (
+          buttonEmojis.size < uniqueEmojisNeeded &&
+          count < availableEmojisForButtons.length
+        ) {
+          buttonEmojis.add(availableEmojisForButtons[count]);
+          count++;
+        }
+
+        const finalButtonEmojis = shuffle(Array.from(buttonEmojis));
+
+        finalButtonEmojis.forEach((emoji) => {
+          const button = document.createElement("button");
+          button.classList.add("emoji-button");
+          button.dataset.emoji = emoji;
+          button.innerHTML = `<span>${emoji}</span>`;
+          button.addEventListener("click", () => handleEmojiTap(button, emoji));
+          emojiGrid.appendChild(button);
+        });
+      }
+
+      /**
+       * Handles a tap on an emoji button with enhanced feedback.
+       * @param {HTMLElement} button - The button element that was tapped.
+       * @param {string} emoji - The emoji associated with the tapped button.
+       */
+      function handleEmojiTap(button, emoji) {
+        if (!waitingForInput) return;
+
+        // Haptic feedback for mobile devices
+        if ('vibrate' in navigator) {
+          navigator.vibrate(50); // Short vibration for feedback
+        }
+
+        playerSequence.push(emoji);
+
+        const playerEmojiSpan = document.createElement("span");
+        playerEmojiSpan.textContent = emoji;
+        playerEmojiSpan.style.animation = 'bounce 0.3s ease-out';
+        playerSequenceDisplay.appendChild(playerEmojiSpan);
+
+        // Enhanced visual feedback
+        button.style.transform = 'scale(0.9)';
+        button.style.opacity = '0.6';
+        setTimeout(() => {
+          button.style.transform = '';
+          button.style.opacity = '';
+        }, 200);
+
+        if (
+          playerSequence[playerSequence.length - 1] !==
+          currentSequence[playerSequence.length - 1]
+        ) {
+          playSound("wrong"); // Play wrong sound
+          button.classList.add("wrong-choice");
+
+          // Strong haptic feedback for wrong answer
+          if ('vibrate' in navigator) {
+            navigator.vibrate([100, 50, 100]); // Double vibration pattern
+          }
+
+          displayGameMessage("Oops! That's not right.", "error");
+          waitingForInput = false;
+          gameActive = false;
+          Array.from(emojiGrid.children).forEach(
+            (btn) => (btn.disabled = true)
+          ); // Disable all buttons
+
+          setTimeout(() => {
+            showMessageBox(
+              "Game Over!",
+              `The correct sequence was: ${currentSequence.join(
+                " "
+              )}. You reached Level ${level}. Your final score is ${score}.`
+            );
+            playSound("gameOver"); // Play game over sound
+            initializeGame(); // Reset game to category selection on incorrect answer
+          }, 1000);
+          return;
+        } else {
+          playSound("correct"); // Play correct sound
+          button.classList.add("correct-choice");
+
+          // Success haptic feedback
+          if ('vibrate' in navigator) {
+            navigator.vibrate(80); // Success vibration
+          }
+
+          // Add wiggle animation to the button for correct choice
+          button.style.animation = 'wiggle 0.5s ease-out';
+          setTimeout(() => {
+            button.classList.remove("correct-choice");
+            button.style.animation = '';
+          }, 500);
+        }
+
+        if (playerSequence.length === currentSequence.length) {
+          score++;
+          level++;
+          sequenceLength++;
+          if (sequenceLength > currentEmojiPool.length) {
+            sequenceLength = currentEmojiPool.length;
+          }
+          if (emojiDisplayTimePerItem > minEmojiDisplayTimePerItem) {
+            emojiDisplayTimePerItem -= 100;
+          }
+          updateLevelInfo();
+          waitingForInput = false;
+          gameActive = false;
+
+          // Celebration haptic feedback
+          if ('vibrate' in navigator) {
+            navigator.vibrate([100, 50, 100, 50, 200]); // Celebration pattern
+          }
+
+          // Add celebration animation to all buttons
+          Array.from(emojiGrid.children).forEach((btn, index) => {
+            setTimeout(() => {
+              btn.style.animation = 'bounce 0.6s ease-out';
+              setTimeout(() => {
+                btn.style.animation = '';
+              }, 600);
+            }, index * 100);
+          });
+
+          showMessageBox(
+            "Great Job!",
+            `You completed Level ${level - 1}. Starting Level ${level}...`,
+            () => {
+              playSound("levelUp"); // Play level up sound
+              startRound();
+            }
+          );
+        }
+      }
+
+      // --- Event Listeners ---
+      categoryButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+          const category = button.dataset.category;
+          currentEmojiPool = emojiCategories[category];
+
+          // Hide category selection, show game screen
+          categorySelectionScreen.classList.add("hidden");
+          gameScreen.classList.remove("hidden");
+
+          // Initialize game state for the new category and start the first round
+          level = 1; // Ensure level is reset for new category
+          score = 0; // Ensure score is reset for new category
+          sequenceLength = 3; // Reset sequence length
+          emojiDisplayTimePerItem = 2000; // Reset display time
+          updateLevelInfo(); // Update level info display
+          startRound(); // Directly start the first round
+        });
+      });
+
+      startGameButton.addEventListener("click", startRound);
+      resetGameButton.addEventListener("click", initializeGame);
+      messageBoxOK.addEventListener("click", hideMessageBox);
+
+      // Toggle sound button functionality
+      toggleSoundButton.addEventListener("click", () => {
+        soundEnabled = !soundEnabled;
+        toggleSoundButton.textContent = soundEnabled
+          ? "🔊 Sound ON"
+          : "🔇 Sound OFF";
+        if (soundEnabled) {
+          // Optionally play a soft sound to confirm sound is on
+          playSound("start");
+        }
+      });
+
+      // Initialize the game to show category selection on load
+      window.onload = initializeGame;
+    </script>
+  </body>
+</html>

@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Asteroid Blaster</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap");
+
+      html,
+      body {
+        height: 100vh; /* Ensure html and body take full viewport height */
+        margin: 0;
+        overflow: hidden; /* Ensure no body scrollbars */
+        background-color: #1a1a2e; /* Dark space background */
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        font-family: "Inter", sans-serif;
+        color: #e0e0e0;
+        -webkit-user-select: none; /* Safari */
+        -moz-user-select: none; /* Firefox */
+        -ms-user-select: none; /* IE10+ */
+        user-select: none; /* Standard */
+      }
+
+      .game-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background-color: #0f0f1d;
+        border-radius: 20px;
+        box-shadow: 0 0 30px rgba(0, 255, 255, 0.4);
+        padding: 20px;
+        max-width: 90%;
+        width: 500px; /* Max width for desktop */
+        box-sizing: border-box;
+        position: relative; /* For game over overlay */
+        /* Allow game container to shrink vertically */
+        flex-grow: 1; /* Allow it to grow if space is available */
+        max-height: 95vh; /* Ensure it doesn't exceed 95% of viewport height */
+      }
+
+      canvas {
+        background-color: #0a0a1a; /* Even darker canvas background */
+        border: 2px solid #00ffff; /* Cyan border */
+        border-radius: 10px;
+        display: block;
+        touch-action: none; /* Prevent browser touch actions like pull-to-refresh */
+        flex-shrink: 1; /* Allow canvas to shrink */
+        cursor: pointer; /* Indicate it's interactive */
+        position: relative; /* For potential overlay effects */
+      }
+
+      .game-info {
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+        margin-bottom: 10px;
+        padding: 0 10px;
+        font-size: 1.2em;
+        color: #00ffcc; /* Bright green text */
+        flex-shrink: 0; /* Prevent info from shrinking */
+      }
+
+      .stage-info {
+        margin-left: 20px; /* Space between score and stage */
+        color: #ffaa00; /* Orange color for stage */
+      }
+
+      .controls {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        margin-top: 15px;
+        width: 100%;
+        padding: 0 10px;
+        flex-wrap: wrap; /* Allow controls to wrap on small screens */
+        flex-shrink: 0; /* Prevent controls from shrinking */
+      }
+
+      .control-button {
+        background: linear-gradient(145deg, #00b3b3, #008080);
+        color: white;
+        border: none;
+        border-radius: 15px;
+        padding: 18px 30px; /* Increased padding for larger touch targets */
+        font-size: 1.3em;
+        font-weight: bold;
+        cursor: pointer;
+        box-shadow: 0 5px 15px rgba(0, 255, 255, 0.3);
+        transition: all 0.15s ease; /* Faster transition for better responsiveness */
+        flex: 1; /* Allow buttons to grow */
+        min-width: 120px; /* Minimum width for buttons */
+        min-height: 60px; /* Minimum height for better touch targets */
+        /* Re-enable display for control buttons */
+        display: block;
+        /* Better touch support */
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+        /* Improve font rendering */
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+      }
+
+      .control-button:hover {
+        background: linear-gradient(145deg, #00e6e6, #00a3a3);
+        transform: translateY(-2px);
+        box-shadow: 0 7px 20px rgba(0, 255, 255, 0.5);
+      }
+
+      .control-button:active,
+      .control-button.active {
+        background: linear-gradient(145deg, #009999, #006666);
+        transform: translateY(1px);
+        box-shadow: 0 2px 8px rgba(0, 255, 255, 0.4);
+        /* Add visual feedback for active state */
+        border: 2px solid #00ffff;
+      }
+
+      #shootButton {
+        background: linear-gradient(145deg, #ff6666, #cc0000);
+        box-shadow: 0 5px 15px rgba(255, 102, 102, 0.3);
+        /* Keep shoot button hidden if auto-shooting is enabled and no explicit button is desired */
+        display: none;
+      }
+
+      #shootButton:hover {
+        background: linear-gradient(145deg, #ff9999, #ff3333);
+        box-shadow: 0 7px 20px rgba(255, 102, 102, 0.5);
+      }
+
+      .game-over-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.8);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        border-radius: 20px;
+        z-index: 10;
+        font-size: 2em;
+        font-weight: bold;
+        text-align: center;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.5s ease;
+      }
+
+      .game-over-overlay.visible {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .game-over-overlay h2 {
+        color: #ffcc00; /* Yellow for game over message */
+        margin-bottom: 20px;
+      }
+
+      .game-over-overlay p {
+        color: #fff;
+        font-size: 0.7em;
+        margin-bottom: 30px;
+      }
+
+      #restartButton {
+        background: linear-gradient(145deg, #66ff66, #00cc00);
+        box-shadow: 0 5px 15px rgba(102, 255, 102, 0.3);
+        color: white;
+        border: none;
+        border-radius: 15px;
+        padding: 15px 30px;
+        font-size: 1.3em;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      #restartButton:hover {
+        background: linear-gradient(145deg, #99ff99, #33ff33);
+        transform: translateY(-2px);
+        box-shadow: 0 7px 20px rgba(102, 255, 102, 0.5);
+      }
+
+      #restartButton:active {
+        transform: translateY(1px);
+        box-shadow: 0 3px 10px rgba(102, 255, 102, 0.2);
+      }
+
+      .start-screen {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.9);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        border-radius: 20px;
+        z-index: 20; /* Above game over overlay */
+        color: white;
+        font-size: 1.2em; /* Smaller base font size */
+        text-align: center;
+        padding: 10px;
+        box-sizing: border-box;
+        overflow: hidden; /* Prevent scrolling */
+      }
+
+      .start-screen h1 {
+        color: #00ffff;
+        font-size: 1.6em; /* Smaller heading */
+        margin-bottom: 12px;
+        margin-top: 0;
+      }
+
+      .start-screen p {
+        margin: 4px 0; /* Tighter spacing */
+        line-height: 1.2;
+        max-width: 350px;
+      }
+
+      #startButton {
+        background: linear-gradient(145deg, #66ff66, #00cc00);
+        box-shadow: 0 5px 15px rgba(102, 255, 102, 0.3);
+        color: white;
+        border: none;
+        border-radius: 15px;
+        padding: 10px 20px; /* More compact button */
+        font-size: 1.1em; /* Smaller button text */
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        margin-top: 15px; /* Less margin */
+        min-width: 160px;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      #startButton:hover {
+        background: linear-gradient(145deg, #99ff99, #33ff33);
+        transform: translateY(-2px);
+        box-shadow: 0 7px 20px rgba(102, 255, 102, 0.5);
+      }
+
+      #startButton:active {
+        transform: translateY(1px);
+        box-shadow: 0 3px 10px rgba(102, 255, 102, 0.2);
+      }
+
+      /* Responsive adjustments */
+      @media (max-width: 600px) {
+        .game-container {
+          width: 100%;
+          max-width: 95vw; /* Use vw for better fitting on very small screens */
+          padding: 15px;
+        }
+
+        .game-info {
+          font-size: 1em;
+        }
+
+        .control-button {
+          padding: 12px 20px; /* Slightly less padding */
+          font-size: 1em; /* Slightly smaller font */
+          min-width: unset; /* Remove min-width to allow full flexibility */
+          flex: 1 1 auto; /* Allow items to shrink and grow */
+          display: block; /* Ensure buttons are visible on small screens */
+        }
+        #shootButton {
+          display: none; /* Keep shoot button hidden even on small screens if auto-shooting */
+        }
+        .controls {
+          gap: 8px; /* Reduce gap on small screens */
+          padding: 0 5px; /* Reduce padding on small screens */
+        }
+
+        /* Mobile start screen improvements */
+        .start-screen {
+          font-size: 1em; /* Much smaller base font size for mobile */
+          padding: 8px;
+          justify-content: center; /* Center content vertically */
+        }
+
+        .start-screen h1 {
+          font-size: 1.4em; /* Smaller heading for mobile */
+          margin-bottom: 8px;
+        }
+
+        .start-screen p {
+          font-size: 0.85em; /* Much smaller text for mobile */
+          margin: 3px 0;
+          max-width: 90vw;
+          line-height: 1.1;
+        }
+
+        #startButton {
+          font-size: 1em; /* Smaller button text */
+          padding: 12px 20px; /* Compact but touchable */
+          min-width: 140px;
+          margin-top: 12px;
+        }
+      }
+
+      /* Extra small screen adjustments */
+      @media (max-width: 400px) {
+        .start-screen {
+          font-size: 0.9em;
+          padding: 5px;
+        }
+
+        .start-screen h1 {
+          font-size: 1.2em;
+          margin-bottom: 6px;
+        }
+
+        .start-screen p {
+          font-size: 0.8em;
+          margin: 2px 0;
+        }
+
+        #startButton {
+          font-size: 0.9em;
+          padding: 10px 18px;
+          min-width: 120px;
+          margin-top: 10px;
+        }
+      }
+
+      /* Very small screens (landscape phones) */
+      @media (max-height: 500px) {
+        .start-screen {
+          font-size: 0.8em;
+          padding: 3px;
+        }
+
+        .start-screen h1 {
+          font-size: 1.1em;
+          margin-bottom: 4px;
+        }
+
+        .start-screen p {
+          font-size: 0.75em;
+          margin: 1px 0;
+          line-height: 1;
+        }
+
+        #startButton {
+          font-size: 0.85em;
+          padding: 8px 16px;
+          min-width: 100px;
+          margin-top: 8px;
+        }
+      }
+    </style>
+    <!-- Tone.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+  </head>
+  <body>
+    <div class="game-container">
+      <div class="game-info">
+        <span id="score">Score: 0</span>
+        <span id="stage">Stage: 1</span>
+        <span id="lives">Lives: 3</span>
+      </div>
+      <canvas id="gameCanvas"></canvas>
+      <div class="controls">
+        <button id="leftButton" class="control-button">← Move</button>
+        <button id="rightButton" class="control-button">Move →</button>
+        <!-- The shoot button is hidden via CSS as shooting is now automatic -->
+        <button id="shootButton" class="control-button">Shoot!</button>
+      </div>
+
+      <div id="gameOverOverlay" class="game-over-overlay">
+        <h2>Game Over!</h2>
+        <p id="finalScore"></p>
+        <button id="restartButton">Play Again?</button>
+      </div>
+
+      <div id="startScreen" class="start-screen">
+        <h1>Asteroid Blaster</h1>
+        <p>Clear the asteroid field!</p>
+        <p>🎮 Arrow/WASD keys 📱 Tap sides 🖱️ Click/hold</p>
+        <p>Auto-shooting enabled</p>
+        <button id="startButton">Play!</button>
+      </div>
+    </div>
+
+    <script>
+      const canvas = document.getElementById("gameCanvas");
+      const ctx = canvas.getContext("2d");
+      const scoreDisplay = document.getElementById("score");
+      const stageDisplay = document.getElementById("stage");
+      const livesDisplay = document.getElementById("lives");
+      const gameOverOverlay = document.getElementById("gameOverOverlay");
+      const finalScoreDisplay = document.getElementById("finalScore");
+      const restartButton = document.getElementById("restartButton");
+      const leftButton = document.getElementById("leftButton"); // Re-added
+      const rightButton = document.getElementById("rightButton"); // Re-added
+      const shootButton = document.getElementById("shootButton");
+      const startScreen = document.getElementById("startScreen");
+      const startButton = document.getElementById("startButton");
+
+      // Game constants and variables
+      let player;
+      let bullets = [];
+      let asteroids = [];
+      let score = 0;
+      let lives = 3;
+      let gameOver = false;
+      let animationFrameId;
+      let autoShootIntervalId;
+
+      // Base game difficulty parameters
+      let PLAYER_SPEED = 5;
+      let BULLET_SPEED = 7;
+      let ASTEROID_SPEED_MIN_BASE = 1;
+      let ASTEROID_SPEED_MAX_BASE = 3;
+      let ASTEROID_SPAWN_INTERVAL_BASE = 1000;
+
+      const ASTEROID_SIZE_MIN_BASE = 20;
+      const ASTEROID_SIZE_MAX_BASE = 40;
+      const ASTEROID_SIZE_CAP = 60;
+
+      const AUTO_SHOOT_DELAY = 300;
+
+      let lastAsteroidSpawnTime = 0;
+
+      let stage = 1;
+      const SCORE_PER_STAGE = 100;
+
+      const STAGE_COLORS = [
+        "#888888",
+        "#FF6347",
+        "#ADFF2F",
+        "#6A5ACD",
+        "#DAA520",
+        "#FF69B4",
+        "#40E0D0",
+        "#EE82EE",
+        "#F0E68C",
+        "#DCDCDC",
+      ];
+
+      const shootSynth = new Tone.Synth({
+        oscillator: { type: "sine" },
+        envelope: {
+          attack: 0.01,
+          decay: 0.1,
+          sustain: 0.0,
+          release: 0.1,
+        },
+        volume: -10,
+      }).toDestination();
+
+      const hitNoise = new Tone.NoiseSynth({
+        noise: { type: "white" },
+        envelope: {
+          attack: 0.005,
+          decay: 0.15,
+          sustain: 0.0,
+          release: 0.1,
+        },
+        volume: -15,
+      }).toDestination();
+
+      const lifeLostSynth = new Tone.MembraneSynth({
+        pitchDecay: 0.05,
+        octaves: 1,
+        envelope: {
+          attack: 0.001,
+          decay: 0.4,
+          sustain: 0.01,
+          release: 0.2,
+        },
+        volume: -10,
+      }).toDestination();
+
+      class Player {
+        constructor() {
+          this.width = 40;
+          this.height = 30;
+          this.x = canvas.width / 2 - this.width / 2;
+          this.y = canvas.height - this.height - 10;
+          this.color = "#00aaff";
+        }
+
+        draw() {
+          ctx.fillStyle = this.color;
+          ctx.beginPath();
+          ctx.moveTo(this.x + this.width / 2, this.y);
+          ctx.lineTo(this.x, this.y + this.height);
+          ctx.lineTo(this.x + this.width, this.y + this.height);
+          ctx.closePath();
+          ctx.fill();
+        }
+
+        move(direction) {
+          if (direction === "left") {
+            this.x -= PLAYER_SPEED;
+          } else if (direction === "right") {
+            this.x += PLAYER_SPEED;
+          }
+
+          if (this.x < 0) {
+            this.x = 0;
+          }
+          if (this.x + this.width > canvas.width) {
+            this.x = canvas.width - this.width;
+          }
+        }
+
+        shoot() {
+          bullets.push(new Bullet(this.x + this.width / 2 - 2.5, this.y));
+          shootSynth.triggerAttackRelease("C5", "8n", Tone.now());
+        }
+      }
+
+      class Bullet {
+        constructor(x, y) {
+          this.width = 5;
+          this.height = 10;
+          this.x = x;
+          this.y = y;
+          this.color = "#ffcc00";
+        }
+
+        draw() {
+          ctx.fillStyle = this.color;
+          ctx.fillRect(this.x, this.y, this.width, this.height);
+        }
+
+        update() {
+          this.y -= BULLET_SPEED;
+        }
+      }
+
+      class Asteroid {
+        constructor(currentStage) {
+          const stageSizeIncrease = (currentStage - 1) * 2;
+          const effectiveMinSize = ASTEROID_SIZE_MIN_BASE + stageSizeIncrease;
+          const effectiveMaxSize = Math.min(
+            ASTEROID_SIZE_MAX_BASE + stageSizeIncrease * 1.5,
+            ASTEROID_SIZE_CAP
+          );
+
+          this.size =
+            Math.random() * (effectiveMaxSize - effectiveMinSize) +
+            effectiveMinSize;
+
+          this.x = Math.random() * (canvas.width - this.size);
+          this.y = -this.size;
+
+          this.speed =
+            Math.random() * (ASTEROID_SPEED_MAX - ASTEROID_SPEED_MIN) +
+            ASTEROID_SPEED_MIN;
+
+          this.color = STAGE_COLORS[(currentStage - 1) % STAGE_COLORS.length];
+        }
+
+        draw() {
+          ctx.fillStyle = this.color;
+          ctx.beginPath();
+          ctx.arc(
+            this.x + this.size / 2,
+            this.y + this.size / 2,
+            this.size / 2,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+          ctx.strokeStyle = "#cccccc";
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        }
+
+        update() {
+          this.y += this.speed;
+        }
+      }
+
+      function resizeCanvas() {
+        const gameContainer = document.querySelector(".game-container");
+        const gameInfo = document.querySelector(".game-info");
+        const controls = document.querySelector(".controls");
+
+        const gameInfoHeight = gameInfo.offsetHeight;
+        const controlsHeight = controls.offsetHeight;
+        const containerPaddingVertical =
+          parseFloat(window.getComputedStyle(gameContainer).paddingTop) +
+          parseFloat(window.getComputedStyle(gameContainer).paddingBottom);
+        const gameInfoMarginBottom = parseFloat(
+          window.getComputedStyle(gameInfo).marginBottom
+        );
+        const controlsMarginTop = parseFloat(
+          window.getComputedStyle(controls).marginTop
+        );
+
+        const totalNonCanvasHeight =
+          gameInfoHeight +
+          controlsHeight +
+          containerPaddingVertical +
+          gameInfoMarginBottom +
+          controlsMarginTop;
+
+        const availableCanvasHeight =
+          window.innerHeight - totalNonCanvasHeight - 20;
+
+        const containerWidth = gameContainer.clientWidth;
+        canvas.width = Math.min(containerWidth, 460);
+
+        const desiredCanvasHeightFromWidth = canvas.width * 1.2;
+
+        canvas.height = Math.min(
+          desiredCanvasHeightFromWidth,
+          availableCanvasHeight
+        );
+
+        if (player) {
+          player.x = canvas.width / 2 - player.width / 2;
+          player.y = canvas.height - player.height - 10;
+        }
+        if (!gameOver && player) {
+          draw();
+        }
+        console.log(
+          "Canvas resized:",
+          canvas.width,
+          canvas.height,
+          "Available vertical space for canvas:",
+          availableCanvasHeight
+        );
+      }
+
+      let ASTEROID_SPEED_MIN = ASTEROID_SPEED_MIN_BASE;
+      let ASTEROID_SPEED_MAX = ASTEROID_SPEED_MAX_BASE;
+      let ASTEROID_SPAWN_INTERVAL = ASTEROID_SPAWN_INTERVAL_BASE;
+
+      function updateStageDifficulty() {
+        ASTEROID_SPEED_MAX += 0.5;
+        ASTEROID_SPEED_MIN += 0.2;
+        ASTEROID_SPAWN_INTERVAL = Math.max(200, ASTEROID_SPAWN_INTERVAL - 50);
+        console.log(
+          `Stage ${stage}: Asteroid Speed Min: ${ASTEROID_SPEED_MIN}, Max: ${ASTEROID_SPEED_MAX}, Spawn Interval: ${ASTEROID_SPAWN_INTERVAL}`
+        );
+      }
+
+      function startAutoShoot() {
+        if (autoShootIntervalId) {
+          clearInterval(autoShootIntervalId);
+        }
+        autoShootIntervalId = setInterval(() => {
+          if (!gameOver && player && startScreen.style.display === "none") {
+            player.shoot();
+          }
+        }, AUTO_SHOOT_DELAY);
+      }
+
+      function stopAutoShoot() {
+        if (autoShootIntervalId) {
+          clearInterval(autoShootIntervalId);
+          autoShootIntervalId = null;
+        }
+      }
+
+      function initGame() {
+        console.log("Initializing game...");
+        score = 0;
+        lives = 3;
+        stage = 1;
+        ASTEROID_SPEED_MIN = ASTEROID_SPEED_MIN_BASE;
+        ASTEROID_SPEED_MAX = ASTEROID_SPEED_MAX_BASE;
+        ASTEROID_SPAWN_INTERVAL = ASTEROID_SPAWN_INTERVAL_BASE;
+
+        bullets = [];
+        asteroids = [];
+        gameOver = false;
+        player = new Player();
+        updateDisplay();
+        gameOverOverlay.classList.remove("visible");
+        startScreen.style.display = "none";
+        resizeCanvas();
+        if (animationFrameId) {
+          cancelAnimationFrame(animationFrameId);
+        }
+        console.log("Game initialized, starting loop...");
+        gameLoop();
+        startAutoShoot();
+      }
+
+      function updateDisplay() {
+        scoreDisplay.textContent = `Score: ${score}`;
+        stageDisplay.textContent = `Stage: ${stage}`;
+        livesDisplay.textContent = `Lives: ${lives}`;
+      }
+
+      function checkCollision(obj1, obj2) {
+        return (
+          obj1.x < obj2.x + obj2.size &&
+          obj1.x + obj1.width > obj2.x &&
+          obj1.y < obj2.y + obj2.size &&
+          obj1.y + obj1.height > obj2.y
+        );
+      }
+
+      function update() {
+        if (gameOver) {
+          stopAutoShoot();
+          return;
+        }
+
+        if (score >= stage * SCORE_PER_STAGE && stage < 10) {
+          stage++;
+          updateStageDifficulty();
+          updateDisplay();
+        }
+
+        const currentTime = Date.now();
+        if (currentTime - lastAsteroidSpawnTime > ASTEROID_SPAWN_INTERVAL) {
+          asteroids.push(new Asteroid(stage));
+          lastAsteroidSpawnTime = currentTime;
+        }
+
+        for (let i = bullets.length - 1; i >= 0; i--) {
+          const bullet = bullets[i];
+          bullet.update();
+          if (bullet.y < 0) {
+            bullets.splice(i, 1);
+          }
+        }
+
+        for (let i = asteroids.length - 1; i >= 0; i--) {
+          const asteroid = asteroids[i];
+          asteroid.update();
+
+          let hitByBullet = false;
+          for (let j = bullets.length - 1; j >= 0; j--) {
+            const bullet = bullets[j];
+            if (
+              checkCollision(bullet, {
+                x: asteroid.x,
+                y: asteroid.y,
+                size: asteroid.size,
+              })
+            ) {
+              asteroids.splice(i, 1);
+              bullets.splice(j, 1);
+              score += 10;
+              updateDisplay();
+              hitByBullet = true;
+              hitNoise.triggerAttackRelease("16n", Tone.now());
+              break;
+            }
+          }
+
+          if (hitByBullet) {
+            continue;
+          }
+
+          if (
+            checkCollision(player, {
+              x: asteroid.x,
+              y: asteroid.y,
+              size: asteroid.size,
+            })
+          ) {
+            asteroids.splice(i, 1);
+            lives--;
+            lifeLostSynth.triggerAttackRelease("C2", "0.2", Tone.now());
+            updateDisplay();
+            if (lives <= 0) {
+              gameOver = true;
+              cancelAnimationFrame(animationFrameId);
+              finalScoreDisplay.textContent = `Your Score: ${score}`;
+              gameOverOverlay.classList.add("visible");
+              console.log("Game Over!");
+            }
+          }
+
+          if (
+            i < asteroids.length &&
+            asteroids[i] === asteroid &&
+            asteroid.y > canvas.height
+          ) {
+            asteroids.splice(i, 1);
+          }
+        }
+      }
+
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        if (player) {
+          player.draw();
+        }
+
+        bullets.forEach((bullet) => {
+          bullet.draw();
+        });
+
+        asteroids.forEach((asteroid) => {
+          asteroid.draw();
+        });
+      }
+
+      function gameLoop() {
+        update();
+        draw();
+        animationFrameId = requestAnimationFrame(gameLoop);
+      }
+
+      // Keyboard controls with state tracking
+      document.addEventListener("keydown", (e) => {
+        if (gameOver || startScreen.style.display !== "none") return;
+
+        if (e.key === "ArrowLeft" || e.key === "a" || e.key === "A") {
+          e.preventDefault();
+          inputState.keyboard.left = true;
+        } else if (e.key === "ArrowRight" || e.key === "d" || e.key === "D") {
+          e.preventDefault();
+          inputState.keyboard.right = true;
+        }
+      });
+
+      document.addEventListener("keyup", (e) => {
+        if (e.key === "ArrowLeft" || e.key === "a" || e.key === "A") {
+          e.preventDefault();
+          inputState.keyboard.left = false;
+        } else if (e.key === "ArrowRight" || e.key === "d" || e.key === "D") {
+          e.preventDefault();
+          inputState.keyboard.right = false;
+        }
+      });
+
+      // Unified input state system
+      const inputState = {
+        left: false,
+        right: false,
+        keyboard: {
+          left: false,
+          right: false
+        },
+        touch: {
+          left: false,
+          right: false
+        },
+        buttons: {
+          left: false,
+          right: false
+        }
+      };
+
+      // Function to update input state and handle continuous movement
+      function updateInputState() {
+        // Aggregate all input sources
+        inputState.left = inputState.keyboard.left || inputState.touch.left || inputState.buttons.left;
+        inputState.right = inputState.keyboard.right || inputState.touch.right || inputState.buttons.right;
+
+        // Apply movement
+        if (inputState.left) {
+          player.move("left");
+        }
+        if (inputState.right) {
+          player.move("right");
+        }
+
+        // Continue checking for movement
+        requestAnimationFrame(updateInputState);
+      }
+
+      // Start the input update loop
+      updateInputState();
+
+      leftButton.addEventListener("touchstart", (e) => {
+        e.preventDefault();
+        if (!gameOver && startScreen.style.display === "none") {
+          inputState.buttons.left = true;
+          leftButton.classList.add("active");
+        }
+      });
+      leftButton.addEventListener("touchend", (e) => {
+        e.preventDefault();
+        inputState.buttons.left = false;
+        leftButton.classList.remove("active");
+      });
+      leftButton.addEventListener("mousedown", () => {
+        if (!gameOver && startScreen.style.display === "none") {
+          inputState.buttons.left = true;
+          leftButton.classList.add("active");
+        }
+      });
+      leftButton.addEventListener("mouseup", () => {
+        inputState.buttons.left = false;
+        leftButton.classList.remove("active");
+      });
+      leftButton.addEventListener("mouseleave", () => {
+        inputState.buttons.left = false;
+        leftButton.classList.remove("active");
+      });
+
+      rightButton.addEventListener("touchstart", (e) => {
+        e.preventDefault();
+        if (!gameOver && startScreen.style.display === "none") {
+          inputState.buttons.right = true;
+          rightButton.classList.add("active");
+        }
+      });
+      rightButton.addEventListener("touchend", (e) => {
+        e.preventDefault();
+        inputState.buttons.right = false;
+        rightButton.classList.remove("active");
+      });
+      rightButton.addEventListener("mousedown", () => {
+        if (!gameOver && startScreen.style.display === "none") {
+          inputState.buttons.right = true;
+          rightButton.classList.add("active");
+        }
+      });
+      rightButton.addEventListener("mouseup", () => {
+        inputState.buttons.right = false;
+        rightButton.classList.remove("active");
+      });
+      rightButton.addEventListener("mouseleave", () => {
+        inputState.buttons.right = false;
+        rightButton.classList.remove("active");
+      });
+
+      // Touch/Click movement on canvas with improved zones and state tracking
+      function handleCanvasTouchStart(e) {
+        e.preventDefault();
+        if (gameOver || startScreen.style.display !== "none") return;
+
+        let clientX;
+        if (e.touches && e.touches.length > 0) {
+          clientX = e.touches[0].clientX;
+        } else {
+          clientX = e.clientX;
+        }
+
+        const canvasRect = canvas.getBoundingClientRect();
+        const clickX = clientX - canvasRect.left;
+
+        // Three-zone layout: left 40%, center 20%, right 40%
+        const leftZone = canvas.width * 0.4;
+        const rightZone = canvas.width * 0.6;
+
+        if (clickX < leftZone) {
+          inputState.touch.left = true;
+        } else if (clickX > rightZone) {
+          inputState.touch.right = true;
+        }
+        // Center zone does nothing (neutral area)
+      }
+
+      function handleCanvasTouchEnd(e) {
+        e.preventDefault();
+        inputState.touch.left = false;
+        inputState.touch.right = false;
+      }
+
+      // Touch event listeners
+      canvas.addEventListener("touchstart", handleCanvasTouchStart);
+      canvas.addEventListener("touchmove", handleCanvasTouchStart);
+      canvas.addEventListener("touchend", handleCanvasTouchEnd);
+      canvas.addEventListener("touchcancel", handleCanvasTouchEnd);
+
+      // Mouse event listeners for desktop testing
+      canvas.addEventListener("mousedown", handleCanvasTouchStart);
+      canvas.addEventListener("mouseup", handleCanvasTouchEnd);
+      canvas.addEventListener("mouseleave", handleCanvasTouchEnd);
+      canvas.addEventListener("mousemove", (e) => {
+        if (e.buttons === 1) {
+          handleCanvasTouchStart(e);
+        }
+      });
+
+      restartButton.addEventListener("click", initGame);
+
+      startButton.addEventListener("click", async () => {
+        await Tone.start();
+        console.log("Audio context started");
+        initGame();
+      });
+
+      window.onload = function () {
+        window.addEventListener("resize", resizeCanvas);
+        resizeCanvas();
+      };
+    </script>
+  </body>
+</html>

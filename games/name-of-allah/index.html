@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Allah's 99 Names Game</title>
+    <!-- Tailwind CSS CDN for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts - Inter for general text, Amatic SC for display, and Noto Naskh Arabic for Arabic script -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Amatic+SC:wght@700&family=Noto+Naskh+Arabic:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* Custom styles for the body and animations */
+      body {
+        font-family: "Inter", sans-serif; /* Apply Inter font as default */
+        background: linear-gradient(
+          135deg,
+          #a7f3d0 0%,
+          #6ee7b7 100%
+        ); /* Soft green-blue gradient background */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh; /* Ensure full viewport height */
+        margin: 0;
+        overflow-x: hidden; /* Prevent horizontal scroll bars */
+        padding: 1rem; /* Add some padding around the edges */
+        position: relative; /* For absolute positioning of background elements */
+        -webkit-tap-highlight-color: transparent; /* Remove tap highlight on mobile */
+      }
+
+      /* Subtle background animation */
+      body::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: repeating-linear-gradient(
+          45deg,
+          rgba(255, 255, 255, 0.05),
+          rgba(255, 255, 255, 0.05) 10px,
+          transparent 10px,
+          transparent 20px
+        );
+        animation: background-pan 30s linear infinite;
+        z-index: -1; /* Place behind content */
+        opacity: 0.7;
+      }
+
+      @keyframes background-pan {
+        0% {
+          background-position: 0% 0%;
+        }
+        100% {
+          background-position: 100% 100%;
+        }
+      }
+
+      /* Title font styling */
+      h1 {
+        font-family: "Amatic SC", cursive; /* Playful font for the title */
+        letter-spacing: 0.05em; /* Slightly increased letter spacing */
+        text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.25); /* More prominent text shadow */
+      }
+
+      /* Styling for the name cards */
+      .name-card {
+        background: linear-gradient(
+          145deg,
+          #ffffff,
+          #f0f0f0
+        ); /* Soft gradient background */
+        border-radius: 1.5rem; /* More rounded corners */
+        box-shadow: 0 15px 25px -5px rgba(0, 0, 0, 0.15),
+          0 8px 10px -6px rgba(0, 0, 0, 0.1); /* Enhanced shadow */
+        cursor: pointer; /* Indicate clickability */
+        position: relative;
+        transition: transform 0.3s ease, box-shadow 0.3s ease,
+          border-color 0.3s ease; /* Smooth transitions */
+        height: 14rem; /* Fixed height for cards */
+        width: 100%; /* Ensure cards take full width in their column */
+        max-width: 16rem; /* Max width to control size on larger screens */
+        border: 3px solid #818cf8; /* A more prominent blue border */
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        padding: 1.5rem;
+        touch-action: manipulation; /* Improves responsiveness of touch events */
+        overflow: hidden; /* Prevent text from breaking outside card */
+        word-break: break-word; /* Allow long words to break */
+        text-wrap: balance; /* Balance text lines for better appearance */
+        hyphens: auto; /* Enable hyphenation for better text breaking */
+      }
+
+      .name-card:hover {
+        transform: translateY(-10px) scale(1.05) rotateZ(-1deg); /* Lift, slightly scale, and subtly rotate on hover */
+        box-shadow: 0 25px 40px -8px rgba(0, 0, 0, 0.2),
+          0 12px 15px -8px rgba(0, 0, 0, 0.08); /* Deeper shadow on hover */
+        border-color: #6366f1; /* Darker blue border on hover */
+      }
+
+      /* Arabic text specific styling */
+      .arabic-text {
+        font-family: "Noto Naskh Arabic", serif; /* Apply Noto Naskh Arabic for Arabic script */
+        font-size: 2.25rem; /* Larger Arabic font */
+        line-height: 1.2;
+        direction: rtl; /* Right-to-left for Arabic */
+      }
+
+      /* Message box styling */
+      #messageBox {
+        position: fixed; /* Fixed position to stay on top */
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: #d1fae5; /* Light green for success/info */
+        color: #065f46; /* Darker green text */
+        font-size: 1.6rem; /* Larger font size */
+        font-weight: 600;
+        padding: 1.75rem 3rem; /* More generous padding */
+        border-radius: 1.25rem; /* Slightly more rounded corners */
+        box-shadow: 0 12px 25px rgba(0, 0, 0, 0.25); /* Stronger shadow */
+        z-index: 100; /* Ensure it's on top */
+        opacity: 0; /* Start hidden */
+        transition: opacity 0.4s ease-in-out, transform 0.4s ease-in-out; /* Smooth fade in/out and pop */
+        text-align: center;
+        border: 3px solid #34d399; /* Green border */
+        animation: message-pulse 1.5s infinite; /* Add a subtle pulse animation */
+      }
+      #messageBox.visible {
+        opacity: 1; /* Make visible */
+        transform: translate(-50%, -50%) scale(1);
+      }
+
+      @keyframes message-pulse {
+        0% {
+          transform: translate(-50%, -50%) scale(1);
+        }
+        50% {
+          transform: translate(-50%, -50%) scale(1.03);
+        }
+        100% {
+          transform: translate(-50%, -50%) scale(1);
+        }
+      }
+
+      /* Responsive grid for cards */
+      .names-grid {
+        display: grid;
+        grid-template-columns: repeat(
+          auto-fit,
+          minmax(12rem, 1fr)
+        ); /* Auto-fit columns, min 12rem wide */
+        gap: 1.75rem; /* Increased gap between cards */
+        width: 100%;
+        max-width: 1000px; /* Slightly wider max width for the grid */
+        margin-top: 2rem;
+        margin-bottom: 2rem;
+        padding: 0 0.5rem; /* Small horizontal padding for grid */
+      }
+
+      /* Speaker icon animation */
+      .speaker-icon {
+        opacity: 0;
+        transition: opacity 0.3s ease-in-out;
+      }
+      .speaker-icon.speaking {
+        opacity: 1;
+        animation: speaker-bounce 0.8s infinite alternate;
+      }
+      @keyframes speaker-bounce {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-5px);
+        }
+      }
+
+      /* Language toggle button styles */
+      .lang-btn {
+        min-width: 80px;
+      }
+      .lang-btn.active {
+        background-color: #2563eb; /* blue-600 */
+        color: white;
+      }
+      .lang-btn:not(.active) {
+        background-color: transparent;
+        color: #4b5563; /* gray-600 */
+      }
+      .lang-btn:not(.active):hover {
+        background-color: #f3f4f6; /* gray-100 */
+      }
+
+      /* Small screen adjustments */
+      @media (max-width: 640px) {
+        .name-card {
+          height: 16rem; /* Increased height to accommodate text overflow */
+          padding: 1rem;
+          max-width: none; /* Allow cards to take full width available in their grid column */
+        }
+        .names-grid {
+          grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+          gap: 1rem;
+        }
+        .main-container {
+          padding: 1rem;
+        }
+        h1 {
+          font-size: 2.25rem; /* Smaller title on small screens */
+        }
+        p {
+          font-size: 0.9rem;
+        }
+        .arabic-text {
+          font-size: clamp(1.5rem, 4vw, 1.75rem); /* Responsive Arabic font size */
+          line-height: 1.3; /* Better line spacing for readability */
+        }
+        #messageBox {
+          font-size: 1.1rem;
+          padding: 1rem 1.25rem;
+        }
+        .lang-btn {
+          min-width: 70px;
+          font-size: 0.75rem;
+          padding: 6px 12px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Main container for the game content -->
+    <div
+      class="main-container flex flex-col items-center p-6 bg-white rounded-3xl shadow-2xl max-w-5xl w-full border-4 border-blue-600"
+    >
+      <!-- Game Title -->
+      <h1
+        class="text-4xl md:text-5xl lg:text-6xl font-extrabold text-blue-800 mb-4 text-center leading-tight"
+      >
+        Discover Allah's Beautiful Names!
+      </h1>
+      <!-- Language Selection -->
+      <div class="flex justify-center mb-6">
+        <div class="bg-white rounded-full shadow-md p-1 flex">
+          <button id="lang-en" class="lang-btn px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 bg-blue-600 text-white">
+            English
+          </button>
+          <button id="lang-bn" class="lang-btn px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 text-gray-600 hover:text-gray-800">
+            বাংলা
+          </button>
+        </div>
+      </div>
+
+      <!-- Game Instructions -->
+      <p id="instructions" class="text-lg md:text-xl text-gray-700 mb-8 text-center max-w-xl">
+        Click on a card to hear Allah's name in Arabic and its beautiful meaning
+        in English.
+      </p>
+
+      <!-- Container for the name cards -->
+      <div id="namesGrid" class="names-grid">
+        <!-- Cards will be dynamically inserted here by JavaScript -->
+      </div>
+
+      <!-- Message Box: Appears temporarily to give feedback -->
+      <div id="messageBox" class="hidden"></div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const namesGrid = document.getElementById("namesGrid");
+        const messageBox = document.getElementById("messageBox");
+        const instructions = document.getElementById("instructions");
+
+        let voicesLoaded = false; // Flag to track if voices are loaded
+        let availableVoices = []; // Store voices once loaded
+        let currentSpeakerIcon = null; // To track which icon is currently speaking
+        let currentLanguage = 'en'; // Current language: 'en' or 'bn'
+
+        // Language switching functionality
+        const langEnBtn = document.getElementById('lang-en');
+        const langBnBtn = document.getElementById('lang-bn');
+
+        function switchLanguage(lang) {
+          currentLanguage = lang;
+
+          // Update button states
+          if (lang === 'en') {
+            langEnBtn.classList.add('active');
+            langBnBtn.classList.remove('active');
+            instructions.textContent = 'Click on a card to hear Allah\'s name in Arabic and its beautiful meaning in English.';
+          } else {
+            langBnBtn.classList.add('active');
+            langEnBtn.classList.remove('active');
+            instructions.textContent = 'একটি কার্ডে ক্লিক করুন আল্লাহর নাম আরবিতে এবং এর সুন্দর অর্থ বাংলায় শুনতে।';
+          }
+
+          // Update all cards with new language
+          updateAllCards();
+        }
+
+        // Initialize language state to English
+        switchLanguage('en');
+
+        // Event listeners for language buttons
+        langEnBtn.addEventListener('click', () => switchLanguage('en'));
+        langBnBtn.addEventListener('click', () => switchLanguage('bn'));
+
+        // Function to update all cards with current language
+        function updateAllCards() {
+          const cards = namesGrid.querySelectorAll('.name-card');
+          cards.forEach((card, index) => {
+            if (index < shuffledNames.length) {
+              const nameData = shuffledNames[index];
+              updateCardContent(card, nameData);
+            }
+          });
+        }
+
+        // Function to handle card clicks
+        function handleCardClick(nameData, speakerIcon) {
+          // Stop any ongoing speech and reset previous speaker icon
+          speechSynthesis.cancel();
+          if (currentSpeakerIcon) {
+            currentSpeakerIcon.classList.remove("speaking");
+          }
+
+          // Set the current speaker icon for this card
+          currentSpeakerIcon = speakerIcon;
+          speakerIcon.classList.add("speaking"); // Start speaker icon animation
+
+          // Determine which meaning text to use and which language to speak
+          const meaningText = currentLanguage === 'bn' ? nameData.meaning_bn : nameData.meaning;
+          const speakLang = currentLanguage === 'bn' ? 'bn-IN' : 'en-US';
+          const transliteration = currentLanguage === 'bn' && nameData.bangla ? nameData.bangla : nameData.english;
+
+          // Chain promises for sequential speaking
+          speakText(nameData.arabic, "ar-SA")
+            .then(() => speakText(meaningText, speakLang))
+            .catch((error) => {
+              // Only log non-interruption errors, as interruptions are handled by resolve
+              if (error && error.message !== "interrupted") {
+                console.error("Speech sequence failed:", error);
+              }
+            })
+            .finally(() => {
+              // Ensure icon stops animating after the sequence completes (or is interrupted intentionally)
+              if (speakerIcon && speakerIcon.classList.contains("speaking")) {
+                speakerIcon.classList.remove("speaking");
+                currentSpeakerIcon = null;
+              }
+            });
+
+          // Show message
+          showMessage(`Playing: ${transliteration} - "${nameData.arabic}"`);
+          console.log(
+            `Speaking Arabic: ${nameData.arabic} and ${currentLanguage === 'bn' ? 'Bangla' : 'English'} Meaning: ${meaningText}`
+          );
+        }
+
+        // Function to update individual card content
+        function updateCardContent(card, nameData) {
+          const transliteration = currentLanguage === 'bn' && nameData.bangla ? nameData.bangla : nameData.english;
+          const meaning = currentLanguage === 'bn' ? nameData.meaning_bn : nameData.meaning;
+
+          card.innerHTML = `
+                    <div class="relative flex items-center justify-center w-full mb-3">
+                        <p class="arabic-text text-gray-800 font-semibold">${nameData.arabic}</p>
+                        <svg class="speaker-icon w-6 h-6 ml-2 text-blue-500 absolute right-0 top-1/2 -translate-y-1/2" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+                        </svg>
+                    </div>
+                    <p class="text-2xl md:text-3xl font-bold text-blue-800 mb-1">${transliteration}</p>
+                    <p class="text-sm md:text-base text-gray-600 italic leading-tight">${meaning}</p>
+                `;
+
+          // Re-attach click event listener
+          const speakerIcon = card.querySelector(".speaker-icon");
+          card.onclick = () => handleCardClick(nameData, speakerIcon);
+        }
+
+        // Function to load voices. Necessary for some browsers (especially mobile)
+        // where voices are not immediately available.
+        function loadVoices() {
+          if ("speechSynthesis" in window) {
+            availableVoices = speechSynthesis.getVoices();
+            if (availableVoices.length > 0) {
+              voicesLoaded = true;
+              console.log(
+                `SpeechSynthesis voices loaded. Total voices: ${availableVoices.length}`
+              );
+              // Optional: Log names of loaded voices for debugging
+              // availableVoices.forEach(voice => console.log(`Voice: ${voice.name} (${voice.lang})`));
+            } else {
+              console.log("SpeechSynthesis voices not yet available.");
+            }
+          }
+        }
+
+        // Listen for voices to be loaded (crucial for mobile and initial load)
+        if ("speechSynthesis" in window) {
+          speechSynthesis.onvoiceschanged = loadVoices;
+          // Also try to load them immediately if they are already available on DOMContentLoaded
+          loadVoices();
+        } else {
+          console.warn(
+            "Web Speech API is not supported in this browser. Voice output will not work."
+          );
+        }
+
+        // Array of Allah's 99 Names with English and Bangla meanings
+        const allahNames = [
+          {
+            arabic: "الرَّحْمَن",
+            english: "Ar-Rahman",
+            bangla: "আর-রাহমান",
+            meaning: "The Most Merciful",
+            meaning_bn: "সর্বশ্রেষ্ঠ করুণাময়",
+          },
+          {
+            arabic: "الرَّحِيم",
+            english: "Ar-Rahim",
+            bangla: "আর-রাহীম",
+            meaning: "The Especially Merciful",
+            meaning_bn: "অত্যন্ত করুণাময়",
+          },
+          {
+            arabic: "الْمَلِك",
+            english: "Al-Malik",
+            bangla: "আল-মালিক",
+            meaning: "The King, The Sovereign",
+            meaning_bn: "সর্বশাসক, বাদশাহ",
+          },
+          {
+            arabic: "الْقُدُّوس",
+            english: "Al-Quddus",
+            bangla: "আল-কুদ্দুস",
+            meaning: "The Holy, The Pure",
+            meaning_bn: "পবিত্র, পরিষ্কার",
+          },
+          {
+            arabic: "السَّلام",
+            english: "As-Salam",
+            bangla: "আস-সালাম",
+            meaning: "The Giver of Peace",
+            meaning_bn: "শান্তি দানকারী",
+          },
+          {
+            arabic: "الْمُؤْمِن",
+            english: "Al-Mu'min",
+            bangla: "আল-মু'মিন",
+            meaning: "The Giver of Faith",
+            meaning_bn: "ঈমান দানকারী",
+          },
+          {
+            arabic: "الْمُهَيْمِن",
+            english: "Al-Muhaymin",
+            bangla: "আল-মুহাইমিন",
+            meaning: "The Protector, The Guardian",
+            meaning_bn: "রক্ষক, অভিভাবক",
+          },
+          {
+            arabic: "الْعَزِيز",
+            english: "Al-Aziz",
+            bangla: "আল-আজিজ",
+            meaning: "The All-Mighty, The Victorious",
+            meaning_bn: "সর্বশক্তিমান, বিজয়ী",
+          },
+          {
+            arabic: "الْجَبَّار",
+            english: "Al-Jabbar",
+            bangla: "আল-জাব্বার",
+            meaning: "The Compeller, The Restorer",
+            meaning_bn: "সর্ববিজয়ী, সংস্কারকারী",
+          },
+          {
+            arabic: "الْمُتَكَبِّر",
+            english: "Al-Mutakabbir",
+            bangla: "আল-মুতাকাব্বির",
+            meaning: "The Supreme, The Majestic",
+            meaning_bn: "সর্বমহান, গৌরবময়",
+          },
+          { arabic: "الْخَالِق", english: "Al-Khaliq", bangla: "আল-খালিক", meaning: "The Creator", meaning_bn: "স্রষ্টা" },
+          {
+            arabic: "الْبَارِئ",
+            english: "Al-Bari",
+            bangla: "আল-বারি",
+            meaning: "The Evolver, The Maker",
+            meaning_bn: "সৃষ্টিকর্তা, নির্মাতা",
+          },
+          {
+            arabic: "الْمُصَوِّر",
+            english: "Al-Musawwir",
+            bangla: "আল-মুসাওয়ির",
+            meaning: "The Fashioner",
+            meaning_bn: "আকৃতি দানকারী, স্বরূপদাতা",
+          },
+          {
+            arabic: "الْغَفَّار",
+            english: "Al-Ghaffar",
+            bangla: "আল-গাফ্ফার",
+            meaning: "The Forgiver",
+            meaning_bn: "ক্ষমাকারী, ক্ষমাশীল",
+          },
+          {
+            arabic: "الْقَهَّار",
+            english: "Al-Qahhar",
+            bangla: "আল-কাহ্হার",
+            meaning: "The Subduer, The Irresistible",
+            meaning_bn: "বিজয়ী, অপরাজেয়",
+          },
+          {
+            arabic: "الْوَهَّاب",
+            english: "Al-Wahhab",
+            bangla: "আল-ওয়াহ্হাব",
+            meaning: "The Bestower",
+            meaning_bn: "দানকারী, অনুগ্রহকারী",
+          },
+          {
+            arabic: "الرَّزَّاق",
+            english: "Ar-Razzaq",
+            bangla: "আর-রায্যাক",
+            meaning: "The Provider",
+            meaning_bn: "রিযিকদাতা, ভরণপোষণকারী",
+          },
+          {
+            arabic: "الْفَتَّاح",
+            english: "Al-Fattah",
+            bangla: "আল-ফাত্তাহ",
+            meaning: "The Opener, The Judge",
+            meaning_bn: "উন্মোচনকারী, বিচারক",
+          },
+          {
+            arabic: "الْعَلِيم",
+            english: "Al-Alim",
+            bangla: "আল-আলিম",
+            meaning: "The All-Knowing",
+            meaning_bn: "সর্বজ্ঞ, সকল জ্ঞানের অধিকারী",
+          },
+          {
+            arabic: "الْقَابِض",
+            english: "Al-Qabid",
+            bangla: "আল-কাবিদ",
+            meaning: "The Withholder",
+            meaning_bn: "সংকোচনকারী, বিরতকারী",
+          },
+          { arabic: "الْبَاسِط", english: "Al-Basit", bangla: "আল-বাসিত", meaning: "The Extender", meaning_bn: "প্রসারকারী, বিস্তারকারী" },
+          { arabic: "الْخَافِض", english: "Al-Khafid", bangla: "আল-খাফিদ", meaning: "The Abaser", meaning_bn: "অবনতকারী, নমন্নকারী" },
+          { arabic: "الرَّافِع", english: "Ar-Rafi", bangla: "আর-রাফি", meaning: "The Exalter", meaning_bn: "উন্নতকারী, সম্মানদানকারী" },
+          {
+            arabic: "الْمُعِزّ",
+            english: "Al-Mu'izz",
+            bangla: "আল-মুয়িজ",
+            meaning: "The Giver of Honor",
+            meaning_bn: "সম্মানদাতা, গৌরবদাতা",
+          },
+          {
+            arabic: "الْمُذِلّ",
+            english: "Al-Muzill",
+            bangla: "আল-মুযিল",
+            meaning: "The Giver of Dishonor",
+            meaning_bn: "অসম্মানদাতা, অপমানকারী",
+          },
+          {
+            arabic: "السَّمِيع",
+            english: "As-Sami",
+            bangla: "আস-সামি",
+            meaning: "The All-Hearing",
+            meaning_bn: "সর্বশ্রোতা, সকল শব্দ শ্রবণকারী",
+          },
+          {
+            arabic: "الْبَصِير",
+            english: "Al-Basir",
+            bangla: "আল-বাসির",
+            meaning: "The All-Seeing",
+            meaning_bn: "সর্বদ্রষ্টা, সকল দৃশ্য দর্শনকারী",
+          },
+          { arabic: "الْحَكَم", english: "Al-Hakam", bangla: "আল-হাকাম", meaning: "The Judge", meaning_bn: "বিচারক, বিধাতা" },
+          { arabic: "الْعَدْل", english: "Al-Adl", bangla: "আল-আদল", meaning: "The Just", meaning_bn: "ন্যায়বান, পক্ষপাতহীন" },
+          {
+            arabic: "اللَّطِيف",
+            english: "Al-Latif",
+            bangla: "আল-লতিফ",
+            meaning: "The Subtle One, The Kind",
+            meaning_bn: "সূক্ষ্মদর্শী, স্নেহময়",
+          },
+          {
+            arabic: "الْخَبِير",
+            english: "Al-Khabir",
+            bangla: "আল-খাবির",
+            meaning: "The All-Aware",
+            meaning_bn: "সর্বজ্ঞ, সকল বিষয়ে অবগত",
+          },
+          {
+            arabic: "الْحَلِيم",
+            english: "Al-Haleem",
+            bangla: "আল-হালিম",
+            meaning: "The Forbearing",
+            meaning_bn: "ধৈর্যশীল, সহনশীল",
+          },
+          {
+            arabic: "الْعَظِيم",
+            english: "Al-Atheem",
+            bangla: "আল-আজিম",
+            meaning: "The Magnificent",
+            meaning_bn: "মহান, মহিমান্বিত",
+          },
+          {
+            arabic: "الْغَفُور",
+            english: "Al-Ghafoor",
+            bangla: "আল-গাফুর",
+            meaning: "The All-Forgiving",
+            meaning_bn: "সর্বক্ষমাকারী, ক্ষমাদাতা",
+          },
+          {
+            arabic: "الشَّكُور",
+            english: "Ash-Shakur",
+            bangla: "আশ-শাকুর",
+            meaning: "The Appreciative",
+            meaning_bn: "কৃতজ্ঞ, পুরস্কারদাতা",
+          },
+          { arabic: "الْعَلِيّ", english: "Al-Ali", bangla: "আল-আলি", meaning: "The Most High", meaning_bn: "সর্বোচ্চ, উচ্চতম" },
+          {
+            arabic: "الْكَبِير",
+            english: "Al-Kabeer",
+            bangla: "আল-কাবির",
+            meaning: "The Most Great",
+            meaning_bn: "সর্বশ্রেষ্ঠ, মহান",
+          },
+          {
+            arabic: "الْحَفِيظ",
+            english: "Al-Hafeez",
+            bangla: "আল-হাফিজ",
+            meaning: "The Preserver",
+            meaning_bn: "রক্ষণাবেক্ষণকারী, সংরক্ষণকারী",
+          },
+          {
+            arabic: "الْمُقِيت",
+            english: "Al-Muqit",
+            bangla: "আল-মুকিত",
+            meaning: "The Sustainer",
+            meaning_bn: "পোষণকারী, প্রতিপালক",
+          },
+          {
+            arabic: "الْحَسِيب",
+            english: "Al-Haseeb",
+            bangla: "আল-হাসিব",
+            meaning: "The Reckoner",
+            meaning_bn: "হিসাবগ্রহণকারী, পরিমাপকারী",
+          },
+          { arabic: "الْجَلِيل", english: "Al-Jaleel", bangla: "আল-জালিল", meaning: "The Sublime", meaning_bn: "মহান, মহিমান্বিত" },
+          {
+            arabic: "الْكَرِيم",
+            english: "Al-Kareem",
+            bangla: "আল-কারিম",
+            meaning: "The Generous",
+            meaning_bn: "উদার, দানশীল",
+          },
+          {
+            arabic: "الرَّقِيب",
+            english: "Ar-Raqeeb",
+            bangla: "আর-রাকিব",
+            meaning: "The Watchful",
+            meaning_bn: "পর্যবেক্ষক, তত্ত্বাবধায়ক",
+          },
+          {
+            arabic: "الْمُجِيب",
+            english: "Al-Mujeeb",
+            bangla: "আল-মুজিব",
+            meaning: "The Responder",
+            meaning_bn: "উত্তরদাতা, প্রার্থনা কবুলকারী",
+          },
+          {
+            arabic: "الْوَاسِع",
+            english: "Al-Wasi",
+            bangla: "আল-ওয়াসিয়",
+            meaning: "The All-Encompassing",
+            meaning_bn: "সর্বব্যাপী, বিস্তৃত",
+          },
+          {
+            arabic: "الْحَكِيم",
+            english: "Al-Hakeem",
+            bangla: "আল-হাকিম",
+            meaning: "The All-Wise",
+            meaning_bn: "সর্বজ্ঞানী, প্রজ্ঞাময়",
+          },
+          { arabic: "الْوَدُود", english: "Al-Wadud", bangla: "আল-ওয়াদুদ", meaning: "The Loving", meaning_bn: "স্নেহময়, প্রেমময়" },
+          {
+            arabic: "الْمَجِيد",
+            english: "Al-Majeed",
+            bangla: "আল-মাজিদ",
+            meaning: "The Glorious",
+            meaning_bn: "মহিমান্বিত, সম্মানিত",
+          },
+          {
+            arabic: "الْبَاعِث",
+            english: "Al-Ba'ith",
+            bangla: "আল-বাইস",
+            meaning: "The Resurrector",
+            meaning_bn: "পুনরুজ্জীবিতকারী, জীবনদাতা",
+          },
+          {
+            arabic: "الشَّهِيد",
+            english: "Ash-Shaheed",
+            bangla: "আশ-শাহিদ",
+            meaning: "The Witness",
+            meaning_bn: "সাক্ষী, প্রত্যক্ষদর্শী",
+          },
+          { arabic: "الْحَقّ", english: "Al-Haqq", bangla: "আল-হাক্ক", meaning: "The Truth", meaning_bn: "সত্য, সত্যস্বরূপ" },
+          { arabic: "الْوَكِيل", english: "Al-Wakeel", bangla: "আল-ওয়াকিল", meaning: "The Trustee", meaning_bn: "অভিভাবক, কর্মসম্পাদক" },
+          {
+            arabic: "الْقَوِيّ",
+            english: "Al-Qawi",
+            bangla: "আল-কাউই",
+            meaning: "The Most Strong",
+            meaning_bn: "সর্বশক্তিমান, ক্ষমতাবান",
+          },
+          { arabic: "الْمَتِين", english: "Al-Matin", bangla: "আল-মাতিন", meaning: "The Firm", meaning_bn: "দৃঢ়, অবিচল" },
+          {
+            arabic: "الْوَلِيّ",
+            english: "Al-Wali",
+            bangla: "আল-ওয়ালি",
+            meaning: "The Protecting Friend",
+            meaning_bn: "রক্ষাকর্তা, অভিভাবক বন্ধু",
+          },
+          {
+            arabic: "الْحَمِيد",
+            english: "Al-Hameed",
+            bangla: "আল-হামিদ",
+            meaning: "The Praiseworthy",
+            meaning_bn: "প্রশংসিত, সকল প্রশংসার অধিকারী",
+          },
+          {
+            arabic: "الْمُحْصِي",
+            english: "Al-Muhsee",
+            bangla: "আল-মুহসি",
+            meaning: "The Accounter",
+            meaning_bn: "গণনাকারী, হিসাবরক্ষক",
+          },
+          {
+            arabic: "الْمُبْدِئ",
+            english: "Al-Mubdi",
+            bangla: "আল-মুবদি",
+            meaning: "The Originator",
+            meaning_bn: "সৃষ্টিকর্তা, আদিকারণ",
+          },
+          {
+            arabic: "الْمُعِيد",
+            english: "Al-Mu'eed",
+            bangla: "আল-মুঈদ",
+            meaning: "The Restorer",
+            meaning_bn: "পুনর্বারকারী, প্রত্যাবর্তনকারী",
+          },
+          {
+            arabic: "الْمُحْيِي",
+            english: "Al-Muhyi",
+            bangla: "আল-মুহয়ি",
+            meaning: "The Giver of Life",
+            meaning_bn: "জীবনদাতা, প্রাণদাতা",
+          },
+          {
+            arabic: "الْمُمِيت",
+            english: "Al-Mumeet",
+            bangla: "আল-মুমিত",
+            meaning: "The Taker of Life",
+            meaning_bn: "মৃত্যুদাতা, জীবনকর্তা",
+          },
+          { arabic: "الْحَيّ", english: "Al-Hayy", bangla: "আল-হাই", meaning: "The Ever-Living", meaning_bn: "অবিনশ্বর, চিরজীবী" },
+          {
+            arabic: "الْقَيُّوم",
+            english: "Al-Qayyum",
+            bangla: "আল-কাইয়ুম",
+            meaning: "The Self-Sustaining",
+            meaning_bn: "স্বয়ংসম্পূর্ণ, সকলের ধারক",
+          },
+          { arabic: "الْوَاجِد", english: "Al-Wajid", bangla: "আল-ওয়াজিদ", meaning: "The Finder", meaning_bn: "অনুসন্ধানকারী, সৌখিন" },
+          {
+            arabic: "الْمَاجِد",
+            english: "Al-Majid",
+            bangla: "আল-মাজিদ",
+            meaning: "The Illustrious",
+            meaning_bn: "মহিমান্বিত, সম্মানিত",
+          },
+          { arabic: "الْوَاحِد", english: "Al-Wahid", bangla: "আল-ওয়াহিদ", meaning: "The One", meaning_bn: "এক, অদ্বিতীয়" },
+          { arabic: "الأَحَد", english: "Al-Ahad", bangla: "আল-আহাদ", meaning: "The Unique", meaning_bn: "অদ্বিতীয়, অদ্বিত্ব" },
+          { arabic: "الصَّمَد", english: "As-Samad", bangla: "আস-সামাদ", meaning: "The Eternal", meaning_bn: "অমর, চিরন্তন" },
+          { arabic: "الْقَادِر", english: "Al-Qadir", bangla: "আল-কাদির", meaning: "The Capable", meaning_bn: "সর্বশক্তিমান, সক্ষম" },
+          {
+            arabic: "الْمُقْتَدِر",
+            english: "Al-Muqtadir",
+            bangla: "আল-মুক্তাদির",
+            meaning: "The Powerful",
+            meaning_bn: "সর্বক্ষমতাময়, পরাক্রমশালী",
+          },
+          {
+            arabic: "الْمُقَدِّم",
+            english: "Al-Muqaddim",
+            bangla: "আল-মুকাদ্দিম",
+            meaning: "The Advancer",
+            meaning_bn: "অগ্রসারণকারী, অগ্রগামী",
+          },
+          {
+            arabic: "الْمُؤَخِّر",
+            english: "Al-Mu'akhkhir",
+            bangla: "আল-মুয়াক্খির",
+            meaning: "The Delayer",
+            meaning_bn: "বিলম্বকারী, পশ্চাদগামী",
+          },
+          { arabic: "الأَوَّل", english: "Al-Awwal", bangla: "আল-আওয়াল", meaning: "The First", meaning_bn: "প্রথম, আদি" },
+          { arabic: "الآخِر", english: "Al-Akhir", bangla: "আল-আখির", meaning: "The Last", meaning_bn: "শেষ, অন্তিম" },
+          { arabic: "الظَّاهِر", english: "Az-Zahir", bangla: "আয-জাহির", meaning: "The Manifest", meaning_bn: "প্রকাশিত, স্পষ্ট" },
+          { arabic: "الْبَاطِن", english: "Al-Batin", bangla: "আল-বাতিন", meaning: "The Hidden", meaning_bn: "গুপ্ত, অদৃশ্য" },
+          {
+            arabic: "الْوَالِي",
+            english: "Al-Wali",
+            bangla: "আল-ওয়ালি",
+            meaning: "The Protecting Friend",
+            meaning_bn: "রক্ষাকর্তা, অভিভাবক বন্ধু",
+          },
+          {
+            arabic: "الْمُتَعَال",
+            english: "Al-Muta'ali",
+            bangla: "আল-মুতায়ালি",
+            meaning: "The Most Exalted",
+            meaning_bn: "সর্বোচ্চ, মহিমান্বিত",
+          },
+          { arabic: "الْبَرّ", english: "Al-Barr", bangla: "আল-বার", meaning: "The Benevolent", meaning_bn: "কল্যাণকারী, দয়ালু" },
+          {
+            arabic: "التَّوَّاب",
+            english: "At-Tawwab",
+            bangla: "আত-তাওয়াব",
+            meaning: "The Acceptor of Repentance",
+            meaning_bn: "তওবা কবুলকারী, ক্ষমাশীল",
+          },
+          {
+            arabic: "الْمُنْتَقِم",
+            english: "Al-Muntaqim",
+            bangla: "আল-মুনতাকিম",
+            meaning: "The Avenger",
+            meaning_bn: "প্রতিশোধগ্রহণকারী, শাস্তিদাতা",
+          },
+          { arabic: "الْعَفُوّ", english: "Al-Afu", bangla: "আল-আফু", meaning: "The Pardoner", meaning_bn: "ক্ষমাশীল, পরিত্যাগকারী" },
+          { arabic: "الرَّؤُوف", english: "Ar-Ra'uf", bangla: "আর-রউফ", meaning: "The Kind", meaning_bn: "স্নেহময়, দয়ালু" },
+          {
+            arabic: "مَالِك الْمُلْك",
+            english: "Malik-ul-Mulk",
+            bangla: "মালিকুল মুলক",
+            meaning: "The Owner of All Sovereignty",
+            meaning_bn: "সকল রাজ্যের অধিপতি, সার্বভৌম",
+          },
+          {
+            arabic: "ذُو الْجَلالِ وَالإِكْرَام",
+            english: "Dhul-Jalali Wal-Ikram",
+            bangla: "জুল জালালি ওয়াল ইকরাম",
+            meaning: "The Lord of Majesty and Honor",
+            meaning_bn: "মহিমা ও সম্মানের অধিপতি",
+          },
+          {
+            arabic: "الْمُقْسِط",
+            english: "Al-Muqsit",
+            bangla: "আল-মুক্সিত",
+            meaning: "The Just Dealer",
+            meaning_bn: "ন্যায়বিচারকারী, সুবিচারকারী",
+          },
+          { arabic: "الْجَامِع", english: "Al-Jami", bangla: "আল-জামি", meaning: "The Gatherer", meaning_bn: "সমবেতকারী, একত্রকারী" },
+          { arabic: "الْغَنِيّ", english: "Al-Ghani", bangla: "আল-গানি", meaning: "The Rich", meaning_bn: "স্বয়ংসম্পূর্ণ, অমুখাপেক্ষী" },
+          {
+            arabic: "الْمُغْنِي",
+            english: "Al-Mughni",
+            bangla: "আল-মুগনি",
+            meaning: "The Enricher",
+            meaning_bn: "ধনদাতা, সম্পদশালী কর্তা",
+          },
+          { arabic: "الْمَانِع", english: "Al-Mani", bangla: "আল-মানি", meaning: "The Preventer", meaning_bn: "বাধাদাতা, নিষেধকারী" },
+          { arabic: "الضَّارّ", english: "Ad-Darr", bangla: "আদ-দার", meaning: "The Distresser", meaning_bn: "ক্ষতিকারক, দুঃখদায়ক" },
+          { arabic: "النَّافِع", english: "An-Nafi", bangla: "আন-নাফি", meaning: "The Benefiter", meaning_bn: "কল্যাণকারী, উপকারী" },
+          { arabic: "النُّور", english: "An-Noor", bangla: "আন-নুর", meaning: "The Light", meaning_bn: "আলোক, জ্যোতি" },
+          { arabic: "الْهَادِي", english: "Al-Hadi", bangla: "আল-হাদি", meaning: "The Guide", meaning_bn: "পথপ্রদর্শক, মার্গদর্শক" },
+          {
+            arabic: "الْبَدِيع",
+            english: "Al-Badi",
+            bangla: "আল-বাদি",
+            meaning: "The Incomparable",
+            meaning_bn: "অতুলনীয়, অদ্বিতীয় সৃষ্টিকর্তা",
+          },
+          {
+            arabic: "الْبَاقِي",
+            english: "Al-Baqi",
+            bangla: "আল-বাকি",
+            meaning: "The Everlasting",
+            meaning_bn: "চিরন্তন, অবিনশ্বর",
+          },
+          {
+            arabic: "الْوَارِث",
+            english: "Al-Warith",
+            bangla: "আল-ওয়ারিস",
+            meaning: "The Inheritor",
+            meaning_bn: "উত্তরাধিকারী, সকল কিছুর অধিকারী",
+          },
+          {
+            arabic: "الرَّشِيد",
+            english: "Ar-Rasheed",
+            bangla: "আর-রাশিদ",
+            meaning: "The Guide to the Right Path",
+            meaning_bn: "সৎপথের পথপ্রদর্শক, সঠিক পথনির্দেশক",
+          },
+          { arabic: "الصَّبُور", english: "As-Saboor", bangla: "আস-সাবুর", meaning: "The Patient", meaning_bn: "ধৈর্যশীল, সহনশীল" },
+        ];
+
+        // Function to shuffle an array (Fisher-Yates algorithm)
+        function shuffleArray(array) {
+          for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]]; // Swap elements
+          }
+          return array;
+        }
+
+        // Verify we have exactly 99 names
+        console.log(`Total Allah's names loaded: ${allahNames.length} (should be 99)`);
+
+        // Shuffle the names to present them in a random order
+        const shuffledNames = shuffleArray([...allahNames]); // Create a shallow copy before shuffling
+
+        // Function to display a temporary message
+        function showMessage(text) {
+          messageBox.textContent = text;
+          messageBox.classList.remove("hidden"); // Show the message box
+          messageBox.classList.add("visible"); // Fade it in and pop
+          setTimeout(() => {
+            messageBox.classList.remove("visible"); // Fade it out
+            messageBox.addEventListener(
+              "transitionend",
+              () => {
+                // Ensure hidden class is added only after the opacity transition finishes
+                if (!messageBox.classList.contains("visible")) {
+                  messageBox.classList.add("hidden");
+                }
+              },
+              { once: true }
+            );
+          }, 2000); // Message visible for 2 seconds
+        }
+
+        // Function to detect if a voice is likely male based on name patterns
+        function isMaleVoice(voice) {
+          const voiceName = voice.name.toLowerCase();
+          const maleIndicators = ['male', 'man', 'adam', 'david', 'daniel', 'david', 'mark', 'paul', 'peter', 'john', 'michael', 'alex', 'chris', 'tom', 'james', 'robert', 'william', 'richard', 'charles', 'joseph', 'thomas'];
+          const femaleIndicators = ['female', 'woman', 'samantha', 'karen', 'kathy', 'susan', 'monica', 'allison', 'lisa', 'jenny', 'emily', 'sarah', 'michelle', 'natalie', 'rachel', 'diana', 'zoe'];
+
+          const hasMaleIndicator = maleIndicators.some(indicator => voiceName.includes(indicator));
+          const hasFemaleIndicator = femaleIndicators.some(indicator => voiceName.includes(indicator));
+
+          // If explicitly marked as female, it's not male
+          if (hasFemaleIndicator) return false;
+
+          // If explicitly marked as male, it's male
+          if (hasMaleIndicator) return true;
+
+          // Default assumption: most system voices are female unless explicitly marked male
+          return false;
+        }
+
+        // Function to speak the given text using Web Speech API
+        function speakText(text, lang = "en-US") {
+          return new Promise((resolve, reject) => {
+            if (!("speechSynthesis" in window)) {
+              console.warn("SpeechSynthesis not supported. Cannot speak.");
+              reject(new Error("SpeechSynthesis not supported"));
+              return;
+            }
+
+            // If voices are not loaded yet, wait briefly and retry or log error
+            // This scenario is now handled by the initial `loadVoices` and `onvoiceschanged`
+            // but an extra check here adds robustness.
+            if (!voicesLoaded || availableVoices.length === 0) {
+              console.warn(
+                "Voices not yet available when speakText called. Attempting to reload."
+              );
+              loadVoices(); // Try to reload voices if they weren't ready
+              if (availableVoices.length === 0) {
+                console.error(
+                  "Voices still not available after retry. Cannot speak."
+                );
+                reject(new Error("Voices not available"));
+                return;
+              }
+            }
+
+            // Always cancel any ongoing speech before starting a new one
+            speechSynthesis.cancel();
+
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = lang; // Set the language
+
+            // Optimize speech settings based on language
+            if (lang.startsWith('ar')) {
+              utterance.rate = 0.7; // Slower rate for better Arabic pronunciation
+              utterance.pitch = 0.9; // Lower pitch for male voice preference
+              utterance.volume = 0.9; // Clear volume for Arabic
+            } else if (lang.startsWith('bn')) {
+              utterance.rate = 0.8; // Moderate rate for Bangla
+              utterance.pitch = 0.85; // Lower pitch for male voice
+              utterance.volume = 0.8;
+            } else {
+              utterance.rate = 0.9; // Slightly slower speech for kids
+              utterance.pitch = 0.85; // Lower pitch for male voice
+              utterance.volume = 0.8;
+            }
+
+            let selectedVoice = null;
+            let matchingVoices = [];
+
+            // Enhanced voice selection for Arabic with male preference
+            if (lang.startsWith('ar')) {
+              // Prioritize high-quality Arabic voices
+              const preferredArabicVoices = ['ar-SA', 'ar-AE', 'ar-EG', 'ar-IQ'];
+
+              // First, collect all matching language voices
+              for (const preferredLang of preferredArabicVoices) {
+                for (const voice of availableVoices) {
+                  if (voice.lang === preferredLang) {
+                    matchingVoices.push(voice);
+                  }
+                }
+              }
+
+              // If no exact matches, try broader Arabic language match
+              if (matchingVoices.length === 0) {
+                for (const voice of availableVoices) {
+                  if (voice.lang.startsWith('ar')) {
+                    matchingVoices.push(voice);
+                  }
+                }
+              }
+
+              // Prioritize male voices within matching voices
+              const maleVoices = matchingVoices.filter(voice => isMaleVoice(voice));
+              if (maleVoices.length > 0) {
+                selectedVoice = maleVoices[0];
+                console.log(`Selected male Arabic voice: ${selectedVoice.name} (${selectedVoice.lang})`);
+              } else if (matchingVoices.length > 0) {
+                selectedVoice = matchingVoices[0];
+                console.log(`Selected Arabic voice (no male available): ${selectedVoice.name} (${selectedVoice.lang})`);
+              }
+            } else if (lang.startsWith('bn')) {
+              // Enhanced voice selection for Bangla with male preference
+              const preferredBanglaVoices = ['bn-IN', 'bn-BD'];
+
+              // First, collect all matching language voices
+              for (const preferredLang of preferredBanglaVoices) {
+                for (const voice of availableVoices) {
+                  if (voice.lang === preferredLang) {
+                    matchingVoices.push(voice);
+                  }
+                }
+              }
+
+              // If no exact matches, try broader Bangla language match
+              if (matchingVoices.length === 0) {
+                for (const voice of availableVoices) {
+                  if (voice.lang.startsWith('bn')) {
+                    matchingVoices.push(voice);
+                  }
+                }
+              }
+
+              // Prioritize male voices within matching voices
+              const maleVoices = matchingVoices.filter(voice => isMaleVoice(voice));
+              if (maleVoices.length > 0) {
+                selectedVoice = maleVoices[0];
+                console.log(`Selected male Bangla voice: ${selectedVoice.name} (${selectedVoice.lang})`);
+              } else if (matchingVoices.length > 0) {
+                selectedVoice = matchingVoices[0];
+                console.log(`Selected Bangla voice (no male available): ${selectedVoice.name} (${selectedVoice.lang})`);
+              }
+            } else {
+              // For English and other languages
+              // First, collect all exact language matches
+              for (const voice of availableVoices) {
+                if (voice.lang === lang) {
+                  matchingVoices.push(voice);
+                }
+              }
+
+              // If no exact matches, try broader language match
+              if (matchingVoices.length === 0) {
+                const primaryLang = lang.substring(0, 2);
+                for (const voice of availableVoices) {
+                  if (voice.lang.startsWith(primaryLang)) {
+                    matchingVoices.push(voice);
+                  }
+                }
+              }
+
+              // Prioritize male voices within matching voices
+              const maleVoices = matchingVoices.filter(voice => isMaleVoice(voice));
+              if (maleVoices.length > 0) {
+                selectedVoice = maleVoices[0];
+                console.log(`Selected male English voice: ${selectedVoice.name} (${selectedVoice.lang})`);
+              } else if (matchingVoices.length > 0) {
+                selectedVoice = matchingVoices[0];
+                console.log(`Selected English voice (no male available): ${selectedVoice.name} (${selectedVoice.lang})`);
+              }
+            }
+
+            // Final fallback to any available voice
+            if (!selectedVoice && availableVoices.length > 0) {
+              // Try to find any male voice as last resort
+              const anyMaleVoice = availableVoices.find(voice => isMaleVoice(voice));
+              selectedVoice = anyMaleVoice || availableVoices[0];
+              console.warn(
+                `No suitable voice found for '${lang}'. Falling back to: ${selectedVoice.name} (${selectedVoice.lang})`
+              );
+            } else if (!selectedVoice) {
+              console.error(
+                `No voices available at all. Cannot speak "${text}"`
+              );
+              reject(new Error("No voices available"));
+              return;
+            }
+            utterance.voice = selectedVoice;
+
+            utterance.onend = () => {
+              console.log(`Speech ended for: "${text}" (${lang}) using voice: ${selectedVoice.name}`);
+              resolve(); // Resolve the promise when speech ends
+            };
+            utterance.onerror = (event) => {
+              // Log the error but resolve the promise if it's an 'interrupted' error
+              // This prevents the promise chain from breaking on intentional cancellations.
+              if (event.error === "interrupted") {
+                console.log(
+                  `Intentional interruption for "${text}". Proceeding with sequence.`
+                );
+                resolve(); // Resolve even on interruption to allow next speech to play
+              } else {
+                console.error(
+                  `SpeechSynthesisUtterance error for "${text}" (${lang}): ${event.error}`,
+                  event
+                );
+
+                // For Arabic speech errors, provide helpful feedback
+                if (lang.startsWith('ar')) {
+                  console.warn('Arabic speech may not be available in this browser. Consider trying Chrome or Edge for better Arabic voice support.');
+                }
+
+                reject(event.error); // Reject for other errors
+              }
+            };
+
+            speechSynthesis.speak(utterance);
+          });
+        }
+
+        // Function to create a single name card
+        function createNameCard(nameData) {
+          const card = document.createElement("div");
+          card.classList.add("name-card"); // Classes added directly for simplified UI
+          card.dataset.englishName = nameData.english; // Store English name for easy access
+
+          // Use the updateCardContent function to set initial content
+          updateCardContent(card, nameData);
+
+          return card;
+        }
+
+        // Populate the grid with name cards
+        shuffledNames.forEach((name) => {
+          const card = createNameCard(name);
+          namesGrid.appendChild(card);
+        });
+      });
+    </script>
+  </body>
+</html>

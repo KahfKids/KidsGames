@@ -1,0 +1,2774 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>Jannah Garden Colors</title>
+    <!-- Font Awesome for icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <!-- Tone.js for sound effects -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Amiri:wght@400;700&display=swap");
+
+      body {
+        font-family: "Amiri", serif; /* A classic, elegant font for Jannah theme */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        min-height: 100vh;
+        margin: 0;
+        background: linear-gradient(
+          to bottom right,
+          #e0f2f7,
+          #bbdefb
+        ); /* Soft sky blue gradient */
+        color: #333;
+        overflow-x: hidden;
+        padding: 10px;
+        box-sizing: border-box;
+      }
+
+      .game-container {
+        background-color: #ffffff;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        text-align: center;
+        width: 100%;
+        max-width: 800px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        box-sizing: border-box;
+      }
+
+      h1 {
+        color: #4caf50; /* Green for growth and nature */
+        margin-bottom: 20px;
+        font-family: "Inter", sans-serif;
+        font-size: 2em;
+      }
+
+      .jannah-header {
+        margin-bottom: 15px;
+        font-size: 1.1em;
+        color: #66bb6a;
+      }
+
+      canvas {
+        border: 2px solid #81c784; /* Light green border */
+        background-color: #c8e6c9; /* Soft green for the garden bed */
+        display: block;
+        width: 100%;
+        max-width: 760px; /* Adjusted to fit inside container with padding */
+        height: auto; /* Remove fixed aspect ratio for better mobile responsiveness */
+        border-radius: 15px;
+        margin-bottom: 20px;
+        cursor: cell; /* Indicates planting */
+        touch-action: manipulation; /* Improve touch responsiveness */
+        transition: box-shadow 0.3s ease;
+        will-change: transform; /* Optimize for animation performance */
+      }
+
+      /* Add visual feedback on canvas interaction */
+      canvas:active {
+        box-shadow: 0 0 20px rgba(129, 199, 132, 0.5);
+        transform: scale(0.98);
+      }
+
+      /* Optimize scrolling performance on mobile */
+      .controls {
+        -webkit-overflow-scrolling: touch;
+        scroll-behavior: smooth;
+      }
+
+      /* Add loading animation for better perceived performance */
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      .game-container {
+        animation: fadeIn 0.5s ease-out;
+      }
+
+      .controls-group {
+        width: 100%;
+        max-width: 760px;
+        margin-bottom: 20px;
+        padding-bottom: 10px; /* Space from next group */
+        border-bottom: 1px dashed #cfd8dc; /* Separator */
+      }
+
+      .controls-group:last-of-type {
+        border-bottom: none; /* No border for the last group */
+      }
+
+      .controls-group h2 {
+        font-family: "Inter", sans-serif;
+        color: #4caf50;
+        font-size: 1.3em;
+        margin-top: 10px;
+        margin-bottom: 15px;
+      }
+
+      .controls {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+      }
+
+      .selection-button {
+        /* General style for all selection buttons */
+        background-color: #f0f4c3; /* Light yellow background */
+        border: none;
+        padding: 10px 15px;
+        border-radius: 12px;
+        cursor: pointer;
+        font-size: 1.1em;
+        color: #388e3c;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transition: all 0.2s ease-in-out;
+        min-width: 120px; /* Ensure buttons have a minimum width */
+      }
+
+      .selection-button:hover {
+        background-color: #dcedc8; /* Slightly darker green on hover */
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+      }
+
+      .selection-button:active {
+        background-color: #c5e1a5; /* Even darker green on active */
+        transform: translateY(0);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        transition: all 0.1s ease-in-out;
+      }
+
+      .selection-button.selected {
+        background-color: #81c784; /* Darker green when selected */
+        color: #ffffff;
+        border: 2px solid #388e3c;
+        transform: scale(1.05);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+      }
+
+      /* Add haptic feedback simulation for mobile */
+      @media (pointer: coarse) {
+        .selection-button:active {
+          animation: buttonPress 0.15s ease-in-out;
+        }
+
+        .action-button:active {
+          animation: buttonPress 0.15s ease-in-out;
+        }
+      }
+
+      @keyframes buttonPress {
+        0% { transform: scale(1); }
+        50% { transform: scale(0.95); }
+        100% { transform: scale(1); }
+      }
+
+      /* Flower icon styling */
+      .flower-icon {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: inline-block;
+        vertical-align: middle;
+      }
+
+      .selection-button[data-item-shape="red"] .flower-icon {
+        background-color: #ef5350;
+      }
+      .selection-button[data-item-shape="yellow"] .flower-icon {
+        background-color: #ffee58;
+      }
+      .selection-button[data-item-shape="blue"] .flower-icon {
+        background-color: #42a5f5;
+      }
+      .selection-button[data-item-shape="purple"] .flower-icon {
+        background-color: #ab47bc;
+      }
+      .selection-button[data-item-shape="orange"] .flower-icon {
+        background-color: #ffa726;
+      }
+      .selection-button[data-item-shape="green"] .flower-icon {
+        background-color: #689f38;
+      } /* New green */
+      .selection-button[data-item-shape="pink"] .flower-icon {
+        background-color: #f48fb1;
+      } /* New pink */
+      .selection-button[data-item-shape="white"] .flower-icon {
+        background-color: #ffffff;
+        border: 1px solid #ccc;
+      } /* White lily */
+      .selection-button[data-item-shape="tulip"] .flower-icon {
+        background-color: #ff5252;
+      } /* Tulip */
+      .selection-button[data-item-shape="sunflower"] .flower-icon {
+        background-color: #fdd835;
+      } /* Sunflower */
+      .selection-button[data-item-shape="daisy"] .flower-icon {
+        background-color: #f0f4c3;
+        border: 1px solid #9e9e9e;
+      } /* Daisy */
+      .selection-button[data-item-shape="lavender"] .flower-icon {
+        background-color: #b39ddb;
+      } /* Lavender */
+      .selection-button[data-item-shape="orchid"] .flower-icon {
+        background-color: #e0b0ff;
+      } /* Orchid */
+      .selection-button[data-item-shape="rose"] .flower-icon {
+        background-color: #e57373;
+      } /* Rose */
+      .selection-button[data-item-shape="daffodil"] .flower-icon {
+        background-color: #ffeb3b;
+      } /* Daffodil */
+      .selection-button[data-item-shape="cherryblossom"] .flower-icon {
+        background-color: #f8bbd0;
+      } /* Cherry Blossom */
+      .selection-button[data-item-shape="lily"] .flower-icon {
+        background-color: #ff8a80;
+      } /* Lily (new) */
+      .selection-button[data-item-shape="freesia"] .flower-icon {
+        background-color: #81d4fa;
+      } /* Freesia (new) */
+      .selection-button[data-item-shape="iris"] .flower-icon {
+        background-color: #673ab7;
+      } /* Iris (new) */
+
+      /* Direct icon styling for elements in button text */
+      .selection-button .fas {
+        margin-right: 5px; /* Space between icon and text */
+        color: #388e3c; /* Default icon color within button text */
+      }
+      .selection-button.selected .fas {
+        color: #ffffff; /* White icon when selected */
+      }
+
+      .action-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 15px;
+        width: 100%;
+        max-width: 760px;
+      }
+
+      .action-button {
+        background-color: #66bb6a; /* Green */
+        color: white;
+        border: none;
+        padding: 12px 25px;
+        border-radius: 12px;
+        cursor: pointer;
+        font-size: 1.1em;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transition: all 0.2s ease-in-out;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 150px;
+        justify-content: center;
+      }
+
+      .action-button.clear {
+        background-color: #ef5350; /* Red for clear */
+      }
+
+      .action-button.undo {
+        background-color: #ffb300; /* Amber for undo */
+      }
+
+      .action-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        opacity: 0.9;
+      }
+
+      .message-box {
+        background-color: #fffde7;
+        color: #fbc02d;
+        padding: 10px 15px;
+        border-radius: 8px;
+        margin-top: 15px;
+        font-size: 0.9em;
+        border: 1px solid #ffe082;
+        display: none; /* Hidden by default */
+        opacity: 0;
+        transition: opacity 0.3s ease-in-out;
+        width: 100%;
+        max-width: 760px;
+        text-align: left;
+      }
+
+      .message-box.show {
+        display: block;
+        opacity: 1;
+      }
+
+      /* Enhanced Mobile Responsive Styles */
+
+      /* Small phones */
+      @media (max-width: 480px) {
+        body {
+          padding: 5px;
+        }
+
+        .game-container {
+          padding: 10px;
+          border-radius: 15px;
+        }
+
+        h1 {
+          font-size: 1.5em;
+          margin-bottom: 15px;
+        }
+
+        .jannah-header {
+          font-size: 0.9em;
+          margin-bottom: 10px;
+        }
+
+        canvas {
+          margin-bottom: 15px;
+          border-radius: 12px;
+        }
+
+        .controls-group {
+          margin-bottom: 15px;
+        }
+
+        .controls-group h2 {
+          font-size: 1.1em;
+          margin-bottom: 10px;
+        }
+
+        .controls {
+          display: flex;
+          overflow-x: auto;
+          gap: 8px;
+          padding-bottom: 5px;
+          scroll-snap-type: x mandatory;
+          -webkit-overflow-scrolling: touch;
+        }
+
+        .selection-button {
+          flex: 0 0 auto;
+          width: 80px;
+          min-width: 80px;
+          height: 80px;
+          font-size: 0.75em;
+          padding: 8px 6px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          scroll-snap-align: start;
+          border-radius: 10px;
+        }
+
+        .flower-icon {
+          width: 20px;
+          height: 20px;
+          margin-bottom: 4px;
+        }
+
+        .selection-button .fas {
+          font-size: 0.9em;
+          margin-right: 0;
+          margin-bottom: 4px;
+        }
+
+        .action-buttons {
+          position: fixed;
+          bottom: 10px;
+          left: 50%;
+          transform: translateX(-50%);
+          z-index: 1000;
+          gap: 10px;
+          padding: 10px;
+          background-color: rgba(255, 255, 255, 0.95);
+          border-radius: 25px;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+          backdrop-filter: blur(10px);
+        }
+
+        .action-button {
+          min-width: 50px;
+          padding: 12px 15px;
+          font-size: 0.8em;
+          border-radius: 20px;
+        }
+
+        .action-button .fas {
+          margin-right: 0;
+        }
+      }
+
+      /* Medium phones and small tablets */
+      @media (min-width: 481px) and (max-width: 768px) {
+        .game-container {
+          padding: 15px;
+        }
+
+        h1 {
+          font-size: 1.7em;
+        }
+
+        .controls {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+          gap: 10px;
+        }
+
+        .selection-button {
+          min-width: 120px;
+          padding: 12px 10px;
+          font-size: 0.9em;
+        }
+
+        .action-buttons {
+          flex-wrap: wrap;
+          justify-content: center;
+        }
+      }
+
+      /* Tablets */
+      @media (min-width: 769px) and (max-width: 1024px) {
+        .controls {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+          gap: 12px;
+        }
+      }
+
+      /* Landscape adjustments */
+      @media (max-height: 600px) and (orientation: landscape) {
+        .game-container {
+          padding: 10px;
+        }
+
+        h1 {
+          font-size: 1.4em;
+          margin-bottom: 10px;
+        }
+
+        canvas {
+          margin-bottom: 10px;
+          max-height: 40vh;
+        }
+
+        .controls-group {
+          margin-bottom: 10px;
+        }
+
+        .controls-group h2 {
+          font-size: 1em;
+          margin-bottom: 8px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="game-container">
+      <h1>Jannah Garden Colors</h1>
+      <p class="jannah-header">
+        Plant beautiful flowers and create your own virtual Jannah garden!
+      </p>
+      <canvas id="gardenCanvas"></canvas>
+
+      <div class="controls-group">
+        <h2>Choose a Flower</h2>
+        <div class="controls">
+          <button
+            class="selection-button selected"
+            data-item-type="flower"
+            data-item-shape="red"
+          >
+            <span class="flower-icon"></span> Red Bloom
+          </button>
+          <button
+            class="selection-button"
+            data-item-type="flower"
+            data-item-shape="yellow"
+          >
+            <span class="flower-icon"></span> Yellow Star
+          </button>
+          <button
+            class="selection-button"
+            data-item-type="flower"
+            data-item-shape="blue"
+          >
+            <span class="flower-icon"></span> Blue Bell
+          </button>
+          <button
+            class="selection-button"
+            data-item-type="flower"
+            data-item-shape="purple"
+          >
+            <span class="flower-icon"></span> Purple Dew
+          </button>
+          <button
+            class="selection-button"
+            data-item-type="flower"
+            data-item-shape="orange"
+          >
+            <span class="flower-icon"></span> Orange Sun
+          </button>
+          <button
+            class="selection-button"
+            data-item-type="flower"
+            data-item-shape="green"
+          >
+            <span class="flower-icon"></span> Green Clover
+          </button>
+          <button
+            class="selection-button"
+            data-item-type="flower"
+            data-item-shape="pink"
+          >
+            <span class="flower-icon"></span> Pink Blossom
+          </button>
+          <button
+            class="selection-button"
+            data-item-type="flower"
+            data-item-shape="white"
+          >
+            <span class="flower-icon"></span> White Lily
+          </button>
+          <button
+            class="selection-button"
+            data-item-type="flower"
+            data-item-shape="tulip"
+          >
+            <span class="flower-icon"></span> Tulip
+          </button>
+          <button
+            class="selection-button"
+            data-item-type="flower"
+            data-item-shape="sunflower"
+          >
+            <span class="flower-icon"></span> Sunflower
+          </button>
+          <button
+            class="selection-button"
+            data-item-type="flower"
+            data-item-shape="daisy"
+          >
+            <span class="flower-icon"></span> Daisy
+          </button>
+          <button
+            class="selection-button"
+            data-item-type="flower"
+            data-item-shape="lavender"
+          >
+            <span class="flower-icon"></span> Lavender
+          </button>
+          <button
+            class="selection-button"
+            data-item-type="flower"
+            data-item-shape="orchid"
+          >
+            <span class="flower-icon"></span> Orchid
+          </button>
+          <button
+            class="selection-button"
+            data-item-type="flower"
+            data-item-shape="rose"
+          >
+            <span class="flower-icon"></span> Rose
+          </button>
+          <button
+            class="selection-button"
+            data-item-type="flower"
+            data-item-shape="daffodil"
+          >
+            <span class="flower-icon"></span> Daffodil
+          </button>
+          <button
+            class="selection-button"
+            data-item-type="flower"
+            data-item-shape="cherryblossom"
+          >
+            <span class="flower-icon"></span> Cherry Blossom
+          </button>
+          <button
+            class="selection-button"
+            data-item-type="flower"
+            data-item-shape="lily"
+          >
+            <span class="flower-icon"></span> Lily
+          </button>
+          <button
+            class="selection-button"
+            data-item-type="flower"
+            data-item-shape="freesia"
+          >
+            <span class="flower-icon"></span> Freesia
+          </button>
+          <button
+            class="selection-button"
+            data-item-type="flower"
+            data-item-shape="iris"
+          >
+            <span class="flower-icon"></span> Iris
+          </button>
+        </div>
+      </div>
+
+      <div class="controls-group">
+        <h2>Add Garden Elements</h2>
+        <div class="controls">
+          <button
+            class="selection-button"
+            data-item-type="element"
+            data-item-shape="pond"
+          >
+            <i class="fas fa-water"></i> Water Pond
+          </button>
+          <button
+            class="selection-button"
+            data-item-type="element"
+            data-item-shape="tree"
+          >
+            <i class="fas fa-tree"></i> Green Tree
+          </button>
+          <button
+            class="selection-button"
+            data-item-type="element"
+            data-item-shape="bench"
+          >
+            <i class="fas fa-couch"></i> Garden Bench
+          </button>
+          <button
+            class="selection-button"
+            data-item-type="element"
+            data-item-shape="archway"
+          >
+            <i class="fas fa-archway"></i> Stone Archway
+          </button>
+          <button
+            class="selection-button"
+            data-item-type="element"
+            data-item-shape="lantern"
+          >
+            <i class="fas fa-lightbulb"></i> Garden Lantern
+          </button>
+          <button
+            class="selection-button"
+            data-item-type="element"
+            data-item-shape="pathstone"
+          >
+            <i class="fas fa-gem"></i> Path Stone
+          </button>
+          <button
+            class="selection-button"
+            data-item-type="element"
+            data-item-shape="birdhouse"
+          >
+            <i class="fas fa-house-chimney"></i> Birdhouse
+          </button>
+          <button
+            class="selection-button"
+            data-item-type="element"
+            data-item-shape="flowerpot"
+          >
+            <i class="fas fa-pot-food"></i> Flower Pot
+          </button>
+          <button
+            class="selection-button"
+            data-item-type="element"
+            data-item-shape="pillar"
+          >
+            <i class="fas fa-columns"></i> Garden Pillar
+          </button>
+          <button
+            class="selection-button"
+            data-item-type="element"
+            data-item-shape="hedge"
+          >
+            <i class="fas fa-leaf"></i> Garden Hedge
+          </button>
+          <button
+            class="selection-button"
+            data-item-type="element"
+            data-item-shape="gate"
+          >
+            <i class="fas fa-door-closed"></i> Garden Gate
+          </button>
+          <button
+            class="selection-button"
+            data-item-type="element"
+            data-item-shape="flowerbed"
+          >
+            <i class="fas fa-square-full"></i> Flower Bed
+          </button>
+          <button
+            class="selection-button"
+            data-item-type="element"
+            data-item-shape="gardenwall"
+          >
+            <i class="fas fa-border-all"></i> Garden Wall
+          </button>
+          <button
+            class="selection-button"
+            data-item-type="element"
+            data-item-shape="gazebo"
+          >
+            <i class="fas fa-house-user"></i> Gazebo
+          </button>
+          <button
+            class="selection-button"
+            data-item-type="element"
+            data-item-shape="picnictable"
+          >
+            <i class="fas fa-table"></i> Picnic Table
+          </button>
+          <button
+            class="selection-button"
+            data-item-type="element"
+            data-item-shape="wheelbarrow"
+          >
+            <i class="fas fa-truck-loading"></i> Wheelbarrow
+          </button>
+          <button
+            class="selection-button"
+            data-item-type="element"
+            data-item-shape="trellis"
+          >
+            <i class="fas fa-grip-lines"></i> Trellis
+          </button>
+        </div>
+      </div>
+
+      <div class="action-buttons">
+        <button id="undoButton" class="action-button undo">
+          <i class="fas fa-undo"></i> Undo Last
+        </button>
+        <button id="clearButton" class="action-button clear">
+          <i class="fas fa-trash-alt"></i> Clear Garden
+        </button>
+        <button id="soundToggleButton" class="action-button">
+          <i class="fas fa-volume-up"></i> Sound On
+        </button>
+      </div>
+
+      <div id="messageBox" class="message-box"></div>
+    </div>
+
+    <script>
+      // Get the canvas element and its 2D rendering context
+      const canvas = document.getElementById("gardenCanvas");
+      const ctx = canvas.getContext("2d");
+
+      // Get control elements
+      const selectionButtons = document.querySelectorAll(".selection-button"); // Now selects all item buttons
+      const clearButton = document.getElementById("clearButton");
+      const undoButton = document.getElementById("undoButton"); // New undo button
+      const messageBox = document.getElementById("messageBox");
+      const soundToggleButton = document.getElementById("soundToggleButton");
+
+      // Sound variables
+      let isSoundOn = true;
+      let synth; // Will be initialized by Tone.js
+
+      // Initialize Tone.js
+      function initializeAudio() {
+        try {
+          if (!synth) {
+            synth = new Tone.Synth({
+              oscillator: {
+                type: "triangle", // A soft, gentle wave
+              },
+              envelope: {
+                attack: 0.01,
+                decay: 0.2,
+                sustain: 0.1,
+                release: 0.5,
+              },
+            }).toDestination();
+          }
+          // Start Tone.js context on user interaction (first click)
+          Tone.start();
+        } catch (e) {
+          console.error("Failed to initialize audio:", e);
+          showMessage(
+            "Audio could not be initialized. Please check browser permissions.",
+            "error"
+          );
+          isSoundOn = false; // Disable sound if init fails
+          soundToggleButton.innerHTML =
+            '<i class="fas fa-volume-mute"></i> Sound Off';
+        }
+      }
+
+      // Function to play sound
+      function playItemSound() {
+        if (isSoundOn && synth) {
+          synth.triggerAttackRelease("C4", "8n"); // Play a C4 note for an eighth note duration
+        }
+      }
+
+      // Store selected item type (flower color or garden element)
+      let selectedItem = { type: "flower", shape: "red" }; // Default selected item (red flower)
+
+      // Array to store planted flowers and elements
+      let plantedItems = [];
+
+      // Define drawing functions for all items (flowers and elements)
+      // Each function takes x, y coordinates and draws an item at that position
+      const itemDrawingFunctions = {
+        // --- Flower Drawing Functions ---
+        red: (x, y, scale = 1) => {
+          ctx.fillStyle = "#ef5350"; // Red petal color
+          ctx.strokeStyle = "#c62828"; // Darker red border
+          ctx.lineWidth = 2 * scale;
+
+          // Petals
+          for (let i = 0; i < 5; i++) {
+            ctx.beginPath();
+            ctx.ellipse(
+              x,
+              y,
+              15 * scale,
+              8 * scale,
+              Math.PI / 2 + (i * Math.PI) / 2.5,
+              0,
+              2 * Math.PI
+            );
+            ctx.fill();
+            ctx.stroke();
+          }
+          // Center
+          ctx.beginPath();
+          ctx.arc(x, y, 7 * scale, 0, Math.PI * 2);
+          ctx.fillStyle = "#ffeb3b"; // Yellow center
+          ctx.fill();
+          ctx.stroke();
+        },
+        yellow: (x, y, scale = 1) => {
+          ctx.fillStyle = "#ffee58"; // Yellow petal color
+          ctx.strokeStyle = "#fbc02d"; // Darker yellow border
+          ctx.lineWidth = 2 * scale;
+
+          // Petals (star-like)
+          ctx.beginPath();
+          for (let i = 0; i < 5; i++) {
+            const angle = (Math.PI / 5) * (2 * i);
+            const innerX = x + Math.cos(angle) * (10 * scale);
+            const innerY = y + Math.sin(angle) * (10 * scale);
+            const outerX = x + Math.cos(angle + Math.PI / 5) * (20 * scale);
+            const outerY = y + Math.sin(angle + Math.PI / 5) * (20 * scale);
+
+            if (i === 0) {
+              ctx.moveTo(innerX, innerY);
+            } else {
+              ctx.lineTo(innerX, innerY);
+            }
+            ctx.lineTo(outerX, outerY);
+          }
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          // Center
+          ctx.beginPath();
+          ctx.arc(x, y, 6 * scale, 0, Math.PI * 2);
+          ctx.fillStyle = "#f57f17"; // Darker yellow center
+          ctx.fill();
+          ctx.stroke();
+        },
+        blue: (x, y, scale = 1) => {
+          ctx.fillStyle = "#42a5f5"; // Blue petal color
+          ctx.strokeStyle = "#1976d2"; // Darker blue border
+          ctx.lineWidth = 2 * scale;
+
+          // Bell-like shape
+          ctx.beginPath();
+          ctx.arc(
+            x,
+            y - 10 * scale,
+            10 * scale,
+            Math.PI * 0.8,
+            Math.PI * 0.2,
+            true
+          ); // Top arc
+          ctx.lineTo(x + 15 * scale, y + 20 * scale);
+          ctx.arc(x, y + 20 * scale, 15 * scale, 0, Math.PI, false); // Bottom arc
+          ctx.lineTo(x - 15 * scale, y + 20 * scale);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          // Stem
+          ctx.beginPath();
+          ctx.moveTo(x, y + 20 * scale);
+          ctx.lineTo(x, y + 35 * scale);
+          ctx.strokeStyle = "#689f38"; // Green stem
+          ctx.lineWidth = 3 * scale;
+          ctx.stroke();
+        },
+        purple: (x, y, scale = 1) => {
+          ctx.fillStyle = "#ab47bc"; // Purple petal color
+          ctx.strokeStyle = "#6a1b9a"; // Darker purple border
+          ctx.lineWidth = 2 * scale;
+
+          // Droplet/dewdrop shape for petals
+          for (let i = 0; i < 4; i++) {
+            ctx.save(); // Save current canvas state
+            ctx.translate(x, y); // Move origin to flower center
+            ctx.rotate((i * Math.PI) / 2); // Rotate for each petal
+
+            ctx.beginPath();
+            ctx.moveTo(0, 0); // Start at center
+            ctx.quadraticCurveTo(10 * scale, -15 * scale, 0, -25 * scale); // Top curve
+            ctx.quadraticCurveTo(-10 * scale, -15 * scale, 0, 0); // Bottom curve
+            ctx.fill();
+            ctx.stroke();
+            ctx.restore(); // Restore canvas state
+          }
+
+          // Center
+          ctx.beginPath();
+          ctx.arc(x, y, 5 * scale, 0, Math.PI * 2);
+          ctx.fillStyle = "#ede7f6"; // Very light purple center
+          ctx.fill();
+          ctx.stroke();
+        },
+        orange: (x, y, scale = 1) => {
+          ctx.fillStyle = "#ffa726"; // Orange petal color
+          ctx.strokeStyle = "#e65100"; // Darker orange border
+          ctx.lineWidth = 2 * scale;
+
+          // Sun-like petals
+          for (let i = 0; i < 8; i++) {
+            ctx.beginPath();
+            ctx.arc(
+              x,
+              y,
+              20 * scale,
+              (i * Math.PI) / 4 - 0.2,
+              (i * Math.PI) / 4 + 0.2
+            );
+            ctx.lineTo(x, y);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+          }
+          // Center
+          ctx.beginPath();
+          ctx.arc(x, y, 10 * scale, 0, Math.PI * 2);
+          ctx.fillStyle = "#ffca28"; // Yellow center
+          ctx.fill();
+          ctx.stroke();
+        },
+        green: (x, y, scale = 1) => {
+          // New Green Clover
+          ctx.fillStyle = "#689f38"; // Green petal color
+          ctx.strokeStyle = "#33691e"; // Darker green border
+          ctx.lineWidth = 2 * scale;
+
+          // Four heart-like leaves
+          const leafSize = 15 * scale;
+          const stemLength = 20 * scale;
+
+          // Draw stem first to be behind leaves
+          ctx.beginPath();
+          ctx.moveTo(x, y + leafSize * 0.5); // Adjust stem start to connect to leaves better
+          ctx.lineTo(x, y + leafSize * 0.5 + stemLength);
+          ctx.strokeStyle = "#33691e";
+          ctx.lineWidth = 3 * scale;
+          ctx.stroke();
+
+          for (let i = 0; i < 4; i++) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate((i * Math.PI) / 2); // Rotate for each leaf
+
+            ctx.beginPath();
+            ctx.arc(-leafSize / 2, -leafSize / 2, leafSize / 2, 0, Math.PI * 2);
+            ctx.arc(leafSize / 2, -leafSize / 2, leafSize / 2, 0, Math.PI * 2);
+            ctx.lineTo(0, 0); // Pointy bottom of leaf
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            ctx.restore();
+          }
+        },
+        pink: (x, y, scale = 1) => {
+          // New Pink Blossom
+          ctx.fillStyle = "#f48fb1"; // Pink petal color
+          ctx.strokeStyle = "#ad1457"; // Darker pink border
+          ctx.lineWidth = 2 * scale;
+
+          // Simple round petals
+          for (let i = 0; i < 6; i++) {
+            ctx.beginPath();
+            const angle = (i * Math.PI) / 3;
+            const petalX = x + Math.cos(angle) * (10 * scale);
+            const petalY = y + Math.sin(angle) * (10 * scale);
+            ctx.arc(petalX, petalY, 12 * scale, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+          }
+          // Center
+          ctx.beginPath();
+          ctx.arc(x, y, 6 * scale, 0, Math.PI * 2);
+          ctx.fillStyle = "#f8bbd0"; // Lighter pink center
+          ctx.fill();
+          ctx.stroke();
+        },
+        white: (x, y, scale = 1) => {
+          // White Lily
+          ctx.fillStyle = "#ffffff"; // White petal color
+          ctx.strokeStyle = "#b0bec5"; // Light grey border
+          ctx.lineWidth = 2 * scale;
+
+          // Six elongated petals
+          for (let i = 0; i < 6; i++) {
+            ctx.beginPath();
+            ctx.ellipse(
+              x,
+              y,
+              10 * scale,
+              25 * scale,
+              (i * Math.PI) / 3,
+              0,
+              2 * Math.PI
+            );
+            ctx.fill();
+            ctx.stroke();
+          }
+          // Center (stamens)
+          ctx.beginPath();
+          ctx.arc(x, y, 5 * scale, 0, Math.PI * 2);
+          ctx.fillStyle = "#ffeb3b"; // Yellow center
+          ctx.fill();
+          ctx.stroke();
+          // Thin dark lines for stamen details
+          ctx.strokeStyle = "#fbc02d";
+          ctx.lineWidth = 1 * scale;
+          ctx.beginPath();
+          ctx.moveTo(x, y);
+          ctx.lineTo(x + 5 * scale, y - 10 * scale);
+          ctx.moveTo(x, y);
+          ctx.lineTo(x - 5 * scale, y - 10 * scale);
+          ctx.stroke();
+        },
+        tulip: (x, y, scale = 1) => {
+          // New Tulip Flower
+          ctx.fillStyle = "#ff5252"; // Red tulip color
+          ctx.strokeStyle = "#d32f2f"; // Darker red border
+          ctx.lineWidth = 2 * scale;
+
+          // Petal shape (three main upward petals)
+          ctx.beginPath();
+          ctx.moveTo(x, y - 30 * scale); // Top peak
+          ctx.quadraticCurveTo(
+            x + 15 * scale,
+            y - 20 * scale,
+            x + 15 * scale,
+            y
+          );
+          ctx.quadraticCurveTo(x, y + 10 * scale, x - 15 * scale, y);
+          ctx.quadraticCurveTo(
+            x - 15 * scale,
+            y - 20 * scale,
+            x,
+            y - 30 * scale
+          );
+          ctx.fill();
+          ctx.stroke();
+
+          // Inner petals
+          ctx.beginPath();
+          ctx.moveTo(x, y - 25 * scale);
+          ctx.quadraticCurveTo(
+            x + 10 * scale,
+            y - 15 * scale,
+            x + 10 * scale,
+            y
+          );
+          ctx.quadraticCurveTo(x, y + 5 * scale, x - 10 * scale, y);
+          ctx.quadraticCurveTo(
+            x - 10 * scale,
+            y - 15 * scale,
+            x,
+            y - 25 * scale
+          );
+          ctx.fillStyle = "#ff8a80"; // Lighter red inside
+          ctx.fill();
+          ctx.stroke();
+
+          // Stem
+          ctx.beginPath();
+          ctx.moveTo(x, y + 5 * scale);
+          ctx.lineTo(x, y + 30 * scale);
+          ctx.strokeStyle = "#689f38"; // Green stem
+          ctx.lineWidth = 3 * scale;
+          ctx.stroke();
+        },
+        sunflower: (x, y, scale = 1) => {
+          // New Sunflower
+          ctx.fillStyle = "#fdd835"; // Yellow petal color
+          ctx.strokeStyle = "#fbc02d"; // Dark yellow border
+          ctx.lineWidth = 2 * scale;
+
+          // Petals
+          const numPetals = 16;
+          for (let i = 0; i < numPetals; i++) {
+            ctx.beginPath();
+            ctx.arc(
+              x,
+              y,
+              25 * scale,
+              (i * Math.PI) / (numPetals / 2) - 0.2,
+              (i * Math.PI) / (numPetals / 2) + 0.2
+            );
+            ctx.lineTo(x, y);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+          }
+          // Center (dark brown, textured)
+          ctx.beginPath();
+          ctx.arc(x, y, 12 * scale, 0, Math.PI * 2);
+          ctx.fillStyle = "#4e342e"; // Dark brown center
+          ctx.strokeStyle = "#3e2723";
+          ctx.fill();
+          ctx.stroke();
+
+          // Seeds/texture in center
+          ctx.fillStyle = "#6d4c41";
+          for (let i = 0; i < 50; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const radius = Math.random() * 10 * scale;
+            ctx.beginPath();
+            ctx.arc(
+              x + Math.cos(angle) * radius,
+              y + Math.sin(angle) * radius,
+              0.8 * scale,
+              0,
+              Math.PI * 2
+            );
+            ctx.fill();
+          }
+          // Stem
+          ctx.beginPath();
+          ctx.moveTo(x, y + 15 * scale);
+          ctx.lineTo(x, y + 40 * scale);
+          ctx.strokeStyle = "#689f38"; // Green stem
+          ctx.lineWidth = 4 * scale;
+          ctx.stroke();
+        },
+        daisy: (x, y, scale = 1) => {
+          // New Daisy Flower
+          ctx.fillStyle = "#ffffff"; // White petals
+          ctx.strokeStyle = "#b0bec5"; // Light grey border
+          ctx.lineWidth = 1.5 * scale;
+
+          // Petals
+          for (let i = 0; i < 12; i++) {
+            ctx.beginPath();
+            ctx.ellipse(
+              x,
+              y,
+              20 * scale,
+              6 * scale,
+              (i * Math.PI) / 6,
+              0,
+              2 * Math.PI
+            );
+            ctx.fill();
+            ctx.stroke();
+          }
+          // Center
+          ctx.beginPath();
+          ctx.arc(x, y, 8 * scale, 0, Math.PI * 2);
+          ctx.fillStyle = "#ffeb3b"; // Yellow center
+          ctx.fill();
+          ctx.strokeStyle = "#fbc02d";
+          ctx.stroke();
+        },
+        lavender: (x, y, scale = 1) => {
+          // New Lavender Flower
+          const stemLength = 40 * scale;
+          const flowerletSize = 4 * scale;
+
+          ctx.strokeStyle = "#689f38"; // Green stem
+          ctx.lineWidth = 2 * scale;
+          ctx.beginPath();
+          ctx.moveTo(x, y + stemLength);
+          ctx.lineTo(x, y);
+          ctx.stroke();
+
+          ctx.fillStyle = "#ab47bc"; // Purple for lavender flowerlets
+          ctx.strokeStyle = "#6a1b9a";
+          ctx.lineWidth = 1 * scale;
+
+          for (let i = 0; i < 7; i++) {
+            const fx = x + Math.sin(i * 0.5) * (3 * scale); // slight wobble
+            const fy = y - i * (8 * scale);
+            ctx.beginPath();
+            ctx.arc(fx, fy, flowerletSize, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+          }
+        },
+        orchid: (x, y, scale = 1) => {
+          // New Orchid Flower
+          ctx.fillStyle = "#e0b0ff"; // Light purple/pink for orchid
+          ctx.strokeStyle = "#9370db"; // Medium purple
+          ctx.lineWidth = 2 * scale;
+
+          // Main petal (bottom)
+          ctx.beginPath();
+          ctx.ellipse(
+            x,
+            y + 15 * scale,
+            15 * scale,
+            20 * scale,
+            Math.PI / 2,
+            0,
+            2 * Math.PI
+          );
+          ctx.fill();
+          ctx.stroke();
+
+          // Side petals
+          ctx.beginPath();
+          ctx.ellipse(
+            x - 15 * scale,
+            y + 5 * scale,
+            12 * scale,
+            18 * scale,
+            Math.PI / 4,
+            0,
+            2 * Math.PI
+          );
+          ctx.fill();
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.ellipse(
+            x + 15 * scale,
+            y + 5 * scale,
+            12 * scale,
+            18 * scale,
+            -Math.PI / 4,
+            0,
+            2 * Math.PI
+          );
+          ctx.fill();
+          ctx.stroke();
+
+          // Top petals
+          ctx.beginPath();
+          ctx.ellipse(
+            x,
+            y - 10 * scale,
+            10 * scale,
+            15 * scale,
+            0,
+            0,
+            2 * Math.PI
+          );
+          ctx.fill();
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.ellipse(
+            x - 8 * scale,
+            y - 20 * scale,
+            8 * scale,
+            10 * scale,
+            Math.PI / 8,
+            0,
+            2 * Math.PI
+          );
+          ctx.fill();
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.ellipse(
+            x + 8 * scale,
+            y - 20 * scale,
+            8 * scale,
+            10 * scale,
+            -Math.PI / 8,
+            0,
+            2 * Math.PI
+          );
+          ctx.fill();
+          ctx.stroke();
+
+          // Center detail
+          ctx.beginPath();
+          ctx.arc(x, y, 5 * scale, 0, Math.PI * 2);
+          ctx.fillStyle = "#ffeb3b"; // Yellow center
+          ctx.fill();
+          ctx.stroke();
+        },
+        rose: (x, y, scale = 1) => {
+          ctx.fillStyle = "#e57373"; // Rose red/pink
+          ctx.strokeStyle = "#d32f2f";
+          ctx.lineWidth = 1.5 * scale;
+          // Layered petals
+          for (let i = 0; i < 3; i++) {
+            ctx.beginPath();
+            ctx.ellipse(
+              x,
+              y,
+              18 * scale,
+              10 * scale,
+              Math.PI / 6 + (i * Math.PI) / 3,
+              0,
+              Math.PI * 2
+            );
+            ctx.fill();
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.ellipse(
+              x,
+              y,
+              15 * scale,
+              8 * scale,
+              -Math.PI / 6 + (i * Math.PI) / 3,
+              0,
+              Math.PI * 2
+            );
+            ctx.fill();
+            ctx.stroke();
+          }
+          // Inner swirl
+          ctx.beginPath();
+          ctx.arc(x, y, 5 * scale, 0, Math.PI * 2);
+          ctx.fillStyle = "#ffccbc";
+          ctx.fill();
+        },
+        daffodil: (x, y, scale = 1) => {
+          ctx.fillStyle = "#ffeb3b"; // Yellow petals
+          ctx.strokeStyle = "#fbc02d";
+          ctx.lineWidth = 2 * scale;
+          // Outer petals
+          for (let i = 0; i < 6; i++) {
+            ctx.beginPath();
+            ctx.ellipse(
+              x,
+              y,
+              20 * scale,
+              8 * scale,
+              (i * Math.PI) / 3,
+              0,
+              2 * Math.PI
+            );
+            ctx.fill();
+            ctx.stroke();
+          }
+          // Trumpet center
+          ctx.beginPath();
+          ctx.arc(x, y, 10 * scale, 0, Math.PI * 2);
+          ctx.fillStyle = "#ffa726"; // Orange center
+          ctx.fill();
+          ctx.strokeStyle = "#e65100";
+          ctx.stroke();
+        },
+        cherryblossom: (x, y, scale = 1) => {
+          ctx.fillStyle = "#f8bbd0"; // Light pink petals
+          ctx.strokeStyle = "#f48fb1";
+          ctx.lineWidth = 1.5 * scale;
+          const petalCount = 5;
+          const petalLength = 15 * scale;
+          const petalWidth = 7 * scale;
+
+          for (let i = 0; i < petalCount; i++) {
+            const angle = i * ((Math.PI * 2) / petalCount) + Math.PI / 10; // offset slightly
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(angle);
+            ctx.beginPath();
+            ctx.ellipse(
+              0,
+              petalLength / 2,
+              petalWidth,
+              petalLength / 2,
+              0,
+              0,
+              Math.PI * 2
+            );
+            ctx.fill();
+            ctx.stroke();
+            ctx.restore();
+          }
+          // Small brown center
+          ctx.beginPath();
+          ctx.arc(x, y, 3 * scale, 0, Math.PI * 2);
+          ctx.fillStyle = "#6d4c41";
+          ctx.fill();
+        },
+        lily: (x, y, scale = 1) => {
+          // New Lily (trumpet shape)
+          ctx.fillStyle = "#ff8a80"; // Light orange/red for lily
+          ctx.strokeStyle = "#e57373";
+          ctx.lineWidth = 2 * scale;
+
+          // Trumpet petals
+          ctx.beginPath();
+          ctx.moveTo(x, y - 25 * scale); // Top point
+          ctx.quadraticCurveTo(
+            x + 10 * scale,
+            y - 35 * scale,
+            x + 20 * scale,
+            y - 20 * scale
+          );
+          ctx.quadraticCurveTo(
+            x + 30 * scale,
+            y,
+            x + 20 * scale,
+            y + 20 * scale
+          );
+          ctx.quadraticCurveTo(
+            x + 10 * scale,
+            y + 35 * scale,
+            x,
+            y + 25 * scale
+          );
+          ctx.quadraticCurveTo(
+            x - 10 * scale,
+            y + 35 * scale,
+            x - 20 * scale,
+            y + 20 * scale
+          );
+          ctx.quadraticCurveTo(
+            x - 30 * scale,
+            y,
+            x - 20 * scale,
+            y - 20 * scale
+          );
+          ctx.quadraticCurveTo(
+            x - 10 * scale,
+            y - 35 * scale,
+            x,
+            y - 25 * scale
+          );
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+
+          // Center (stamens)
+          ctx.beginPath();
+          ctx.arc(x, y, 5 * scale, 0, Math.PI * 2);
+          ctx.fillStyle = "#ffeb3b"; // Yellow center
+          ctx.fill();
+          ctx.stroke();
+        },
+        freesia: (x, y, scale = 1) => {
+          // New Freesia
+          const stemLength = 40 * scale;
+          const flowerletSize = 8 * scale; // Larger flowerlets than lavender
+
+          ctx.strokeStyle = "#689f38"; // Green stem
+          ctx.lineWidth = 2 * scale;
+          ctx.beginPath();
+          ctx.moveTo(x, y + stemLength);
+          ctx.lineTo(x, y - 10 * scale); // Stem goes up to base of first flower
+
+          // Branching stem
+          ctx.lineTo(x + 5 * scale, y - 20 * scale);
+          ctx.lineTo(x + 10 * scale, y - 30 * scale);
+          ctx.stroke();
+
+          ctx.fillStyle = "#81d4fa"; // Light blue for freesias
+          ctx.strokeStyle = "#42a5f5";
+          ctx.lineWidth = 1 * scale;
+
+          // Flowerlets along stem
+          ctx.beginPath();
+          ctx.arc(x, y - 5 * scale, flowerletSize, 0, Math.PI * 2); // First flowerlet
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.arc(
+            x + 8 * scale,
+            y - 18 * scale,
+            flowerletSize * 0.9,
+            0,
+            Math.PI * 2
+          ); // Second
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.arc(
+            x + 15 * scale,
+            y - 30 * scale,
+            flowerletSize * 0.8,
+            0,
+            Math.PI * 2
+          ); // Third
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.arc(
+            x + 20 * scale,
+            y - 40 * scale,
+            flowerletSize * 0.7,
+            0,
+            Math.PI * 2
+          ); // Fourth
+          ctx.fill();
+          ctx.stroke();
+        },
+        iris: (x, y, scale = 1) => {
+          // New Iris
+          ctx.fillStyle = "#673ab7"; // Deep blue/purple for iris
+          ctx.strokeStyle = "#4527a0";
+          ctx.lineWidth = 2 * scale;
+
+          // Upper petals (standards)
+          ctx.beginPath();
+          ctx.moveTo(x, y - 30 * scale);
+          ctx.quadraticCurveTo(
+            x + 10 * scale,
+            y - 20 * scale,
+            x + 15 * scale,
+            y - 5 * scale
+          );
+          ctx.quadraticCurveTo(
+            x,
+            y - 10 * scale,
+            x - 15 * scale,
+            y - 5 * scale
+          );
+          ctx.quadraticCurveTo(
+            x - 10 * scale,
+            y - 20 * scale,
+            x,
+            y - 30 * scale
+          );
+          ctx.fill();
+          ctx.stroke();
+
+          // Lower petals (falls)
+          ctx.beginPath();
+          ctx.moveTo(x, y + 10 * scale);
+          ctx.quadraticCurveTo(
+            x + 20 * scale,
+            y + 30 * scale,
+            x + 30 * scale,
+            y + 5 * scale
+          );
+          ctx.quadraticCurveTo(
+            x + 10 * scale,
+            y - 5 * scale,
+            x,
+            y + 10 * scale
+          );
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.moveTo(x, y + 10 * scale);
+          ctx.quadraticCurveTo(
+            x - 20 * scale,
+            y + 30 * scale,
+            x - 30 * scale,
+            y + 5 * scale
+          );
+          ctx.quadraticCurveTo(
+            x - 10 * scale,
+            y - 5 * scale,
+            x,
+            y + 10 * scale
+          );
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+
+          // Small center detail (beard)
+          ctx.beginPath();
+          ctx.arc(x, y + 5 * scale, 4 * scale, 0, Math.PI * 2);
+          ctx.fillStyle = "#ffb300"; // Orange/yellow for beard
+          ctx.fill();
+        },
+
+        // --- Garden Element Drawing Functions ---
+        pond: (x, y, scale = 1) => {
+          ctx.fillStyle = "#4dd0e1"; // Light blue for water
+          ctx.strokeStyle = "#00838f"; // Darker blue border
+          ctx.lineWidth = 3 * scale;
+
+          // Oval shape for the pond
+          ctx.beginPath();
+          ctx.ellipse(x, y, 50 * scale, 30 * scale, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+
+          // Small ripple lines
+          ctx.strokeStyle = "#80deea";
+          ctx.lineWidth = 1 * scale;
+          ctx.beginPath();
+          ctx.ellipse(
+            x,
+            y,
+            40 * scale,
+            25 * scale,
+            0,
+            Math.PI * 0.1,
+            Math.PI * 0.9
+          );
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.ellipse(
+            x,
+            y,
+            30 * scale,
+            18 * scale,
+            0,
+            Math.PI * 1.1,
+            Math.PI * 1.9
+          );
+          ctx.stroke();
+        },
+        tree: (x, y, scale = 1) => {
+          const trunkWidth = 15 * scale;
+          const trunkHeight = 40 * scale;
+          const canopyRadius = 30 * scale;
+
+          // Trunk
+          ctx.fillStyle = "#8d6e63"; // Brown
+          ctx.fillRect(x - trunkWidth / 2, y, trunkWidth, trunkHeight); // Trunk starts at y
+
+          // Canopy (a few overlapping green circles)
+          ctx.fillStyle = "#4caf50"; // Green
+          ctx.strokeStyle = "#2e7d32"; // Darker green border
+          ctx.lineWidth = 2 * scale;
+
+          ctx.beginPath();
+          ctx.arc(x, y - canopyRadius / 2, canopyRadius, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.arc(
+            x - canopyRadius * 0.6,
+            y - canopyRadius * 0.8,
+            canopyRadius * 0.8,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.arc(
+            x + canopyRadius * 0.6,
+            y - canopyRadius * 0.8,
+            canopyRadius * 0.8,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+          ctx.stroke();
+        },
+        bench: (x, y, scale = 1) => {
+          const benchWidth = 60 * scale;
+          const benchHeight = 20 * scale;
+          const legWidth = 8 * scale;
+          const legHeight = 15 * scale;
+
+          // Bench seat
+          ctx.fillStyle = "#a1887f"; // Light brown for wood
+          ctx.strokeStyle = "#6d4c41"; // Darker brown border
+          ctx.lineWidth = 2 * scale;
+          ctx.fillRect(
+            x - benchWidth / 2,
+            y - benchHeight / 2,
+            benchWidth,
+            benchHeight
+          );
+          ctx.strokeRect(
+            x - benchWidth / 2,
+            y - benchHeight / 2,
+            benchWidth,
+            benchHeight
+          );
+
+          // Bench legs
+          ctx.fillRect(
+            x - benchWidth / 2 + legWidth / 2,
+            y + benchHeight / 2,
+            legWidth,
+            legHeight
+          );
+          ctx.strokeRect(
+            x - benchWidth / 2 + legWidth / 2,
+            y + benchHeight / 2,
+            legWidth,
+            legHeight
+          );
+
+          ctx.fillRect(
+            x + benchWidth / 2 - legWidth * 1.5,
+            y + benchHeight / 2,
+            legWidth,
+            legHeight
+          );
+          ctx.strokeRect(
+            x + benchWidth / 2 - legWidth * 1.5,
+            y + benchHeight / 2,
+            legWidth,
+            legHeight
+          );
+        },
+        archway: (x, y, scale = 1) => {
+          const archWidth = 80 * scale;
+          const archHeight = 60 * scale;
+          const pillarWidth = 15 * scale;
+          const pillarHeight = 40 * scale;
+
+          // Pillars
+          ctx.fillStyle = "#bdbdbd"; // Grey for stone
+          ctx.strokeStyle = "#757575"; // Darker grey border
+          ctx.lineWidth = 2 * scale;
+
+          ctx.fillRect(x - archWidth / 2, y, pillarWidth, pillarHeight);
+          ctx.strokeRect(x - archWidth / 2, y, pillarWidth, pillarHeight);
+
+          ctx.fillRect(
+            x + archWidth / 2 - pillarWidth,
+            y,
+            pillarWidth,
+            pillarHeight
+          );
+          ctx.strokeRect(
+            x + archWidth / 2 - pillarWidth,
+            y,
+            pillarWidth,
+            pillarHeight
+          );
+
+          // Arch top
+          ctx.beginPath();
+          ctx.arc(x, y, archWidth / 2, Math.PI, 0, false); // Half circle arch
+          ctx.lineTo(x + archWidth / 2, y); // Connect to right pillar
+          ctx.lineTo(x + archWidth / 2 - pillarWidth, y); // Inner right corner
+          ctx.arc(x, y, archWidth / 2 - pillarWidth, 0, Math.PI, true); // Inner half circle
+          ctx.lineTo(x - archWidth / 2 + pillarWidth, y); // Inner left corner
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+        },
+        lantern: (x, y, scale = 1) => {
+          const baseSize = 15 * scale;
+          const bodyWidth = 25 * scale;
+          const bodyHeight = 35 * scale;
+          const lightRadius = 10 * scale;
+
+          // Base
+          ctx.fillStyle = "#616161"; // Dark grey
+          ctx.fillRect(
+            x - baseSize / 2,
+            y + bodyHeight / 2 + lightRadius / 2,
+            baseSize,
+            5 * scale
+          );
+          ctx.strokeStyle = "#424242";
+          ctx.lineWidth = 1 * scale;
+          ctx.strokeRect(
+            x - baseSize / 2,
+            y + bodyHeight / 2 + lightRadius / 2,
+            baseSize,
+            5 * scale
+          );
+
+          // Body
+          ctx.fillRect(
+            x - bodyWidth / 2,
+            y - bodyHeight / 2,
+            bodyWidth,
+            bodyHeight
+          );
+          ctx.strokeRect(
+            x - bodyWidth / 2,
+            y - bodyHeight / 2,
+            bodyWidth,
+            bodyHeight
+          );
+
+          // Light (yellow circle)
+          ctx.beginPath();
+          ctx.arc(x, y, lightRadius, 0, Math.PI * 2);
+          ctx.fillStyle = "#ffeb3b"; // Yellow for light
+          ctx.shadowColor = "#ffeb3b";
+          ctx.shadowBlur = 10 * scale;
+          ctx.fill();
+          ctx.shadowBlur = 0; // Reset shadow
+          ctx.strokeStyle = "#fbc02d";
+          ctx.stroke();
+
+          // Top hook
+          ctx.beginPath();
+          ctx.moveTo(x, y - bodyHeight / 2 - 5 * scale);
+          ctx.lineTo(x, y - bodyHeight / 2 - 15 * scale);
+          ctx.strokeStyle = "#616161";
+          ctx.lineWidth = 2 * scale;
+          ctx.stroke();
+        },
+        pathstone: (x, y, scale = 1) => {
+          const stoneWidth = 40 * scale;
+          const stoneHeight = 25 * scale;
+
+          ctx.fillStyle = "#d7ccc8"; // Light brown/grey stone
+          ctx.strokeStyle = "#a1887f"; // Brownish grey border
+          ctx.lineWidth = 2 * scale;
+
+          // Irregular oval shape
+          ctx.beginPath();
+          ctx.ellipse(
+            x,
+            y,
+            stoneWidth / 2,
+            stoneHeight / 2,
+            Math.random() * Math.PI,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+          ctx.stroke();
+        },
+        birdhouse: (x, y, scale = 1) => {
+          const poleHeight = 40 * scale;
+          const poleWidth = 5 * scale;
+          const houseWidth = 30 * scale;
+          const houseHeight = 25 * scale;
+          const roofOverlap = 5 * scale;
+
+          // Pole
+          ctx.fillStyle = "#8d6e63"; // Brown
+          ctx.fillRect(
+            x - poleWidth / 2,
+            y + houseHeight / 2 + roofOverlap,
+            poleWidth,
+            poleHeight
+          );
+
+          // House body
+          ctx.fillStyle = "#fbe9e7"; // Light pink/cream
+          ctx.strokeStyle = "#d7ccc8";
+          ctx.lineWidth = 1.5 * scale;
+          ctx.fillRect(
+            x - houseWidth / 2,
+            y - houseHeight / 2,
+            houseWidth,
+            houseHeight
+          );
+          ctx.strokeRect(
+            x - houseWidth / 2,
+            y - houseHeight / 2,
+            houseWidth,
+            houseHeight
+          );
+
+          // Roof
+          ctx.fillStyle = "#a1887f"; // Darker brown for roof
+          ctx.beginPath();
+          ctx.moveTo(x - houseWidth / 2 - roofOverlap, y - houseHeight / 2);
+          ctx.lineTo(x + houseWidth / 2 + roofOverlap, y - houseHeight / 2);
+          ctx.lineTo(x, y - houseHeight / 2 - houseHeight / 2 - roofOverlap); // Peak
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+
+          // Entrance hole
+          ctx.beginPath();
+          ctx.arc(x, y + 5 * scale, 7 * scale, 0, Math.PI * 2);
+          ctx.fillStyle = "#424242"; // Dark grey
+          ctx.fill();
+        },
+        flowerpot: (x, y, scale = 1) => {
+          const potWidth = 35 * scale;
+          const potHeight = 30 * scale;
+          const topLipHeight = 5 * scale;
+
+          ctx.fillStyle = "#a1887f"; // Terracotta color
+          ctx.strokeStyle = "#6d4c41";
+          ctx.lineWidth = 2 * scale;
+
+          // Pot body
+          ctx.beginPath();
+          ctx.moveTo(x - potWidth / 2, y - topLipHeight);
+          ctx.lineTo(x - potWidth / 2 + potWidth * 0.1, y + potHeight);
+          ctx.lineTo(x + potWidth / 2 - potWidth * 0.1, y + potHeight);
+          ctx.lineTo(x + potWidth / 2, y - topLipHeight);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+
+          // Pot top lip
+          ctx.beginPath();
+          ctx.rect(
+            x - potWidth / 2 - 2 * scale,
+            y - topLipHeight - 5 * scale,
+            potWidth + 4 * scale,
+            topLipHeight + 5 * scale
+          );
+          ctx.fillStyle = "#8d6e63"; // Darker terracotta
+          ctx.fill();
+          ctx.stroke();
+        },
+        pillar: (x, y, scale = 1) => {
+          const baseWidth = 30 * scale;
+          const baseHeight = 10 * scale;
+          const columnWidth = 15 * scale;
+          const columnHeight = 60 * scale;
+          const capWidth = 35 * scale;
+          const capHeight = 10 * scale;
+
+          ctx.fillStyle = "#bdbdbd"; // Grey stone
+          ctx.strokeStyle = "#757575"; // Darker grey
+          ctx.lineWidth = 2 * scale;
+
+          // Base
+          ctx.fillRect(
+            x - baseWidth / 2,
+            y + columnHeight,
+            baseWidth,
+            baseHeight
+          );
+          ctx.strokeRect(
+            x - baseWidth / 2,
+            y + columnHeight,
+            baseWidth,
+            baseHeight
+          );
+
+          // Column
+          ctx.fillRect(x - columnWidth / 2, y, columnWidth, columnHeight);
+          ctx.strokeRect(x - columnWidth / 2, y, columnWidth, columnHeight);
+
+          // Capital (top)
+          ctx.fillRect(x - capWidth / 2, y - capHeight, capWidth, capHeight);
+          ctx.strokeRect(x - capWidth / 2, y - capHeight, capWidth, capHeight);
+        },
+        hedge: (x, y, scale = 1) => {
+          const hedgeWidth = 70 * scale;
+          const hedgeHeight = 40 * scale;
+
+          ctx.fillStyle = "#4CAF50"; // Green hedge
+          ctx.strokeStyle = "#2e7d32"; // Darker green border
+          ctx.lineWidth = 2 * scale;
+
+          // Main body of the hedge
+          ctx.beginPath();
+          ctx.roundRect(
+            x - hedgeWidth / 2,
+            y - hedgeHeight / 2,
+            hedgeWidth,
+            hedgeHeight,
+            10 * scale
+          );
+          ctx.fill();
+          ctx.stroke();
+
+          // Add some irregular bumps/texture
+          ctx.beginPath();
+          ctx.arc(
+            x - hedgeWidth / 2 + 15 * scale,
+            y - hedgeHeight / 2 + 10 * scale,
+            10 * scale,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.arc(
+            x + hedgeWidth / 2 - 15 * scale,
+            y - hedgeHeight / 2 + 5 * scale,
+            12 * scale,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.arc(
+            x,
+            y - hedgeHeight / 2 + 15 * scale,
+            13 * scale,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+          ctx.stroke();
+        },
+        gate: (x, y, scale = 1) => {
+          const gateWidth = 60 * scale;
+          const gateHeight = 50 * scale;
+          const postWidth = 10 * scale;
+
+          ctx.fillStyle = "#a1887f"; // Brown for wood
+          ctx.strokeStyle = "#6d4c41"; // Dark brown
+          ctx.lineWidth = 2 * scale;
+
+          // Left post
+          ctx.fillRect(
+            x - gateWidth / 2 - postWidth,
+            y - gateHeight,
+            postWidth,
+            gateHeight + 10 * scale
+          );
+          ctx.strokeRect(
+            x - gateWidth / 2 - postWidth,
+            y - gateHeight,
+            postWidth,
+            gateHeight + 10 * scale
+          );
+
+          // Right post
+          ctx.fillRect(
+            x + gateWidth / 2,
+            y - gateHeight,
+            postWidth,
+            gateHeight + 10 * scale
+          );
+          ctx.strokeRect(
+            x + gateWidth / 2,
+            y - gateHeight,
+            postWidth,
+            gateHeight + 10 * scale
+          );
+
+          // Gate panels
+          ctx.fillRect(
+            x - gateWidth / 2,
+            y - gateHeight,
+            gateWidth / 2 - 2 * scale,
+            gateHeight
+          );
+          ctx.strokeRect(
+            x - gateWidth / 2,
+            y - gateHeight,
+            gateWidth / 2 - 2 * scale,
+            gateHeight
+          );
+
+          ctx.fillRect(
+            x + 2 * scale,
+            y - gateHeight,
+            gateWidth / 2 - 2 * scale,
+            gateHeight
+          );
+          ctx.strokeRect(
+            x + 2 * scale,
+            y - gateHeight,
+            gateWidth / 2 - 2 * scale,
+            gateHeight
+          );
+
+          // Horizontal bars on gate panels
+          ctx.strokeStyle = "#424242"; // Darker lines
+          ctx.lineWidth = 1 * scale;
+          ctx.beginPath();
+          ctx.moveTo(x - gateWidth / 2, y - gateHeight * 0.7);
+          ctx.lineTo(x + gateWidth / 2, y - gateHeight * 0.7);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(x - gateWidth / 2, y - gateHeight * 0.3);
+          ctx.lineTo(x + gateWidth / 2, y - gateHeight * 0.3);
+          ctx.stroke();
+        },
+        flowerbed: (x, y, scale = 1) => {
+          const bedWidth = 80 * scale;
+          const bedHeight = 40 * scale;
+
+          ctx.fillStyle = "#a2cf6e"; // Slightly lighter green for the bed
+          ctx.strokeStyle = "#689f38"; // Darker green border
+          ctx.lineWidth = 2 * scale;
+
+          ctx.beginPath();
+          ctx.roundRect(
+            x - bedWidth / 2,
+            y - bedHeight / 2,
+            bedWidth,
+            bedHeight,
+            8 * scale
+          );
+          ctx.fill();
+          ctx.stroke();
+
+          // Add some dirt texture (optional, can be simplified)
+          ctx.fillStyle = "#8d6e63"; // Brown for dirt
+          ctx.beginPath();
+          ctx.ellipse(
+            x,
+            y + bedHeight * 0.1,
+            bedWidth * 0.4,
+            bedHeight * 0.2,
+            0,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+        },
+        gardenwall: (x, y, scale = 1) => {
+          const wallWidth = 100 * scale;
+          const wallHeight = 30 * scale;
+          const brickHeight = 10 * scale;
+
+          ctx.fillStyle = "#b0bec5"; // Grey stone
+          ctx.strokeStyle = "#78909c"; // Darker grey
+          ctx.lineWidth = 1 * scale;
+
+          // Main wall body
+          ctx.fillRect(
+            x - wallWidth / 2,
+            y - wallHeight / 2,
+            wallWidth,
+            wallHeight
+          );
+          ctx.strokeRect(
+            x - wallWidth / 2,
+            y - wallHeight / 2,
+            wallWidth,
+            wallHeight
+          );
+
+          // Simple brick lines
+          for (let i = 1; i < wallHeight / brickHeight; i++) {
+            ctx.beginPath();
+            ctx.moveTo(x - wallWidth / 2, y - wallHeight / 2 + i * brickHeight);
+            ctx.lineTo(x + wallWidth / 2, y - wallHeight / 2 + i * brickHeight);
+            ctx.stroke();
+          }
+
+          const numBricks = Math.floor(wallWidth / (brickHeight * 2));
+          for (let i = 0; i < numBricks; i++) {
+            ctx.beginPath();
+            ctx.moveTo(
+              x -
+                wallWidth / 2 +
+                i * brickHeight * 2 +
+                (i % 2 === 0 ? brickHeight : 0),
+              y - wallHeight / 2
+            );
+            ctx.lineTo(
+              x -
+                wallWidth / 2 +
+                i * brickHeight * 2 +
+                (i % 2 === 0 ? brickHeight : 0),
+              y + wallHeight / 2
+            );
+            ctx.stroke();
+          }
+        },
+        gazebo: (x, y, scale = 1) => {
+          const baseRadius = 40 * scale;
+          const pillarHeight = 50 * scale;
+          const pillarRadius = 5 * scale;
+          const roofHeight = 30 * scale;
+
+          ctx.fillStyle = "#e0e0e0"; // Light grey
+          ctx.strokeStyle = "#9e9e9e"; // Medium grey
+          ctx.lineWidth = 2 * scale;
+
+          // Base circle
+          ctx.beginPath();
+          ctx.arc(x, y + pillarHeight, baseRadius, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+
+          // Pillars (simplified)
+          const numPillars = 6;
+          for (let i = 0; i < numPillars; i++) {
+            const angle = (i / numPillars) * Math.PI * 2;
+            const px = x + Math.cos(angle) * (baseRadius - pillarRadius);
+            const py =
+              y +
+              pillarHeight +
+              Math.sin(angle) * (baseRadius - pillarRadius) * 0.2; // Slightly offset for perspective
+
+            ctx.fillRect(
+              px - pillarRadius,
+              py - pillarHeight,
+              pillarRadius * 2,
+              pillarHeight
+            );
+            ctx.strokeRect(
+              px - pillarRadius,
+              py - pillarHeight,
+              pillarRadius * 2,
+              pillarHeight
+            );
+          }
+
+          // Roof (cone-like shape)
+          ctx.fillStyle = "#a1887f"; // Brownish roof
+          ctx.strokeStyle = "#6d4c41";
+          ctx.beginPath();
+          ctx.ellipse(x, y, baseRadius, baseRadius * 0.4, 0, 0, Math.PI * 2); // Bottom of roof
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.moveTo(x, y - roofHeight); // Peak of roof
+          ctx.lineTo(x - baseRadius, y);
+          ctx.lineTo(x + baseRadius, y);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+        },
+        picnictable: (x, y, scale = 1) => {
+          const tableWidth = 80 * scale;
+          const tableLength = 40 * scale;
+          const tableHeight = 30 * scale;
+          const legWidth = 10 * scale;
+          const legHeight = 25 * scale;
+
+          ctx.fillStyle = "#a1887f"; // Wood color
+          ctx.strokeStyle = "#6d4c41";
+          ctx.lineWidth = 2 * scale;
+
+          // Tabletop
+          ctx.fillRect(
+            x - tableWidth / 2,
+            y - tableHeight,
+            tableWidth,
+            tableLength
+          );
+          ctx.strokeRect(
+            x - tableWidth / 2,
+            y - tableHeight,
+            tableWidth,
+            tableLength
+          );
+
+          // Legs
+          ctx.fillRect(
+            x - tableWidth / 2 + 5 * scale,
+            y - tableHeight + tableLength,
+            legWidth,
+            legHeight
+          );
+          ctx.strokeRect(
+            x - tableWidth / 2 + 5 * scale,
+            y - tableHeight + tableLength,
+            legWidth,
+            legHeight
+          );
+
+          ctx.fillRect(
+            x + tableWidth / 2 - legWidth - 5 * scale,
+            y - tableHeight + tableLength,
+            legWidth,
+            legHeight
+          );
+          ctx.strokeRect(
+            x + tableWidth / 2 - legWidth - 5 * scale,
+            y - tableHeight + tableLength,
+            legWidth,
+            legHeight
+          );
+
+          // Benches (simplified)
+          const benchOffset = 10 * scale;
+          ctx.fillRect(
+            x - tableWidth / 2 + benchOffset,
+            y + 5 * scale,
+            tableWidth - 2 * benchOffset,
+            10 * scale
+          );
+          ctx.strokeRect(
+            x - tableWidth / 2 + benchOffset,
+            y + 5 * scale,
+            tableWidth - 2 * benchOffset,
+            10 * scale
+          );
+        },
+        wheelbarrow: (x, y, scale = 1) => {
+          const wheelRadius = 15 * scale;
+          const handleLength = 40 * scale;
+          const bodyWidth = 50 * scale;
+          const bodyHeight = 25 * scale;
+
+          ctx.fillStyle = "#a1887f"; // Wood/metal color
+          ctx.strokeStyle = "#616161"; // Dark grey
+          ctx.lineWidth = 2 * scale;
+
+          // Wheel
+          ctx.beginPath();
+          ctx.arc(
+            x - wheelRadius,
+            y + wheelRadius,
+            wheelRadius,
+            0,
+            Math.PI * 2
+          );
+          ctx.fillStyle = "#424242"; // Black wheel
+          ctx.fill();
+          ctx.stroke();
+
+          // Body
+          ctx.beginPath();
+          ctx.moveTo(x - wheelRadius * 2, y);
+          ctx.lineTo(x + bodyWidth / 2, y);
+          ctx.lineTo(x + bodyWidth / 2 + 10 * scale, y - bodyHeight);
+          ctx.lineTo(x - wheelRadius * 2 + 10 * scale, y - bodyHeight);
+          ctx.closePath();
+          ctx.fillStyle = "#c5e1a5"; // Light green for main body
+          ctx.fill();
+          ctx.stroke();
+
+          // Handles
+          ctx.beginPath();
+          ctx.moveTo(x + bodyWidth / 2, y);
+          ctx.lineTo(x + bodyWidth / 2 + handleLength, y - 5 * scale);
+          ctx.moveTo(x + bodyWidth / 2, y - 10 * scale);
+          ctx.lineTo(x + bodyWidth / 2 + handleLength, y - 15 * scale);
+          ctx.strokeStyle = "#8d6e63"; // Brown handles
+          ctx.lineWidth = 3 * scale;
+          ctx.stroke();
+        },
+        trellis: (x, y, scale = 1) => {
+          const width = 40 * scale;
+          const height = 60 * scale;
+          const barThickness = 4 * scale;
+
+          ctx.strokeStyle = "#8d6e63"; // Brown wood for trellis
+          ctx.lineWidth = barThickness;
+
+          // Vertical bars
+          ctx.beginPath();
+          ctx.moveTo(x - width / 2, y - height / 2);
+          ctx.lineTo(x - width / 2, y + height / 2);
+          ctx.moveTo(x + width / 2, y - height / 2);
+          ctx.lineTo(x + width / 2, y + height / 2);
+          ctx.stroke();
+
+          // Horizontal bars
+          for (let i = 0; i <= height; i += 15 * scale) {
+            ctx.beginPath();
+            ctx.moveTo(x - width / 2, y - height / 2 + i);
+            ctx.lineTo(x + width / 2, y - height / 2 + i);
+            ctx.stroke();
+          }
+
+          // Diagonal bars (optional, adds more detail)
+          ctx.beginPath();
+          ctx.moveTo(x - width / 2, y - height / 2);
+          ctx.lineTo(x + width / 2, y + height / 2);
+          ctx.moveTo(x + width / 2, y - height / 2);
+          ctx.lineTo(x - width / 2, y + height / 2);
+          ctx.stroke();
+        },
+      };
+
+      // Function to draw all planted items with performance optimization
+      function drawGarden() {
+        const dpr = window.devicePixelRatio || 1;
+
+        // Clear the canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Optimize drawing by reducing calls for the same item type
+        const itemsByShape = {};
+        plantedItems.forEach(item => {
+          if (!itemsByShape[item.shape]) {
+            itemsByShape[item.shape] = [];
+          }
+          itemsByShape[item.shape].push(item);
+        });
+
+        // Redraw each item
+        plantedItems.forEach((item) => {
+          const drawFunction = itemDrawingFunctions[item.shape];
+          if (drawFunction) {
+            drawFunction(item.x, item.y, item.scale);
+          }
+        });
+
+        // Show performance hint for mobile if there are many items
+        if (plantedItems.length > 20 && window.innerWidth <= 480) {
+          ctx.save();
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+          ctx.fillRect(10 / dpr, 10 / dpr, 200 / dpr, 30 / dpr);
+          ctx.fillStyle = '#ffffff';
+          ctx.font = `${12 / dpr}px Inter`;
+          ctx.fillText('Consider clearing garden for better performance', 20 / dpr, 30 / dpr);
+          ctx.restore();
+        }
+      }
+
+      // Function to handle canvas resizing with high-DPI support
+      function resizeCanvas() {
+        const container = canvas.parentElement;
+        const dpr = window.devicePixelRatio || 1;
+
+        // Calculate optimal canvas size based on screen size
+        const containerWidth = container.offsetWidth;
+        const maxHeight = window.innerHeight <= 600 ?
+          Math.min(window.innerHeight * 0.4, containerWidth * 0.6) :
+          containerWidth * 0.75;
+
+        // Set canvas display size
+        canvas.style.width = "100%";
+        canvas.style.height = maxHeight + "px";
+
+        // Set canvas internal resolution for high-DPI displays
+        canvas.width = containerWidth * dpr;
+        canvas.height = maxHeight * dpr;
+
+        // Scale drawing context for high-DPI displays
+        ctx.scale(dpr, dpr);
+
+        // Redraw garden after resize
+        drawGarden();
+      }
+
+      // Display a temporary message
+      function showMessage(message, type = "info") {
+        messageBox.textContent = message;
+        messageBox.className = `message-box show ${type}`; // Add type for potential styling
+        setTimeout(() => {
+          messageBox.classList.remove("show");
+        }, 3000); // Hide after 3 seconds
+      }
+
+      // Event Listener for all selection buttons (flowers and elements)
+      function setupSelectionButtons() {
+        selectionButtons.forEach((button) => {
+          button.addEventListener("click", () => {
+            // Remove 'selected' class from all selection buttons
+            selectionButtons.forEach((btn) => btn.classList.remove("selected"));
+            // Add 'selected' class to the clicked button
+            button.classList.add("selected");
+            // Update selected item type and shape
+            selectedItem = {
+              type: button.dataset.itemType,
+              shape: button.dataset.itemShape,
+            };
+            showMessage(`Selected: ${button.textContent.trim()}`);
+          });
+        });
+      }
+
+      // Function to handle item planting at coordinates
+      function plantItemAtCoordinates(x, y) {
+        // Initialize audio context on first interaction if not already
+        if (!synth) {
+          initializeAudio();
+        }
+
+        // Add haptic feedback on supported devices
+        if (navigator.vibrate) {
+          navigator.vibrate(50); // Short vibration feedback
+        }
+
+        // Add visual feedback to canvas
+        canvas.style.transform = 'scale(0.98)';
+        setTimeout(() => {
+          canvas.style.transform = 'scale(1)';
+        }, 150);
+
+        // Determine appropriate scale for elements (larger than flowers usually)
+        let itemScale = 1;
+        if (selectedItem.type === "element") {
+          switch (selectedItem.shape) {
+            case "pond":
+              itemScale = 0.8;
+              break;
+            case "tree":
+              itemScale = 0.8;
+              break;
+            case "bench":
+              itemScale = 0.7;
+              break;
+            case "archway":
+              itemScale = 0.9;
+              break;
+            case "lantern":
+              itemScale = 0.6;
+              break;
+            case "pathstone":
+              itemScale = 0.5;
+              break;
+            case "birdhouse":
+              itemScale = 0.5;
+              break;
+            case "flowerpot":
+              itemScale = 0.5;
+              break;
+            case "pillar":
+              itemScale = 0.7;
+              break;
+            case "hedge":
+              itemScale = 0.7;
+              break;
+            case "gate":
+              itemScale = 0.8;
+              break;
+            case "flowerbed":
+              itemScale = 0.9;
+              break;
+            case "gardenwall":
+              itemScale = 0.8;
+              break;
+            case "gazebo":
+              itemScale = 1;
+              break;
+            case "picnictable":
+              itemScale = 0.8;
+              break;
+            case "wheelbarrow":
+              itemScale = 0.7;
+              break;
+            case "trellis":
+              itemScale = 0.7;
+              break;
+          }
+        } else if (selectedItem.type === "flower") {
+          switch (selectedItem.shape) {
+            case "tulip":
+              itemScale = 0.8;
+              break;
+            case "sunflower":
+              itemScale = 0.9;
+              break;
+            case "daisy":
+              itemScale = 0.7;
+              break;
+            case "lavender":
+              itemScale = 0.7;
+              break;
+            case "orchid":
+              itemScale = 0.6;
+              break;
+            case "rose":
+              itemScale = 0.7;
+              break;
+            case "daffodil":
+              itemScale = 0.7;
+              break;
+            case "cherryblossom":
+              itemScale = 0.5;
+              break;
+            case "lily":
+              itemScale = 0.7;
+              break;
+            case "freesia":
+              itemScale = 0.6;
+              break;
+            case "iris":
+              itemScale = 0.8;
+              break;
+          }
+        }
+
+        // Add new item to the array
+        plantedItems.push({
+          x: x,
+          y: y,
+          itemType: selectedItem.type,
+          shape: selectedItem.shape,
+          scale: itemScale,
+        });
+
+        // Play sound after planting
+        playItemSound();
+
+        // Redraw the garden
+        drawGarden();
+        // Capitalize first letter for message display
+        const itemName =
+          selectedItem.shape.charAt(0).toUpperCase() +
+          selectedItem.shape.slice(1).replace(/([A-Z])/g, " $1");
+        showMessage(`A ${itemName} has been planted!`, "success");
+      }
+
+      // Event listener for canvas click to plant an item
+      canvas.addEventListener("click", (event) => {
+        // Get click coordinates relative to canvas, accounting for high-DPI scaling
+        const rect = canvas.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+        const x = (event.clientX - rect.left) * (canvas.width / rect.width) / dpr;
+        const y = (event.clientY - rect.top) * (canvas.height / rect.height) / dpr;
+
+        plantItemAtCoordinates(x, y);
+      });
+
+      // Add touch event support for mobile
+      canvas.addEventListener("touchstart", (event) => {
+        event.preventDefault(); // Prevent scrolling/zooming on canvas
+
+        const touch = event.touches[0];
+        const rect = canvas.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+        const x = (touch.clientX - rect.left) * (canvas.width / rect.width) / dpr;
+        const y = (touch.clientY - rect.top) * (canvas.height / rect.height) / dpr;
+
+        plantItemAtCoordinates(x, y);
+      });
+
+      // Event listener for clearing the garden
+      clearButton.addEventListener("click", () => {
+        if (plantedItems.length === 0) {
+          showMessage("The garden is already empty!", "info");
+          return;
+        }
+        // Ask for confirmation using a custom message box instead of alert/confirm
+        showMessage(
+          'Are you sure you want to clear the entire garden? Click "Clear Garden" again to confirm.',
+          "warning"
+        );
+        clearButton.onclick = () => {
+          // Change handler to confirm
+          plantedItems = []; // Clear the array
+          drawGarden(); // Redraw (which clears the canvas)
+          showMessage("Garden cleared!", "success");
+          // Reset button handler
+          clearButton.onclick = () => {
+            clearButton.dispatchEvent(new Event("click")); // Trigger self again for initial click
+          };
+        };
+        // Revert click handler after a delay if no second click
+        setTimeout(() => {
+          if (clearButton.onclick !== null) {
+            // Check if it hasn't been reset yet
+            clearButton.onclick = () => {
+              clearButton.dispatchEvent(new Event("click"));
+            };
+          }
+        }, 3000); // 3 seconds to confirm
+      });
+
+      // Event listener for undoing the last action
+      undoButton.addEventListener("click", () => {
+        if (plantedItems.length > 0) {
+          const removedItem = plantedItems.pop(); // Remove the last item
+          drawGarden(); // Redraw the garden
+          const itemName =
+            removedItem.shape.charAt(0).toUpperCase() +
+            removedItem.shape.slice(1).replace(/([A-Z])/g, " $1");
+          showMessage(`Removed the last ${itemName}.`, "info");
+        } else {
+          showMessage("Nothing to undo!", "info");
+        }
+      });
+
+      // Event listener for sound toggle button
+      soundToggleButton.addEventListener("click", () => {
+        isSoundOn = !isSoundOn;
+        if (isSoundOn) {
+          soundToggleButton.innerHTML =
+            '<i class="fas fa-volume-up"></i> Sound On';
+          // Initialize audio if it was off and is being turned on
+          if (!synth) {
+            initializeAudio();
+          }
+          showMessage("Sound On", "info");
+        } else {
+          soundToggleButton.innerHTML =
+            '<i class="fas fa-volume-mute"></i> Sound Off';
+          showMessage("Sound Off", "info");
+        }
+      });
+
+      // Function to load garden from local storage (simplified as save is removed)
+      function loadGarden() {
+        try {
+          const savedGarden = localStorage.getItem("jannahGarden");
+          if (savedGarden) {
+            plantedItems = JSON.parse(savedGarden);
+            // Filter out removed items if they exist in saved data
+            const validShapes = Object.keys(itemDrawingFunctions);
+            plantedItems = plantedItems.filter((item) =>
+              validShapes.includes(item.shape)
+            );
+
+            drawGarden();
+            showMessage("Garden loaded from memory!", "info");
+          } else {
+            showMessage("No saved garden found. Start planting!", "info");
+          }
+        } catch (e) {
+          showMessage(
+            "Could not load garden. Data might be corrupted.",
+            "error"
+          );
+          console.error("Error loading from local storage:", e);
+        }
+      }
+
+      // Initialize on window load
+      window.onload = function () {
+        resizeCanvas(); // Set initial canvas size
+        loadGarden(); // Load any previously saved garden
+        setupSelectionButtons(); // Call to set up listeners for all new buttons
+        // Ensure initial selected button is highlighted
+        // Check if default selected item exists, otherwise select the first available flower
+        const defaultButton = document.querySelector(
+          `.selection-button[data-item-type="${selectedItem.type}"][data-item-shape="${selectedItem.shape}"]`
+        );
+        if (defaultButton) {
+          defaultButton.classList.add("selected");
+        } else {
+          const firstFlowerButton = document.querySelector(
+            '.selection-button[data-item-type="flower"]'
+          );
+          if (firstFlowerButton) {
+            firstFlowerButton.classList.add("selected");
+            selectedItem = {
+              type: firstFlowerButton.dataset.itemType,
+              shape: firstFlowerButton.dataset.itemShape,
+            };
+          }
+        }
+      };
+
+      // Debounced resize handler for better performance
+      let resizeTimeout;
+      function debouncedResize() {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+          resizeCanvas();
+        }, 250); // Debounce resize events to 250ms
+      }
+
+      // Event listener for window resize to make it responsive
+      window.addEventListener("resize", debouncedResize);
+
+      // Add resize observer for better responsive behavior
+      if (window.ResizeObserver) {
+        const resizeObserver = new ResizeObserver((entries) => {
+          for (let entry of entries) {
+            if (entry.target === canvas.parentElement) {
+              debouncedResize();
+              break;
+            }
+          }
+        });
+        resizeObserver.observe(canvas.parentElement);
+      }
+
+      // Add orientation change handler for mobile
+      window.addEventListener("orientationchange", () => {
+        setTimeout(() => {
+          resizeCanvas();
+          showMessage("Screen orientation changed - garden adjusted!", "info");
+        }, 500); // Small delay to ensure orientation change is complete
+      });
+    </script>
+  </body>
+</html>

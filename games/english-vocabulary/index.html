@@ -1,0 +1,1247 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>English Vocabulary Adventure - KidsGames</title>
+
+    <!-- KidsGames PWA Support -->
+    <link rel="manifest" href="/KidsGames/manifest.json" />
+    <meta name="theme-color" content="#4f391a" />
+    <meta name="background-color" content="#ece4d9" />
+    <meta name="description" content="Learn English words through fun audio-visual games for kids" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <link rel="apple-touch-icon" href="/KidsGames/icons/icon-192x192.png" />
+
+    <!-- Google Fonts - Inter -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <!-- Tone.js CDN for sound generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, sans-serif;
+      }
+
+      body {
+        background: #ece4d9;
+        color: #4f391a;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+        overflow-x: hidden;
+      }
+
+      .game-container {
+        background: linear-gradient(135deg, #eadabe 0%, #d4c4a8 100%);
+        border-radius: 24px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        margin: 16px;
+        padding: 24px;
+        max-width: 800px;
+        width: calc(100% - 32px);
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      /* Decorative elements */
+      .game-container::before {
+        content: "";
+        position: absolute;
+        top: -20px;
+        right: -20px;
+        width: 100px;
+        height: 100px;
+        background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+        border-radius: 50%;
+        pointer-events: none;
+      }
+
+      .game-container::after {
+        content: "";
+        position: absolute;
+        bottom: -15px;
+        left: -15px;
+        width: 80px;
+        height: 80px;
+        background: radial-gradient(circle, rgba(79,57,26,0.1) 0%, transparent 70%);
+        border-radius: 50%;
+        pointer-events: none;
+      }
+
+      .game-header {
+        text-align: center;
+        position: relative;
+        z-index: 1;
+      }
+
+      .game-title {
+        font-size: clamp(1.75rem, 5vw, 2.5rem);
+        font-weight: 700;
+        color: #4f391a;
+        margin-bottom: 8px;
+        letter-spacing: -0.5px;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .game-subtitle {
+        font-size: clamp(1rem, 2.5vw, 1.25rem);
+        color: #6b5637;
+        font-weight: 500;
+      }
+
+      .level-selector {
+        background: rgba(255, 255, 255, 0.8);
+        border-radius: 16px;
+        padding: 16px;
+        text-align: left;
+        position: relative;
+        z-index: 1;
+      }
+
+      .level-label {
+        display: block;
+        font-weight: 600;
+        color: #4f391a;
+        margin-bottom: 8px;
+        font-size: 0.9rem;
+      }
+
+      #difficulty-select {
+        width: 100%;
+        padding: 12px 16px;
+        border: 2px solid #c4b5a0;
+        border-radius: 12px;
+        font-size: 1rem;
+        background-color: white;
+        color: #4f391a;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        appearance: none;
+        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234f391a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        background-size: 20px;
+        padding-right: 40px;
+      }
+
+      #difficulty-select:focus {
+        outline: none;
+        border-color: #4f391a;
+        box-shadow: 0 0 0 3px rgba(79, 57, 26, 0.2);
+      }
+
+      .instructions-display {
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 16px;
+        padding: 20px;
+        min-height: 60px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: clamp(1.25rem, 3vw, 1.5rem);
+        font-weight: 600;
+        color: #4f391a;
+        text-align: center;
+        position: relative;
+        z-index: 1;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      }
+
+      .button-group {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        justify-content: center;
+        position: relative;
+        z-index: 1;
+      }
+
+      .game-button {
+        background: linear-gradient(135deg, #4f391a 0%, #6b5637 100%);
+        color: white;
+        border: none;
+        padding: 14px 24px;
+        border-radius: 12px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(79, 57, 26, 0.3);
+        flex: 1;
+        min-width: 140px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .game-button::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        transition: left 0.5s ease;
+      }
+
+      .game-button:hover::before {
+        left: 100%;
+      }
+
+      .game-button:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(79, 57, 26, 0.4);
+      }
+
+      .game-button:active:not(:disabled) {
+        transform: translateY(0);
+      }
+
+      .game-button:disabled {
+        background: #c4b5a0;
+        cursor: not-allowed;
+        opacity: 0.6;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      }
+
+      .start-button {
+        background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+      }
+
+      .sound-button {
+        background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+      }
+
+      .toggle-sound-button {
+        background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+      }
+
+      .choices-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 12px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .choice-button {
+        background: white;
+        border: 3px solid #e0d5c1;
+        border-radius: 16px;
+        padding: 16px 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+        min-height: 100px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .choice-button::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, rgba(255,255,255,0.8) 0%, rgba(234,218,190,0.8) 100%);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+
+      .choice-button:hover::before {
+        opacity: 1;
+      }
+
+      .choice-button:hover:not(:disabled) {
+        transform: translateY(-4px) scale(1.02);
+        border-color: #4f391a;
+        box-shadow: 0 8px 20px rgba(79, 57, 26, 0.2);
+      }
+
+      .choice-button:active:not(:disabled) {
+        transform: translateY(-2px) scale(1.01);
+      }
+
+      .choice-button:disabled {
+        filter: grayscale(80%);
+        cursor: not-allowed;
+        opacity: 0.6;
+        transform: none !important;
+      }
+
+      .choice-emoji {
+        font-size: 2.5rem;
+        line-height: 1;
+        margin-bottom: 4px;
+      }
+
+      .choice-text {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #4f391a;
+        text-align: center;
+        line-height: 1.2;
+      }
+
+      .feedback-section {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .feedback-message {
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 12px;
+        padding: 16px;
+        font-size: 1.125rem;
+        font-weight: 600;
+        text-align: center;
+        min-height: 50px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      }
+
+      .feedback-message.correct {
+        background: linear-gradient(135deg, rgba(39, 174, 96, 0.9) 0%, rgba(34, 153, 84, 0.9) 100%);
+        color: white;
+      }
+
+      .feedback-message.incorrect {
+        background: linear-gradient(135deg, rgba(231, 76, 60, 0.9) 0%, rgba(192, 57, 43, 0.9) 100%);
+        color: white;
+      }
+
+      .score-section {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 12px;
+        padding: 16px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        position: relative;
+        z-index: 1;
+      }
+
+      .score-display {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #4f391a;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .score-icon {
+        font-size: 1.5rem;
+      }
+
+      .streak-display {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #f39c12;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+
+      /* Enhanced animations */
+      @keyframes bounce {
+        0%, 20%, 53%, 80%, 100% {
+          transform: translate3d(0, 0, 0);
+        }
+        40%, 43% {
+          transform: translate3d(0, -8px, 0);
+        }
+        70% {
+          transform: translate3d(0, -4px, 0);
+        }
+        90% {
+          transform: translate3d(0, -2px, 0);
+        }
+      }
+
+      @keyframes wiggle {
+        0%, 7% {
+          transform: rotateZ(0);
+        }
+        15% {
+          transform: rotateZ(-15deg);
+        }
+        20% {
+          transform: rotateZ(10deg);
+        }
+        25% {
+          transform: rotateZ(-10deg);
+        }
+        30% {
+          transform: rotateZ(6deg);
+        }
+        35% {
+          transform: rotateZ(-4deg);
+        }
+        40%, 100% {
+          transform: rotateZ(0);
+        }
+      }
+
+      @keyframes pulse {
+        0% {
+          box-shadow: 0 0 0 0 rgba(39, 174, 96, 0.7);
+        }
+        70% {
+          box-shadow: 0 0 0 20px rgba(39, 174, 96, 0);
+        }
+        100% {
+          box-shadow: 0 0 0 0 rgba(39, 174, 96, 0);
+        }
+      }
+
+      @keyframes shake {
+        0%, 100% {
+          transform: translateX(0);
+        }
+        10%, 30%, 50%, 70%, 90% {
+          transform: translateX(-8px);
+        }
+        20%, 40%, 60%, 80% {
+          transform: translateX(8px);
+        }
+      }
+
+      @keyframes confetti {
+        0% {
+          transform: translateY(0) rotateZ(0deg);
+          opacity: 1;
+        }
+        100% {
+          transform: translateY(100px) rotateZ(720deg);
+          opacity: 0;
+        }
+      }
+
+      .correct-choice-effect {
+        animation: bounce 1s ease-in-out, pulse 1.5s ease-in-out;
+        background: linear-gradient(135deg, rgba(39, 174, 96, 0.2) 0%, rgba(34, 153, 84, 0.2) 100%) !important;
+        border-color: #27ae60 !important;
+      }
+
+      .incorrect-choice-effect {
+        animation: shake 0.8s ease-in-out;
+        background: linear-gradient(135deg, rgba(231, 76, 60, 0.2) 0%, rgba(192, 57, 43, 0.2) 100%) !important;
+        border-color: #e74c3c !important;
+      }
+
+      .reveal-correct-effect {
+        animation: pulse 1.5s ease-in-out;
+        background: linear-gradient(135deg, rgba(39, 174, 96, 0.2) 0%, rgba(34, 153, 84, 0.2) 100%) !important;
+        border-color: #27ae60 !important;
+      }
+
+      /* Confetti effect */
+      .confetti {
+        position: fixed;
+        width: 10px;
+        height: 10px;
+        background: #27ae60;
+        position: absolute;
+        animation: confetti 1s ease-in-out forwards;
+        pointer-events: none;
+      }
+
+      .confetti:nth-child(2n) { background: #f39c12; left: 50%; }
+      .confetti:nth-child(3n) { background: #e74c3c; left: 60%; }
+      .confetti:nth-child(4n) { background: #3498db; left: 70%; }
+      .confetti:nth-child(5n) { background: #9b59b6; left: 80%; }
+      .confetti:nth-child(6n) { background: #1abc9c; left: 90%; }
+
+      /* Responsive design */
+      @media (max-width: 768px) {
+        .game-container {
+          margin: 12px;
+          padding: 20px;
+          gap: 16px;
+        }
+
+        .choices-grid {
+          grid-template-columns: repeat(2, 1fr);
+          gap: 10px;
+        }
+
+        .choice-button {
+          min-height: 80px;
+          padding: 12px 8px;
+        }
+
+        .choice-emoji {
+          font-size: 2rem;
+        }
+
+        .choice-text {
+          font-size: 0.9rem;
+        }
+
+        .button-group {
+          flex-direction: column;
+        }
+
+        .game-button {
+          width: 100%;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .game-container {
+          margin: 8px;
+          padding: 16px;
+          gap: 14px;
+        }
+
+        .game-title {
+          font-size: 1.5rem;
+        }
+
+        .choices-grid {
+          grid-template-columns: 1fr;
+          gap: 8px;
+        }
+
+        .choice-button {
+          min-height: 70px;
+          padding: 10px 8px;
+          flex-direction: row;
+          justify-content: flex-start;
+          gap: 12px;
+        }
+
+        .choice-emoji {
+          font-size: 1.8rem;
+          margin-bottom: 0;
+        }
+
+        .score-section {
+          flex-direction: column;
+          gap: 8px;
+          text-align: center;
+        }
+      }
+
+      @media (min-height: 800px) {
+        .game-container {
+          max-height: calc(100vh - 32px);
+          overflow-y: auto;
+        }
+      }
+
+      /* Landscape orientation support */
+      @media (max-height: 600px) and (orientation: landscape) {
+        .game-container {
+          margin: 8px;
+          padding: 12px;
+          gap: 10px;
+        }
+
+        .game-title {
+          font-size: 1.5rem;
+        }
+
+        .game-subtitle {
+          font-size: 1rem;
+        }
+
+        .choices-grid {
+          grid-template-columns: repeat(4, 1fr);
+        }
+
+        .choice-button {
+          min-height: 60px;
+          padding: 8px 4px;
+        }
+
+        .choice-emoji {
+          font-size: 1.5rem;
+        }
+
+        .choice-text {
+          font-size: 0.8rem;
+        }
+      }
+
+      /* High contrast mode support */
+      @media (prefers-contrast: high) {
+        .choice-button {
+          border-width: 4px;
+        }
+
+        .game-button {
+          border: 2px solid currentColor;
+        }
+      }
+
+      /* Reduced motion support */
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="game-container">
+      <div class="game-header">
+        <h1 class="game-title">🎓 English Vocabulary Adventure</h1>
+        <p class="game-subtitle">Listen carefully and match the sound to the word!</p>
+      </div>
+
+      <div class="level-selector">
+        <label for="difficulty-select" class="level-label">Select Difficulty Level:</label>
+        <select id="difficulty-select">
+          <option value="Beginner (Ages 4-6)">🌱 Beginner (Ages 4-6)</option>
+          <option value="Intermediate (Ages 7-9)">🌟 Intermediate (Ages 7-9)</option>
+          <option value="Advanced (Ages 10+)">🚀 Advanced (Ages 10+)</option>
+        </select>
+      </div>
+
+      <div id="instructions-display" class="instructions-display">
+        🎮 Select a level and click 'Start Game' to begin your adventure!
+      </div>
+
+      <div class="button-group">
+        <button id="play-sound-button" class="game-button sound-button" disabled>
+          🔊 Play Sound
+        </button>
+        <button id="start-game-button" class="game-button start-button">
+          🎯 Start Game
+        </button>
+      </div>
+
+      <!-- Container for the word choice buttons -->
+      <div id="choice-buttons-container" class="choices-grid">
+        <!-- Dynamically generated choice buttons will go here -->
+      </div>
+
+      <div class="feedback-section">
+        <div id="feedback-message" class="feedback-message"></div>
+      </div>
+
+      <div class="score-section">
+        <div class="score-display">
+          <span class="score-icon">⭐</span>
+          <span>Score: <span id="score-value">0</span></span>
+        </div>
+        <div class="streak-display">
+          <span>🔥</span>
+          <span>Streak: <span id="streak-value">0</span></span>
+        </div>
+      </div>
+
+      <div class="button-group">
+        <button id="toggle-sound-button" class="game-button toggle-sound-button">
+          🔔 Sound Effects: ON
+        </button>
+      </div>
+    </div>
+
+    <script>
+      // Game state variables
+      let score = 0;
+      let streak = 0;
+      let currentCorrectWord = ""; // The word whose sound is played
+      let utterance = null; // SpeechSynthesisUtterance instance
+      let currentVoice = null; // To store a preferred voice if available
+      let soundEffectsOn = true; // State for sound effects toggle
+      let selectedLevelVocabulary = []; // Stores the vocabulary for the currently selected level
+
+      // Tone.js sound effects
+      let correctSound = null;
+      let incorrectSound = null;
+      let nextRoundSound = null;
+
+      // Elements from the DOM
+      const difficultySelect = document.getElementById("difficulty-select");
+      const instructionsDisplay = document.getElementById("instructions-display");
+      const playSoundButton = document.getElementById("play-sound-button");
+      const startGameButton = document.getElementById("start-game-button");
+      const choiceButtonsContainer = document.getElementById("choice-buttons-container");
+      const feedbackMessage = document.getElementById("feedback-message");
+      const scoreValue = document.getElementById("score-value");
+      const streakValue = document.getElementById("streak-value");
+      const toggleSoundButton = document.getElementById("toggle-sound-button");
+
+      // List of vocabulary words categorized by difficulty/age level
+      const vocabularyLevels = {
+        "Beginner (Ages 4-6)": [
+          { word: "Apple", emoji: "🍎" },
+          { word: "Cat", emoji: "🐱" },
+          { word: "Ball", emoji: "⚽" },
+          { word: "Sun", emoji: "☀️" },
+          { word: "Happy", emoji: "😊" },
+          { word: "Tree", emoji: "🌳" },
+          { word: "Book", emoji: "📚" },
+          { word: "Run", emoji: "🏃" },
+          { word: "Sing", emoji: "🎤" },
+          { word: "Blue", emoji: "🔵" },
+        ],
+        "Intermediate (Ages 7-9)": [
+          { word: "Brave", emoji: "💪" },
+          { word: "Mountain", emoji: "⛰️" },
+          { word: "Journey", emoji: "🗺️" },
+          { word: "Curious", emoji: "🤔" },
+          { word: "Ancient", emoji: "🏛️" },
+          { word: "Discovery", emoji: "💡" },
+          { word: "Challenge", emoji: "🏆" },
+          { word: "Express", emoji: "🗣️" },
+          { word: "Imagine", emoji: "💭" },
+          { word: "Solution", emoji: "✅" },
+        ],
+        "Advanced (Ages 10+)": [
+          { word: "Ubiquitous", emoji: "🌐" },
+          { word: "Ephemeral", emoji: "⏳" },
+          { word: "Benevolent", emoji: "😇" },
+          { word: "Serendipity", emoji: "✨" },
+          { word: "Magnanimous", emoji: "👑" },
+          { word: "Conundrum", emoji: "❓" },
+          { word: "Eloquent", emoji: "💬" },
+          { word: "Paradox", emoji: "🔄" },
+          { word: "Resilience", emoji: "🌱" },
+          { word: "Meticulous", emoji: "🔍" },
+        ],
+      };
+
+      /**
+       * Utility function to shuffle an array.
+       * @param {Array} array - The array to shuffle.
+       * @returns {Array} The shuffled array.
+       */
+      function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [array[i], array[j]] = [array[j], array[i]]; // Swap elements
+        }
+        return array;
+      }
+
+      /**
+       * Creates and initializes Tone.js synthesizer instances for sound effects.
+       * This function should be called only after Tone.context.rawContext is running.
+       */
+      function createToneSynths() {
+        if (!correctSound) {
+          // Prevent re-creation if already exists
+          // Softer correct sound: Sine wave, gentle envelope
+          correctSound = new Tone.Synth({
+            oscillator: { type: "sine" },
+            envelope: { attack: 0.05, decay: 0.3, sustain: 0.1, release: 0.5 },
+          }).toDestination();
+
+          // Softer incorrect sound: Triangle wave, slightly lower pitch, quick decay
+          incorrectSound = new Tone.Synth({
+            oscillator: { type: "triangle" },
+            envelope: { attack: 0.02, decay: 0.2, sustain: 0.0, release: 0.3 },
+          }).toDestination();
+
+          // Softer next round sound: MembraneSynth, subtle hit
+          nextRoundSound = new Tone.MembraneSynth({
+            pitchDecay: 0.01, // Quick decay
+            octaves: 0.5,
+            envelope: { attack: 0.005, decay: 0.1, sustain: 0.0, release: 0.2 },
+            volume: -10, // Quieter
+          }).toDestination();
+
+          console.log("Tone.js synths created.");
+        }
+      }
+
+      /**
+       * Initializes the Speech Synthesis API.
+       */
+      function initializeSpeechSynthesis() {
+        if ("speechSynthesis" in window) {
+          speechSynthesis.onvoiceschanged = () => {
+            const voices = speechSynthesis.getVoices();
+            currentVoice =
+              voices.find((voice) => voice.lang.startsWith("en")) || voices[0];
+            if (!currentVoice) {
+              console.warn(
+                "No speech voices available. Text-to-speech might not work as expected."
+              );
+            } else {
+              console.log("Speech voices loaded and ready.");
+            }
+          };
+          speechSynthesis.getVoices(); // Trigger voiceschanged event
+        } else {
+          console.error("Speech Synthesis API not supported in this browser.");
+          playSoundButton.disabled = true;
+          startGameButton.disabled = true;
+          feedbackMessage.textContent =
+            "Your browser does not support spoken words.";
+        }
+      }
+
+      /**
+       * Plays a sound effect based on its type.
+       * @param {string} type - 'correct', 'incorrect', or 'nextRound'.
+       */
+      function playSoundEffect(type) {
+        if (!soundEffectsOn) {
+          // Check if sound effects are enabled
+          return;
+        }
+
+        // Ensure Tone.js context is running and synths are created
+        if (Tone.context.state !== "running" || !correctSound) {
+          console.warn(
+            "Tone.js audio context not running or synths not initialized. Cannot play sound effect."
+          );
+          return;
+        }
+
+        try {
+          switch (type) {
+            case "correct":
+              correctSound.triggerAttackRelease("E5", "0.4"); // Softer, higher chime
+              break;
+            case "incorrect":
+              incorrectSound.triggerAttackRelease("C3", "0.3"); // Softer, lower tone
+              break;
+            case "nextRound":
+              nextRoundSound.triggerAttackRelease("C4", "0.1"); // Quick, subtle chime
+              break;
+            default:
+              console.warn("Unknown sound effect type:", type);
+          }
+        } catch (e) {
+          console.error("Error playing sound effect:", e);
+        }
+      }
+
+      /**
+       * Toggles the sound effects on/off.
+       */
+      function toggleSoundEffects() {
+        soundEffectsOn = !soundEffectsOn;
+        toggleSoundButton.textContent = `Sound Effects: ${
+          soundEffectsOn ? "ON" : "OFF"
+        }`;
+
+        if (Tone.Destination) {
+          // Check if Tone.Destination exists before trying to mute
+          Tone.Destination.mute = !soundEffectsOn; // Mute all Tone.js output
+          console.log("Tone.Destination muted:", Tone.Destination.mute);
+        } else {
+          console.warn("Tone.Destination not available for muting.");
+        }
+
+        // Always cancel speech synthesis if the button is clicked to ensure no lingering speech
+        speechSynthesis.cancel();
+
+        console.log("Sound Effects Toggled: ", soundEffectsOn);
+      }
+
+      /**
+       * Starts a new round of the game.
+       * Selects a random correct word and three random incorrect words, then displays them.
+       */
+      function newRound() {
+        feedbackMessage.textContent = ""; // Clear previous feedback message
+        feedbackMessage.className = "feedback-message"; // Reset feedback message styling
+        enableChoiceButtons(true); // Enable the choice buttons
+
+        // Remove any lingering effect classes from previous round
+        const allChoiceButtons =
+          choiceButtonsContainer.querySelectorAll(".choice-button");
+        allChoiceButtons.forEach((button) => {
+          button.classList.remove(
+            "correct-choice-effect",
+            "incorrect-choice-effect",
+            "reveal-correct-effect"
+          );
+        });
+
+        instructionsDisplay.textContent = "Which word did you hear?";
+        playSoundButton.disabled = false; // Enable play sound button
+
+        // Get vocabulary for the selected level
+        const selectedLevel = difficultySelect.value;
+        selectedLevelVocabulary = vocabularyLevels[selectedLevel] || [];
+
+        if (selectedLevelVocabulary.length === 0) {
+          console.error(
+            "No vocabulary found for the selected level:",
+            selectedLevel
+          );
+          feedbackMessage.textContent =
+            "No words available for this level. Please select another.";
+          enableChoiceButtons(false);
+          playSoundButton.disabled = true;
+          return;
+        }
+
+        // 1. Select the correct word object for this round
+        const correctWordObj =
+          selectedLevelVocabulary[
+            Math.floor(Math.random() * selectedLevelVocabulary.length)
+          ];
+        currentCorrectWord = correctWordObj.word; // Store just the word for comparison
+
+        // 2. Select 3 other random, unique incorrect word objects
+        const availableForIncorrect = selectedLevelVocabulary.filter(
+          (wordObj) => wordObj.word !== currentCorrectWord
+        );
+        // Ensure we have enough words for incorrect choices (at least 3 unique words)
+        if (availableForIncorrect.length < 3) {
+          // If not enough unique words, try to loop back or use fewer incorrect choices
+          console.warn(
+            "Not enough unique words to generate 3 incorrect choices for this level. Duplicates might occur or fewer choices will be displayed."
+          );
+          // As a fallback, take what's available and shuffle to ensure some variety
+          const allWordsExceptCorrect = shuffleArray(
+            [...selectedLevelVocabulary].filter(
+              (wordObj) => wordObj.word !== currentCorrectWord
+            )
+          );
+          const shuffledIncorrect = allWordsExceptCorrect.slice(0, 3);
+          // If less than 3, just use what's available
+          const roundChoices = shuffleArray([
+            correctWordObj,
+            ...shuffledIncorrect,
+          ]);
+          updateChoiceButtons(roundChoices);
+          console.log(`Correct Word: ${currentCorrectWord}`);
+          console.log(`Choices: ${roundChoices.map((f) => f.word).join(", ")}`);
+          setTimeout(() => {
+            playCurrentSound();
+            playSoundEffect("nextRound");
+          }, 500);
+          return;
+        }
+
+        const shuffledIncorrect = shuffleArray([
+          ...availableForIncorrect,
+        ]).slice(0, 3);
+
+        // 3. Combine correct and incorrect word objects into a single array for choices
+        const roundChoices = shuffleArray([
+          correctWordObj,
+          ...shuffledIncorrect,
+        ]);
+
+        // 4. Update choice buttons
+        updateChoiceButtons(roundChoices);
+
+        console.log(`Correct Word: ${currentCorrectWord}`);
+        console.log(`Choices: ${roundChoices.map((f) => f.word).join(", ")}`);
+
+        // Play the sound of the correct word automatically and play next round sound effect
+        // Delay added to allow user to see new round setup before sound
+        setTimeout(() => {
+          playCurrentSound(); // This is the spoken word, always plays
+          playSoundEffect("nextRound"); // This is the chime, depends on soundEffectsOn
+        }, 500);
+      }
+
+      /**
+       * Updates the choice buttons with new word data.
+       * @param {Array<Object>} choices - An array of word objects for the buttons.
+       */
+      function updateChoiceButtons(choices) {
+        choiceButtonsContainer.innerHTML = ""; // Clear existing buttons
+        choices.forEach((wordObj) => {
+          const button = document.createElement("button");
+          button.classList.add("choice-button");
+          button.dataset.wordName = wordObj.word; // Store the word name for comparison
+
+          // Create emoji and text elements
+          const emojiElement = document.createElement("div");
+          emojiElement.classList.add("choice-emoji");
+          emojiElement.textContent = wordObj.emoji || "📚";
+
+          const textElement = document.createElement("div");
+          textElement.classList.add("choice-text");
+          textElement.textContent = wordObj.word;
+
+          button.appendChild(emojiElement);
+          button.appendChild(textElement);
+
+          // Add entrance animation
+          button.style.animation = `bounce 0.6s ease-out ${choices.indexOf(wordObj) * 0.1}s both`;
+
+          button.addEventListener("click", (event) => {
+            let clickedButton = event.target.closest(".choice-button");
+            if (clickedButton) {
+              checkAnswer(clickedButton);
+            }
+          });
+          choiceButtonsContainer.appendChild(button);
+        });
+      }
+
+      /**
+       * Plays the sound of the `currentCorrectWord` using Speech Synthesis.
+       * This function always attempts to play the spoken word, regardless of soundEffectsOn.
+       */
+      function playCurrentSound() {
+        if (!("speechSynthesis" in window)) {
+          console.error(
+            "Speech Synthesis API not supported. Cannot play sound."
+          );
+          return;
+        }
+        if (!currentCorrectWord) {
+          console.warn("No current word set to play sound.");
+          return;
+        }
+
+        utterance = new SpeechSynthesisUtterance(currentCorrectWord); // Speak the correct word
+        if (currentVoice) {
+          utterance.voice = currentVoice; // Use the selected voice if available
+        }
+        utterance.rate = 0.8; // Set speech rate for clarity (slower is often better)
+        utterance.pitch = 1; // Set pitch (normal)
+
+        speechSynthesis.cancel(); // Stop any ongoing speech before starting a new one
+        speechSynthesis.speak(utterance);
+      }
+
+      /**
+       * Creates a confetti effect for celebrations.
+       */
+      function createConfetti() {
+        const colors = ['#27ae60', '#f39c12', '#e74c3c', '#3498db', '#9b59b6', '#1abc9c'];
+        const container = document.querySelector('.game-container');
+
+        for (let i = 0; i < 15; i++) {
+          setTimeout(() => {
+            const confetti = document.createElement('div');
+            confetti.className = 'confetti';
+            confetti.style.left = Math.random() * 100 + '%';
+            confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            confetti.style.animationDelay = Math.random() * 0.5 + 's';
+            container.appendChild(confetti);
+
+            // Remove confetti after animation
+            setTimeout(() => confetti.remove(), 1500);
+          }, i * 50);
+        }
+      }
+
+      /**
+       * Updates the display of score and streak with animation.
+       */
+      function updateScoreDisplay() {
+        scoreValue.textContent = score;
+        streakValue.textContent = streak;
+
+        // Add pulse animation to score and streak
+        scoreValue.style.animation = 'pulse 0.6s ease-out';
+        streakValue.style.animation = 'pulse 0.6s ease-out';
+
+        setTimeout(() => {
+          scoreValue.style.animation = '';
+          streakValue.style.animation = '';
+        }, 600);
+      }
+
+      /**
+       * Checks the user's chosen word against the actual correct word.
+       * Updates the score and provides visual feedback.
+       * @param {HTMLElement} selectedButton - The button element chosen by the user.
+       */
+      function checkAnswer(selectedButton) {
+        enableChoiceButtons(false); // Disable buttons immediately after a choice
+        playSoundButton.disabled = true; // Disable play sound button during feedback
+
+        const selectedWordName = selectedButton.dataset.wordName; // Get the word name from the data-wordName attribute
+
+        if (selectedWordName === currentCorrectWord) {
+          score++; // Increment score for a correct answer
+          streak++; // Increment streak
+
+          // Enhanced feedback messages with encouragement
+          const encouragements = [
+            "🎉 Excellent! You got it right!",
+            "🌟 Brilliant! That's correct!",
+            "🎯 Awesome! Well done!",
+            "🏆 Fantastic! You're a star!",
+            "💫 Super! You nailed it!"
+          ];
+          feedbackMessage.textContent = encouragements[Math.floor(Math.random() * encouragements.length)];
+          feedbackMessage.classList.add("correct"); // Add 'correct' styling
+          selectedButton.classList.add("correct-choice-effect"); // Apply correct effect
+
+          // Create celebration effects for milestones
+          if (streak === 3 || streak === 5 || streak === 10) {
+            createConfetti();
+            feedbackMessage.textContent += ` 🔥 ${streak} in a row!`;
+          }
+
+          playSoundEffect("correct"); // Play correct sound effect (chime)
+        } else {
+          streak = 0; // Reset streak on incorrect answer
+
+          feedbackMessage.textContent = `🤔 Oops! The correct word was "${currentCorrectWord}".`;
+          feedbackMessage.classList.add("incorrect"); // Add 'incorrect' styling
+          selectedButton.classList.add("incorrect-choice-effect"); // Apply incorrect effect
+          playSoundEffect("incorrect"); // Play incorrect sound effect (chime)
+
+          // Find and highlight the correct button using data-wordName
+          const correctButton = choiceButtonsContainer.querySelector(
+            `[data-word-name="${currentCorrectWord}"]`
+          );
+          if (correctButton) {
+            correctButton.classList.add("reveal-correct-effect");
+          }
+        }
+
+        updateScoreDisplay(); // Update both score and streak displays
+
+        // Wait for a short duration before starting the next round
+        setTimeout(newRound, 2500); // Slightly longer delay for celebrations
+      }
+
+      /**
+       * Enables or disables the dynamically created choice buttons.
+       * @param {boolean} enable - If true, buttons are enabled; if false, they are disabled.
+       */
+      function enableChoiceButtons(enable) {
+        const choiceButtons =
+          choiceButtonsContainer.querySelectorAll(".choice-button");
+        choiceButtons.forEach((button) => {
+          button.disabled = !enable;
+        });
+      }
+
+      /**
+       * Initializes or restarts the game.
+       * Resets the score and begins the first round of gameplay.
+       */
+      function startGame() {
+        // First, initialize speech synthesis voices (can happen without user gesture)
+        initializeSpeechSynthesis();
+
+        // Then, ensure Tone.js audio context is started on this user gesture
+        // and create synths only once context is running.
+        if (Tone.context.state !== "running") {
+          Tone.start()
+            .then(() => {
+              console.log("Tone.js AudioContext started by Start Game button!");
+              createToneSynths();
+              // Proceed with game logic after audio context is running and synths are ready
+              initializeGame();
+            })
+            .catch((e) => {
+              console.error(
+                "Failed to start Tone.js AudioContext from Start Game:",
+                e
+              );
+              feedbackMessage.textContent =
+                "🚫 Failed to start audio. Please try refreshing.";
+              // Disable game if audio fails critically
+              playSoundButton.disabled = true;
+              startGameButton.disabled = true;
+              enableChoiceButtons(false);
+            });
+        } else {
+          // If context is already running (e.g., from previous restart), just create synths if not already
+          createToneSynths();
+          initializeGame();
+        }
+      }
+
+      /**
+       * Initializes game state and starts the first round.
+       */
+      function initializeGame() {
+        score = 0;
+        streak = 0;
+        updateScoreDisplay();
+        startGameButton.textContent = "🔄 Restart Game";
+        startGameButton.innerHTML = "🔄 Restart Game";
+        feedbackMessage.textContent = "";
+        feedbackMessage.className = "feedback-message";
+        newRound();
+      }
+
+      // Event Listeners
+      startGameButton.addEventListener("click", startGame);
+      playSoundButton.addEventListener("click", () => {
+        // Ensure Tone.js context is started if it wasn't by "Start Game" button
+        if (Tone.context.state !== "running") {
+          Tone.start()
+            .then(() => {
+              console.log("Tone.js AudioContext started by Play Sound button!");
+              createToneSynths();
+              playCurrentSound(); // Play sound after context and synths are ready
+            })
+            .catch((e) => {
+              console.error(
+                "Failed to start Tone.js AudioContext from Play Sound:",
+                e
+              );
+              feedbackMessage.textContent =
+                "Failed to play sound. Please try refreshing.";
+            });
+        } else {
+          playCurrentSound(); // Play sound immediately if already running
+        }
+      });
+      toggleSoundButton.addEventListener("click", toggleSoundEffects); // New event listener for toggle button
+
+      // Initial state: Disable choice buttons and play sound button until the game starts
+      enableChoiceButtons(false);
+      playSoundButton.disabled = true;
+      // Initialize speech synthesis (voices loading) on page load, Tone.js will be on user gesture.
+      initializeSpeechSynthesis();
+      // Set initial selected level vocabulary
+      selectedLevelVocabulary = vocabularyLevels[difficultySelect.value];
+
+      // Update initial displays
+      updateScoreDisplay();
+
+      difficultySelect.addEventListener("change", () => {
+        selectedLevelVocabulary = vocabularyLevels[difficultySelect.value];
+        // Optionally, restart game or prepare for new round when level changes
+        feedbackMessage.textContent = `🎮 Level set to ${difficultySelect.value}. Click 'Start Game' to begin!`;
+        feedbackMessage.className = "feedback-message";
+        score = 0;
+        streak = 0;
+        updateScoreDisplay();
+        enableChoiceButtons(false);
+        playSoundButton.disabled = true;
+        startGameButton.textContent = "🎯 Start Game";
+        // Clear current choices from the display when level changes
+        choiceButtonsContainer.innerHTML = "";
+      });
+    </script>
+  </body>
+</html>

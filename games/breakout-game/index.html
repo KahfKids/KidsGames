@@ -1,0 +1,1296 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Breakout Game</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <style>
+      /* General body styling */
+      body {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+        background: linear-gradient(
+          135deg,
+          #2a2a72,
+          #009ffd
+        ); /* Cool gradient background */
+        font-family: "Inter", sans-serif; /* Inter font for modern look */
+        color: #fff;
+        overflow: hidden; /* Prevent scrollbars */
+        padding: 20px;
+        box-sizing: border-box;
+      }
+
+      /* Game container styling */
+      .game-container {
+        background-color: #1a1a40; /* Darker background for game area */
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); /* Stronger shadow for depth */
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        max-width: 90vw; /* Max width for responsiveness */
+        width: 800px; /* Base width */
+        box-sizing: border-box;
+        position: relative;
+        overflow: hidden; /* Ensure nothing overflows */
+      }
+
+      /* Game title */
+      h1 {
+        font-size: 2.5em;
+        margin-bottom: 20px;
+        color: #fff;
+        text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+      }
+
+      /* Game Canvas styling */
+      canvas {
+        background-color: #0d0d2b; /* Even darker canvas background */
+        border: 3px solid #009ffd; /* Border matching gradient */
+        border-radius: 10px;
+        display: block;
+        touch-action: none; /* Disable default touch actions */
+        box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5); /* Inner shadow for canvas */
+        max-width: 100%; /* Make canvas fluid width but don't stretch */
+        max-height: 70vh; /* Increase canvas height limit for better gameplay */
+        image-rendering: crisp-edges; /* Better pixel scaling */
+        image-rendering: pixelated; /* Fallback for older browsers */
+      }
+
+      /* Game information display */
+      .game-info {
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+        padding: 10px 0;
+        font-size: 1.2em;
+        color: #ccc;
+        margin-bottom: 10px;
+      }
+
+      /* Control buttons styling */
+      .controls {
+        margin-top: 20px;
+        display: flex;
+        gap: 15px; /* Spacing between buttons */
+        flex-wrap: wrap; /* Allow buttons to wrap on smaller screens */
+        justify-content: center;
+      }
+
+      .game-button {
+        background: linear-gradient(
+          180deg,
+          #00c6ff,
+          #0072ff
+        ); /* Gradient for buttons */
+        border: none;
+        color: white;
+        padding: 12px 25px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1em;
+        font-weight: bold;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease; /* Smooth transitions for hover/active */
+        box-shadow: 0 4px 15px rgba(0, 114, 255, 0.4);
+        gap: 8px; /* Space between icon and text */
+      }
+
+      .game-button:hover {
+        background: linear-gradient(180deg, #00e0ff, #0088ff);
+        transform: translateY(-2px); /* Slight lift on hover */
+        box-shadow: 0 6px 20px rgba(0, 114, 255, 0.6);
+      }
+
+      .game-button:active {
+        transform: translateY(0); /* Press effect */
+        box-shadow: 0 2px 10px rgba(0, 114, 255, 0.3);
+        background: linear-gradient(180deg, #0072ff, #00c6ff);
+      }
+
+      .game-button i {
+        margin-right: 5px; /* Space between icon and text */
+      }
+
+      /* Touch controls styling */
+      .touch-controls {
+        position: relative;
+        margin-top: 30px; /* Add space above controls */
+        display: none; /* Hidden by default on desktop */
+        gap: 20px;
+        z-index: 100;
+        justify-content: center;
+        width: 100%;
+      }
+
+      .touch-button {
+        width: 60px;
+        height: 60px;
+        min-width: 60px; /* Ensure minimum touch target size */
+        min-height: 60px;
+        background: linear-gradient(180deg, rgba(0, 198, 255, 0.8), rgba(0, 114, 255, 0.8));
+        border: 2px solid #009ffd;
+        border-radius: 50%;
+        color: white;
+        font-size: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 15px rgba(0, 114, 255, 0.4);
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-touch-callout: none;
+        touch-action: manipulation; /* Improve touch responsiveness */
+      }
+
+      .touch-button:active {
+        transform: scale(0.95);
+        background: linear-gradient(180deg, rgba(0, 224, 255, 0.9), rgba(0, 136, 255, 0.9));
+        box-shadow: 0 2px 10px rgba(0, 114, 255, 0.6);
+      }
+
+      .touch-button-left {
+        left: -10px;
+      }
+
+      .touch-button-right {
+        right: -10px;
+      }
+
+      /* Show touch controls on mobile devices */
+      @media (max-width: 768px), (pointer: coarse) {
+        .touch-controls {
+          display: flex;
+        }
+      }
+
+      /* Message box styling */
+      .message-box {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: rgba(
+          0,
+          0,
+          0,
+          0.85
+        ); /* Semi-transparent dark background */
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.7);
+        text-align: center;
+        font-size: 1.5em;
+        color: #fff;
+        z-index: 1000; /* Bring to front */
+        display: none; /* Hidden by default */
+        border: 2px solid #009ffd; /* Border around message box */
+        animation: fadeIn 0.5s ease-out; /* Fade in animation */
+        max-width: 90%; /* Responsive width */
+        box-sizing: border-box;
+      }
+
+      .message-box button {
+        margin-top: 20px;
+        padding: 10px 20px;
+        font-size: 1em;
+        background-color: #28a745; /* Green button for action */
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+      }
+
+      .message-box button:hover {
+        background-color: #218838;
+      }
+
+      /* Animations */
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translate(-50%, -60%);
+        }
+        to {
+          opacity: 1;
+          transform: translate(-50%, -50%);
+        }
+      }
+
+      /* Responsive adjustments */
+      @media (max-width: 768px) {
+        h1 {
+          font-size: 2em;
+        }
+        .game-info {
+          font-size: 1em;
+        }
+        .game-button {
+          padding: 14px 24px; /* Increased padding for better touch */
+          font-size: 1em;
+          min-height: 48px; /* Minimum touch target size */
+          min-width: 120px;
+        }
+        .message-box {
+          font-size: 1.2em;
+          padding: 20px;
+        }
+        .touch-controls {
+          margin-top: 40px; /* More space on smaller screens */
+        }
+        .touch-button {
+          width: 70px;
+          height: 70px;
+          min-width: 70px;
+          min-height: 70px;
+          font-size: 28px;
+        }
+      }
+
+      @media (max-width: 480px) {
+        h1 {
+          font-size: 1.8em;
+        }
+        .game-info {
+          flex-direction: column;
+          align-items: center;
+          gap: 8px;
+          font-size: 0.9em;
+        }
+        .game-button {
+          width: 100%; /* Full width buttons on very small screens */
+          padding: 16px;
+          min-height: 52px;
+          font-size: 1.1em;
+        }
+        .message-box {
+          font-size: 1em;
+          padding: 15px;
+        }
+        .touch-controls {
+          margin-top: 50px;
+          gap: 30px;
+        }
+        .touch-button {
+          width: 80px;
+          height: 80px;
+          min-width: 80px;
+          min-height: 80px;
+          font-size: 32px;
+        }
+        /* Ensure safe areas for notched devices */
+        .game-container {
+          padding-left: env(safe-area-inset-left);
+          padding-right: env(safe-area-inset-right);
+        }
+        .touch-controls {
+          padding-left: calc(20px + env(safe-area-inset-left));
+          padding-right: calc(20px + env(safe-area-inset-right));
+          margin-top: calc(50px + env(safe-area-inset-bottom));
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="game-container">
+      <h1>Breakout Game</h1>
+      <div class="game-info">
+        <span id="score">Score: 0</span>
+        <span id="lives">Lives: 3</span>
+      </div>
+      <canvas id="gameCanvas"></canvas>
+      <div class="controls">
+        <button id="startButton" class="game-button">
+          <i class="fas fa-play"></i> Start Game
+        </button>
+        <button id="restartButton" class="game-button" style="display: none">
+          <i class="fas fa-redo"></i> Restart
+        </button>
+      </div>
+
+      <!-- Touch controls for mobile -->
+      <div class="touch-controls" id="touchControls">
+        <button id="leftButton" class="touch-button touch-button-left">
+          <i class="fas fa-chevron-left"></i>
+        </button>
+        <button id="rightButton" class="touch-button touch-button-right">
+          <i class="fas fa-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Custom message box for game over/win -->
+    <div id="messageBox" class="message-box">
+      <p id="messageText"></p>
+      <button id="messageBoxButton">Play Again</button>
+    </div>
+
+    <script>
+      // Get the canvas element and its 2D rendering context
+      const canvas = document.getElementById("gameCanvas");
+      const ctx = canvas.getContext("2d");
+
+      // Get game info and control elements
+      const scoreDisplay = document.getElementById("score");
+      const livesDisplay = document.getElementById("lives");
+      const startButton = document.getElementById("startButton");
+      const restartButton = document.getElementById("restartButton");
+      const messageBox = document.getElementById("messageBox");
+      const messageText = document.getElementById("messageText");
+      const messageBoxButton = document.getElementById("messageBoxButton");
+      const touchControls = document.getElementById("touchControls");
+      const leftButton = document.getElementById("leftButton");
+      const rightButton = document.getElementById("rightButton");
+
+      // Game variables
+      let gameRunning = false;
+      let animationFrameId;
+      let lastFrameTime = 0;
+      let targetFPS = 60;
+
+      // Scaling variables for responsive design
+      let scaleFactor = 1;
+      let baseCanvasWidth = 800;
+      let baseCanvasHeight = 600;
+
+      // Enhanced game mechanics
+      let baseBallSpeed = 4.5;
+      let ballSpeed = 4.5;
+      let currentLevel = 1;
+      let comboCount = 0;
+      let lastHitTime = 0;
+      let particles = [];
+      let speedMultiplier = 1;
+      let maxSpeedMultiplier = 1.8;
+
+      // Ball properties
+      let baseBallRadius = 10;
+      let ballRadius = 10;
+      let x, y; // Ball position
+      let dx, dy; // Ball speed and direction
+
+      // Paddle properties
+      let basePaddleHeight = 15;
+      let basePaddleWidth = 100;
+      let paddleHeight = 15;
+      let paddleWidth = 100;
+      let paddleX; // Paddle position
+
+      // Brick properties
+      let brickRowCount = 6;
+      let brickColumnCount = 8;
+      let baseBrickWidth = 75;
+      let baseBrickHeight = 20;
+      let baseBrickPadding = 10;
+      let baseBrickOffsetTop = 30;
+      let baseBrickOffsetLeft = 30;
+      let brickWidth = 75;
+      let brickHeight = 20;
+      let brickPadding = 10;
+      let brickOffsetTop = 30;
+      let brickOffsetLeft = 30;
+      let bricks = []; // Array to store brick objects
+
+      // Brick types with different properties
+      const brickTypes = {
+        normal: { color: '#ff6b6b', hits: 1, points: 10, powerUp: null },
+        strong: { color: '#ff3838', hits: 2, points: 20, powerUp: null },
+        bonus: { color: '#4ecdc4', hits: 1, points: 50, powerUp: 'bonus' },
+        powerUp: { color: '#45b7d1', hits: 1, points: 30, powerUp: 'expand' },
+        speedUp: { color: '#f9ca24', hits: 1, points: 25, powerUp: 'slow' }
+      };
+
+      // Power-up effects
+      let activePowerUps = [];
+      let powerUpDuration = 10000; // 10 seconds
+
+      // Game state
+      let score = 0;
+      let lives = 3;
+
+      // Input handling
+      let rightPressed = false;
+      let leftPressed = false;
+      let touchLeftPressed = false;
+      let touchRightPressed = false;
+
+      /**
+       * Creates particle effects for visual feedback
+       */
+      function createParticles(x, y, color, count = 8) {
+        for (let i = 0; i < count; i++) {
+          particles.push({
+            x: x,
+            y: y,
+            vx: (Math.random() - 0.5) * 6 * scaleFactor,
+            vy: (Math.random() - 0.5) * 6 * scaleFactor,
+            life: 30,
+            color: color,
+            size: Math.random() * 4 + 2
+          });
+        }
+      }
+
+      /**
+       * Updates and draws particles
+       */
+      function updateParticles() {
+        particles = particles.filter(particle => {
+          particle.x += particle.vx;
+          particle.y += particle.vy;
+          particle.vy += 0.2; // gravity
+          particle.life--;
+
+          if (particle.life > 0) {
+            ctx.globalAlpha = particle.life / 30;
+            ctx.fillStyle = particle.color;
+            ctx.fillRect(particle.x, particle.y, particle.size * scaleFactor, particle.size * scaleFactor);
+            ctx.globalAlpha = 1;
+            return true;
+          }
+          return false;
+        });
+      }
+
+      /**
+       * Increases ball speed gently for kids
+       */
+      function increaseSpeed() {
+        if (speedMultiplier < maxSpeedMultiplier) {
+          speedMultiplier += 0.03; // Much gentler increase for kids
+          const currentSpeed = Math.sqrt(dx * dx + dy * dy);
+          const newSpeed = baseBallSpeed * scaleFactor * speedMultiplier;
+          const angle = Math.atan2(dy, dx);
+          dx = Math.cos(angle) * newSpeed;
+          dy = Math.sin(angle) * newSpeed;
+        }
+      }
+
+      /**
+       * Calculates realistic ball deflection from paddle with gentle speed boost
+       */
+      function calculatePaddleDeflection(ballX) {
+        const relativeIntersectX = (ballX - (paddleX + paddleWidth / 2)) / (paddleWidth / 2);
+        const bounceAngle = relativeIntersectX * Math.PI / 3; // Max 60 degree angle
+
+        // Very gentle speed increase for kids
+        increaseSpeed();
+        const speed = Math.sqrt(dx * dx + dy * dy) * 1.02; // Much gentler speed increase
+        return {
+          dx: speed * Math.sin(bounceAngle),
+          dy: -Math.abs(speed * Math.cos(bounceAngle))
+        };
+      }
+
+      /**
+       * Updates combo and score with multiplier system
+       */
+      function updateCombo() {
+        const currentTime = Date.now();
+        if (currentTime - lastHitTime < 1000) { // Within 1 second
+          comboCount++;
+        } else {
+          comboCount = 1;
+        }
+        lastHitTime = currentTime;
+        return comboCount;
+      }
+
+      /**
+       * Applies power-up effects
+       */
+      function applyPowerUp(type) {
+        const powerUp = {
+          type: type,
+          endTime: Date.now() + powerUpDuration
+        };
+
+        // Apply immediate effect
+        switch(type) {
+          case 'expand':
+            paddleWidth = basePaddleWidth * 1.5 * scaleFactor;
+            createParticles(paddleX + paddleWidth/2, canvas.height - paddleHeight, '#45b7d1', 15);
+            break;
+          case 'slow':
+            const currentSpeed = Math.sqrt(dx * dx + dy * dy);
+            const newSpeed = currentSpeed * 0.7;
+            const angle = Math.atan2(dy, dx);
+            dx = Math.cos(angle) * newSpeed;
+            dy = Math.sin(angle) * newSpeed;
+            createParticles(x, y, '#f9ca24', 10);
+            break;
+          case 'bonus':
+            score += 100;
+            createParticles(canvas.width/2, canvas.height/2, '#4ecdc4', 20);
+            break;
+        }
+
+        activePowerUps.push(powerUp);
+      }
+
+      /**
+       * Updates and removes expired power-ups
+       */
+      function updatePowerUps() {
+        const currentTime = Date.now();
+        activePowerUps = activePowerUps.filter(powerUp => {
+          if (currentTime > powerUp.endTime) {
+            // Remove expired power-up effect
+            switch(powerUp.type) {
+              case 'expand':
+                paddleWidth = basePaddleWidth * scaleFactor;
+                break;
+            }
+            return false;
+          }
+          return true;
+        });
+      }
+
+      /**
+       * Updates the scale factor for responsive design
+       */
+      function updateScaleFactor() {
+        const container = canvas.parentElement;
+        const availableWidth = container.clientWidth - 40; // Subtract padding
+        const availableHeight = window.innerHeight * 0.7; // Max 70% of viewport height
+
+        // Calculate the best fit while maintaining aspect ratio
+        const scaleX = availableWidth / baseCanvasWidth;
+        const scaleY = availableHeight / baseCanvasHeight;
+        scaleFactor = Math.min(scaleX, scaleY, 1.5); // Cap at 1.5x for very large screens
+
+        // Adjust FPS for mobile performance
+        if (scaleFactor < 0.8) {
+          targetFPS = 50; // Lower FPS on smaller screens for better performance
+        } else {
+          targetFPS = 60;
+        }
+      }
+
+      /**
+       * Updates all game element dimensions based on scale factor
+       */
+      function updateScaledDimensions() {
+        // Scale ball
+        ballRadius = baseBallRadius * scaleFactor;
+
+        // Scale paddle
+        paddleHeight = basePaddleHeight * scaleFactor;
+        paddleWidth = basePaddleWidth * scaleFactor;
+
+        // Scale bricks
+        brickHeight = baseBrickHeight * scaleFactor;
+        brickOffsetTop = baseBrickOffsetTop * scaleFactor;
+        brickOffsetLeft = baseBrickOffsetLeft * scaleFactor;
+
+        // Calculate brick dimensions to fill canvas width properly
+        const availableBrickWidth = canvas.width - 2 * brickOffsetLeft;
+        const totalPaddingWidth = (brickColumnCount - 1) * (baseBrickPadding * scaleFactor);
+
+        // Calculate brick width to fill available space perfectly
+        brickWidth = (availableBrickWidth - totalPaddingWidth) / brickColumnCount;
+        brickPadding = baseBrickPadding * scaleFactor;
+
+        // Ensure minimum brick width for playability
+        if (brickWidth < 40 * scaleFactor) {
+          brickWidth = 40 * scaleFactor;
+          // Recalculate padding to fit if bricks are at minimum size
+          const usedBricksWidth = brickColumnCount * brickWidth;
+          const remainingSpace = availableBrickWidth - usedBricksWidth;
+          brickPadding = Math.max(remainingSpace / (brickColumnCount - 1), 5 * scaleFactor);
+        }
+      }
+
+      /**
+       * Initializes the game state.
+       * Resets ball, paddle, bricks, score, and lives.
+       */
+      function initGame() {
+        // Set canvas dimensions based on container width
+        resizeCanvas();
+
+        // Initial ball position and speed
+        x = canvas.width / 2;
+        y = canvas.height - 30 * scaleFactor;
+        // Set initial ball speed with kid-friendly physics
+        speedMultiplier = 1;
+        ballSpeed = baseBallSpeed * scaleFactor * 1.0; // Normal starting speed for kids
+        const initialAngle = (Math.random() - 0.5) * Math.PI / 6; // Gentle angles for kids
+        dx = Math.sin(initialAngle) * ballSpeed; // Horizontal speed
+        dy = -Math.abs(Math.cos(initialAngle) * ballSpeed); // Vertical speed (upwards)
+
+        // Initial paddle position
+        paddleX = (canvas.width - paddleWidth) / 2;
+
+        // Initialize bricks array with varied types
+        bricks = [];
+        for (let c = 0; c < brickColumnCount; c++) {
+          bricks[c] = [];
+          for (let r = 0; r < brickRowCount; r++) {
+            // Create varied brick layout based on row
+            let type = 'normal';
+            if (r === 0) {
+              // Top row - strong bricks
+              type = 'strong';
+            } else if (r === 1 && Math.random() > 0.6) {
+              // Second row - occasional power-ups
+              type = 'powerUp';
+            } else if (r === 2 && Math.random() > 0.7) {
+              // Third row - occasional bonus bricks
+              type = 'bonus';
+            } else if (r === 3 && Math.random() > 0.8) {
+              // Fourth row - occasional speed control
+              type = 'speedUp';
+            }
+
+            const brickType = brickTypes[type];
+            bricks[c][r] = {
+              x: 0,
+              y: 0,
+              status: 1,
+              type: type,
+              hits: brickType.hits,
+              maxHits: brickType.hits,
+              color: brickType.color,
+              points: brickType.points,
+              powerUp: brickType.powerUp
+            };
+          }
+        }
+
+        // Reset game state
+        score = 0;
+        lives = 3;
+        currentLevel = 1;
+        comboCount = 0;
+        lastHitTime = 0;
+        particles = [];
+        activePowerUps = [];
+        ballSpeed = baseBallSpeed * scaleFactor;
+        updateGameInfo(); // Update display
+        gameRunning = false; // Game is paused initially
+        messageBox.style.display = "none"; // Hide any previous messages
+        startButton.style.display = "inline-flex"; // Show start button
+        restartButton.style.display = "none"; // Hide restart button
+      }
+
+      /**
+       * Resizes the canvas to fit its parent container and maintain a reasonable aspect ratio.
+       */
+      function resizeCanvas() {
+        // Update scale factor first
+        updateScaleFactor();
+
+        // Set canvas dimensions based on scale factor
+        canvas.width = baseCanvasWidth * scaleFactor;
+        canvas.height = baseCanvasHeight * scaleFactor;
+
+        // Update all scaled dimensions
+        updateScaledDimensions();
+      }
+
+      /**
+       * Updates the score and lives display on the screen.
+       */
+      function updateGameInfo() {
+        scoreDisplay.textContent = `Score: ${score}`;
+        livesDisplay.textContent = `Lives: ${lives}`;
+      }
+
+      /**
+       * Draws the ball on the canvas.
+       */
+      function drawBall() {
+        ctx.beginPath();
+        ctx.arc(x, y, ballRadius, 0, Math.PI * 2); // Draw a circle
+        ctx.fillStyle = "#ffdd00"; // Yellow ball
+        ctx.fill();
+        ctx.closePath();
+      }
+
+      /**
+       * Draws the paddle on the canvas.
+       */
+      function drawPaddle() {
+        ctx.beginPath();
+        ctx.rect(
+          paddleX,
+          canvas.height - paddleHeight,
+          paddleWidth,
+          paddleHeight
+        ); // Draw a rectangle
+        ctx.fillStyle = "#00c6ff"; // Blue paddle
+        ctx.fill();
+        ctx.closePath();
+      }
+
+      /**
+       * Draws all visible bricks on the canvas with different types and effects.
+       */
+      function drawBricks() {
+        for (let c = 0; c < brickColumnCount; c++) {
+          for (let r = 0; r < brickRowCount; r++) {
+            const brick = bricks[c][r];
+            if (brick.status === 1) {
+              // Calculate brick position
+              const brickX = c * (brickWidth + brickPadding) + brickOffsetLeft;
+              const brickY = r * (brickHeight + brickPadding) + brickOffsetTop;
+              brick.x = brickX;
+              brick.y = brickY;
+
+              ctx.beginPath();
+              ctx.rect(brickX, brickY, brickWidth, brickHeight);
+
+              // Set color based on brick type and damage
+              ctx.fillStyle = brick.color;
+
+              // Add visual effect for damaged strong bricks
+              if (brick.type === 'strong' && brick.hits < brick.maxHits) {
+                ctx.globalAlpha = 0.7;
+              }
+
+              // Add glow effect for special bricks
+              if (brick.type === 'bonus' || brick.type === 'powerUp') {
+                ctx.shadowBlur = 10 * scaleFactor;
+                ctx.shadowColor = brick.color;
+              }
+
+              ctx.fill();
+              ctx.closePath();
+              ctx.globalAlpha = 1;
+              ctx.shadowBlur = 0;
+
+              // Draw hits remaining for strong bricks
+              if (brick.type === 'strong' && brick.hits > 1) {
+                ctx.fillStyle = '#ffffff';
+                ctx.font = `${12 * scaleFactor}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.fillText(brick.hits, brickX + brickWidth / 2, brickY + brickHeight / 2 + 4 * scaleFactor);
+              }
+
+              // Draw icon for special bricks
+              if (brick.powerUp) {
+                ctx.fillStyle = '#ffffff';
+                ctx.font = `${14 * scaleFactor}px FontAwesome`;
+                ctx.textAlign = 'center';
+                let icon = '';
+                if (brick.powerUp === 'expand') icon = '↔';
+                else if (brick.powerUp === 'bonus') icon = '★';
+                else if (brick.powerUp === 'slow') icon = '⚡';
+                ctx.fillText(icon, brickX + brickWidth / 2, brickY + brickHeight / 2 + 4 * scaleFactor);
+              }
+            }
+          }
+        }
+      }
+
+      /**
+       * Enhanced collision detection with better physics and brick effects.
+       */
+      function collisionDetection() {
+        for (let c = 0; c < brickColumnCount; c++) {
+          for (let r = 0; r < brickRowCount; r++) {
+            const brick = bricks[c][r];
+            if (brick.status === 1) {
+              // Enhanced collision detection
+              const ballLeft = x - ballRadius;
+              const ballRight = x + ballRadius;
+              const ballTop = y - ballRadius;
+              const ballBottom = y + ballRadius;
+
+              const brickLeft = brick.x;
+              const brickRight = brick.x + brickWidth;
+              const brickTop = brick.y;
+              const brickBottom = brick.y + brickHeight;
+
+              if (ballRight > brickLeft && ballLeft < brickRight &&
+                  ballBottom > brickTop && ballTop < brickBottom) {
+
+                // Determine collision side for realistic physics
+                const overlapLeft = ballRight - brickLeft;
+                const overlapRight = brickRight - ballLeft;
+                const overlapTop = ballBottom - brickTop;
+                const overlapBottom = brickBottom - ballTop;
+
+                const minOverlapX = Math.min(overlapLeft, overlapRight);
+                const minOverlapY = Math.min(overlapTop, overlapBottom);
+
+                // Apply damage to brick
+                brick.hits--;
+                if (brick.hits <= 0) {
+                  brick.status = 0; // Mark brick as broken
+
+                  // Calculate combo and score
+                  const combo = updateCombo();
+                  const points = brick.points * combo;
+                  score += points;
+
+                  // Create particles for visual feedback
+                  createParticles(brick.x + brickWidth/2, brick.y + brickHeight/2, brick.color, 12);
+
+                  // Apply power-up if present
+                  if (brick.powerUp) {
+                    applyPowerUp(brick.powerUp);
+                  }
+
+                  // Check for win condition
+                  const totalBricks = brickRowCount * brickColumnCount;
+                  const remainingBricks = bricks.flat().filter(b => b.status === 1).length;
+                  if (remainingBricks === 0) {
+                    showMessage(`LEVEL ${currentLevel} COMPLETE! 🎉 Score: ${score}`, true);
+                    gameRunning = false;
+                    cancelAnimationFrame(animationFrameId);
+                  }
+                } else {
+                  // Brick damaged but not destroyed
+                  createParticles(brick.x + brickWidth/2, brick.y + brickHeight/2, brick.color, 5);
+                }
+
+                updateGameInfo();
+
+                // Realistic ball deflection based on collision side with speed boost
+                if (minOverlapX < minOverlapY) {
+                  // Side collision
+                  dx = -dx;
+                  // Increase speed slightly on brick hits
+                  increaseSpeed();
+                  // Adjust ball position to prevent getting stuck
+                  if (overlapLeft < overlapRight) {
+                    x = brickLeft - ballRadius;
+                  } else {
+                    x = brickRight + ballRadius;
+                  }
+                } else {
+                  // Top/Bottom collision
+                  dy = -dy;
+                  // Increase speed slightly on brick hits
+                  increaseSpeed();
+                  // Adjust ball position to prevent getting stuck
+                  if (overlapTop < overlapBottom) {
+                    y = brickTop - ballRadius;
+                  } else {
+                    y = brickBottom + ballRadius;
+                  }
+                }
+                return; // Exit after first collision to prevent multiple hits
+              }
+            }
+          }
+        }
+      }
+
+      /**
+       * Main drawing function. Clears canvas and redraws all game elements with enhanced features.
+       */
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear entire canvas
+
+        drawBricks();
+        drawBall();
+        drawPaddle();
+
+        // Update game systems
+        updateParticles();
+        updatePowerUps();
+        collisionDetection(); // Check collisions on each frame
+
+        // Draw combo indicator
+        if (comboCount > 1) {
+          ctx.fillStyle = '#ffff00';
+          ctx.font = `bold ${20 * scaleFactor}px Arial`;
+          ctx.textAlign = 'center';
+          ctx.fillText(`${comboCount}x COMBO!`, canvas.width / 2, 50 * scaleFactor);
+        }
+
+        // Draw active power-ups indicator
+        if (activePowerUps.length > 0) {
+          const powerUpTexts = activePowerUps.map(pu => {
+            const timeLeft = Math.ceil((pu.endTime - Date.now()) / 1000);
+            return `${pu.type.toUpperCase()}: ${timeLeft}s`;
+          }).join(' | ');
+
+          ctx.fillStyle = '#00ff00';
+          ctx.font = `${14 * scaleFactor}px Arial`;
+          ctx.textAlign = 'center';
+          ctx.fillText(powerUpTexts, canvas.width / 2, canvas.height - 20 * scaleFactor);
+        }
+
+        // Draw friendly speed indicator for kids
+        const speedPercent = Math.round((speedMultiplier / maxSpeedMultiplier) * 100);
+        let speedEmoji = '🐢'; // Turtle for slow
+        let speedText = 'GENTLE';
+
+        if (speedPercent > 75) {
+          speedEmoji = '🚀'; // Rocket for fastest
+          speedText = 'SUPER FAST!';
+        } else if (speedPercent > 50) {
+          speedEmoji = '🏃'; // Runner for medium-fast
+          speedText = 'FAST!';
+        } else if (speedPercent > 25) {
+          speedEmoji = '🚶'; // Walker for medium
+          speedText = 'MEDIUM';
+        }
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = `bold ${14 * scaleFactor}px Arial`;
+        ctx.textAlign = 'left';
+        ctx.fillText(`${speedEmoji} ${speedText}`, 20 * scaleFactor, 40 * scaleFactor);
+
+        // Add gentle sparkles when going fast (not intimidating)
+        if (speedMultiplier > 1.4) {
+          ctx.fillStyle = '#ffff00';
+          ctx.globalAlpha = 0.6;
+          for (let i = 0; i < 2; i++) {
+            const sparkleX = x + (Math.random() - 0.5) * 30 * scaleFactor;
+            const sparkleY = y + (Math.random() - 0.5) * 30 * scaleFactor;
+            ctx.beginPath();
+            ctx.arc(sparkleX, sparkleY, 2 * scaleFactor, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          ctx.globalAlpha = 1;
+        }
+
+        // Ball movement and wall collision
+        if (x + dx > canvas.width - ballRadius || x + dx < ballRadius) {
+          dx = -dx; // Reverse horizontal direction if hitting side walls
+        }
+        if (y + dy < ballRadius) {
+          dy = -dy; // Reverse vertical direction if hitting top wall
+        } else if (y + dy > canvas.height - ballRadius - paddleHeight) {
+          // Enhanced paddle collision detection
+          const ballBottom = y + ballRadius;
+          const paddleTop = canvas.height - paddleHeight;
+          const paddleBottom = canvas.height;
+
+          if (ballBottom >= paddleTop && x >= paddleX && x <= paddleX + paddleWidth) {
+            // Ball hits paddle - use realistic physics
+            const deflection = calculatePaddleDeflection(x);
+            dx = deflection.dx;
+            dy = deflection.dy;
+
+            // Prevent ball from getting stuck in paddle
+            y = paddleTop - ballRadius;
+
+            // Create impact effect
+            createParticles(x, paddleTop, '#00c6ff', 3);
+
+            // Reset combo if ball has been in play for a while
+            const timeSinceLastHit = Date.now() - lastHitTime;
+            if (timeSinceLastHit > 3000) {
+              comboCount = 0;
+            }
+          } else if (ballBottom > paddleBottom) {
+            // Ball hits bottom (misses paddle)
+            lives--;
+            comboCount = 0; // Reset combo on life loss
+            updateGameInfo(); // Update lives display
+
+            // Create fail effect
+            createParticles(x, canvas.height - 20, '#ff0000', 8);
+
+            if (lives === 0) {
+              showMessage(`GAME OVER! 💔 Final Score: ${score}`, false);
+              gameRunning = false;
+              cancelAnimationFrame(animationFrameId); // Stop the game loop
+            } else {
+              // Reset ball and paddle position for next life with increased difficulty
+              x = canvas.width / 2;
+              y = canvas.height - 30 * scaleFactor;
+
+              // Gentle speed increase with each life lost for kids
+              speedMultiplier = 1 + ((4 - lives) * 0.15); // Much gentler multiplier for kids
+              ballSpeed = baseBallSpeed * scaleFactor * speedMultiplier;
+              const angle = (Math.random() - 0.5) * Math.PI / 4; // Reasonable angles for kids
+              dx = Math.sin(angle) * ballSpeed;
+              dy = -Math.abs(Math.cos(angle) * ballSpeed);
+
+              // Encouraging visual effect for kids
+              createParticles(canvas.width/2, canvas.height/2, '#45b7d1', 10);
+
+              paddleX = (canvas.width - paddleWidth) / 2;
+              gameRunning = false; // Pause game until player restarts
+              startButton.style.display = "inline-flex"; // Show start button
+              restartButton.style.display = "none"; // Hide restart button
+            }
+          }
+        }
+
+        // Paddle movement (scaled speed)
+        const paddleSpeed = 7 * scaleFactor;
+        if ((rightPressed || touchRightPressed) && paddleX < canvas.width - paddleWidth) {
+          paddleX += paddleSpeed; // Move right
+        } else if ((leftPressed || touchLeftPressed) && paddleX > 0) {
+          paddleX -= paddleSpeed; // Move left
+        }
+
+        x += dx; // Update ball x position
+        y += dy; // Update ball y position
+      }
+
+      /**
+       * The main game loop. Calls draw function repeatedly using requestAnimationFrame with frame rate limiting.
+       */
+      function gameLoop(currentTime) {
+        if (gameRunning) {
+          // Frame rate limiting for better performance on mobile
+          if (currentTime - lastFrameTime >= 1000 / targetFPS) {
+            draw();
+            lastFrameTime = currentTime;
+          }
+          animationFrameId = requestAnimationFrame(gameLoop);
+        }
+      }
+
+      /**
+       * Displays a message box with game status (win/lose) and a play again button.
+       * @param {string} message - The message to display.
+       * @param {boolean} isWin - True if the game was won, false otherwise.
+       */
+      function showMessage(message, isWin) {
+        messageText.textContent = message;
+        messageBoxButton.textContent = "Play Again";
+        messageBox.style.display = "block";
+        if (isWin) {
+          messageBoxButton.style.backgroundColor = "#28a745"; // Green for win
+        } else {
+          messageBoxButton.style.backgroundColor = "#dc3545"; // Red for lose
+        }
+      }
+
+      // Event Listeners for Keyboard Input
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Right" || e.key === "ArrowRight") {
+          rightPressed = true;
+        } else if (e.key === "Left" || e.key === "ArrowLeft") {
+          leftPressed = true;
+        }
+      });
+
+      document.addEventListener("keyup", (e) => {
+        if (e.key === "Right" || e.key === "ArrowRight") {
+          rightPressed = false;
+        } else if (e.key === "Left" || e.key === "ArrowLeft") {
+          leftPressed = false;
+        }
+      });
+
+      // Event Listeners for Touch Input (for paddle movement)
+      let touchStartX = 0;
+      let paddleStartTouchX = 0;
+
+      canvas.addEventListener(
+        "touchstart",
+        (e) => {
+          e.preventDefault(); // Prevent scrolling
+          if (e.touches.length > 0) {
+            touchStartX = e.touches[0].clientX;
+            paddleStartTouchX = paddleX;
+          }
+        },
+        { passive: false }
+      ); // Set passive to false to allow preventDefault
+
+      canvas.addEventListener(
+        "touchmove",
+        (e) => {
+          e.preventDefault(); // Prevent scrolling
+          if (e.touches.length > 0) {
+            const touchCurrentX = e.touches[0].clientX;
+            const touchDeltaX = touchCurrentX - touchStartX;
+            let newPaddleX = paddleStartTouchX + touchDeltaX;
+
+            // Clamp paddle to canvas boundaries
+            if (newPaddleX < 0) {
+              newPaddleX = 0;
+            } else if (newPaddleX + paddleWidth > canvas.width) {
+              newPaddleX = canvas.width - paddleWidth;
+            }
+            paddleX = newPaddleX;
+          }
+        },
+        { passive: false }
+      );
+
+      canvas.addEventListener("touchend", () => {
+        // No specific action needed on touchend for continuous movement
+      });
+
+      // Handle mouse movement for paddle control
+      canvas.addEventListener("mousemove", (e) => {
+        const relativeX = e.clientX - canvas.getBoundingClientRect().left;
+        if (relativeX > 0 && relativeX < canvas.width) {
+          // Center the paddle based on mouse position
+          paddleX = relativeX - paddleWidth / 2;
+          // Clamp paddle to canvas boundaries
+          if (paddleX < 0) {
+            paddleX = 0;
+          }
+          if (paddleX + paddleWidth > canvas.width) {
+            paddleX = canvas.width - paddleWidth;
+          }
+        }
+      });
+
+      // Start Button Handler
+      startButton.addEventListener("click", () => {
+        if (!gameRunning) {
+          gameRunning = true;
+          startButton.style.display = "none"; // Hide start button
+          restartButton.style.display = "inline-flex"; // Show restart button
+          gameLoop(); // Start the game loop
+        }
+      });
+
+      // Restart Button Handler
+      restartButton.addEventListener("click", () => {
+        cancelAnimationFrame(animationFrameId); // Stop current loop if running
+        initGame(); // Re-initialize game state
+        gameRunning = true; // Set game to running
+        startButton.style.display = "none"; // Hide start button
+        restartButton.style.display = "inline-flex"; // Show restart button
+        gameLoop(); // Start new game loop
+      });
+
+      // Touch button event handlers
+      function handleTouchStart(button, direction) {
+        return (e) => {
+          e.preventDefault();
+          if (direction === 'left') {
+            touchLeftPressed = true;
+          } else {
+            touchRightPressed = true;
+          }
+        };
+      }
+
+      function handleTouchEnd(button, direction) {
+        return (e) => {
+          e.preventDefault();
+          if (direction === 'left') {
+            touchLeftPressed = false;
+          } else {
+            touchRightPressed = false;
+          }
+        };
+      }
+
+      // Left button touch events
+      leftButton.addEventListener("touchstart", handleTouchStart(leftButton, 'left'), { passive: false });
+      leftButton.addEventListener("touchend", handleTouchEnd(leftButton, 'left'), { passive: false });
+      leftButton.addEventListener("mousedown", handleTouchStart(leftButton, 'left'));
+      leftButton.addEventListener("mouseup", handleTouchEnd(leftButton, 'left'));
+      leftButton.addEventListener("mouseleave", handleTouchEnd(leftButton, 'left'));
+
+      // Right button touch events
+      rightButton.addEventListener("touchstart", handleTouchStart(rightButton, 'right'), { passive: false });
+      rightButton.addEventListener("touchend", handleTouchEnd(rightButton, 'right'), { passive: false });
+      rightButton.addEventListener("mousedown", handleTouchStart(rightButton, 'right'));
+      rightButton.addEventListener("mouseup", handleTouchEnd(rightButton, 'right'));
+      rightButton.addEventListener("mouseleave", handleTouchEnd(rightButton, 'right'));
+
+      // Prevent touch scroll on the buttons
+      leftButton.addEventListener("touchmove", (e) => e.preventDefault(), { passive: false });
+      rightButton.addEventListener("touchmove", (e) => e.preventDefault(), { passive: false });
+
+      // Message Box Button Handler (for Play Again)
+      messageBoxButton.addEventListener("click", () => {
+        cancelAnimationFrame(animationFrameId); // Stop current loop if running
+        initGame(); // Re-initialize game state
+        // Game will be started by the startButton click after init, or directly if gameRunning is true
+        // if we are coming from a win/lose state, we want to allow user to press Start again.
+        // But if it was a mid-game pause, we just restart the game.
+        if (
+          messageText.textContent.includes("GAME OVER") ||
+          messageText.textContent.includes("You WIN")
+        ) {
+          startButton.style.display = "inline-flex";
+          restartButton.style.display = "none";
+        } else {
+          // This else block might not be hit with current logic but good for future proofing
+          gameRunning = true;
+          startButton.style.display = "none";
+          restartButton.style.display = "inline-flex";
+          gameLoop();
+        }
+        messageBox.style.display = "none"; // Hide the message box
+      });
+
+      // Initialize game on window load
+      window.onload = function () {
+        initGame(); // Initialize game state
+
+        // Add event listener for window resize to make the canvas responsive
+        window.addEventListener("resize", () => {
+          resizeCanvas();
+          // Re-center paddle and ball after resize
+          paddleX = (canvas.width - paddleWidth) / 2;
+          x = canvas.width / 2;
+          y = canvas.height - 30 * scaleFactor;
+          // If game is running, redraw immediately
+          if (gameRunning) {
+            draw();
+          } else {
+            // If game is paused, clear and draw initial state
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawPaddle();
+            drawBall();
+            drawBricks();
+          }
+        });
+
+        // Handle orientation changes for mobile devices
+        window.addEventListener("orientationchange", () => {
+          setTimeout(() => {
+            resizeCanvas();
+            // Re-center paddle and ball after orientation change
+            paddleX = (canvas.width - paddleWidth) / 2;
+            x = canvas.width / 2;
+            y = canvas.height - 30 * scaleFactor;
+            // Redraw the game
+            if (gameRunning) {
+              draw();
+            } else {
+              ctx.clearRect(0, 0, canvas.width, canvas.height);
+              drawPaddle();
+              drawBall();
+              drawBricks();
+            }
+          }, 100); // Small delay to allow the browser to update layout
+        });
+
+        // Prevent zoom on double tap for mobile
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function (event) {
+          const now = (new Date()).getTime();
+          if (now - lastTouchEnd <= 300) {
+            event.preventDefault();
+          }
+          lastTouchEnd = now;
+        }, false);
+
+        // Initial draw to show elements before game starts
+        drawPaddle();
+        drawBall();
+        drawBricks();
+      };
+    </script>
+  </body>
+</html>

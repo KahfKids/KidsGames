@@ -79,13 +79,19 @@
       /* Mobile Controls */
       #mobileControls {
         position: fixed;
-        bottom: 20px;
+        bottom: 30px;
         width: 100%;
         z-index: 100;
         display: flex;
         justify-content: space-between;
-        padding: 0 20px;
+        align-items: center;
+        padding: 0 30px;
         box-sizing: border-box;
+        pointer-events: none; /* Allow touch through to game area */
+      }
+
+      #mobileControls > * {
+        pointer-events: auto; /* Re-enable touch for controls */
       }
 
       .movement-controls {
@@ -94,13 +100,13 @@
       }
 
       .control-button {
-        width: 60px;
-        height: 60px;
-        background: rgba(255, 255, 255, 0.2);
-        border: 2px solid white;
-        border-radius: 10px;
+        width: 70px;
+        height: 70px;
+        background: rgba(255, 255, 255, 0.3);
+        border: 3px solid white;
+        border-radius: 12px;
         color: white;
-        font-size: 24px;
+        font-size: 28px;
         cursor: pointer;
         display: inline-flex;
         justify-content: center;
@@ -112,12 +118,31 @@
         -webkit-touch-callout: none;
         position: relative;
         z-index: 1000;
+        transition: all 0.1s ease;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      }
+
+      .control-button:active,
+      .control-button.pressed {
+        transform: scale(0.95);
+        background: rgba(255, 255, 255, 0.5);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
       }
 
       #shootButton {
-        background: rgba(0, 255, 0, 0.2);
-        font-size: 16px;
-        width: 80px;
+        background: rgba(0, 255, 0, 0.3);
+        font-size: 18px;
+        font-weight: bold;
+        width: 90px;
+        height: 80px;
+        border-color: #00ff00;
+        border-width: 4px;
+      }
+
+      #shootButton:active,
+      #shootButton.pressed {
+        background: rgba(0, 255, 0, 0.5);
+        border-color: #00ff00;
       }
 
       @media (max-width: 1024px) {
@@ -232,6 +257,13 @@
       // Control states
       let isLeftPressed = false;
       let isRightPressed = false;
+
+      // Keyboard control states
+      let isKeyboardLeft = false;
+      let isKeyboardRight = false;
+
+      // Input mode detection
+      let inputMode = 'mixed'; // 'keyboard', 'touch', 'mouse', 'mixed'
 
       function createSVGElement(type, attributes) {
         const elem = document.createElementNS(
@@ -429,11 +461,14 @@
 
       function update() {
         if (!gameIsOver) {
-          // Handle arrow button controls
-          if (isLeftPressed) {
+          // Handle movement from all input sources
+          let moveLeft = isLeftPressed || isKeyboardLeft;
+          let moveRight = isRightPressed || isKeyboardRight;
+
+          if (moveLeft) {
             player.x = Math.max(20, player.x - player.speed);
           }
-          if (isRightPressed) {
+          if (moveRight) {
             player.x = Math.min(viewBox.width - 20, player.x + player.speed);
           }
         }
@@ -461,12 +496,94 @@
         gameOver();
       }
 
+      // Input mode detection
+      function detectInputMode(type) {
+        if (type === 'keyboard') {
+          if (inputMode !== 'keyboard') {
+            inputMode = 'keyboard';
+            updateControlInstructions();
+          }
+        } else if (type === 'touch') {
+          if (inputMode !== 'touch') {
+            inputMode = 'touch';
+            updateControlInstructions();
+          }
+        } else if (type === 'mouse') {
+          if (inputMode === 'keyboard') {
+            inputMode = 'mixed';
+            updateControlInstructions();
+          }
+        }
+      }
+
+      // Update control instructions based on input mode
+      function updateControlInstructions() {
+        const instructions = document.querySelector('.instructions');
+        if (inputMode === 'keyboard') {
+          instructions.innerHTML = 'Use Arrow Keys/WASD to move, Space to shoot';
+        } else if (inputMode === 'touch') {
+          instructions.innerHTML = 'Use buttons to move and shoot<br>Or touch/drag on game area';
+        } else {
+          instructions.innerHTML = 'Use arrows/WASD to move, Space to shoot<br>Or use mouse/touch controls';
+        }
+      }
+
+      // Keyboard event handlers
+      function handleKeyDown(e) {
+        if (gameIsOver) return;
+
+        detectInputMode('keyboard');
+
+        switch(e.key) {
+          case 'ArrowLeft':
+          case 'a':
+          case 'A':
+            e.preventDefault();
+            isKeyboardLeft = true;
+            break;
+          case 'ArrowRight':
+          case 'd':
+          case 'D':
+            e.preventDefault();
+            isKeyboardRight = true;
+            break;
+          case ' ':
+          case 'Enter':
+            e.preventDefault();
+            shoot();
+            break;
+        }
+      }
+
+      function handleKeyUp(e) {
+        switch(e.key) {
+          case 'ArrowLeft':
+          case 'a':
+          case 'A':
+            isKeyboardLeft = false;
+            break;
+          case 'ArrowRight':
+          case 'd':
+          case 'D':
+            isKeyboardRight = false;
+            break;
+        }
+      }
+
       // Mouse/Touch movement handler
       function handleMove(e) {
-        if (!gameIsOver) {
-          const clientX = e.type.includes("touch")
-            ? e.touches[0].clientX
-            : e.clientX;
+        if (gameIsOver) return;
+
+        const isTouch = e.type.includes("touch");
+        if (isTouch) {
+          detectInputMode('touch');
+        } else {
+          detectInputMode('mouse');
+        }
+
+        // Only use mouse/touch movement if keyboard is not active
+        if (!isKeyboardLeft && !isKeyboardRight) {
+          const clientX = isTouch ? e.touches[0].clientX : e.clientX;
           const scaledX = getScaledPosition(clientX);
           player.x = Math.max(20, Math.min(viewBox.width - 20, scaledX));
         }
@@ -474,18 +591,35 @@
 
       // Mouse/Touch shoot handler
       function handleShoot(e) {
-        if (!gameIsOver) {
-          e.preventDefault();
-          shoot();
+        if (gameIsOver) return;
+
+        const isTouch = e.type.includes("touch");
+        if (isTouch) {
+          detectInputMode('touch');
+        } else {
+          detectInputMode('mouse');
         }
+
+        e.preventDefault();
+        shoot();
       }
 
       // Mobile Control Button Events
+      function addVisualFeedback(button, isPressed) {
+        if (isPressed) {
+          button.classList.add('pressed');
+        } else {
+          button.classList.remove('pressed');
+        }
+      }
+
       leftButton.addEventListener(
         "touchstart",
         (e) => {
           e.preventDefault();
           isLeftPressed = true;
+          addVisualFeedback(leftButton, true);
+          detectInputMode('touch');
         },
         { passive: false }
       );
@@ -494,6 +628,7 @@
         (e) => {
           e.preventDefault();
           isLeftPressed = false;
+          addVisualFeedback(leftButton, false);
         },
         { passive: false }
       );
@@ -502,6 +637,7 @@
         (e) => {
           e.preventDefault();
           isLeftPressed = false;
+          addVisualFeedback(leftButton, false);
         },
         { passive: false }
       );
@@ -511,6 +647,8 @@
         (e) => {
           e.preventDefault();
           isRightPressed = true;
+          addVisualFeedback(rightButton, true);
+          detectInputMode('touch');
         },
         { passive: false }
       );
@@ -519,6 +657,7 @@
         (e) => {
           e.preventDefault();
           isRightPressed = false;
+          addVisualFeedback(rightButton, false);
         },
         { passive: false }
       );
@@ -527,6 +666,7 @@
         (e) => {
           e.preventDefault();
           isRightPressed = false;
+          addVisualFeedback(rightButton, false);
         },
         { passive: false }
       );
@@ -536,9 +676,34 @@
         (e) => {
           e.preventDefault();
           shoot();
+          addVisualFeedback(shootButton, true);
+          detectInputMode('touch');
         },
         { passive: false }
       );
+      shootButton.addEventListener(
+        "touchend",
+        (e) => {
+          e.preventDefault();
+          addVisualFeedback(shootButton, false);
+        },
+        { passive: false }
+      );
+      shootButton.addEventListener(
+        "touchcancel",
+        (e) => {
+          e.preventDefault();
+          addVisualFeedback(shootButton, false);
+        },
+        { passive: false }
+      );
+
+      // Haptic feedback function
+      function triggerHaptic() {
+        if ('vibrate' in navigator) {
+          navigator.vibrate(10);
+        }
+      }
 
       // Add pointer events for better touch support
       leftButton.addEventListener(
@@ -546,6 +711,9 @@
         (e) => {
           e.preventDefault();
           isLeftPressed = true;
+          addVisualFeedback(leftButton, true);
+          detectInputMode('touch');
+          triggerHaptic();
         },
         { passive: false }
       );
@@ -554,6 +722,7 @@
         (e) => {
           e.preventDefault();
           isLeftPressed = false;
+          addVisualFeedback(leftButton, false);
         },
         { passive: false }
       );
@@ -562,6 +731,7 @@
         (e) => {
           e.preventDefault();
           isLeftPressed = false;
+          addVisualFeedback(leftButton, false);
         },
         { passive: false }
       );
@@ -571,6 +741,9 @@
         (e) => {
           e.preventDefault();
           isRightPressed = true;
+          addVisualFeedback(rightButton, true);
+          detectInputMode('touch');
+          triggerHaptic();
         },
         { passive: false }
       );
@@ -579,6 +752,7 @@
         (e) => {
           e.preventDefault();
           isRightPressed = false;
+          addVisualFeedback(rightButton, false);
         },
         { passive: false }
       );
@@ -587,6 +761,7 @@
         (e) => {
           e.preventDefault();
           isRightPressed = false;
+          addVisualFeedback(rightButton, false);
         },
         { passive: false }
       );
@@ -596,16 +771,49 @@
         (e) => {
           e.preventDefault();
           shoot();
+          addVisualFeedback(shootButton, true);
+          detectInputMode('touch');
+          triggerHaptic();
+        },
+        { passive: false }
+      );
+      shootButton.addEventListener(
+        "pointerup",
+        (e) => {
+          e.preventDefault();
+          addVisualFeedback(shootButton, false);
+        },
+        { passive: false }
+      );
+      shootButton.addEventListener(
+        "pointercancel",
+        (e) => {
+          e.preventDefault();
+          addVisualFeedback(shootButton, false);
         },
         { passive: false }
       );
 
-      // Event Listeners
+      // Keyboard Event Listeners
+      document.addEventListener("keydown", handleKeyDown);
+      document.addEventListener("keyup", handleKeyUp);
+
+      // Mouse/Touch Event Listeners
       svg.addEventListener("mousemove", handleMove);
-      svg.addEventListener("touchmove", handleMove);
-      svg.addEventListener("touchstart", handleMove);
+      svg.addEventListener("touchmove", (e) => {
+        // Only handle touch if it starts on the SVG, not on buttons
+        if (e.target === svg) {
+          handleMove(e);
+        }
+      });
+      svg.addEventListener("touchstart", (e) => {
+        // Only handle touch if it starts on the SVG, not on buttons
+        if (e.target === svg) {
+          handleMove(e);
+          handleShoot(e);
+        }
+      });
       svg.addEventListener("mousedown", handleShoot);
-      svg.addEventListener("touchstart", handleShoot);
       restartButton.addEventListener("click", initGame);
       restartButton.addEventListener("touchstart", (e) => {
         e.preventDefault();
@@ -624,6 +832,9 @@
 
       // Initial game start
       initGame();
+
+      // Initialize control instructions
+      updateControlInstructions();
     </script>
 
     <!-- KidsGames PWA Service Worker -->

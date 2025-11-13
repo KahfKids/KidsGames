@@ -1,0 +1,2368 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Science Quiz Adventure!</title>
+    <!-- Tailwind CSS CDN for easy styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      /* Custom font for a more friendly look */
+      @import url("https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap");
+
+      /* CSS Variables for consistent theming */
+      :root {
+        --primary: #8b5cf6; /* Purple */
+        --secondary: #f59e0b; /* Amber */
+        --success: #10b981; /* Emerald */
+        --danger: #ef4444; /* Rose */
+        --warning: #f59e0b; /* Amber */
+        --info: #3b82f6; /* Blue */
+        --dark: #1f2937; /* Gray-800 */
+        --light: #fef3c7; /* Amber-100 */
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Nunito", sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        overflow-x: hidden;
+        position: relative;
+        margin: 0;
+        padding: 0;
+      }
+
+      /* Floating background elements */
+      .bg-decoration {
+        position: fixed;
+        border-radius: 50%;
+        pointer-events: none;
+        opacity: 0.1;
+        animation: float 20s infinite ease-in-out;
+      }
+
+      .bg-decoration:nth-child(1) {
+        width: 200px;
+        height: 200px;
+        background: var(--secondary);
+        top: 10%;
+        left: 10%;
+        animation-delay: 0s;
+      }
+
+      .bg-decoration:nth-child(2) {
+        width: 150px;
+        height: 150px;
+        background: var(--info);
+        top: 60%;
+        right: 10%;
+        animation-delay: 5s;
+      }
+
+      .bg-decoration:nth-child(3) {
+        width: 100px;
+        height: 100px;
+        background: var(--success);
+        bottom: 20%;
+        left: 20%;
+        animation-delay: 10s;
+      }
+
+      @keyframes float {
+        0%, 100% {
+          transform: translateY(0px) rotate(0deg);
+        }
+        33% {
+          transform: translateY(-20px) rotate(120deg);
+        }
+        66% {
+          transform: translateY(10px) rotate(240deg);
+        }
+      }
+
+      /* Main quiz container - fully responsive */
+      .quiz-container {
+        width: 95%;
+        max-width: 500px;
+        margin: 2vh auto;
+        background: linear-gradient(135deg, #ffffff 0%, #fef3c7 100%);
+        border-radius: 2rem;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        padding: clamp(1rem, 4vw, 1.5rem);
+        border: 3px solid var(--primary);
+        overflow: visible;
+      }
+
+      /* Safe area support for mobile devices */
+      @supports (padding: max(0px)) {
+        .quiz-container {
+          padding-left: max(1rem, env(safe-area-inset-left));
+          padding-right: max(1rem, env(safe-area-inset-right));
+        }
+      }
+
+      /* Header section with responsive layout */
+      .quiz-header {
+        text-align: center;
+        margin-bottom: 1rem;
+        position: relative;
+      }
+
+      .quiz-title {
+        font-size: clamp(1.5rem, 8vw, 2.5rem);
+        font-weight: 800;
+        color: var(--primary);
+        margin-bottom: 0.5rem;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        line-height: 1.2;
+      }
+
+      /* Stats bar - responsive layout */
+      .quiz-stats {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+      }
+
+      .stat-item {
+        background: rgba(255, 255, 255, 0.9);
+        padding: 0.5rem 1rem;
+        border-radius: 2rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 600;
+        font-size: clamp(0.875rem, 3vw, 1rem);
+      }
+
+      /* Question section */
+      .question-section {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .question-display {
+        background: linear-gradient(135deg, var(--info) 0%, var(--primary) 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 1.5rem;
+        font-size: clamp(1rem, 5vw, 1.25rem);
+        font-weight: 600;
+        text-align: center;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+        min-height: 4rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .question-display::before {
+        content: "";
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+        animation: shimmer 3s infinite;
+      }
+
+      @keyframes shimmer {
+        0% {
+          transform: translateX(-100%) translateY(-100%) rotate(45deg);
+        }
+        100% {
+          transform: translateX(100%) translateY(100%) rotate(45deg);
+        }
+      }
+
+      /* Answer buttons - touch friendly */
+      .answers-container {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+        width: 100%;
+      }
+
+      @media (min-width: 480px) {
+        .answers-container {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+
+      .answer-button {
+        background: linear-gradient(135deg, #ffffff 0%, #f3f4f6 100%);
+        border: 3px solid var(--primary);
+        color: var(--dark);
+        padding: 1rem 0.75rem;
+        border-radius: 1rem;
+        font-size: clamp(0.875rem, 4vw, 1rem);
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        min-height: 3.5rem; /* Touch friendly */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+        user-select: none;
+        -webkit-tap-highlight-color: transparent;
+        word-wrap: break-word;
+        word-break: break-word;
+        white-space: normal;
+        line-height: 1.3;
+        text-align: center;
+      }
+
+      .answer-button::before {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        background: rgba(139, 92, 246, 0.3);
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        transition: width 0.6s, height 0.6s;
+      }
+
+      .answer-button:hover::before,
+      .answer-button:focus::before {
+        width: 300px;
+        height: 300px;
+      }
+
+      .answer-button:hover,
+      .answer-button:focus {
+        transform: translateY(-4px) scale(1.02);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15);
+        background: linear-gradient(135deg, var(--light) 0%, #ffffff 100%);
+      }
+
+      .answer-button:active {
+        transform: translateY(-2px) scale(1.01);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      }
+
+      .answer-button.correct {
+        background: linear-gradient(135deg, var(--success) 0%, #34d399 100%);
+        border-color: var(--success);
+        color: white;
+        transform: scale(1.05);
+        animation: correct-pulse 0.8s ease-out;
+        box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+      }
+
+      .answer-button.incorrect {
+        background: linear-gradient(135deg, var(--danger) 0%, #f87171 100%);
+        border-color: var(--danger);
+        color: white;
+        animation: incorrect-shake 0.6s ease-out;
+      }
+
+      @keyframes correct-pulse {
+        0% {
+          transform: scale(1);
+        }
+        25% {
+          transform: scale(1.1);
+        }
+        50% {
+          transform: scale(0.95);
+        }
+        75% {
+          transform: scale(1.05);
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
+
+      @keyframes incorrect-shake {
+        0%, 100% {
+          transform: translateX(0);
+        }
+        10%, 30%, 50%, 70%, 90% {
+          transform: translateX(-8px);
+        }
+        20%, 40%, 60%, 80% {
+          transform: translateX(8px);
+        }
+      }
+
+      /* Progress bar */
+      .progress-bar {
+        width: 100%;
+        height: 8px;
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 4px;
+        margin: 1rem 0;
+        overflow: hidden;
+        position: relative;
+      }
+
+      .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, var(--secondary) 0%, var(--primary) 100%);
+        border-radius: 4px;
+        transition: width 0.5s ease-out;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .progress-fill::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+        animation: progress-shimmer 2s infinite;
+      }
+
+      @keyframes progress-shimmer {
+        0% {
+          transform: translateX(-100%);
+        }
+        100% {
+          transform: translateX(100%);
+        }
+      }
+
+      /* Feedback section */
+      .feedback-container {
+        min-height: 3rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 1rem 0;
+        position: relative;
+      }
+
+      .feedback-message {
+        font-size: clamp(1rem, 4vw, 1.25rem);
+        font-weight: 700;
+        text-align: center;
+        animation: feedback-appear 0.5s ease-out;
+      }
+
+      @keyframes feedback-appear {
+        from {
+          opacity: 0;
+          transform: scale(0.8) translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1) translateY(0);
+        }
+      }
+
+      /* Footer section */
+      .quiz-footer {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+        margin-top: 1rem;
+        border-top: 2px solid rgba(139, 92, 246, 0.2);
+        padding-top: 1rem;
+      }
+
+      .score-display {
+        background: linear-gradient(135deg, var(--secondary) 0%, var(--warning) 100%);
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 2rem;
+        font-size: clamp(1rem, 4vw, 1.25rem);
+        font-weight: 700;
+        box-shadow: 0 10px 25px -5px rgba(245, 158, 11, 0.3);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      /* Control buttons */
+      .control-buttons {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+
+      .control-button {
+        background: var(--primary);
+        color: white;
+        padding: 0.75rem 1.25rem;
+        border-radius: 1.5rem;
+        font-size: clamp(0.875rem, 3vw, 1rem);
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        min-height: 2.5rem;
+      }
+
+      .control-button:hover,
+      .control-button:focus {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px -5px rgba(139, 92, 246, 0.3);
+        background: #7c3aed;
+      }
+
+      .control-button:active {
+        transform: translateY(0);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      }
+
+      /* Start screen */
+      .start-screen {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(254, 243, 199, 0.95) 100%);
+        border: 3px solid var(--primary);
+        border-radius: 2rem;
+        padding: 2rem;
+        text-align: center;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        max-width: 90vw;
+        width: 500px;
+        max-height: 90vh;
+        overflow-y: auto;
+      }
+
+      .start-title {
+        font-size: clamp(2rem, 8vw, 3rem);
+        font-weight: 800;
+        color: var(--primary);
+        margin-bottom: 1rem;
+        animation: title-bounce 2s ease-in-out infinite;
+      }
+
+      @keyframes title-bounce {
+        0%, 100% {
+          transform: translateY(0) scale(1);
+        }
+        50% {
+          transform: translateY(-10px) scale(1.05);
+        }
+      }
+
+      .start-description {
+        font-size: clamp(1rem, 4vw, 1.25rem);
+        color: var(--dark);
+        margin-bottom: 2rem;
+        line-height: 1.6;
+      }
+
+      .start-button {
+        background: linear-gradient(135deg, var(--primary) 0%, #7c3aed 100%);
+        color: white;
+        padding: 1rem 2rem;
+        border-radius: 2rem;
+        font-size: clamp(1.125rem, 4vw, 1.5rem);
+        font-weight: 700;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 10px 25px -5px rgba(139, 92, 246, 0.3);
+        min-height: 3.5rem;
+        animation: start-pulse 2s ease-in-out infinite;
+      }
+
+      @keyframes start-pulse {
+        0%, 100% {
+          transform: scale(1);
+          box-shadow: 0 10px 25px -5px rgba(139, 92, 246, 0.3);
+        }
+        50% {
+          transform: scale(1.05);
+          box-shadow: 0 20px 40px -5px rgba(139, 92, 246, 0.4);
+        }
+      }
+
+      .start-button:hover,
+      .start-button:focus {
+        transform: translateY(-4px) scale(1.1);
+        box-shadow: 0 20px 40px -5px rgba(139, 92, 246, 0.4);
+      }
+
+      .start-button:active {
+        transform: translateY(-2px) scale(1.05);
+      }
+
+      /* Streak indicator */
+      .streak-indicator {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: linear-gradient(135deg, var(--warning) 0%, var(--secondary) 100%);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 2rem;
+        font-weight: 700;
+        box-shadow: 0 10px 25px -5px rgba(245, 158, 11, 0.4);
+        display: none;
+        z-index: 100;
+        animation: streak-appear 0.5s ease-out;
+      }
+
+      .streak-indicator.active {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      @keyframes streak-appear {
+        from {
+          opacity: 0;
+          transform: scale(0) rotate(180deg);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1) rotate(0deg);
+        }
+      }
+
+      /* Confetti animation */
+      .confetti {
+        position: fixed;
+        width: 10px;
+        height: 10px;
+        background: var(--secondary);
+        position: absolute;
+        animation: confetti-fall 3s ease-out forwards;
+      }
+
+      @keyframes confetti-fall {
+        0% {
+          transform: translateY(-100vh) rotate(0deg);
+          opacity: 1;
+        }
+        100% {
+          transform: translateY(100vh) rotate(720deg);
+          opacity: 0;
+        }
+      }
+
+      /* Responsive adjustments */
+      @media (max-width: 480px) {
+        body {
+          overflow-y: auto;
+        }
+
+        .quiz-container {
+          width: 98%;
+          max-height: 95vh;
+          margin: 1vh 1vw;
+          padding: clamp(0.75rem, 3vw, 1rem);
+          overflow-y: auto;
+          overflow-x: hidden;
+        }
+
+        .answer-button {
+          font-size: clamp(0.8rem, 3.5vw, 0.95rem);
+          padding: 0.8rem 0.6rem;
+          min-height: 3rem;
+          line-height: 1.2;
+        }
+
+        .quiz-header {
+          margin-bottom: 0.75rem;
+        }
+
+        .quiz-title {
+          font-size: clamp(1.25rem, 6vw, 2rem);
+          margin-bottom: 0.25rem;
+        }
+
+        .quiz-stats {
+          justify-content: center;
+          gap: 0.5rem;
+          margin-bottom: 0.75rem;
+        }
+
+        .stat-item {
+          padding: 0.3rem 0.6rem;
+          font-size: 0.75rem;
+          gap: 0.25rem;
+        }
+
+        .progress-bar {
+          margin: 0.5rem 0;
+          height: 6px;
+        }
+
+        .question-display {
+          min-height: 3rem;
+          padding: 1rem;
+          font-size: clamp(0.9rem, 4vw, 1.1rem);
+        }
+
+        .answer-button {
+          min-height: 2.8rem;
+          padding: 0.75rem;
+          font-size: clamp(0.8rem, 3.5vw, 0.95rem);
+        }
+
+        .feedback-container {
+          min-height: 2rem;
+          margin: 0.5rem 0;
+        }
+
+        .quiz-footer {
+          margin-top: 0.5rem;
+          padding-top: 0.5rem;
+          gap: 0.5rem;
+        }
+
+        .score-display {
+          padding: 0.5rem 1rem;
+          font-size: clamp(0.9rem, 3.5vw, 1.1rem);
+        }
+
+        .control-button {
+          padding: 0.5rem 1rem;
+          font-size: clamp(0.75rem, 3vw, 0.9rem);
+          min-height: 2rem;
+        }
+      }
+
+      @media (max-height: 600px) {
+        body {
+          min-height: 100vh;
+          overflow-y: auto;
+        }
+
+        .quiz-container {
+          max-height: 98vh;
+          margin: 1vh auto;
+          padding: clamp(0.5rem, 2vw, 0.75rem);
+          overflow-y: auto;
+          overflow-x: hidden;
+        }
+
+        .quiz-title {
+          font-size: clamp(1.1rem, 5vw, 1.5rem);
+          margin-bottom: 0.25rem;
+        }
+
+        .quiz-header {
+          margin-bottom: 0.5rem;
+        }
+
+        .quiz-stats {
+          margin-bottom: 0.5rem;
+          gap: 0.25rem;
+        }
+
+        .stat-item {
+          padding: 0.25rem 0.5rem;
+          font-size: 0.7rem;
+        }
+
+        .progress-bar {
+          margin: 0.25rem 0;
+          height: 4px;
+        }
+
+        .question-display {
+          min-height: 2.5rem;
+          padding: 0.75rem;
+          font-size: clamp(0.8rem, 3.5vw, 1rem);
+        }
+
+        .answer-button {
+          min-height: 2.2rem;
+          padding: 0.5rem;
+          font-size: clamp(0.75rem, 3vw, 0.9rem);
+        }
+
+        .feedback-container {
+          min-height: 1.5rem;
+          margin: 0.25rem 0;
+        }
+
+        .quiz-footer {
+          margin-top: 0.25rem;
+          padding-top: 0.25rem;
+          gap: 0.25rem;
+        }
+
+        .score-display {
+          padding: 0.4rem 0.8rem;
+          font-size: clamp(0.8rem, 3vw, 1rem);
+        }
+
+        .control-button {
+          padding: 0.4rem 0.8rem;
+          font-size: clamp(0.7rem, 2.5vw, 0.85rem);
+          min-height: 1.8rem;
+        }
+      }
+
+      /* Landscape mode adjustments */
+      @media (orientation: landscape) and (max-height: 500px) {
+        body {
+          overflow-y: auto;
+        }
+
+        .quiz-container {
+          max-height: 99vh;
+          margin: 0.5vh auto;
+          padding: clamp(0.5rem, 2vw, 0.75rem);
+          overflow-y: auto;
+          overflow-x: hidden;
+        }
+
+        .quiz-title {
+          font-size: clamp(1rem, 4vw, 1.5rem);
+          margin-bottom: 0.125rem;
+        }
+
+        .quiz-header {
+          margin-bottom: 0.25rem;
+        }
+
+        .quiz-stats {
+          margin-bottom: 0.25rem;
+          gap: 0.25rem;
+        }
+
+        .stat-item {
+          padding: 0.2rem 0.4rem;
+          font-size: 0.65rem;
+        }
+
+        .progress-bar {
+          margin: 0.125rem 0;
+          height: 3px;
+        }
+
+        .question-display {
+          min-height: 2rem;
+          padding: 0.5rem;
+          font-size: clamp(0.75rem, 3vw, 0.9rem);
+        }
+
+        .answer-button {
+          min-height: 2rem;
+          padding: 0.4rem;
+          font-size: clamp(0.7rem, 2.5vw, 0.85rem);
+        }
+
+        .feedback-container {
+          min-height: 1.25rem;
+          margin: 0.125rem 0;
+        }
+
+        .quiz-footer {
+          margin-top: 0.125rem;
+          padding-top: 0.125rem;
+          gap: 0.125rem;
+        }
+
+        .score-display {
+          padding: 0.3rem 0.6rem;
+          font-size: clamp(0.75rem, 3vw, 0.9rem);
+        }
+
+        .control-button {
+          padding: 0.3rem 0.6rem;
+          font-size: clamp(0.65rem, 2.5vw, 0.8rem);
+          min-height: 1.6rem;
+        }
+      }
+
+      /* Start screen mobile responsiveness */
+      @media (max-width: 480px) {
+        .start-screen {
+          width: 95vw;
+          max-width: none;
+          padding: clamp(1rem, 4vw, 1.5rem);
+          margin: clamp(0.5rem, 2vw, 1rem);
+        }
+
+        .start-title {
+          font-size: clamp(1.5rem, 7vw, 2.5rem);
+          margin-bottom: clamp(0.5rem, 2vw, 1rem);
+        }
+
+        .start-description {
+          font-size: clamp(0.9rem, 4vw, 1.1rem);
+          margin-bottom: clamp(1rem, 3vw, 1.5rem);
+          line-height: 1.5;
+        }
+
+        .start-button {
+          padding: clamp(0.75rem, 3vw, 1rem) clamp(1.5rem, 5vw, 2rem);
+          font-size: clamp(1rem, 4vw, 1.25rem);
+          min-height: 3rem;
+        }
+      }
+
+      @media (max-height: 600px) {
+        .start-screen {
+          padding: clamp(0.75rem, 3vw, 1.25rem);
+          max-height: 90vh;
+        }
+
+        .start-title {
+          font-size: clamp(1.25rem, 6vw, 2rem);
+          margin-bottom: clamp(0.375rem, 1.5vw, 0.75rem);
+        }
+
+        .start-description {
+          font-size: clamp(0.85rem, 3.5vw, 1rem);
+          margin-bottom: clamp(0.75rem, 2.5vw, 1.25rem);
+        }
+
+        .start-button {
+          padding: clamp(0.5rem, 2vw, 0.75rem) clamp(1.25rem, 4vw, 1.5rem);
+          font-size: clamp(0.9rem, 3.5vw, 1.1rem);
+          min-height: 2.5rem;
+        }
+      }
+
+      /* Accessibility improvements */
+      .visually-hidden {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+
+      /* Focus indicators */
+      *:focus-visible {
+        outline: 3px solid var(--primary);
+        outline-offset: 2px;
+      }
+
+      /* Smooth scrolling */
+      html {
+        scroll-behavior: smooth;
+      }
+
+      /* Prevent text selection on mobile */
+      .no-select {
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+      }
+    </style>
+  </head>
+  <body
+    class="flex items-center justify-center min-h-screen p-2 md:p-4 overflow-hidden"
+  >
+    <!-- Floating background decorations -->
+    <div class="bg-decoration"></div>
+    <div class="bg-decoration"></div>
+    <div class="bg-decoration"></div>
+
+    <!-- Streak indicator (hidden by default) -->
+    <div id="streak-indicator" class="streak-indicator">
+      <span>🔥</span>
+      <span id="streak-count">0</span>
+      <span>Streak!</span>
+    </div>
+
+    <!-- Welcome/Start Screen -->
+    <div
+      id="start-screen"
+      class="fixed inset-0 flex items-center justify-center z-10"
+    >
+      <div class="start-screen">
+        <div class="start-screen-content">
+        <div class="start-title">
+          🧪 Science Quiz Adventure! 🧪
+        </div>
+        <p class="start-description">
+          Get ready for an exciting journey through the world of science!
+          Test your knowledge with fun questions about biology, chemistry, physics, and more.
+          Can you become a Science Champion? 🏆
+        </p>
+        <button
+          id="start-button"
+          class="start-button"
+        >
+          Start Adventure!
+        </button>
+      </div>
+      </div>
+    </div>
+
+    <!-- Main Quiz Container (initially hidden) -->
+    <div
+      id="quiz-game-container"
+      class="fixed inset-0 flex items-center justify-center z-10 hidden"
+      role="main"
+      aria-label="Science Quiz Game"
+    >
+      <div class="quiz-container no-select">
+      <!-- Header with title and stats -->
+      <header class="quiz-header">
+        <h1 class="quiz-title">
+          🧪 Science Quiz 🚀
+        </h1>
+
+        <!-- Stats bar -->
+        <div class="quiz-stats">
+          <div class="stat-item" id="lives-display" aria-label="Lives remaining">
+            <span>❤️</span>
+            <span id="lives-text">3 Lives</span>
+          </div>
+
+          <div class="stat-item" id="timer-display" aria-label="Time remaining">
+            <span>⏰</span>
+            <span id="timer-text">50s</span>
+          </div>
+
+          <div class="stat-item" id="question-counter" aria-label="Question progress">
+            <span>📝</span>
+            <span id="question-text">Q 1/10</span>
+          </div>
+        </div>
+
+        <!-- Progress bar -->
+        <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+          <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+        </div>
+      </header>
+
+      <!-- Question section -->
+      <section class="question-section">
+        <!-- Question display -->
+        <div
+          id="question-display"
+          class="question-display"
+          role="region"
+          aria-label="Question"
+        >
+          Loading amazing science question...
+        </div>
+
+        <!-- Answer buttons -->
+        <div
+          id="answer-buttons"
+          class="answers-container"
+          role="group"
+          aria-label="Answer choices"
+        >
+          <!-- Buttons will be dynamically added here by JavaScript -->
+        </div>
+
+        <!-- Feedback container -->
+        <div class="feedback-container" role="status" aria-live="polite">
+          <div id="feedback-message" class="feedback-message"></div>
+        </div>
+      </section>
+
+      <!-- Footer with score and controls -->
+      <footer class="quiz-footer">
+        <!-- Score display -->
+        <div class="score-display" id="score-display" aria-label="Current score">
+          <span>⭐</span>
+          <span id="score-text">Score: 0</span>
+        </div>
+
+        <!-- Control buttons -->
+        <div class="control-buttons">
+          <button
+            id="reset-button"
+            class="control-button"
+            onclick="resetGame()"
+            aria-label="Reset game"
+          >
+            🔄 Reset
+          </button>
+
+          <button
+            id="sound-toggle-button"
+            class="control-button"
+            onclick="toggleSound()"
+            aria-label="Toggle sound effects"
+          >
+            🔊 Sound On
+          </button>
+        </div>
+
+        <!-- Play Again button (initially hidden) -->
+        <button
+          id="play-again-button"
+          class="control-button hidden"
+          onclick="resetGame()"
+          aria-label="Play again"
+        >
+          🎮 Play Again!
+        </button>
+      </footer>
+    </div>
+    </div>
+
+    <script>
+      // Game configuration
+      const GAME_CONFIG = {
+        INITIAL_LIVES: 3,
+        INITIAL_TIMER_SECONDS: 50,
+        STREAK_BONUS_MULTIPLIER: 1.5,
+        QUICK_ANSWER_BONUS_SECONDS: 30,
+        CONFETTI_COLORS: ['#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ef4444'],
+        MAX_STREAK_DISPLAY: 10,
+        PROGRESS_BAR_ANIMATION_DURATION: 500,
+        FEEDBACK_DURATION: 2000,
+        BUTTON_CLICK_FEEDBACK_DURATION: 300
+      };
+
+      // Array of quiz questions (expanded to a significant number of unique questions)
+      const allQuestions = [
+        // Biology
+        {
+          question: "What is the largest organ in the human body?",
+          options: ["Heart", "Brain", "Skin", "Liver"],
+          answer: 2,
+        },
+        {
+          question: "Which gas do plants absorb from the atmosphere?",
+          options: ["Oxygen", "Nitrogen", "Carbon Dioxide", "Hydrogen"],
+          answer: 2,
+        },
+        {
+          question: "What is the process by which plants make their own food?",
+          options: [
+            "Respiration",
+            "Digestion",
+            "Photosynthesis",
+            "Germination",
+          ],
+          answer: 2,
+        },
+        {
+          question: "Which animal lays eggs?",
+          options: ["Dog", "Cat", "Chicken", "Cow"],
+          answer: 2,
+        },
+        {
+          question: "What do bees make?",
+          options: ["Bread", "Milk", "Honey", "Cheese"],
+          answer: 2,
+        },
+        {
+          question: "What are the tiny building blocks of life?",
+          options: ["Atoms", "Molecules", "Cells", "Organs"],
+          answer: 2,
+        },
+        {
+          question: "Which animal undergoes metamorphosis?",
+          options: ["Fish", "Bird", "Butterfly", "Dog"],
+          answer: 2,
+        },
+        {
+          question: "What is the main function of the heart?",
+          options: ["Breathing", "Pumping blood", "Digesting food", "Thinking"],
+          answer: 1,
+        },
+        {
+          question: "Which type of animal eats only plants?",
+          options: ["Carnivore", "Omnivore", "Herbivore", "Insectivore"],
+          answer: 2,
+        },
+        {
+          question: "What part of the brain controls balance and coordination?",
+          options: ["Cerebrum", "Cerebellum", "Brainstem", "Thalamus"],
+          answer: 1,
+        },
+        {
+          question: "What do you call a group of fish?",
+          options: ["Herd", "Flock", "School", "Pack"],
+          answer: 2,
+        },
+        {
+          question: "Which animal is known for its long neck?",
+          options: ["Elephant", "Giraffe", "Tiger", "Bear"],
+          answer: 1,
+        },
+        {
+          question: "What is the outer covering of a tree called?",
+          options: ["Leaf", "Wood", "Bark", "Branch"],
+          answer: 2,
+        },
+        {
+          question: "Which gas do humans breathe out?",
+          options: ["Oxygen", "Nitrogen", "Carbon Dioxide", "Hydrogen"],
+          answer: 2,
+        },
+        {
+          question: "What is the process of a seed growing into a plant?",
+          options: [
+            "Pollination",
+            "Germination",
+            "Fertilization",
+            "Photosynthesis",
+          ],
+          answer: 1,
+        },
+        {
+          question:
+            "Which animal can change its color to blend in with its surroundings?",
+          options: ["Lion", "Chameleon", "Bear", "Penguin"],
+          answer: 1,
+        },
+        {
+          question:
+            "What is the sweet liquid produced by flowers to attract pollinators?",
+          options: ["Sap", "Nectar", "Pollen", "Dew"],
+          answer: 1,
+        },
+        {
+          question: "What are animals that eat both plants and animals called?",
+          options: ["Herbivores", "Carnivores", "Omnivores", "Detritivores"],
+          answer: 2,
+        },
+        {
+          question:
+            "Which part of a plant absorbs water and nutrients from the soil?",
+          options: ["Leaf", "Flower", "Stem", "Root"],
+          answer: 3,
+        },
+        {
+          question: "What kind of animal is a bat?",
+          options: ["Bird", "Insect", "Mammal", "Reptile"],
+          answer: 2,
+        },
+
+        // Chemistry
+        {
+          question: "What is water made of?",
+          options: [
+            "Oxygen and Nitrogen",
+            "Hydrogen and Oxygen",
+            "Carbon and Oxygen",
+            "Sodium and Chlorine",
+          ],
+          answer: 1,
+        },
+        {
+          question: "What is the gas we breathe to live?",
+          options: ["Nitrogen", "Oxygen", "Carbon Dioxide", "Argon"],
+          answer: 1,
+        },
+        {
+          question: "What is the smallest unit of matter?",
+          options: ["Cell", "Molecule", "Atom", "Proton"],
+          answer: 2,
+        },
+        {
+          question: "What makes ice melt?",
+          options: ["Cold", "Heat", "Wind", "Darkness"],
+          answer: 1,
+        },
+        {
+          question: "What is solid water called?",
+          options: ["Steam", "Rain", "Ice", "Dew"],
+          answer: 2,
+        },
+        {
+          question: "What is the common name for NaCl?",
+          options: ["Sugar", "Baking Soda", "Table Salt", "Vinegar"],
+          answer: 2,
+        },
+        {
+          question: "Which element is the most abundant in Earth's atmosphere?",
+          options: ["Oxygen", "Carbon Dioxide", "Nitrogen", "Argon"],
+          answer: 2,
+        },
+        {
+          question: "What happens when you mix baking soda and vinegar?",
+          options: ["It gets cold", "It explodes", "It bubbles", "It freezes"],
+          answer: 2,
+        },
+        {
+          question:
+            "What is a substance that cannot be broken down into simpler substances?",
+          options: ["Compound", "Mixture", "Element", "Molecule"],
+          answer: 2,
+        },
+        {
+          question:
+            "What is the process of a liquid turning into a gas called?",
+          options: ["Melting", "Freezing", "Condensation", "Evaporation"],
+          answer: 3,
+        },
+        {
+          question: "Which of these is a liquid at room temperature?",
+          options: ["Iron", "Gold", "Mercury", "Diamond"],
+          answer: 2,
+        },
+        {
+          question: "What is the main component of natural gas?",
+          options: ["Propane", "Butane", "Methane", "Ethane"],
+          answer: 2,
+        },
+        {
+          question: "What is the pH of pure water?",
+          options: ["0", "7", "14", "10"],
+          answer: 1,
+        },
+        {
+          question: "What gives leaves their green color?",
+          options: ["Chlorophyll", "Carotene", "Anthocyanin", "Xanthophyll"],
+          answer: 0,
+        },
+        {
+          question: "Which element is a noble gas?",
+          options: ["Oxygen", "Nitrogen", "Helium", "Chlorine"],
+          answer: 2,
+        },
+        {
+          question: "What is rust an example of?",
+          options: ["Combustion", "Oxidation", "Reduction", "Dissolving"],
+          answer: 1,
+        },
+        {
+          question: "What is the chemical symbol for gold?",
+          options: ["Go", "Gd", "Au", "Ag"],
+          answer: 2,
+        },
+        {
+          question:
+            "What is the process of a gas turning into a liquid called?",
+          options: ["Evaporation", "Sublimation", "Condensation", "Melting"],
+          answer: 2,
+        },
+        {
+          question: "Which of these is an acid?",
+          options: ["Baking Soda", "Soap", "Lemon Juice", "Water"],
+          answer: 2,
+        },
+        {
+          question: "What is the chemical name for laughing gas?",
+          options: [
+            "Nitric Oxide",
+            "Nitrous Oxide",
+            "Carbon Monoxide",
+            "Sulfur Dioxide",
+          ],
+          answer: 1,
+        },
+
+        // Physics
+        {
+          question: "What makes an apple fall from a tree?",
+          options: ["Wind", "Gravity", "Magic", "Birds"],
+          answer: 1,
+        },
+        {
+          question: "What do you call the energy of motion?",
+          options: [
+            "Potential energy",
+            "Thermal energy",
+            "Kinetic energy",
+            "Chemical energy",
+          ],
+          answer: 2,
+        },
+        {
+          question: "Which of these helps us see?",
+          options: ["Sound", "Light", "Heat", "Smell"],
+          answer: 1,
+        },
+        {
+          question: "What is sound made of?",
+          options: ["Light", "Waves", "Heat", "Air"],
+          answer: 1,
+        },
+        {
+          question: "What unit measures electric current?",
+          options: ["Volt", "Watt", "Ampere", "Ohm"],
+          answer: 2,
+        },
+        {
+          question: "What causes lightning during a storm?",
+          options: ["Rain", "Thunder", "Static electricity", "Wind"],
+          answer: 2,
+        },
+        {
+          question: "What is the force that opposes motion?",
+          options: ["Gravity", "Friction", "Magnetism", "Tension"],
+          answer: 1,
+        },
+        {
+          question: "Which color of light has the shortest wavelength?",
+          options: ["Red", "Green", "Blue", "Yellow"],
+          answer: 2,
+        },
+        {
+          question: "What does a thermometer measure?",
+          options: ["Weight", "Length", "Temperature", "Speed"],
+          answer: 2,
+        },
+        {
+          question: "What type of energy does a stretched rubber band have?",
+          options: ["Kinetic", "Thermal", "Potential", "Sound"],
+          answer: 2,
+        },
+        {
+          question: "What is the speed of light in a vacuum?",
+          options: ["300 m/s", "3000 km/s", "300,000 km/s", "3,000,000 km/s"],
+          answer: 2,
+        },
+        {
+          question: "What is the unit of force?",
+          options: ["Joule", "Watt", "Newton", "Pascal"],
+          answer: 2,
+        },
+        {
+          question: "Which simple machine is a sloping surface?",
+          options: ["Lever", "Pulley", "Wheel and Axle", "Inclined Plane"],
+          answer: 3,
+        },
+        {
+          question: "What causes an echo?",
+          options: [
+            "Refraction of sound",
+            "Absorption of sound",
+            "Reflection of sound",
+            "Diffraction of sound",
+          ],
+          answer: 2,
+        },
+        {
+          question: "Which type of current flows in one direction only?",
+          options: [
+            "Alternating Current",
+            "Direct Current",
+            "Static Current",
+            "Magnetic Current",
+          ],
+          answer: 1,
+        },
+        {
+          question:
+            "What is the phenomenon of light bending as it passes from one medium to another?",
+          options: ["Reflection", "Refraction", "Diffraction", "Interference"],
+          answer: 1,
+        },
+        {
+          question: "Which of these is a conductor of electricity?",
+          options: ["Wood", "Plastic", "Glass", "Copper"],
+          answer: 3,
+        },
+        {
+          question: "What is the unit of power?",
+          options: ["Joule", "Newton", "Volt", "Watt"],
+          answer: 3,
+        },
+        {
+          question:
+            "What is the measure of the average kinetic energy of the particles in a substance?",
+          options: ["Heat", "Temperature", "Energy", "Pressure"],
+          answer: 1,
+        },
+        {
+          question:
+            "Which force pulls objects towards the center of the Earth?",
+          options: ["Friction", "Magnetism", "Gravity", "Tension"],
+          answer: 2,
+        },
+
+        // Astronomy
+        {
+          question: "Which planet is closest to the Sun?",
+          options: ["Earth", "Mars", "Mercury", "Venus"],
+          answer: 2,
+        },
+        {
+          question: "What is the name of our galaxy?",
+          options: ["Andromeda", "Triangulum", "Milky Way", "Sombrero"],
+          answer: 2,
+        },
+        {
+          question: "How many planets are in our solar system?",
+          options: ["7", "8", "9", "10"],
+          answer: 1,
+        },
+        {
+          question:
+            "What do you call a huge ball of hot gas in space that gives off light?",
+          options: ["Planet", "Moon", "Star", "Comet"],
+          answer: 2,
+        },
+        {
+          question: "Which celestial body causes tides on Earth?",
+          options: ["Sun", "Mars", "Moon", "Jupiter"],
+          answer: 2,
+        },
+        {
+          question: "What is a large, dark area on the Moon's surface called?",
+          options: ["Crater", "Valley", "Maria", "Mountain"],
+          answer: 2,
+        },
+        {
+          question: "Which planet has a large red spot?",
+          options: ["Mars", "Saturn", "Jupiter", "Neptune"],
+          answer: 2,
+        },
+        {
+          question: "What are shooting stars?",
+          options: [
+            "Stars falling",
+            "Meteors burning up",
+            "Comets passing",
+            "Asteroids",
+          ],
+          answer: 1,
+        },
+        {
+          question: "Which planet is known for its beautiful rings?",
+          options: ["Mars", "Jupiter", "Saturn", "Uranus"],
+          answer: 2,
+        },
+        {
+          question:
+            "What is the term for a giant explosion that marks the death of a massive star?",
+          options: ["Nebula", "Black Hole", "Supernova", "Quasar"],
+          answer: 2,
+        },
+        {
+          question:
+            "What is the path an object takes around another object in space?",
+          options: ["Rotation", "Revolution", "Orbit", "Spin"],
+          answer: 2,
+        },
+        {
+          question: "Which is the hottest planet in our solar system?",
+          options: ["Mercury", "Earth", "Venus", "Mars"],
+          answer: 2,
+        },
+        {
+          question:
+            "What is a large collection of stars, gas, and dust held together by gravity?",
+          options: ["Solar System", "Nebula", "Galaxy", "Constellation"],
+          answer: 2,
+        },
+        {
+          question: "What causes the different phases of the Moon?",
+          options: [
+            "Earth's shadow",
+            "Moon's rotation",
+            "Sun's position",
+            "The amount of sunlight reflecting off its surface as it orbits Earth",
+          ],
+          answer: 3,
+        },
+        {
+          question: "Which instrument is used to see distant objects in space?",
+          options: ["Microscope", "Periscope", "Telescope", "Kaleidoscope"],
+          answer: 2,
+        },
+        {
+          question: "What are the four inner, rocky planets called?",
+          options: [
+            "Gas Giants",
+            "Ice Giants",
+            "Terrestrial Planets",
+            "Dwarf Planets",
+          ],
+          answer: 2,
+        },
+        {
+          question: "Which planet has the most moons?",
+          options: ["Mars", "Jupiter", "Saturn", "Uranus"],
+          answer: 2,
+        },
+        {
+          question:
+            "What is the name given to a small, icy body that orbits the Sun and develops a 'tail' as it approaches the Sun?",
+          options: ["Asteroid", "Meteoroid", "Comet", "Planetoid"],
+          answer: 2,
+        },
+        {
+          question:
+            "What is the boundary around a black hole beyond which nothing can escape?",
+          options: [
+            "Singularity",
+            "Event Horizon",
+            "Accretion Disk",
+            "Photon Sphere",
+          ],
+          answer: 1,
+        },
+        {
+          question: "Which planet is furthest from the Sun?",
+          options: ["Neptune", "Uranus", "Jupiter", "Pluto"],
+          answer: 0,
+        },
+
+        // Earth Science
+        {
+          question: "What makes up most of Earth's atmosphere?",
+          options: ["Oxygen", "Carbon Dioxide", "Nitrogen", "Argon"],
+          answer: 2,
+        },
+        {
+          question: "What is a large, flowing body of salt water?",
+          options: ["Lake", "River", "Ocean", "Pond"],
+          answer: 2,
+        },
+        {
+          question: "What causes earthquakes?",
+          options: [
+            "Wind",
+            "Volcanoes",
+            "Movement of tectonic plates",
+            "Tides",
+          ],
+          answer: 2,
+        },
+        {
+          question:
+            "What is the process of water changing from liquid to vapor?",
+          options: ["Condensation", "Precipitation", "Evaporation", "Freezing"],
+          answer: 2,
+        },
+        {
+          question: "Which layer of the Earth is liquid?",
+          options: ["Crust", "Inner Core", "Outer Core", "Mantle"],
+          answer: 2,
+        },
+        {
+          question: "What is the scientific study of weather?",
+          options: ["Geology", "Oceanography", "Meteorology", "Climatology"],
+          answer: 2,
+        },
+        {
+          question: "What type of rock is formed from cooled magma or lava?",
+          options: ["Sedimentary", "Metamorphic", "Igneous", "Fossil"],
+          answer: 2,
+        },
+        {
+          question: "What is the deepest part of the ocean?",
+          options: [
+            "Mid-Atlantic Ridge",
+            "Mariana Trench",
+            "Puerto Rico Trench",
+            "Java Trench",
+          ],
+          answer: 1,
+        },
+        {
+          question: "What causes day and night on Earth?",
+          options: [
+            "Earth orbiting the Sun",
+            "Moon orbiting Earth",
+            "Earth rotating on its axis",
+            "Sun rising and setting",
+          ],
+          answer: 2,
+        },
+        {
+          question: "What is the layer of gases surrounding Earth called?",
+          options: ["Hydrosphere", "Lithosphere", "Atmosphere", "Biosphere"],
+          answer: 2,
+        },
+        {
+          question:
+            "What is the process where rocks are broken down into smaller pieces by wind or water?",
+          options: ["Erosion", "Deposition", "Weathering", "Compaction"],
+          answer: 2,
+        },
+        {
+          question: "Which natural disaster is measured by the Richter scale?",
+          options: ["Hurricane", "Tornado", "Earthquake", "Flood"],
+          answer: 2,
+        },
+        {
+          question: "What is the main component of Earth's inner core?",
+          options: [
+            "Liquid iron",
+            "Solid nickel",
+            "Solid iron and nickel",
+            "Molten rock",
+          ],
+          answer: 2,
+        },
+        {
+          question:
+            "What is the term for the vast sheets of ice found in polar regions?",
+          options: ["Glaciers", "Icebergs", "Ice Caps", "Permafrost"],
+          answer: 2,
+        },
+        {
+          question:
+            "Which gas in the atmosphere protects us from harmful UV radiation?",
+          options: ["Oxygen", "Nitrogen", "Ozone", "Carbon Dioxide"],
+          answer: 2,
+        },
+        {
+          question: "What is the largest desert in the world?",
+          options: [
+            "Sahara Desert",
+            "Gobi Desert",
+            "Arabian Desert",
+            "Antarctic Polar Desert",
+          ],
+          answer: 3,
+        },
+        {
+          question: "What are the two main types of glaciers?",
+          options: [
+            "Alpine and continental",
+            "Valley and plateau",
+            "Mountain and lowland",
+            "Sea and land",
+          ],
+          answer: 0,
+        },
+        {
+          question: "What do you call a scientist who studies rocks?",
+          options: ["Biologist", "Chemist", "Geologist", "Astronomer"],
+          answer: 2,
+        },
+        {
+          question:
+            "What is the process by which water vapor in the air turns into liquid water droplets, forming clouds?",
+          options: [
+            "Evaporation",
+            "Precipitation",
+            "Condensation",
+            "Transpiration",
+          ],
+          answer: 2,
+        },
+        {
+          question:
+            "Which natural phenomenon is caused by a rapid decrease in air pressure?",
+          options: ["Rain", "Snow", "Tornado", "Fog"],
+          answer: 2,
+        },
+
+        // General Science / Logic Questions for kids
+        {
+          question: "Which sense do you use to smell flowers?",
+          options: ["Sight", "Hearing", "Smell", "Taste"],
+          answer: 2,
+        },
+        {
+          question: "What do plants need to grow?",
+          options: ["Sugar", "Sunlight", "Meat", "Rocks"],
+          answer: 1,
+        },
+        {
+          question: "What color is the sky on a clear day?",
+          options: ["Red", "Blue", "Green", "Yellow"],
+          answer: 1,
+        },
+        {
+          question: "What keeps us on the ground?",
+          options: ["Wind", "Gravity", "Magnets", "Ropes"],
+          answer: 1,
+        },
+        {
+          question: "What is the largest animal on Earth?",
+          options: ["Elephant", "Blue Whale", "Giraffe", "Dinosaur"],
+          answer: 1,
+        },
+        {
+          question: "What sound does a lion make?",
+          options: ["Chirp", "Meow", "Roar", "Bark"],
+          answer: 2,
+        },
+        {
+          question:
+            "What is the name of the big star that gives us light and heat?",
+          options: ["Moon", "Mars", "Sun", "Jupiter"],
+          answer: 2,
+        },
+        {
+          question: "What is the opposite of hot?",
+          options: ["Warm", "Cold", "Dry", "Wet"],
+          answer: 1,
+        },
+        {
+          question: "How many legs does a spider have?",
+          options: ["Six", "Eight", "Four", "Ten"],
+          answer: 1,
+        },
+        {
+          question: "What do you wear on your feet?",
+          options: ["Gloves", "Hats", "Shoes", "Pants"],
+          answer: 2,
+        },
+        {
+          question: "What do caterpillars turn into?",
+          options: ["Frogs", "Birds", "Butterflies", "Snakes"],
+          answer: 2,
+        },
+        {
+          question: "Which season is the hottest?",
+          options: ["Winter", "Spring", "Summer", "Autumn"],
+          answer: 2,
+        },
+        {
+          question: "What is the color of grass?",
+          options: ["Blue", "Red", "Green", "Yellow"],
+          answer: 2,
+        },
+        {
+          question: "What kind of vehicle flies in the sky?",
+          options: ["Car", "Boat", "Airplane", "Train"],
+          answer: 2,
+        },
+        {
+          question: "What do you use to brush your teeth?",
+          options: ["Spoon", "Fork", "Toothbrush", "Comb"],
+          answer: 2,
+        },
+        {
+          question: "What is the shape of a wheel?",
+          options: ["Square", "Triangle", "Circle", "Rectangle"],
+          answer: 2,
+        },
+        {
+          question: "Which fruit is yellow and long?",
+          options: ["Apple", "Orange", "Banana", "Grape"],
+          answer: 2,
+        },
+        {
+          question: "What do fish use to breathe underwater?",
+          options: ["Lungs", "Nose", "Gills", "Mouth"],
+          answer: 2,
+        },
+        {
+          question: "Which animal says 'Moo'?",
+          options: ["Cat", "Dog", "Cow", "Sheep"],
+          answer: 2,
+        },
+        {
+          question: "What instrument do you use to tell time?",
+          options: ["Ruler", "Thermometer", "Clock", "Scale"],
+          answer: 2,
+        },
+      ];
+
+      // Duplicate questions to reach at least 1000 for demonstration purposes.
+      // In a real application, you'd load a larger unique dataset.
+      let questions = [];
+      const targetQuestionCount = 1000;
+      while (questions.length < targetQuestionCount) {
+        questions = questions.concat(allQuestions);
+      }
+      // Trim to exact target count if necessary
+      questions = questions.slice(0, targetQuestionCount);
+
+      // Enhanced game state variables
+      let currentQuestionIndex = 0; // Tracks the current question
+      let score = 0; // Tracks the player's score
+      let lives = GAME_CONFIG.INITIAL_LIVES; // Initial number of lives
+      let timerSeconds = GAME_CONFIG.INITIAL_TIMER_SECONDS; // Current timer value
+      let countdownInterval; // Variable to hold the timer interval
+      let soundOn = true; // State for sound toggle
+      let streak = 0; // Tracks consecutive correct answers
+      let questionStartTime; // Track when question started for bonus points
+      let isProcessingAnswer = false; // Prevent multiple clicks
+
+      // Enhanced HTML element references
+      const startScreen = document.getElementById("start-screen");
+      const startButton = document.getElementById("start-button");
+      const quizGameContainer = document.getElementById("quiz-game-container");
+      const questionDisplay = document.getElementById("question-display");
+      const answerButtonsContainer = document.getElementById("answer-buttons");
+      const scoreText = document.getElementById("score-text");
+      const feedbackMessage = document.getElementById("feedback-message");
+      const playAgainButton = document.getElementById("play-again-button");
+      const livesDisplay = document.getElementById("lives-display");
+      const livesText = document.getElementById("lives-text");
+      const timerDisplay = document.getElementById("timer-display");
+      const timerText = document.getElementById("timer-text");
+      const soundToggleButton = document.getElementById("sound-toggle-button");
+      const streakIndicator = document.getElementById("streak-indicator");
+      const streakCount = document.getElementById("streak-count");
+      const progressFill = document.getElementById("progress-fill");
+      const questionCounter = document.getElementById("question-counter");
+      const questionText = document.getElementById("question-text");
+
+      // Audio Context and enhanced sound system
+      let audioContext;
+
+      /**
+       * Initializes the AudioContext and creates simple sound generators.
+       */
+      function setupAudio() {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      }
+
+      /**
+       * Creates confetti animation for celebrations
+       */
+      function createConfetti() {
+        const colors = GAME_CONFIG.CONFETTI_COLORS;
+        const confettiCount = 50;
+
+        for (let i = 0; i < confettiCount; i++) {
+          setTimeout(() => {
+            const confetti = document.createElement('div');
+            confetti.className = 'confetti';
+            confetti.style.left = Math.random() * 100 + '%';
+            confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            confetti.style.width = (Math.random() * 10 + 5) + 'px';
+            confetti.style.height = (Math.random() * 10 + 5) + 'px';
+            confetti.style.animationDelay = (Math.random() * 0.5) + 's';
+            confetti.style.animationDuration = (Math.random() * 2 + 2) + 's';
+            document.body.appendChild(confetti);
+
+            // Remove confetti after animation
+            setTimeout(() => {
+              confetti.remove();
+            }, 4000);
+          }, i * 30);
+        }
+      }
+
+      /**
+       * Updates the streak indicator
+       */
+      function updateStreak() {
+        if (streak > 1) {
+          streakIndicator.classList.add('active');
+          streakCount.textContent = Math.min(streak, GAME_CONFIG.MAX_STREAK_DISPLAY);
+
+          // Add excitement for high streaks
+          if (streak >= 5) {
+            streakIndicator.style.animation = 'none';
+            setTimeout(() => {
+              streakIndicator.style.animation = 'streak-appear 0.5s ease-out';
+            }, 10);
+          }
+        } else {
+          streakIndicator.classList.remove('active');
+        }
+      }
+
+      /**
+       * Updates the progress bar
+       */
+      function updateProgressBar() {
+        const progress = (currentQuestionIndex / Math.min(questions.length, 10)) * 100;
+        progressFill.style.width = progress + '%';
+        progressFill.parentElement.setAttribute('aria-valuenow', Math.round(progress));
+      }
+
+      /**
+       * Updates the question counter
+       */
+      function updateQuestionCounter() {
+        const currentQ = Math.min(currentQuestionIndex + 1, Math.min(questions.length, 10));
+        const totalQ = Math.min(questions.length, 10);
+        questionText.textContent = `Q ${currentQ}/${totalQ}`;
+      }
+
+      /**
+       * Provides haptic feedback on supported devices
+       */
+      function provideHapticFeedback(intensity = 'medium') {
+        if ('vibrate' in navigator) {
+          switch (intensity) {
+            case 'light':
+              navigator.vibrate(10);
+              break;
+            case 'medium':
+              navigator.vibrate(20);
+              break;
+            case 'heavy':
+              navigator.vibrate([30, 10, 30]);
+              break;
+          }
+        }
+      }
+
+      /**
+       * Adds button click feedback animation
+       */
+      function addButtonClickFeedback(button) {
+        button.style.transform = 'scale(0.95)';
+        setTimeout(() => {
+          button.style.transform = '';
+        }, GAME_CONFIG.BUTTON_CLICK_FEEDBACK_DURATION);
+      }
+
+      /**
+       * Plays a simple beep sound if sound is enabled.
+       * @param {number} frequency - The frequency of the beep.
+       * @param {number} duration - The duration of the beep in seconds.
+       * @param {number} volume - The volume (0 to 1).
+       */
+      function playBeep(frequency, duration, volume) {
+        if (!soundOn) return; // Do not play sound if disabled
+
+        if (!audioContext) {
+          setupAudio(); // Initialize if not already done
+        }
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        oscillator.frequency.value = frequency;
+        gainNode.gain.value = volume;
+
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + duration);
+      }
+
+      function playCorrectSound() {
+        // Play a happy ascending melody
+        playBeep(523, 0.1, 0.2); // C5
+        setTimeout(() => playBeep(659, 0.1, 0.3), 100); // E5
+        setTimeout(() => playBeep(784, 0.2, 0.4), 200); // G5
+      }
+
+      function playIncorrectSound() {
+        // Play a sad descending sound
+        playBeep(400, 0.15, 0.3); // G4
+        setTimeout(() => playBeep(330, 0.2, 0.4), 150); // E4
+      }
+
+      function playTimeoutSound() {
+        // Play urgent beeps
+        playBeep(440, 0.1, 0.4); // Medium pitch, sharp for timeout
+        setTimeout(() => playBeep(440, 0.1, 0.4), 150); // Double beep for urgency
+        setTimeout(() => playBeep(330, 0.15, 0.5), 300); // Lower pitch
+      }
+
+      function playStreakSound() {
+        // Play a celebration sound for streaks
+        playBeep(523, 0.1, 0.3); // C5
+        setTimeout(() => playBeep(659, 0.1, 0.3), 100); // E5
+        setTimeout(() => playBeep(784, 0.1, 0.3), 200); // G5
+        setTimeout(() => playBeep(1047, 0.2, 0.4), 300); // C6
+      }
+
+      /**
+       * Toggles sound on/off and updates the button text.
+       */
+      function toggleSound() {
+        soundOn = !soundOn;
+        soundToggleButton.innerHTML = soundOn ? "🔊 Sound On" : "🔇 Sound Off";
+        provideHapticFeedback('light');
+      }
+
+      /**
+       * Shuffles an array using the Fisher-Yates (Knuth) algorithm.
+       * @param {Array} array - The array to shuffle.
+       */
+      function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [array[i], array[j]] = [array[j], array[i]]; // Swap elements
+        }
+      }
+
+      /**
+       * Starts the quiz game, hiding the start screen and shuffling questions.
+       */
+      function startGame() {
+        startScreen.classList.add("hidden"); // Hide start screen
+        quizGameContainer.classList.remove("hidden"); // Show quiz container
+        quizGameContainer.classList.add("fade-in"); // Add fade-in animation
+        shuffleArray(questions); // Randomize the questions
+
+        // Reset game state
+        lives = GAME_CONFIG.INITIAL_LIVES;
+        score = 0;
+        streak = 0;
+        currentQuestionIndex = 0;
+        isProcessingAnswer = false;
+
+        // Update all displays
+        updateLivesDisplay();
+        updateStreak();
+        updateProgressBar();
+        updateQuestionCounter();
+
+        // Load first question
+        loadQuestion();
+
+        // Provide haptic feedback
+        provideHapticFeedback('medium');
+      }
+
+      /**
+       * Updates the lives display with heart emojis.
+       */
+      function updateLivesDisplay() {
+        // Enhanced lives display with emojis
+        let hearts = "";
+        for (let i = 0; i < lives; i++) {
+          hearts += "❤️";
+        }
+        for (let i = lives; i < GAME_CONFIG.INITIAL_LIVES; i++) {
+          hearts += "🤍";
+        }
+        livesText.textContent = `${lives} Lives`;
+        livesDisplay.innerHTML = `<span>❤️</span> ${hearts}`;
+      }
+
+      /**
+       * Updates the timer display and handles timeout.
+       */
+      function updateTimer() {
+        timerSeconds--;
+        timerText.textContent = `${timerSeconds}s`;
+
+        // Add urgency color changes
+        if (timerSeconds <= 10) {
+          timerDisplay.style.color = 'var(--warning)';
+          if (timerSeconds <= 5) {
+            timerDisplay.style.color = 'var(--danger)';
+          }
+        }
+
+        if (timerSeconds <= 0) {
+          clearInterval(countdownInterval); // Stop the timer
+          playTimeoutSound();
+          isProcessingAnswer = true;
+
+          // Treat as incorrect answer due to timeout
+          feedbackMessage.textContent = "⏱️ Time's up! The correct answer was: " +
+            questions[currentQuestionIndex].options[questions[currentQuestionIndex].answer];
+          feedbackMessage.style.color = 'var(--danger)';
+
+          // Apply visual feedback for timeout
+          Array.from(answerButtonsContainer.children).forEach((button) => {
+            button.disabled = true;
+          });
+
+          // Highlight correct answer
+          Array.from(answerButtonsContainer.children)[questions[currentQuestionIndex].answer]
+            .classList.add("correct");
+
+          // Reset streak and handle incorrect answer
+          streak = 0;
+          updateStreak();
+          handleIncorrectAnswer();
+
+          // Move to the next question after a short delay
+          setTimeout(() => {
+            if (lives > 0) {
+              currentQuestionIndex++;
+              loadQuestion();
+            }
+          }, GAME_CONFIG.FEEDBACK_DURATION);
+        }
+      }
+
+      /**
+       * Loads and displays the current question and its answer options.
+       */
+      function loadQuestion() {
+        // Clear any previous feedback and ensure play again button is hidden
+        feedbackMessage.textContent = "";
+        feedbackMessage.style.color = "";
+        playAgainButton.classList.add("hidden");
+        scoreText.textContent = `Score: ${score}`; // Update score display
+
+        // If all questions have been answered or reached limit, show the final result
+        if (currentQuestionIndex >= Math.min(questions.length, 10)) {
+          showResult(true); // true means quiz completed successfully
+          return;
+        }
+
+        // Reset processing state and start question timer
+        isProcessingAnswer = false;
+        questionStartTime = Date.now();
+
+        // Reset timer for the new question
+        clearInterval(countdownInterval);
+        timerSeconds = GAME_CONFIG.INITIAL_TIMER_SECONDS;
+        timerText.textContent = `${timerSeconds}s`;
+        timerDisplay.style.color = ''; // Reset timer color
+        countdownInterval = setInterval(updateTimer, 1000); // Start the timer
+
+        // Update progress and question counter
+        updateProgressBar();
+        updateQuestionCounter();
+
+        const currentQuestion = questions[currentQuestionIndex];
+        questionDisplay.textContent = currentQuestion.question; // Set the question text
+        answerButtonsContainer.innerHTML = ""; // Clear previous answer buttons
+
+        // Create buttons for each answer option with enhanced interaction
+        currentQuestion.options.forEach((option, index) => {
+          const button = document.createElement("button");
+          button.textContent = option;
+          button.className = "answer-button";
+          button.setAttribute('aria-label', `Answer option ${index + 1}: ${option}`);
+
+          // Enhanced click event with haptic feedback
+          button.addEventListener('click', (e) => {
+            if (!isProcessingAnswer) {
+              addButtonClickFeedback(button);
+              provideHapticFeedback('medium');
+              checkAnswer(index, button);
+            }
+          });
+
+          // Touch feedback for mobile
+          button.addEventListener('touchstart', (e) => {
+            if (!isProcessingAnswer) {
+              button.style.transform = 'scale(0.98)';
+            }
+          });
+
+          button.addEventListener('touchend', (e) => {
+            if (!isProcessingAnswer) {
+              button.style.transform = '';
+            }
+          });
+
+          answerButtonsContainer.appendChild(button);
+        });
+      }
+
+      /**
+       * Handles logic for an incorrect answer: decrements lives and checks for game over.
+       */
+      function handleIncorrectAnswer() {
+        lives--;
+        updateLivesDisplay(); // Update the visual lives display
+
+        if (lives <= 0) {
+          clearInterval(countdownInterval); // Stop the timer if game over
+          showResult(false); // false means game over due to lives
+        }
+      }
+
+      /**
+       * Checks if the selected answer is correct, updates score, and provides feedback.
+       * @param {number} selectedOptionIndex - The index of the option selected by the user.
+       * @param {HTMLElement} clickedButton - The button element that was clicked.
+       */
+      function checkAnswer(selectedOptionIndex, clickedButton) {
+        if (isProcessingAnswer) return;
+        isProcessingAnswer = true;
+
+        clearInterval(countdownInterval); // Stop the timer once an answer is chosen
+
+        const currentQuestion = questions[currentQuestionIndex];
+        const isCorrect = selectedOptionIndex === currentQuestion.answer;
+        const answerTime = Math.floor((Date.now() - questionStartTime) / 1000);
+        let pointsEarned = 1;
+
+        // Disable all buttons to prevent multiple clicks
+        Array.from(answerButtonsContainer.children).forEach((button) => {
+          button.disabled = true;
+        });
+
+        // Apply visual feedback and calculate points
+        if (isCorrect) {
+          clickedButton.classList.add("correct");
+          playCorrectSound();
+
+          // Calculate points with bonuses
+          pointsEarned = 1;
+
+          // Quick answer bonus
+          if (answerTime <= GAME_CONFIG.QUICK_ANSWER_BONUS_SECONDS) {
+            pointsEarned = Math.floor(pointsEarned * 2);
+            feedbackMessage.textContent = "⚡ Lightning fast! Amazing!";
+          } else if (answerTime <= 20) {
+            pointsEarned = Math.floor(pointsEarned * 1.5);
+            feedbackMessage.textContent = "🎯 Quick thinking! Well done!";
+          } else {
+            feedbackMessage.textContent = "🥳 Correct! Great job!";
+          }
+
+          // Streak bonus
+          streak++;
+          if (streak >= GAME_CONFIG.STREAK_BONUS_MULTIPLIER * 2) {
+            pointsEarned = Math.floor(pointsEarned * GAME_CONFIG.STREAK_BONUS_MULTIPLIER);
+            feedbackMessage.textContent += ` 🔥 ${streak} streak bonus!`;
+            playStreakSound();
+          }
+
+          score += pointsEarned;
+          feedbackMessage.style.color = 'var(--success)';
+
+          // Create celebration effects
+          if (streak >= 3) {
+            createConfetti();
+            provideHapticFeedback('heavy');
+          } else {
+            provideHapticFeedback('medium');
+          }
+
+          updateStreak();
+        } else {
+          clickedButton.classList.add("incorrect");
+          playIncorrectSound();
+
+          // Also highlight the correct answer
+          Array.from(answerButtonsContainer.children)[currentQuestion.answer]
+            .classList.add("correct");
+
+          feedbackMessage.textContent = "🤔 Not quite! The correct answer was: " +
+            currentQuestion.options[currentQuestion.answer];
+          feedbackMessage.style.color = 'var(--danger)';
+
+          // Reset streak
+          streak = 0;
+          updateStreak();
+          handleIncorrectAnswer(); // Decrement lives and check game over
+          provideHapticFeedback('light');
+        }
+
+        // Update score display
+        scoreText.textContent = `Score: ${score}`;
+
+        // Move to the next question after a short delay, only if game is not over
+        if (lives > 0) {
+          setTimeout(() => {
+            currentQuestionIndex++;
+            loadQuestion();
+          }, GAME_CONFIG.FEEDBACK_DURATION);
+        }
+      }
+
+      /**
+       * Displays the final score and the "Play Again" button.
+       * @param {boolean} quizCompleted - True if all questions were answered, false if lives ran out.
+       */
+      function showResult(quizCompleted) {
+        answerButtonsContainer.innerHTML = ""; // Clear answer buttons
+        feedbackMessage.style.color = ""; // Clear previous feedback colors
+        clearInterval(countdownInterval); // Ensure timer is stopped
+        playAgainButton.classList.remove("hidden"); // Show the play again button
+
+        // Hide streak indicator
+        streakIndicator.classList.remove("active");
+
+        // Create final celebration
+        if (quizCompleted) {
+          createConfetti();
+          questionDisplay.textContent = `🏆 Amazing! You completed the quiz! Final score: ${score} points!`;
+          feedbackMessage.textContent = "🌟 You're a Science Champion!";
+          feedbackMessage.style.color = 'var(--success)';
+          playStreakSound();
+        } else {
+          questionDisplay.textContent = `💔 Game Over! You ran out of lives. Final score: ${score} points.`;
+          feedbackMessage.textContent = "🎯 Keep practicing and try again!";
+          feedbackMessage.style.color = 'var(--warning)';
+        }
+
+        // Update final displays
+        updateProgressBar();
+        updateQuestionCounter();
+
+        // Provide final haptic feedback
+        provideHapticFeedback(quizCompleted ? 'heavy' : 'medium');
+      }
+
+      /**
+       * Resets the game state and starts a new quiz.
+       */
+      function resetGame() {
+        clearInterval(countdownInterval); // Stop any active timer
+
+        // Reset all game state
+        currentQuestionIndex = 0;
+        score = 0;
+        streak = 0;
+        lives = GAME_CONFIG.INITIAL_LIVES;
+        isProcessingAnswer = false;
+
+        // Update all displays
+        scoreText.textContent = `Score: ${score}`;
+        updateLivesDisplay();
+        updateStreak();
+        updateProgressBar();
+        updateQuestionCounter();
+
+        // Reset timer color
+        timerDisplay.style.color = '';
+
+        // Reshuffle questions and start new game
+        shuffleArray(questions);
+        loadQuestion();
+
+        // Provide haptic feedback
+        provideHapticFeedback('medium');
+      }
+
+      // Enhanced event listeners with haptic feedback
+      startButton.addEventListener("click", () => {
+        provideHapticFeedback('medium');
+        startGame();
+      });
+
+      // Add haptic feedback to all control buttons
+      document.getElementById("reset-button").addEventListener("click", () => {
+        provideHapticFeedback('light');
+      });
+
+      document.getElementById("sound-toggle-button").addEventListener("click", () => {
+        provideHapticFeedback('light');
+      });
+
+      document.getElementById("play-again-button").addEventListener("click", () => {
+        provideHapticFeedback('medium');
+      });
+
+      // Initial setup when the page loads
+      document.addEventListener("DOMContentLoaded", () => {
+        setupAudio(); // Initialize audio context
+
+        // Add resize handler for responsive behavior
+        let resizeTimeout;
+        window.addEventListener("resize", () => {
+          clearTimeout(resizeTimeout);
+          resizeTimeout = setTimeout(() => {
+            // Adjust layout if needed after resize
+            updateProgressBar();
+          }, 250);
+        });
+
+        // Add visibility change handler to pause/resume timer
+        document.addEventListener("visibilitychange", () => {
+          if (document.hidden && countdownInterval) {
+            // Pause timer when tab is not visible
+            clearInterval(countdownInterval);
+          } else if (!document.hidden && timerSeconds > 0 && !isProcessingAnswer) {
+            // Resume timer when tab becomes visible
+            countdownInterval = setInterval(updateTimer, 1000);
+          }
+        });
+
+        // Initialize displays
+        updateProgressBar();
+        updateQuestionCounter();
+      });
+    </script>
+  </body>
+</html>

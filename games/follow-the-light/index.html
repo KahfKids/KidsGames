@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Follow the Lights!</title>
+    <!-- Tailwind CSS for styling -->
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <!-- Google Fonts - Inter for a modern, kid-friendly look -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <!-- Tone.js for generating sounds dynamically -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
+    <style>
+      /* Apply Inter font to the entire body */
+      body {
+        font-family: "Inter", sans-serif;
+      }
+      /* Custom active states for game pads during flash/click */
+      /* These classes provide a brighter color and a glow effect */
+      .game-pad.active-red {
+        background-color: #ef4444; /* Brighter red */
+        box-shadow: 0 0 20px 5px #ef4444; /* Red glow */
+      }
+      .game-pad.active-blue {
+        background-color: #3b82f6; /* Brighter blue */
+        box-shadow: 0 0 20px 5px #3b82f6; /* Blue glow */
+      }
+      .game-pad.active-green {
+        background-color: #22c55e; /* Brighter green */
+        box-shadow: 0 0 20px 5px #22c55e; /* Green glow */
+      }
+      .game-pad.active-yellow {
+        background-color: #eab308; /* Brighter yellow */
+        box-shadow: 0 0 20px 5px #eab308; /* Yellow glow */
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Main container for the game, centering content and applying a background gradient -->
+    <div
+      class="min-h-screen bg-gradient-to-br from-blue-200 to-purple-200 flex flex-col items-center justify-center p-4"
+    >
+      <!-- Game card container, with rounded corners, shadow, and a playful slight rotation -->
+      <div
+        class="bg-white rounded-3xl shadow-2xl p-6 md:p-8 w-full max-w-md border-b-8 border-r-8 border-gray-300 transform rotate-1"
+      >
+        <!-- Game Title with a pulse animation and emojis for kid-friendliness -->
+        <h1
+          class="text-4xl md:text-5xl font-extrabold text-center text-purple-700 mb-6 font-inter drop-shadow-lg"
+        >
+          <span class="block animate-pulse">✨ Follow the Lights! ✨</span>
+        </h1>
+
+        <!-- Game status display area -->
+        <div
+          id="game-status"
+          class="text-center text-xl md:text-2xl mb-4 text-gray-700 font-inter font-semibold"
+        >
+          Press Play Now!
+        </div>
+        <!-- Score display area -->
+        <div
+          id="score"
+          class="text-center text-3xl md:text-4xl font-bold text-green-700 mb-8 font-inter drop-shadow"
+        >
+          Score: 0
+        </div>
+
+        <!-- Game pads container for circular arrangement -->
+        <!-- This container defines the area where the circular pads are positioned -->
+        <div
+          id="game-pads"
+          class="relative w-64 h-64 md:w-72 md:h-72 mx-auto mt-8 mb-10"
+        >
+          <!-- Each game pad is now absolutely positioned to form a circle -->
+          <!-- The 'top', 'right', 'bottom', 'left' and '-translate-x/-y-1/2' classes -->
+          <!-- precisely place them at the edges of the central container. -->
+          <button
+            id="pad-0"
+            class="game-pad w-28 h-28 md:w-32 md:h-32 bg-red-500 hover:bg-red-600 active:bg-red-700 focus:outline-none focus:ring-6 focus:ring-red-300 transition-all duration-150 rounded-full aspect-square flex items-center justify-center text-white text-6xl font-extrabold shadow-xl border-b-4 border-r-4 border-red-700 transform hover:scale-105 active:scale-95 absolute top-0 left-1/2 -translate-x-1/2"
+          ></button>
+          <button
+            id="pad-1"
+            class="game-pad w-28 h-28 md:w-32 md:h-32 bg-blue-500 hover:bg-blue-600 active:bg-blue-700 focus:outline-none focus:ring-6 focus:ring-blue-300 transition-all duration-150 rounded-full aspect-square flex items-center justify-center text-white text-6xl font-extrabold shadow-xl border-b-4 border-r-4 border-blue-700 transform hover:scale-105 active:scale-95 absolute top-1/2 right-0 -translate-y-1/2"
+          ></button>
+          <button
+            id="pad-2"
+            class="game-pad w-28 h-28 md:w-32 md:h-32 bg-green-500 hover:bg-green-600 active:bg-green-700 focus:outline-none focus:ring-6 focus:ring-green-300 transition-all duration-150 rounded-full aspect-square flex items-center justify-center text-white text-6xl font-extrabold shadow-xl border-b-4 border-r-4 border-green-700 transform hover:scale-105 active:scale-95 absolute bottom-0 left-1/2 -translate-x-1/2"
+          ></button>
+          <button
+            id="pad-3"
+            class="game-pad w-28 h-28 md:w-32 md:h-32 bg-yellow-500 hover:bg-yellow-600 active:bg-yellow-700 focus:outline-none focus:ring-6 focus:ring-yellow-300 transition-all duration-150 rounded-full aspect-square flex items-center justify-center text-white text-6xl font-extrabold shadow-xl border-b-4 border-r-4 border-yellow-700 transform hover:scale-105 active:scale-95 absolute top-1/2 left-0 -translate-y-1/2"
+          ></button>
+        </div>
+
+        <!-- Start Game Button -->
+        <div class="mt-10 text-center">
+          <button
+            id="start-button"
+            class="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold py-4 px-10 rounded-full shadow-2xl transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-6 focus:ring-indigo-300 font-inter text-xl md:text-2xl border-b-4 border-r-4 border-indigo-800"
+          >
+            Play Now!
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // --- Game Variables ---
+      const gamePads = document.querySelectorAll(".game-pad"); // Select all game pad buttons
+      const startButton = document.getElementById("start-button"); // Start game button
+      const gameStatusDisplay = document.getElementById("game-status"); // Element to display game status messages
+      const scoreDisplay = document.getElementById("score"); // Element to display current score
+
+      let gameSequence = []; // Stores the sequence of pads generated by the game
+      let playerSequence = []; // Stores the sequence of pads clicked by the player
+      let score = 0; // Current score
+      let gameOn = false; // Flag to indicate if the game is currently active
+      let showingSequence = false; // Flag to indicate if the game is currently showing the sequence
+      let canClick = false; // Flag to indicate if the player can currently click on pads
+      let sequenceSpeed = 800; // Time in milliseconds for each light/sound in the sequence
+      const padColors = ["red", "blue", "green", "yellow"]; // Array of base colors for pads
+
+      // --- Tone.js Initialization ---
+      // Using Tone.MembraneSynth for softer, percussive click-like sounds for each pad.
+      // This avoids musical notes and provides a more abstract sound effect.
+      const padSynth = new Tone.MembraneSynth({
+        pitchDecay: 0.02, // Controls how quickly the pitch drops for a percussive effect
+        octaves: 1, // Range of pitch drop for the percussive sound
+        envelope: {
+          attack: 0.001, // Very fast attack for an immediate click
+          decay: 0.2, // Short decay
+          sustain: 0.01, // Very brief sustain
+          release: 0.3, // Gentle release to avoid abruptness
+        },
+      }).toDestination();
+
+      // A separate Tone.Synth for the game over sound, low frequency for a 'thud'
+      const gameOverSynth = new Tone.Synth({
+        oscillator: {
+          type: "sine", // Use sine wave for a clean, soft tone
+        },
+        envelope: {
+          attack: 0.01,
+          decay: 0.4,
+          sustain: 0.01,
+          release: 0.8, // Longer release for a fading effect, less jarring
+        },
+      }).toDestination();
+
+      // Mapping of pad indices to specific low frequencies for distinct non-musical sounds
+      // These frequencies are chosen to be low and non-harmonic to avoid a musical feel.
+      const padFrequencies = [
+        70, // Red pad (low frequency for a soft thump)
+        90, // Blue pad
+        110, // Green pad
+        130, // Yellow pad
+      ];
+
+      // --- Game Logic Functions ---
+
+      /**
+       * Initializes and starts a new game.
+       * Resets game state, generates the first sequence item, and starts playback.
+       */
+      function startGame() {
+        // Tone.js requires a user gesture to start its audio context.
+        // Calling Tone.start() ensures audio will play.
+        Tone.start();
+
+        // Reset all game-related variables for a new game
+        gameSequence = [];
+        playerSequence = [];
+        score = 0;
+        updateScore(); // Update the score display
+        gameOn = true;
+        showingSequence = false;
+        canClick = false;
+        sequenceSpeed = 800; // Reset speed to initial value for a new game
+        gameStatusDisplay.textContent = "Get Ready!"; // Inform player to get ready
+        startButton.disabled = true; // Disable the start button while the game is active
+
+        addNextToSequence(); // Add the first random pad to the sequence
+        // Wait a short moment before starting the first sequence playback
+        setTimeout(playSequence, 1000);
+      }
+
+      /**
+       * Adds a new random pad to the end of the `gameSequence`.
+       */
+      function addNextToSequence() {
+        // Generate a random index corresponding to one of the game pads
+        const randomPadIndex = Math.floor(Math.random() * gamePads.length);
+        gameSequence.push(randomPadIndex); // Add the random pad index to the sequence
+      }
+
+      /**
+       * Plays the current game sequence visually (flashing pads) and audibly (playing tones).
+       * Manages delays between flashes and transitions to player's turn.
+       */
+      function playSequence() {
+        showingSequence = true; // Indicate that the game is currently showing the sequence
+        canClick = false; // Disable player input during sequence playback
+        gameStatusDisplay.textContent = "Watch carefully..."; // Instruct the player
+        playerSequence = []; // Clear the player's input for the new round
+
+        let i = 0; // Index to iterate through the gameSequence
+        // Set up an interval to play each step of the sequence with a delay
+        const interval = setInterval(() => {
+          if (i < gameSequence.length) {
+            const padIndex = gameSequence[i];
+            flashPad(padIndex); // Flash the visual element
+            playTone(padIndex); // Play the corresponding sound
+            i++;
+          } else {
+            clearInterval(interval); // Stop the interval when the sequence is fully played
+            showingSequence = false; // Sequence is no longer showing
+            canClick = true; // Enable player input
+            gameStatusDisplay.textContent = "Your turn!"; // Prompt player to respond
+          }
+        }, sequenceSpeed); // The delay between each step in the sequence
+      }
+
+      /**
+       * Flashes a specific game pad by temporarily changing its style.
+       * @param {number} padIndex - The index of the pad to flash (0-3).
+       */
+      function flashPad(padIndex) {
+        const pad = gamePads[padIndex]; // Get the actual pad element
+        const colorPrefix = padColors[padIndex]; // Get the base color string (e.g., 'red')
+
+        // Add the active class which applies a brighter color and glow effect
+        const activeClassName = `active-${colorPrefix}`;
+        pad.classList.add(activeClassName);
+
+        // Temporarily remove original Tailwind background, hover, and active classes
+        // to allow the custom active class to take full effect without conflicts.
+        pad.classList.remove(`bg-${colorPrefix}-500`);
+        pad.classList.remove(`hover:bg-${colorPrefix}-600`);
+        pad.classList.remove(`active:bg-${colorPrefix}-700`);
+
+        // Set a timeout to revert the pad to its original appearance after a short duration
+        setTimeout(() => {
+          pad.classList.remove(activeClassName); // Remove the active class
+          // Add back the original Tailwind classes
+          pad.classList.add(`bg-${colorPrefix}-500`);
+          pad.classList.add(`hover:bg-${colorPrefix}-600`);
+          pad.classList.add(`active:bg-${colorPrefix}-700`);
+        }, sequenceSpeed / 2); // Flash duration is half of the sequence step speed
+      }
+
+      /**
+       * Plays the sound associated with a specific pad using Tone.js.
+       * @param {number} padIndex - The index of the pad whose sound to play.
+       */
+      function playTone(padIndex) {
+        // Play the corresponding non-musical frequency using the MembraneSynth
+        // The duration is set to '8n' (an 8th note) but the envelope ensures it's a short percussive sound
+        padSynth.triggerAttackRelease(padFrequencies[padIndex], "8n");
+      }
+
+      /**
+       * Handles a player's click (or touch) on a game pad.
+       * Validates the input against the game sequence.
+       * @param {Event} event - The click or touch event object.
+       */
+      function handlePadClick(event) {
+        // Ignore clicks if the game is not on, sequence is showing, or player cannot click
+        if (!gameOn || showingSequence || !canClick) {
+          return;
+        }
+
+        // Find the closest game pad element that was clicked
+        const clickedPad = event.target.closest(".game-pad");
+        if (!clickedPad) return; // If no game pad was clicked, exit
+
+        // Determine the index of the clicked pad
+        const clickedPadIndex = Array.from(gamePads).indexOf(clickedPad);
+        playerSequence.push(clickedPadIndex); // Add the clicked pad to the player's sequence
+
+        flashPad(clickedPadIndex); // Flash the clicked pad visually
+        playTone(clickedPadIndex); // Play the corresponding sound
+
+        // Check if the player's last input matches the game's sequence at that position
+        if (
+          playerSequence[playerSequence.length - 1] !==
+          gameSequence[playerSequence.length - 1]
+        ) {
+          gameOver(); // If mismatch, end the game
+          return;
+        }
+
+        // If the player has successfully completed the current sequence length
+        if (playerSequence.length === gameSequence.length) {
+          setTimeout(nextRound, 1000); // Wait a short moment before starting the next round
+        }
+      }
+
+      /**
+       * Advances the game to the next round.
+       * Increments score, adds a new item to the sequence, and prepares for next playback.
+       */
+      function nextRound() {
+        score++; // Increment the player's score
+        updateScore(); // Update the score display
+        gameStatusDisplay.textContent = "Good job!"; // Provide positive feedback
+
+        // Slightly increase the game speed for the next round, with a minimum speed limit
+        sequenceSpeed = Math.max(200, sequenceSpeed - 50); // Speed cannot go below 200ms per step
+
+        addNextToSequence(); // Add a new random pad to the game sequence
+        // Wait a longer moment before the next sequence starts to give player a breather
+        setTimeout(playSequence, 1500);
+      }
+
+      /**
+       * Ends the game, displays a "Game Over" message, and re-enables the start button.
+       */
+      function gameOver() {
+        gameOn = false; // Set game state to off
+        canClick = false; // Disable further player input
+        gameStatusDisplay.textContent = `Game Over! You reached level ${score}.`; // Display final message
+        startButton.disabled = false; // Re-enable the start button so player can play again
+        scoreDisplay.textContent = `Final Score: ${score}`; // Update score display to show final score
+
+        // Play a distinctive, soft 'game over' sound using the dedicated synth
+        gameOverSynth.triggerAttackRelease(40, "1s"); // Play a very low 40Hz note for 1 second, fading out
+      }
+
+      /**
+       * Updates the text content of the score display element.
+       */
+      function updateScore() {
+        scoreDisplay.textContent = `Score: ${score}`;
+      }
+
+      // --- Event Listeners ---
+      // Listen for clicks on the start game button to initiate the game
+      startButton.addEventListener("click", startGame);
+
+      // Add click and touch listeners to each game pad for interaction
+      gamePads.forEach((pad) => {
+        pad.addEventListener("click", handlePadClick);
+        // Add 'touchstart' event for better responsiveness on mobile devices.
+        // e.preventDefault() prevents default touch behaviors like scrolling/zooming.
+        pad.addEventListener("touchstart", (e) => {
+          e.preventDefault();
+          handlePadClick(e);
+        });
+      });
+
+      // Initial setup when the page loads
+      updateScore(); // Display initial score (0)
+    </script>
+  </body>
+</html>

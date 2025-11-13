@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Solar System Model</title>
+    <!-- Link to Tailwind CSS for utility classes -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Link to Three.js library for 3D graphics -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+      /* Apply border-box globally for consistent sizing */
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        overflow: hidden; /* Prevent scrolling */
+        font-family: "Inter", sans-serif; /* Use Inter font */
+        background-color: #000; /* Black background for space */
+        color: #fff; /* White text for information */
+      }
+      #solar-system-container {
+        position: relative;
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+      }
+
+      /* Styles for the sidebar menu */
+      #sidebar {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: -250px; /* Initially hidden off-screen to the left */
+        width: 250px; /* Fixed width for the sidebar */
+        max-width: 80vw; /* Ensure it doesn't take up too much space on very small screens */
+        background-color: rgba(
+          0,
+          0,
+          0,
+          0.9
+        ); /* Slightly darker, more opaque background */
+        padding: 20px;
+        border-radius: 0 10px 10px 0; /* Rounded corners only on the right side */
+        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.5); /* Shadow for depth */
+        z-index: 102; /* Higher z-index than the open menu button */
+        display: flex;
+        flex-direction: column;
+        gap: 15px; /* Spacing between buttons */
+        transition: left 0.3s ease-in-out; /* Smooth slide-in/out transition */
+        overflow-y: auto; /* Enable scrolling if content overflows */
+      }
+      #sidebar.open {
+        left: 0; /* Slide into view */
+      }
+
+      #sidebar button {
+        background-color: #333;
+        color: #fff;
+        padding: 10px 15px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: background-color 0.2s ease, transform 0.1s ease;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        width: 100%; /* Make buttons fill the sidebar width */
+        text-align: center;
+      }
+      #sidebar button:hover {
+        background-color: #555;
+        transform: translateY(-1px);
+      }
+      #sidebar button:active {
+        background-color: #777;
+        transform: translateY(0);
+      }
+
+      /* Style for the button to open the sidebar */
+      #open-sidebar-btn {
+        position: fixed;
+        top: 15px;
+        left: 15px;
+        background-color: rgba(0, 0, 0, 0.7);
+        color: #fff;
+        padding: 10px 12px; /* Adjusted padding to make it a small icon-like button */
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 1.2rem; /* Larger font size for icon appearance */
+        z-index: 103; /* Higher z-index than sidebar */
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        line-height: 1; /* Remove extra line height */
+        transition: background-color 0.2s ease, transform 0.1s ease;
+      }
+      #open-sidebar-btn:hover {
+        background-color: #555;
+        transform: translateY(-1px);
+      }
+      #open-sidebar-btn:active {
+        background-color: #777;
+        transform: translateY(0);
+      }
+
+      /* Info panel styles (unchanged, but ensuring z-index compatibility) */
+      #info-panel {
+        position: absolute;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: rgba(0, 0, 0, 0.7);
+        padding: 15px 25px;
+        border-radius: 10px;
+        text-align: center;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+        max-width: 90%;
+        box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+        z-index: 100; /* Ensure info panel is below sidebar */
+      }
+      #info-panel.visible {
+        opacity: 1;
+        visibility: visible;
+      }
+      #info-panel h3 {
+        font-size: 1.5rem;
+        margin-bottom: 5px;
+        color: #fdd835; /* Yellow for headings */
+      }
+      #info-panel p {
+        font-size: 1rem;
+        line-height: 1.4;
+      }
+
+      /* Responsive adjustments for info panel and sidebar */
+      @media (max-width: 768px) {
+        #info-panel {
+          padding: 10px 15px;
+          font-size: 0.9rem;
+          max-width: 95%;
+        }
+        #info-panel h3 {
+          font-size: 1.2rem;
+        }
+        #sidebar {
+          width: 70vw; /* Wider on smaller screens to be more usable */
+          max-width: 250px; /* But don't exceed a comfortable max */
+        }
+        #sidebar button {
+          padding: 8px 12px;
+          font-size: 0.9rem;
+        }
+        #open-sidebar-btn {
+          font-size: 1rem; /* Slightly smaller on mobile */
+          padding: 8px 10px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="solar-system-container">
+      <!-- Button to open the sidebar -->
+      <button id="open-sidebar-btn">☰</button>
+
+      <!-- Sidebar menu -->
+      <div id="sidebar">
+        <button id="close-sidebar-btn">Close Menu</button>
+        <button id="zoom-in-btn">Zoom In</button>
+        <button id="zoom-out-btn">Zoom Out</button>
+        <button id="toggle-info-btn">Toggle Info</button>
+        <button id="slow-motion-btn">Slow Motion: ON</button>
+        <button id="reset-camera-btn">Reset Camera</button>
+        <button id="top-view-btn">Top View</button>
+        <button id="pause-btn">Pause</button>
+      </div>
+
+      <!-- The Three.js scene will be rendered here -->
+      <div id="info-panel" class="rounded-lg">
+        <h3 id="planet-name" class="font-bold"></h3>
+        <p id="planet-description"></p>
+      </div>
+    </div>
+
+    <script>
+      // Global variables for the Three.js scene
+      let scene, camera, renderer;
+
+      // Variables for camera rotation and distance (for 360-degree view and zoom)
+      let initialRadius = 250; // Initial distance from center (zoom level) - increased for better solar system framing
+      let initialTheta = 0; // Initial horizontal angle for camera rotation
+      let initialPhi = 0.1; // Initial vertical angle for camera rotation (top-down view)
+
+      let radius = initialRadius;
+      let theta = initialTheta;
+      let phi = initialPhi;
+
+      // Mouse/touch interaction variables for camera control
+      let isDragging = false;
+      let previousMouseX = 0;
+      let previousMouseY = 0;
+      let initialPinchDistance = 0;
+
+      // Animation speed control
+      let animationSpeedMultiplier = 0.1; // 0.1 for slow motion, 1.0 for normal speed - enabled by default
+      let isSlowMotion = true; // Track slow motion state - enabled by default
+      let isPaused = false; // New variable to track pause state
+
+      // Define the planets and their properties, including moons
+      // 'radius' is relative size, 'orbit' is distance from parent body
+      const planetsData = [
+        {
+          name: "Sun",
+          radius: 10,
+          color: 0xfdb813,
+          orbit: 0,
+          description:
+            "The star at the center of our Solar System. All planets orbit around it.",
+          isStar: true,
+        },
+        {
+          name: "Mercury",
+          radius: 1,
+          color: 0x8c8c8c,
+          orbit: 20,
+          speed: 0.04,
+          description:
+            "The smallest planet in our Solar System and closest to the Sun.",
+        },
+        {
+          name: "Venus",
+          radius: 2,
+          color: 0xe8a02d,
+          orbit: 30,
+          speed: 0.015,
+          description:
+            "Known for its thick, toxic atmosphere and extreme surface temperatures.",
+        },
+        {
+          name: "Earth",
+          radius: 2.5,
+          color: 0x0077be,
+          orbit: 40,
+          speed: 0.01,
+          description:
+            "Our home planet, known for its abundant liquid water and diverse life.",
+          moons: [
+            {
+              name: "Moon",
+              radius: 0.5,
+              color: 0xcccccc,
+              orbit: 4,
+              speed: 0.05,
+            },
+          ],
+        },
+        {
+          name: "Mars",
+          radius: 1.8,
+          color: 0xc1440e,
+          orbit: 50,
+          speed: 0.008,
+          description:
+            'The "Red Planet," famous for its distinctive reddish hue and potential for past water.',
+          moons: [
+            {
+              name: "Phobos",
+              radius: 0.2,
+              color: 0xa0522d,
+              orbit: 3,
+              speed: 0.1,
+            },
+            {
+              name: "Deimos",
+              radius: 0.15,
+              color: 0x8b4513,
+              orbit: 5,
+              speed: 0.07,
+            },
+          ],
+        },
+        {
+          name: "Jupiter",
+          radius: 6,
+          color: 0xd0c4a4,
+          orbit: 80,
+          speed: 0.002,
+          description:
+            "The largest planet, a gas giant with a distinctive Great Red Spot.",
+          moons: [
+            { name: "Io", radius: 0.8, color: 0xffd700, orbit: 8, speed: 0.02 },
+            {
+              name: "Europa",
+              radius: 0.7,
+              color: 0xadd8e6,
+              orbit: 10,
+              speed: 0.015,
+            },
+            {
+              name: "Ganymede",
+              radius: 1,
+              color: 0xd2b48c,
+              orbit: 12,
+              speed: 0.01,
+            },
+            {
+              name: "Callisto",
+              radius: 0.9,
+              color: 0x8b4513,
+              orbit: 14,
+              speed: 0.008,
+            },
+          ],
+        },
+        {
+          name: "Saturn",
+          radius: 5,
+          color: 0xe0c98b,
+          orbit: 110,
+          speed: 0.0009,
+          description:
+            "Known for its prominent, beautiful ring system composed of ice particles.",
+          moons: [
+            {
+              name: "Titan",
+              radius: 0.9,
+              color: 0xf4a460,
+              orbit: 8,
+              speed: 0.012,
+            },
+          ],
+        },
+        {
+          name: "Uranus",
+          radius: 4,
+          color: 0xadd8e6,
+          orbit: 140,
+          speed: 0.0004,
+          description:
+            "An ice giant with a unique axial tilt, causing it to roll on its side.",
+          moons: [
+            {
+              name: "Titania",
+              radius: 0.6,
+              color: 0xa9a9a9,
+              orbit: 7,
+              speed: 0.015,
+            },
+          ],
+        },
+        {
+          name: "Neptune",
+          radius: 4,
+          color: 0x4682b4,
+          orbit: 170,
+          speed: 0.0002,
+          description:
+            "A distant ice giant with strong winds and a deep blue color.",
+          moons: [
+            {
+              name: "Triton",
+              radius: 0.7,
+              color: 0xbebebe,
+              orbit: 6,
+              speed: 0.018,
+            },
+          ],
+        },
+      ];
+
+      // Arrays to hold Three.js mesh objects for click detection and animation
+      const clickableObjects = []; // Stores all meshes (planets and moons) for raycasting
+      const solarSystemBodies = []; // Stores parent groups/meshes for animation (planets, planetGroups, Sun)
+
+      // Information panel elements
+      const infoPanel = document.getElementById("info-panel");
+      const planetName = document.getElementById("planet-name");
+      const planetDescription = document.getElementById("planet-description");
+
+      // Control buttons
+      const zoomInBtn = document.getElementById("zoom-in-btn");
+      const zoomOutBtn = document.getElementById("zoom-out-btn");
+      const toggleInfoBtn = document.getElementById("toggle-info-btn");
+      const slowMotionBtn = document.getElementById("slow-motion-btn");
+      const resetCameraBtn = document.getElementById("reset-camera-btn");
+      const topViewBtn = document.getElementById("top-view-btn");
+      const pauseBtn = document.getElementById("pause-btn");
+
+      // Sidebar menu elements
+      const openSidebarBtn = document.getElementById("open-sidebar-btn");
+      const closeSidebarBtn = document.getElementById("close-sidebar-btn");
+      const sidebar = document.getElementById("sidebar");
+
+      /**
+       * Initializes the 3D scene, camera, renderer, lights, and creates all celestial bodies.
+       */
+      function init() {
+        // Create a new scene
+        scene = new THREE.Scene();
+
+        // Set up the camera (PerspectiveCamera for 3D view)
+        // FOV, Aspect Ratio, Near Clipping Plane, Far Clipping Plane
+        camera = new THREE.PerspectiveCamera(
+          75,
+          window.innerWidth / window.innerHeight,
+          0.1,
+          1000
+        );
+        // Initial camera position will be calculated in animate() based on radius, theta, phi
+
+        // Set up the renderer (WebGLRenderer for performance)
+        renderer = new THREE.WebGLRenderer({ antialias: true }); // Antialiasing for smoother edges
+        renderer.setSize(window.innerWidth, window.innerHeight); // Set renderer size to full window
+        document
+          .getElementById("solar-system-container")
+          .appendChild(renderer.domElement); // Add renderer to the DOM
+
+        // Add ambient light to illuminate the scene uniformly
+        const ambientLight = new THREE.AmbientLight(0x333333); // Soft white light
+        scene.add(ambientLight);
+
+        // Add a directional light (like sunlight) to simulate the Sun's illumination
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 1); // White light, full intensity
+        directionalLight.position.set(500, 500, 500); // Position the light source
+        scene.add(directionalLight);
+
+        // Create the Sun
+        const sunGeometry = new THREE.SphereGeometry(
+          planetsData[0].radius,
+          32,
+          32
+        );
+        // Use MeshBasicMaterial for the sun to make it appear as a light source itself
+        const sunMaterial = new THREE.MeshBasicMaterial({
+          color: planetsData[0].color,
+        });
+        const sun = new THREE.Mesh(sunGeometry, sunMaterial);
+        // Store relevant data in userData for animation and interaction
+        sun.userData = {
+          name: planetsData[0].name,
+          description: planetsData[0].description,
+          isStar: true,
+          radius: planetsData[0].radius,
+        };
+        scene.add(sun);
+        solarSystemBodies.push(sun); // Add sun to the animation array
+        clickableObjects.push(sun); // Sun is also clickable
+
+        // Create other planets and their orbits, including moons if they exist
+        for (let i = 1; i < planetsData.length; i++) {
+          const data = planetsData[i];
+
+          // Create planet mesh
+          const planetGeometry = new THREE.SphereGeometry(data.radius, 32, 32);
+          // Use MeshLambertMaterial for planets to show diffuse reflection from light sources
+          const planetMaterial = new THREE.MeshLambertMaterial({
+            color: data.color,
+          });
+          const planetMesh = new THREE.Mesh(planetGeometry, planetMaterial);
+          // Store relevant data in userData for animation and interaction
+          planetMesh.userData = {
+            name: data.name,
+            description: data.description,
+            speed: data.speed,
+            orbitRadius: data.orbit,
+            type: "planet",
+          };
+          clickableObjects.push(planetMesh); // Add planet mesh to clickable objects
+
+          // Create orbit line (a thin ring)
+          const orbitGeometry = new THREE.RingGeometry(
+            data.orbit - 0.1,
+            data.orbit + 0.1,
+            64
+          ); // Thin ring
+          const orbitMaterial = new THREE.MeshBasicMaterial({
+            color: 0x555555,
+            side: THREE.DoubleSide,
+          }); // Grey color
+          const orbit = new THREE.Mesh(orbitGeometry, orbitMaterial);
+          orbit.rotation.x = Math.PI / 2; // Rotate to lie flat on XZ plane
+          scene.add(orbit); // Add orbit directly to the scene
+
+          // Handle planets with moons
+          if (data.moons && data.moons.length > 0) {
+            const planetGroup = new THREE.Group(); // Group for the planet and its moons
+            planetGroup.add(planetMesh); // Add planet mesh to its group
+            // The group's userData will hold the planet's primary animation data
+            planetGroup.userData = {
+              name: data.name,
+              description: data.description,
+              speed: data.speed,
+              orbitRadius: data.orbit,
+              type: "planetGroup",
+            };
+
+            data.moons.forEach((moonData) => {
+              const moonGeometry = new THREE.SphereGeometry(
+                moonData.radius,
+                16,
+                16
+              );
+              const moonMaterial = new THREE.MeshLambertMaterial({
+                color: moonData.color,
+              });
+              const moonMesh = new THREE.Mesh(moonGeometry, moonMaterial);
+              moonMesh.position.set(moonData.orbit, 0, 0); // Initial moon position relative to planet
+              // Store moon-specific data in its userData
+              moonMesh.userData = {
+                name: moonData.name,
+                description: `A moon of ${data.name}.`,
+                parentPlanet: data.name,
+                speed: moonData.speed,
+                orbitRadius: moonData.orbit,
+                type: "moon",
+              };
+              clickableObjects.push(moonMesh); // Add moon mesh to clickable objects
+              planetGroup.add(moonMesh); // Add moon mesh to planet's group
+            });
+            scene.add(planetGroup); // Add the planet group to the main scene
+            solarSystemBodies.push(planetGroup); // Add the group to the animation array
+          } else {
+            // If no moons, add the planet directly to the scene and animation array
+            scene.add(planetMesh);
+            solarSystemBodies.push(planetMesh);
+          }
+        }
+
+        // Create a starfield background
+        createStarfield();
+
+        // Event Listeners for camera control (mouse drag, mouse wheel, touch)
+        document.addEventListener("mousedown", onDocumentMouseDown);
+        document.addEventListener("mouseup", onDocumentMouseUp);
+        document.addEventListener("mousemove", onDocumentMouseMove);
+        document.addEventListener("wheel", onDocumentMouseWheel, {
+          passive: false,
+        }); // Passive false to prevent default scroll
+
+        document.addEventListener("touchstart", onDocumentTouchStart, {
+          passive: false,
+        });
+        document.addEventListener("touchend", onDocumentTouchEnd);
+        document.addEventListener("touchmove", onDocumentTouchMove, {
+          passive: false,
+        });
+
+        // Event Listener for window resize
+        window.addEventListener("resize", onWindowResize);
+
+        // Event listener for clicks on planets/moons
+        document.addEventListener("click", onClick);
+
+        // Event listeners for sidebar and control buttons
+        openSidebarBtn.addEventListener("click", openSidebar);
+        closeSidebarBtn.addEventListener("click", closeSidebar);
+        zoomInBtn.addEventListener("click", zoomIn);
+        zoomOutBtn.addEventListener("click", zoomOut);
+        toggleInfoBtn.addEventListener("click", toggleInfoPanel);
+        slowMotionBtn.addEventListener("click", toggleSlowMotion);
+        resetCameraBtn.addEventListener("click", resetCamera);
+        topViewBtn.addEventListener("click", setTopView);
+        pauseBtn.addEventListener("click", togglePause);
+      }
+
+      /**
+       * Creates a starry background for the scene.
+       */
+      function createStarfield() {
+        const starGeometry = new THREE.BufferGeometry();
+        const starMaterial = new THREE.PointsMaterial({
+          color: 0xffffff,
+          size: 0.5,
+        }); // White stars, small size
+
+        const stars = [];
+        for (let i = 0; i < 5000; i++) {
+          // Generate 5000 random stars
+          const x = THREE.MathUtils.randFloatSpread(2000); // Random position within a large cube
+          const y = THREE.MathUtils.randFloatSpread(2000);
+          const z = THREE.MathUtils.randFloatSpread(2000);
+          stars.push(x, y, z);
+        }
+        starGeometry.setAttribute(
+          "position",
+          new THREE.Float32BufferAttribute(stars, 3)
+        );
+
+        const starfield = new THREE.Points(starGeometry, starMaterial);
+        scene.add(starfield);
+      }
+
+      /**
+       * Handles window resize events to adjust camera aspect ratio and renderer size.
+       */
+      function onWindowResize() {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      }
+
+      /**
+       * Handles mouse down event to start dragging for camera rotation.
+       */
+      function onDocumentMouseDown(event) {
+        // If the event target is inside the sidebar, ignore it for camera control.
+        if (
+          sidebar.contains(event.target) ||
+          openSidebarBtn.contains(event.target)
+        ) {
+          return;
+        }
+        isDragging = true;
+        previousMouseX = event.clientX;
+        previousMouseY = event.clientY;
+      }
+
+      /**
+       * Handles mouse up event to stop dragging.
+       */
+      function onDocumentMouseUp(event) {
+        isDragging = false;
+      }
+
+      /**
+       * Handles mouse movement for camera rotation when dragging.
+       */
+      function onDocumentMouseMove(event) {
+        // If the event target is inside the sidebar, ignore it for camera control.
+        if (
+          sidebar.contains(event.target) ||
+          openSidebarBtn.contains(event.target)
+        ) {
+          return;
+        }
+        if (!isDragging) return;
+
+        const deltaX = event.clientX - previousMouseX;
+        const deltaY = event.clientY - previousMouseY;
+
+        theta += deltaX * 0.005; // Adjust rotation speed
+        phi += deltaY * 0.005;
+
+        // Clamp phi to prevent camera from going upside down (limits vertical rotation)
+        phi = Math.max(0.1, Math.min(Math.PI - 0.1, phi)); // Ensure phi is not 0 or PI to avoid gimbal lock at poles
+
+        previousMouseX = event.clientX;
+        previousMouseY = event.clientY;
+      }
+
+      /**
+       * Handles mouse wheel event for zoom in/out.
+       */
+      function onDocumentMouseWheel(event) {
+        // If the event target is inside the sidebar, ignore it for camera control.
+        if (
+          sidebar.contains(event.target) ||
+          openSidebarBtn.contains(event.target)
+        ) {
+          return;
+        }
+        event.preventDefault(); // Prevent default page scrolling
+
+        radius -= event.deltaY * 0.1; // Adjust zoom speed
+        // Clamp zoom levels to reasonable min/max distances
+        radius = Math.max(50, Math.min(500, radius));
+      }
+
+      /**
+       * Handles touch start event for camera control (dragging and pinch-to-zoom).
+       */
+      function onDocumentTouchStart(event) {
+        // If the event target is inside the sidebar or open button, do not process camera control.
+        if (
+          sidebar.contains(event.target) ||
+          openSidebarBtn.contains(event.target)
+        ) {
+          isDragging = false;
+          return;
+        }
+
+        if (event.touches.length === 2) {
+          event.preventDefault(); // Prevent default for pinch-to-zoom right away
+          isDragging = false;
+          const dx = event.touches[0].pageX - event.touches[1].pageX;
+          const dy = event.touches[0].pageY - event.touches[1].pageY;
+          initialPinchDistance = Math.sqrt(dx * dx + dy * dy);
+        } else if (event.touches.length === 1) {
+          isDragging = true;
+          previousMouseX = event.touches[0].pageX;
+          previousMouseY = event.touches[0].pageY;
+        }
+      }
+
+      /**
+       * Handles touch end event.
+       */
+      function onDocumentTouchEnd(event) {
+        isDragging = false;
+        initialPinchDistance = 0;
+      }
+
+      /**
+       * Handles touch move event for camera control (dragging and pinch-to-zoom).
+       */
+      function onDocumentTouchMove(event) {
+        // If the event target is inside the sidebar or open button, do not process camera control.
+        if (
+          sidebar.contains(event.target) ||
+          openSidebarBtn.contains(event.target)
+        ) {
+          return;
+        }
+
+        event.preventDefault(); // Prevent default for camera control gestures (dragging or pinch-to-zoom)
+
+        if (event.touches.length === 1 && isDragging) {
+          // Single touch for rotation
+          const deltaX = event.touches[0].pageX - previousMouseX;
+          const deltaY = event.touches[0].pageY - previousMouseY;
+
+          theta += deltaX * 0.005;
+          phi += deltaY * 0.005;
+          phi = Math.max(0.1, Math.min(Math.PI - 0.1, phi)); // Clamp vertical angle
+
+          previousMouseX = event.touches[0].pageX;
+          previousMouseY = event.touches[0].pageY;
+        } else if (event.touches.length === 2) {
+          // Two touches for pinch-to-zoom
+          const dx = event.touches[0].pageX - event.touches[1].pageX;
+          const dy = event.touches[0].pageY - event.touches[1].pageY;
+          const currentPinchDistance = Math.sqrt(dx * dx + dy * dy);
+
+          if (initialPinchDistance > 0) {
+            const deltaPinch = currentPinchDistance - initialPinchDistance;
+            radius -= deltaPinch * 0.5; // Adjust zoom speed
+            radius = Math.max(50, Math.min(500, radius)); // Clamp zoom levels
+            initialPinchDistance = currentPinchDistance; // Update initial distance for next frame
+          }
+        }
+      }
+
+      /**
+       * Handles click events to show planet/moon information in the info panel.
+       */
+      function onClick(event) {
+        // If the event target is inside the sidebar or open button, ignore it for planet clicks.
+        if (
+          sidebar.contains(event.target) ||
+          openSidebarBtn.contains(event.target)
+        ) {
+          return;
+        }
+
+        // Get mouse coordinates relative to the canvas
+        const rect = renderer.domElement.getBoundingClientRect();
+        const x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        const y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+        const pointer = new THREE.Vector2(x, y);
+        const raycaster = new THREE.Raycaster();
+        raycaster.setFromCamera(pointer, camera);
+
+        // Find intersected objects from the clickableObjects array
+        const intersects = raycaster.intersectObjects(clickableObjects);
+
+        if (intersects.length > 0) {
+          const clickedObject = intersects[0].object;
+          if (clickedObject.userData) {
+            // Update info panel with object data
+            planetName.textContent = clickedObject.userData.name;
+            let descriptionText = clickedObject.userData.description;
+
+            if (
+              clickedObject.userData.type === "planet" &&
+              clickedObject.userData.orbitRadius
+            ) {
+              descriptionText += ` Distance from Sun: ${clickedObject.userData.orbitRadius} units.`;
+            } else if (
+              clickedObject.userData.type === "moon" &&
+              clickedObject.userData.parentPlanet &&
+              clickedObject.userData.orbitRadius
+            ) {
+              descriptionText += ` Orbits ${clickedObject.userData.parentPlanet}. Distance from ${clickedObject.userData.parentPlanet}: ${clickedObject.userData.orbitRadius} units.`;
+            } else if (clickedObject.userData.isStar) {
+              // For the Sun
+              descriptionText += ` Radius: ${clickedObject.userData.radius} units.`;
+            }
+            planetDescription.textContent = descriptionText;
+            infoPanel.classList.add("visible"); // Show the info panel
+          }
+        } else {
+          // Hide info panel if no object is clicked
+          infoPanel.classList.remove("visible");
+        }
+      }
+
+      /**
+       * Zooms the camera in.
+       */
+      function zoomIn() {
+        radius = Math.max(50, radius - 20); // Decrease radius to zoom in, clamp minimum
+      }
+
+      /**
+       * Zooms the camera out.
+       */
+      function zoomOut() {
+        radius = Math.min(500, radius + 20); // Increase radius to zoom out, clamp maximum
+      }
+
+      /**
+       * Toggles the visibility of the info panel.
+       */
+      function toggleInfoPanel() {
+        infoPanel.classList.toggle("visible");
+      }
+
+      /**
+       * Toggles slow motion on or off for planetary orbits.
+       */
+      function toggleSlowMotion() {
+        isSlowMotion = !isSlowMotion;
+        slowMotionBtn.textContent = `Slow Motion: ${
+          isSlowMotion ? "ON" : "OFF"
+        }`; // Update button text
+        animationSpeedMultiplier = isSlowMotion ? 0.1 : 1.0; // Set multiplier based on state
+      }
+
+      /**
+       * Resets the camera to its initial position and zoom.
+       */
+      function resetCamera() {
+        radius = initialRadius;
+        theta = initialTheta;
+        phi = initialPhi;
+      }
+
+      /**
+       * Sets the camera to a top-down view.
+       */
+      function setTopView() {
+        radius = initialRadius; // Keep initial zoom level for clarity
+        theta = initialTheta; // Reset horizontal angle
+        phi = 0.1; // Set phi to a small value for top-down view (avoid 0 for stability)
+      }
+
+      /**
+       * Toggles the pause state of the animation.
+       */
+      function togglePause() {
+        isPaused = !isPaused;
+        pauseBtn.textContent = isPaused ? "Play" : "Pause"; // Update button text
+      }
+
+      /**
+       * Opens the sidebar menu.
+       */
+      function openSidebar() {
+        sidebar.classList.add("open");
+      }
+
+      /**
+       * Closes the sidebar menu.
+       */
+      function closeSidebar() {
+        sidebar.classList.remove("open");
+      }
+
+      /**
+       * The main animation loop, continuously updates the scene and renders.
+       */
+      function animate() {
+        requestAnimationFrame(animate); // Request the next frame
+
+        // Update camera position based on current radius, theta, and phi for orbital view
+        camera.position.x = radius * Math.sin(phi) * Math.cos(theta);
+        camera.position.y = radius * Math.cos(phi);
+        camera.position.z = radius * Math.sin(phi) * Math.sin(theta);
+        camera.lookAt(scene.position); // Always look at the center of the scene (Sun)
+
+        // Only update orbital positions if not paused
+        if (!isPaused) {
+          // Animate planets and their moons orbiting the Sun
+          solarSystemBodies.forEach((body) => {
+            // Skip the Sun as it doesn't orbit
+            if (body.userData.isStar) return;
+
+            const data = body.userData;
+            if (data && data.orbitRadius) {
+              // Apply animation speed multiplier to orbital speed
+              const angle = Date.now() * data.speed * animationSpeedMultiplier;
+              body.position.x = Math.cos(angle) * data.orbitRadius;
+              body.position.z = Math.sin(angle) * data.orbitRadius;
+
+              // If this body is a planet group, animate its moons
+              if (data.type === "planetGroup") {
+                // Iterate through children, skipping the first child which is the planet itself
+                body.children.forEach((child) => {
+                  if (child.userData.type === "moon") {
+                    const moonData = child.userData;
+                    // Apply animation speed multiplier to moon's orbital speed
+                    const moonAngle =
+                      Date.now() * moonData.speed * animationSpeedMultiplier;
+                    // Position moon relative to its parent planet (within the group)
+                    child.position.x =
+                      Math.cos(moonAngle) * moonData.orbitRadius;
+                    child.position.z =
+                      Math.sin(moonAngle) * moonData.orbitRadius;
+                  }
+                });
+              }
+            }
+          });
+        }
+
+        renderer.render(scene, camera); // Render the scene with the camera regardless of pause state
+      }
+
+      // Start the initialization and animation loop when the window loads
+      window.onload = function () {
+        init();
+        animate();
+      };
+    </script>
+  </body>
+</html>

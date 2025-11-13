@@ -1,0 +1,1275 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Geography Quiz Adventure!</title>
+    <!-- Tailwind CSS CDN for easy styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      /* Custom font for a more friendly look */
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap");
+      @import url("https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap");
+
+      :root {
+        --primary-blue: #5DADE2;
+        --primary-green: #52BE80;
+        --primary-orange: #F4D03F;
+        --primary-purple: #BB8FCE;
+        --primary-red: #EC7063;
+        --primary-yellow: #F7DC6F;
+        --primary-pink: #F8B739;
+        --light-blue: #EBF5FB;
+        --light-green: #EAFAF1;
+        --light-orange: #FEF9E7;
+        --light-purple: #F4ECF7;
+        --light-red: #FDEDEC;
+        --light-yellow: #FEF9C3;
+        --light-pink: #FEF5E7;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Inter", sans-serif;
+        background: linear-gradient(135deg, #AED6F1 0%, #F9E79F 50%, #A9DFBF 100%);
+        min-height: 100vh;
+        margin: 0;
+        padding: 0;
+      }
+
+      .quiz-container {
+        width: 95vw;
+        max-width: 600px;
+        height: 92vh;
+        max-height: 92vh;
+        background: linear-gradient(145deg, #FFFFFF 0%, #F8F9FA 100%);
+        border: 3px solid var(--primary-yellow);
+        border-radius: clamp(24px, 5vw, 32px);
+        box-shadow: 0 clamp(8px, 2vw, 20px) clamp(24px, 4vw, 40px) rgba(0, 0, 0, 0.1);
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        padding: clamp(8px, 1.5vw, 16px);
+        margin: 8px auto;
+      }
+
+      .fun-title {
+        font-family: "Fredoka", sans-serif;
+        background: linear-gradient(135deg, var(--primary-orange), var(--primary-pink));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-size: clamp(1.2rem, 3.5vw, 2rem);
+        font-weight: 800;
+        text-align: center;
+        margin-bottom: 0.25rem;
+        line-height: 1.1;
+      }
+
+      .answer-button {
+        background: linear-gradient(145deg, var(--primary-yellow), var(--primary-orange));
+        color: #2C3E50;
+        font-weight: 700;
+        font-size: clamp(0.75rem, 2vw, 0.9rem);
+        border: 2px solid var(--primary-blue);
+        border-radius: clamp(8px, 1.5vw, 12px);
+        padding: clamp(4px, 1vw, 8px);
+        margin: 2px;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        position: relative;
+        overflow: hidden;
+        min-height: clamp(26px, 6vw, 38px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        line-height: 1.0;
+      }
+
+      .answer-button::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.3);
+        transform: translate(-50%, -50%);
+        transition: width 0.6s, height 0.6s;
+      }
+
+      .answer-button:hover {
+        transform: translateY(-2px) scale(1.02);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        border-color: var(--primary-purple);
+      }
+
+      .answer-button:active {
+        transform: translateY(-1px) scale(1.01);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+      }
+
+      .answer-button:hover::before {
+        width: 300px;
+        height: 300px;
+      }
+
+      .answer-button.correct {
+        background: linear-gradient(145deg, var(--primary-green), #58D68D);
+        animation: correct-bounce 0.8s ease-out forwards;
+        color: white;
+        border-color: var(--primary-green);
+      }
+
+      .answer-button.incorrect {
+        background: linear-gradient(145deg, var(--primary-red), #EC7063);
+        animation: incorrect-shake 0.6s ease-out forwards;
+        color: white;
+        border-color: var(--primary-red);
+      }
+
+      @keyframes correct-bounce {
+        0% { transform: scale(1); }
+        25% { transform: scale(1.1) rotate(2deg); }
+        50% { transform: scale(1.15) rotate(-2deg); }
+        75% { transform: scale(1.05) rotate(1deg); }
+        100% { transform: scale(1) rotate(0deg); }
+      }
+
+      @keyframes incorrect-shake {
+        0%, 100% { transform: translateX(0); }
+        10%, 30%, 50%, 70%, 90% { transform: translateX(-8px); }
+        20%, 40%, 60%, 80% { transform: translateX(8px); }
+      }
+
+      .fade-in {
+        animation: fadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes bounce-slow {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-12px); }
+      }
+
+      .animate-bounce-slow {
+        animation: bounce-slow 3s infinite ease-in-out;
+      }
+
+      @keyframes float {
+        0%, 100% { transform: translateY(0) rotate(0deg); }
+        33% { transform: translateY(-6px) rotate(1deg); }
+        66% { transform: translateY(3px) rotate(-1deg); }
+      }
+
+      .animate-float {
+        animation: float 4s infinite ease-in-out;
+      }
+
+      @keyframes pulse-glow {
+        0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.4); }
+        50% { box-shadow: 0 0 30px rgba(59, 130, 246, 0.6); }
+      }
+
+      .control-button {
+        background: linear-gradient(145deg, var(--primary-blue), #85C1E2);
+        color: white;
+        font-weight: 600;
+        font-size: clamp(0.875rem, 2.5vw, 1rem);
+        border: 2px solid var(--primary-blue);
+        border-radius: clamp(16px, 3vw, 20px);
+        padding: clamp(10px, 2.5vw, 14px) clamp(18px, 3.5vw, 24px);
+        margin: 4px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+        min-height: 44px; /* iOS touch target minimum */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        white-space: nowrap;
+      }
+
+      .control-button:hover {
+        background: linear-gradient(145deg, #3498DB, var(--primary-blue));
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+      }
+
+      .control-button:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      /* Make control buttons more prominent on mobile */
+      @media (max-width: 640px) {
+        .control-button {
+          font-size: 1rem;
+          padding: 12px 20px;
+          min-height: 48px;
+        }
+      }
+
+      .start-button {
+        background: linear-gradient(145deg, var(--primary-pink), var(--primary-orange));
+        color: white;
+        font-family: "Fredoka", sans-serif;
+        font-size: clamp(1rem, 3vw, 1.5rem);
+        font-weight: 700;
+        border: 3px solid var(--primary-pink);
+        border-radius: clamp(20px, 4vw, 30px);
+        padding: clamp(16px, 4vw, 24px) clamp(32px, 6vw, 48px);
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .start-button::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.2);
+        transform: translate(-50%, -50%);
+        transition: width 0.8s, height 0.8s;
+      }
+
+      .start-button:hover {
+        transform: translateY(-4px) scale(1.05);
+        box-shadow: 0 15px 35px rgba(168, 85, 247, 0.5);
+      }
+
+      .start-button:hover::before {
+        width: 400px;
+        height: 400px;
+      }
+
+      .quiz-content-area {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        flex: 1;
+        overflow-y: auto;
+        padding: 3px 0;
+        gap: 4px;
+        justify-content: flex-start;
+        -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+      }
+
+      .quiz-bottom-section {
+        width: 100%;
+        padding: 8px 0 3px;
+        border-top: 2px solid var(--primary-yellow);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        gap: 6px;
+      }
+
+      .question-display {
+        font-size: clamp(0.9rem, 2.5vw, 1.1rem);
+        font-weight: 600;
+        color: #2C3E50;
+        text-align: center;
+        padding: clamp(8px, 2vw, 16px);
+        background: linear-gradient(145deg, var(--light-yellow), var(--light-orange));
+        border-radius: clamp(12px, 2.5vw, 20px);
+        width: 100%;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        border: 2px solid var(--primary-orange);
+        position: relative;
+        line-height: 1.2;
+        flex-shrink: 0;
+      }
+
+      
+      .answer-buttons-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 3px;
+        width: 100%;
+        max-width: 500px;
+        flex: 1;
+      }
+
+      @media (min-width: 400px) {
+        .answer-buttons-grid {
+          grid-template-columns: 1fr 1fr;
+          gap: 3px;
+        }
+      }
+
+      .lives-container {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: clamp(0.8rem, 2vw, 1rem);
+        font-weight: 700;
+        color: var(--primary-red);
+        background: var(--light-red);
+        padding: 4px 8px;
+        border-radius: 16px;
+        border: 2px solid var(--primary-red);
+      }
+
+      .heart {
+        font-size: clamp(1rem, 2.5vw, 1.2rem);
+        display: inline-block;
+        animation: heartbeat 1.5s infinite ease-in-out;
+      }
+
+      @keyframes heartbeat {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+      }
+
+      .timer-container {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: clamp(0.8rem, 2vw, 1rem);
+        font-weight: 700;
+        color: var(--primary-orange);
+        background: var(--light-orange);
+        padding: 4px 8px;
+        border-radius: 16px;
+        border: 2px solid var(--primary-orange);
+      }
+
+      .timer-icon {
+        font-size: clamp(1rem, 2.5vw, 1.2rem);
+        animation: pulse 1s infinite ease-in-out;
+      }
+
+      @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+      }
+
+      .score-display {
+        font-size: clamp(1.125rem, 3vw, 1.5rem);
+        font-weight: 600;
+        color: #1F2937;
+        text-align: center;
+      }
+
+      .score-number {
+        color: var(--primary-blue);
+        font-weight: 800;
+        font-size: clamp(1.25rem, 3.5vw, 1.75rem);
+      }
+
+      .feedback-message {
+        font-size: clamp(0.8rem, 2vw, 1rem);
+        font-weight: 700;
+        text-align: center;
+        min-height: 28px;
+        max-height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        line-height: 1.2;
+      }
+
+      .feedback-message.correct {
+        color: var(--primary-green);
+      }
+
+      .feedback-message.incorrect {
+        color: var(--primary-red);
+      }
+
+      .progress-bar {
+        width: 100%;
+        height: 6px;
+        background: var(--light-yellow);
+        border-radius: 3px;
+        overflow: hidden;
+        margin-bottom: 6px;
+        border: 1px solid var(--primary-orange);
+      }
+
+      .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, var(--primary-green), var(--primary-yellow));
+        transition: width 0.5s ease-out;
+        border-radius: 4px;
+      }
+
+      .start-screen {
+        background: linear-gradient(145deg, rgba(255,255,255,0.9), rgba(254,249,195,0.9));
+        backdrop-filter: blur(10px);
+      }
+
+      .start-content {
+        text-align: center;
+        padding: clamp(20px, 4vw, 40px);
+        background: white;
+        border-radius: clamp(20px, 4vw, 30px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.08);
+        border: 4px solid var(--primary-yellow);
+        max-width: 90vw;
+        margin: 0 auto;
+      }
+
+      .start-title {
+        font-family: "Fredoka", sans-serif;
+        font-size: clamp(1.5rem, 5vw, 2.5rem);
+        font-weight: 800;
+        margin-bottom: clamp(12px, 2vw, 20px);
+        line-height: 1.2;
+        background: linear-gradient(135deg, var(--primary-orange), var(--primary-pink));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .start-description {
+        font-size: clamp(0.9rem, 2.5vw, 1.1rem);
+        color: #2C3E50;
+        margin-bottom: clamp(20px, 4vw, 32px);
+        line-height: 1.4;
+        max-width: 380px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      .play-again-button {
+        background: linear-gradient(145deg, var(--primary-green), #58D68D);
+        color: white;
+        font-family: "Fredoka", sans-serif;
+        font-size: clamp(0.9rem, 2.5vw, 1.2rem);
+        font-weight: 700;
+        border: 2px solid var(--primary-green);
+        border-radius: 20px;
+        padding: clamp(12px, 3vw, 18px) clamp(24px, 5vw, 36px);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+      }
+
+      .play-again-button:hover {
+        background: linear-gradient(145deg, #27AE60, var(--primary-green));
+        transform: translateY(-1px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+      }
+
+      .control-buttons-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+        z-index: 10;
+      }
+
+      /* Mobile optimizations */
+      @media (max-width: 480px) {
+        .quiz-container {
+          height: 94vh;
+          max-height: 94vh;
+          padding: clamp(6px, 1.5vw, 12px);
+        }
+
+        .fun-title {
+          font-size: clamp(1rem, 4vw, 1.5rem);
+          margin-bottom: 0.2rem;
+        }
+
+        .question-display {
+          font-size: clamp(0.8rem, 3vw, 1rem);
+          padding: clamp(6px, 2vw, 12px);
+        }
+
+        .answer-button {
+          font-size: clamp(0.6rem, 2vw, 0.75rem);
+          padding: clamp(2px, 0.8vw, 4px);
+          min-height: clamp(18px, 4.5vw, 28px);
+          margin: 1px;
+          line-height: 0.9;
+        }
+
+        .answer-buttons-grid {
+          gap: 2px;
+        }
+
+        .lives-container, .timer-container {
+          font-size: clamp(0.7rem, 2vw, 0.9rem);
+          padding: 3px 6px;
+        }
+
+        .heart, .timer-icon {
+          font-size: clamp(0.8rem, 2.5vw, 1rem);
+        }
+
+        .feedback-message {
+          font-size: clamp(0.7rem, 2vw, 0.9rem);
+          min-height: 24px;
+          max-height: 35px;
+        }
+
+        .quiz-content-area {
+          gap: 3px;
+        }
+      }
+
+      /* Dark mode support */
+      @media (prefers-color-scheme: dark) {
+        body {
+          background: linear-gradient(135deg, #5D6D7E 0%, #2E86AB 100%);
+        }
+
+        .quiz-container {
+          background: linear-gradient(145deg, #2C3E50 0%, #34495E 100%);
+          border-color: var(--primary-yellow);
+        }
+
+        .question-display {
+          background: linear-gradient(145deg, var(--light-orange), var(--light-yellow));
+          color: #2C3E50;
+          border-color: var(--primary-orange);
+        }
+
+        .start-content {
+          background: #2C3E50;
+          border-color: var(--primary-yellow);
+        }
+
+        .start-description {
+          color: #ECF0F1;
+        }
+      }
+    </style>
+  </head>
+  <body class="flex items-center justify-center min-h-screen p-0">
+    <!-- Welcome/Start Screen -->
+    <div id="start-screen" class="absolute inset-0 flex items-center justify-center start-screen z-10 fade-in">
+      <div class="start-content">
+        <div class="start-title animate-bounce-slow">
+          🌍 Geography Quiz Adventure! 🗺️
+        </div>
+        <p class="start-description">
+          Explore the world and test your knowledge of countries, landmarks, and amazing places!
+        </p>
+        <button id="start-button" class="start-button">
+          🚀 Start Adventure!
+        </button>
+      </div>
+    </div>
+
+    <!-- Main Quiz Container (initially hidden) -->
+    <main id="quiz-game-container" class="quiz-container hidden fade-in">
+      <!-- Progress Bar -->
+      <div class="progress-bar">
+        <div id="progress-fill" class="progress-fill" style="width: 0%"></div>
+      </div>
+
+      <header>
+        <h1 class="fun-title">
+          Geography Quiz Adventure!
+        </h1>
+      </header>
+
+      <!-- Game Stats Container -->
+      <section class="flex flex-wrap justify-center items-center gap-4 mb-4">
+        <div class="lives-container">
+          <span>Lives:</span>
+          <span id="lives-display" class="hearts">
+            <span class="heart">❤️</span>
+            <span class="heart">❤️</span>
+            <span class="heart">❤️</span>
+          </span>
+        </div>
+
+        <div class="timer-container">
+          <span class="timer-icon">⏰</span>
+          <span id="timer-display">50s</span>
+        </div>
+      </section>
+
+      <!-- Main Content Area -->
+      <section class="quiz-content-area">
+        <article id="question-display" class="question-display">
+          Loading question...
+        </article>
+
+        <div id="answer-buttons" class="answer-buttons-grid">
+          <!-- Buttons will be dynamically added here by JavaScript -->
+        </div>
+
+        <div id="feedback-message" class="feedback-message"></div>
+      </section>
+
+      <!-- Bottom Section -->
+      <footer class="quiz-bottom-section">
+        <div class="score-display">
+          Score: <span id="score-display" class="score-number">0</span>
+        </div>
+
+        <button id="play-again-button" class="play-again-button hidden" onclick="resetGame()">
+          🎮 Play Again!
+        </button>
+
+        <div id="control-buttons-container" class="control-buttons-container">
+          <button id="reset-button" class="control-button" onclick="resetGame()">
+            🔄 Reset
+          </button>
+          <button id="sound-toggle-button" class="control-button" onclick="toggleSound()">
+            🔊 Sound On
+          </button>
+        </div>
+      </footer>
+    </main>
+
+    <script>
+      // Array of quiz questions (expanded to a significant number of unique questions)
+      const allQuestions = [
+        // Countries & Capitals
+        {
+          question: "What is the capital city of France?",
+          options: ["Berlin", "Rome", "Paris", "London"],
+          answer: 2,
+        },
+        {
+          question: "Which country is famous for its pyramids?",
+          options: ["Greece", "Italy", "Egypt", "China"],
+          answer: 2,
+        },
+        {
+          question: "What is the capital city of Japan?",
+          options: ["Beijing", "Seoul", "Tokyo", "Bangkok"],
+          answer: 2,
+        },
+        {
+          question: "Which country is shaped like a boot?",
+          options: ["Spain", "Greece", "Italy", "Portugal"],
+          answer: 2,
+        },
+        {
+          question: "What is the largest country in the world by land area?",
+          options: ["China", "USA", "Canada", "Russia"],
+          answer: 3,
+        },
+        {
+          question: "What is the capital of the United States?",
+          options: [
+            "New York City",
+            "Los Angeles",
+            "Washington D.C.",
+            "Chicago",
+          ],
+          answer: 2,
+        },
+        {
+          question: "Which country is known for kangaroos?",
+          options: ["India", "South Africa", "Australia", "Brazil"],
+          answer: 2,
+        },
+        {
+          question: "What is the capital city of Canada?",
+          options: ["Toronto", "Vancouver", "Montreal", "Ottawa"],
+          answer: 3,
+        },
+        {
+          question:
+            "Which continent is the Amazon Rainforest primarily located in?",
+          options: ["Africa", "Asia", "South America", "North America"],
+          answer: 2,
+        },
+        {
+          question: "What is the smallest country in the world?",
+          options: ["Monaco", "Nauru", "Vatican City", "San Marino"],
+          answer: 2,
+        },
+
+        // Landmarks
+        {
+          question: "The Eiffel Tower is located in which city?",
+          options: ["Rome", "Berlin", "Paris", "Madrid"],
+          answer: 2,
+        },
+        {
+          question: "Which famous landmark is in London?",
+          options: [
+            "Statue of Liberty",
+            "Colosseum",
+            "Big Ben",
+            "Brandenburg Gate",
+          ],
+          answer: 2,
+        },
+        {
+          question: "The Great Wall of China is in which country?",
+          options: ["Japan", "India", "China", "Korea"],
+          answer: 2,
+        },
+        {
+          question: "Which monument is a famous symbol of New York City?",
+          options: [
+            "Golden Gate Bridge",
+            "Space Needle",
+            "Statue of Liberty",
+            "Gateway Arch",
+          ],
+          answer: 2,
+        },
+        {
+          question: "Where would you find the Colosseum?",
+          options: ["Athens", "Paris", "Rome", "Cairo"],
+          answer: 2,
+        },
+        {
+          question: "What is the ancient city of Machu Picchu located in?",
+          options: ["Mexico", "Peru", "Colombia", "Ecuador"],
+          answer: 1,
+        },
+        {
+          question: "Which famous pyramid is in Egypt?",
+          options: [
+            "Pyramid of the Sun",
+            "Great Pyramid of Giza",
+            "Pyramid of Cholula",
+            "Pyramid of Cestius",
+          ],
+          answer: 1,
+        },
+        {
+          question: "The Taj Mahal is a famous landmark in which country?",
+          options: ["China", "Japan", "India", "Iran"],
+          answer: 2,
+        },
+        {
+          question: "Where is the Sydney Opera House located?",
+          options: ["Melbourne", "Brisbane", "Perth", "Sydney"],
+          answer: 3,
+        },
+        {
+          question: "Which landmark is a leaning tower?",
+          options: [
+            "Tower of London",
+            "Leaning Tower of Pisa",
+            "CN Tower",
+            "Tokyo Skytree",
+          ],
+          answer: 1,
+        },
+
+        // Physical Features
+        {
+          question: "What is the longest river in the world?",
+          options: [
+            "Amazon River",
+            "Yangtze River",
+            "Nile River",
+            "Mississippi River",
+          ],
+          answer: 2,
+        },
+        {
+          question: "Which is the highest mountain in the world?",
+          options: ["K2", "Mount Everest", "Kangchenjunga", "Lhotse"],
+          answer: 1,
+        },
+        {
+          question: "What is the largest ocean on Earth?",
+          options: [
+            "Atlantic Ocean",
+            "Indian Ocean",
+            "Pacific Ocean",
+            "Arctic Ocean",
+          ],
+          answer: 2,
+        },
+        {
+          question: "Which desert is the largest hot desert in the world?",
+          options: [
+            "Gobi Desert",
+            "Kalahari Desert",
+            "Sahara Desert",
+            "Arabian Desert",
+          ],
+          answer: 2,
+        },
+        {
+          question:
+            "What is the name of the narrow strip of land connecting two larger landmasses?",
+          options: ["Strait", "Peninsula", "Isthmus", "Archipelago"],
+          answer: 2,
+        },
+        {
+          question:
+            "Which continent is known for its vast savannas and diverse wildlife?",
+          options: ["Asia", "South America", "Africa", "Australia"],
+          answer: 2,
+        },
+        {
+          question: "What are large masses of ice that move slowly over land?",
+          options: ["Icebergs", "Snowdrifts", "Glaciers", "Ice floes"],
+          answer: 2,
+        },
+        {
+          question:
+            "Which famous waterfall is located on the border of Brazil and Argentina?",
+          options: [
+            "Niagara Falls",
+            "Victoria Falls",
+            "Angel Falls",
+            "Iguazu Falls",
+          ],
+          answer: 3,
+        },
+        {
+          question: "What is a group of islands called?",
+          options: ["Peninsula", "Bay", "Archipelago", "Isthmus"],
+          answer: 2,
+        },
+        {
+          question: "Which body of water separates Europe from Africa?",
+          options: ["Suez Canal", "Red Sea", "Mediterranean Sea", "Black Sea"],
+          answer: 2,
+        },
+
+        // General Geography
+        {
+          question: "How many continents are there on Earth?",
+          options: ["5", "6", "7", "8"],
+          answer: 2,
+        },
+        {
+          question: "Which direction does the sun rise?",
+          options: ["North", "South", "East", "West"],
+          answer: 2,
+        },
+        {
+          question: "What is the Earth's largest continent?",
+          options: ["Africa", "Europe", "Asia", "North America"],
+          answer: 2,
+        },
+        {
+          question:
+            "Which imaginary line divides the Earth into Northern and Southern Hemispheres?",
+          options: [
+            "Prime Meridian",
+            "Tropic of Cancer",
+            "Equator",
+            "Arctic Circle",
+          ],
+          answer: 2,
+        },
+        {
+          question: "What is a large area of flat land called?",
+          options: ["Mountain", "Valley", "Plain", "Plateau"],
+          answer: 2,
+        },
+        {
+          question: "What do you call a map that shows mountains and valleys?",
+          options: [
+            "Political map",
+            "Road map",
+            "Physical map",
+            "Thematic map",
+          ],
+          answer: 2,
+        },
+        {
+          question:
+            "What is the study of Earth's physical features and atmosphere?",
+          options: ["Biology", "History", "Geography", "Geology"],
+          answer: 2,
+        },
+        {
+          question: "Which cardinal direction is opposite to North?",
+          options: ["East", "West", "South", "Up"],
+          answer: 2,
+        },
+        {
+          question: "What is the Earth's natural satellite?",
+          options: ["Sun", "Mars", "Moon", "Venus"],
+          answer: 2,
+        },
+        {
+          question:
+            "What is the name of the instrument used to show directions?",
+          options: ["Telescope", "Microscope", "Compass", "Thermometer"],
+          answer: 2,
+        },
+      ];
+
+      // Duplicate questions to reach at least 1000 for demonstration purposes.
+      // In a real application, you'd load a larger unique dataset.
+      let questions = [];
+      const targetQuestionCount = 1000;
+      while (questions.length < targetQuestionCount) {
+        questions = questions.concat(allQuestions);
+      }
+      // Trim to exact target count if necessary
+      questions = questions.slice(0, targetQuestionCount);
+
+      let currentQuestionIndex = 0; // Tracks the current question
+      let score = 0; // Tracks the player's score
+      let lives = 3; // Initial number of lives
+      const initialTimerSeconds = 50; // Initial time for each question
+      let timerSeconds = initialTimerSeconds; // Current timer value
+      let countdownInterval; // Variable to hold the timer interval
+      let soundOn = true; // State for sound toggle
+
+      // Get references to HTML elements
+      const startScreen = document.getElementById("start-screen");
+      const startButton = document.getElementById("start-button");
+      const quizGameContainer = document.getElementById("quiz-game-container");
+      const questionDisplay = document.getElementById("question-display");
+      const answerButtonsContainer = document.getElementById("answer-buttons");
+      const scoreDisplay = document.getElementById("score-display");
+      const feedbackMessage = document.getElementById("feedback-message");
+      const playAgainButton = document.getElementById("play-again-button");
+      const livesDisplay = document.getElementById("lives-display");
+      const timerDisplay = document.getElementById("timer-display");
+      const controlButtonsContainer = document.getElementById(
+        "control-buttons-container"
+      );
+      const soundToggleButton = document.getElementById("sound-toggle-button");
+      const progressFill = document.getElementById("progress-fill");
+
+      // Audio Context and simple sound generators
+      let audioContext;
+
+      /**
+       * Initializes the AudioContext and creates simple sound generators.
+       */
+      function setupAudio() {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      }
+
+      /**
+       * Plays a simple beep sound if sound is enabled.
+       * @param {number} frequency - The frequency of the beep.
+       * @param {number} duration - The duration of the beep in seconds.
+       * @param {number} volume - The volume (0 to 1).
+       */
+      function playBeep(frequency, duration, volume) {
+        if (!soundOn) return; // Do not play sound if disabled
+
+        if (!audioContext) {
+          setupAudio(); // Initialize if not already done
+        }
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        oscillator.frequency.value = frequency;
+        gainNode.gain.value = volume;
+
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + duration);
+      }
+
+      function playCorrectSound() {
+        playBeep(880, 0.1, 0.3); // High pitch, short for correct
+      }
+
+      function playIncorrectSound() {
+        playBeep(220, 0.2, 0.3); // Low pitch, slightly longer for incorrect
+      }
+
+      function playTimeoutSound() {
+        playBeep(440, 0.1, 0.4); // Medium pitch, sharp for timeout
+        setTimeout(() => playBeep(330, 0.1, 0.4), 150); // Double beep for urgency
+      }
+
+      /**
+       * Toggles sound on/off and updates the button text.
+       */
+      function toggleSound() {
+        soundOn = !soundOn;
+        soundToggleButton.textContent = soundOn ? "🔊 Sound On" : "🔇 Sound Off";
+      }
+
+      /**
+       * Updates the progress bar
+       */
+      function updateProgress() {
+        const progress = (currentQuestionIndex / questions.length) * 100;
+        progressFill.style.width = `${progress}%`;
+      }
+
+      /**
+       * Shuffles an array using the Fisher-Yates (Knuth) algorithm.
+       * @param {Array} array - The array to shuffle.
+       */
+      function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [array[i], array[j]] = [array[j], array[i]]; // Swap elements
+        }
+      }
+
+      /**
+       * Starts the quiz game, hiding the start screen and shuffling questions.
+       */
+      function startGame() {
+        startScreen.classList.add("hidden"); // Hide start screen
+        quizGameContainer.classList.remove("hidden"); // Show quiz container
+        quizGameContainer.classList.add("fade-in"); // Add fade-in animation
+        shuffleArray(questions); // Randomize the questions
+        lives = 3; // Reset lives for a new game
+        score = 0; // Reset score
+        currentQuestionIndex = 0; // Start from the first question
+        updateProgress(); // Initialize progress bar
+        loadQuestion(); // Load the first question
+        updateLivesDisplay(); // Update lives display
+      }
+
+      /**
+       * Updates the lives display with heart emojis.
+       */
+      function updateLivesDisplay() {
+        let hearts = "";
+        for (let i = 0; i < lives; i++) {
+          hearts += '<span class="heart">❤️</span>';
+        }
+        for (let i = lives; i < 3; i++) {
+          hearts += '<span class="heart" style="opacity: 0.3;">🤍</span>';
+        }
+        livesDisplay.innerHTML = hearts; // Use innerHTML to render HTML elements
+      }
+
+      /**
+       * Updates the timer display and handles timeout.
+       */
+      function updateTimer() {
+        timerSeconds--;
+        timerDisplay.textContent = `${timerSeconds}s`;
+
+        // Add warning effect when time is running out
+        if (timerSeconds <= 10) {
+          timerDisplay.parentElement.style.background = 'linear-gradient(145deg, var(--light-red), #fadbd8)';
+          timerDisplay.parentElement.style.borderColor = 'var(--primary-red)';
+          timerDisplay.parentElement.style.color = 'var(--primary-red)';
+        } else {
+          timerDisplay.parentElement.style.background = '';
+          timerDisplay.parentElement.style.borderColor = '';
+          timerDisplay.parentElement.style.color = '';
+        }
+
+        if (timerSeconds <= 0) {
+          clearInterval(countdownInterval); // Stop the timer
+
+          // Check if currentQuestionIndex is still valid BEFORE accessing question data
+          if (currentQuestionIndex < questions.length) {
+            playTimeoutSound();
+            feedbackMessage.textContent =
+              "⏱️ Time's up! The correct answer was: " +
+              questions[currentQuestionIndex].options[
+                questions[currentQuestionIndex].answer
+              ];
+            feedbackMessage.classList.add("incorrect");
+            // Apply visual feedback for timeout
+            Array.from(answerButtonsContainer.children).forEach((button) => {
+              button.disabled = true; // Disable all buttons
+            });
+            // Ensure the correct answer button exists before trying to add class
+            const correctButton = Array.from(answerButtonsContainer.children)[
+              questions[currentQuestionIndex].answer
+            ];
+            if (correctButton) {
+              correctButton.classList.add("correct");
+            }
+
+            handleIncorrectAnswer(); // Decrement lives and check game over
+
+            // Move to the next question after a short delay
+            setTimeout(() => {
+              // Only advance if game is not over
+              if (lives > 0) {
+                currentQuestionIndex++;
+                updateProgress();
+              }
+              loadQuestion();
+            }, 2000); // Wait 2 seconds for feedback
+          } else {
+            // If currentQuestionIndex is out of bounds, the game is likely already over or resetting
+            // Just ensure feedback and buttons are cleared if needed, and prevent further actions.
+            feedbackMessage.textContent = "";
+            answerButtonsContainer.innerHTML = "";
+            clearInterval(countdownInterval); // Ensure timer is fully stopped
+            // Potentially call showResult() if not already done, but loadQuestion() usually handles it.
+          }
+        }
+      }
+
+      /**
+       * Loads and displays the current question and its answer options.
+       */
+      function loadQuestion() {
+        // Clear any previous feedback and ensure play again button is hidden
+        feedbackMessage.textContent = "";
+        feedbackMessage.classList.remove("correct", "incorrect");
+        playAgainButton.classList.add("hidden");
+        scoreDisplay.textContent = score; // Update score display
+
+        // If all questions have been answered, show the final result
+        if (currentQuestionIndex >= questions.length) {
+          showResult(true); // true means quiz completed successfully
+          return;
+        }
+
+        // Reset timer for the new question
+        clearInterval(countdownInterval);
+        timerSeconds = initialTimerSeconds;
+        timerDisplay.textContent = `${timerSeconds}s`;
+        timerDisplay.parentElement.style.background = '';
+        timerDisplay.parentElement.style.borderColor = '';
+        timerDisplay.parentElement.style.color = '';
+        countdownInterval = setInterval(updateTimer, 1000); // Start the timer
+
+        const currentQuestion = questions[currentQuestionIndex];
+        questionDisplay.textContent = currentQuestion.question; // Set the question text
+        answerButtonsContainer.innerHTML = ""; // Clear previous answer buttons
+
+        // Create buttons for each answer option
+        currentQuestion.options.forEach((option, index) => {
+          const button = document.createElement("button");
+          button.textContent = option;
+          button.classList.add("answer-button");
+          // Add click event listener to check the answer
+          button.onclick = () => checkAnswer(index, button);
+          answerButtonsContainer.appendChild(button); // Add button to container
+        });
+      }
+
+      /**
+       * Handles logic for an incorrect answer: decrements lives and checks for game over.
+       */
+      function handleIncorrectAnswer() {
+        lives--;
+        updateLivesDisplay(); // Update the visual lives display
+
+        if (lives <= 0) {
+          clearInterval(countdownInterval); // Stop the timer if game over
+          showResult(false); // false means game over due to lives
+        }
+      }
+
+      /**
+       * Checks if the selected answer is correct, updates score, and provides feedback.
+       * @param {number} selectedOptionIndex - The index of the option selected by the user.
+       * @param {HTMLElement} clickedButton - The button element that was clicked.
+       */
+      function checkAnswer(selectedOptionIndex, clickedButton) {
+        clearInterval(countdownInterval); // Stop the timer once an answer is chosen
+
+        const currentQuestion = questions[currentQuestionIndex];
+        const isCorrect = selectedOptionIndex === currentQuestion.answer;
+
+        // Disable all buttons to prevent multiple clicks
+        Array.from(answerButtonsContainer.children).forEach((button) => {
+          button.disabled = true;
+        });
+
+        // Apply visual feedback to the clicked button and the correct answer button
+        if (isCorrect) {
+          clickedButton.classList.add("correct");
+          playCorrectSound();
+          score++;
+          feedbackMessage.textContent = "🎉 Awesome! Correct answer!";
+          feedbackMessage.classList.add("correct");
+        } else {
+          clickedButton.classList.add("incorrect");
+          playIncorrectSound();
+          // Also highlight the correct answer
+          Array.from(answerButtonsContainer.children)[
+            currentQuestion.answer
+          ].classList.add("correct");
+          feedbackMessage.textContent =
+            "🤔 Oops! The correct answer was: " +
+            currentQuestion.options[currentQuestion.answer];
+          feedbackMessage.classList.add("incorrect");
+          handleIncorrectAnswer(); // Decrement lives and check game over
+        }
+        scoreDisplay.textContent = score;
+
+        // Move to the next question after a short delay, only if game is not over
+        if (lives > 0) {
+          setTimeout(() => {
+            currentQuestionIndex++;
+            updateProgress();
+            loadQuestion();
+          }, 2000); // Wait 2 seconds before loading next question to allow feedback to be seen
+        }
+      }
+
+      /**
+       * Displays the final score and the "Play Again" button.
+       * @param {boolean} quizCompleted - True if all questions were answered, false if lives ran out.
+       */
+      function showResult(quizCompleted) {
+        answerButtonsContainer.innerHTML = ""; // Clear answer buttons
+        feedbackMessage.classList.remove("correct", "incorrect"); // Clear previous feedback colors
+        clearInterval(countdownInterval); // Ensure timer is stopped
+        progressFill.style.width = "100%"; // Complete the progress bar
+
+        if (quizCompleted) {
+          questionDisplay.innerHTML = `🎊 <strong>Quiz Completed!</strong><br>You answered all questions. Your final score is <strong>${score}</strong> questions!`;
+          feedbackMessage.textContent = "🌟 Amazing work, geography explorer!";
+          feedbackMessage.classList.add("correct");
+        } else {
+          questionDisplay.innerHTML = `💔 <strong>Game Over!</strong><br>You ran out of lives. Your final score was <strong>${score}</strong>.`;
+          feedbackMessage.textContent = "🎯 Better luck next time!";
+          feedbackMessage.classList.add("incorrect");
+        }
+        playAgainButton.classList.remove("hidden"); // Show the play again button
+      }
+
+      /**
+       * Resets the game state and starts a new quiz.
+       */
+      function resetGame() {
+        clearInterval(countdownInterval); // Stop any active timer
+        currentQuestionIndex = 0;
+        score = 0;
+        lives = 3; // Reset lives
+        scoreDisplay.textContent = score;
+        updateLivesDisplay(); // Update lives display to full
+        updateProgress(); // Reset progress bar
+        shuffleArray(questions); // Reshuffle questions for a new game
+        loadQuestion(); // Start the first question
+      }
+
+      // Event listener for the start button
+      startButton.addEventListener("click", startGame);
+
+      // Initial setup for audio context when the page loads
+      document.addEventListener("DOMContentLoaded", () => {
+        setupAudio(); // Initialize audio context
+      });
+    </script>
+  </body>
+</html>

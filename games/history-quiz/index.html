@@ -1,0 +1,1322 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>History Quiz Adventure!</title>
+    <!-- Tailwind CSS CDN for easy styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      /* Custom fonts for a kid-friendly look */
+      @import url("https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap");
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap");
+
+      :root {
+        --primary-orange: #FF6B35;
+        --primary-blue: #4ECDC4;
+        --primary-green: #95E77E;
+        --primary-purple: #C77DFF;
+        --primary-pink: #FF6B9D;
+        --primary-yellow: #FFD93D;
+        --light-orange: #FFE5D1;
+        --light-blue: #D1F7FF;
+        --light-green: #E0FFE9;
+        --light-purple: #F3E8FF;
+        --light-pink: #FFE5F1;
+        --light-yellow: #FFF9D1;
+        --text-dark: #2D3436;
+        --text-light: #636E72;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Inter", sans-serif;
+        background: linear-gradient(135deg, #FF6B35 0%, #FF6B9D 25%, #C77DFF 50%, #4ECDC4 75%, #95E77E 100%);
+        min-height: 100vh;
+        margin: 0;
+        padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+        overflow-x: hidden;
+      }
+
+      .quiz-container {
+        width: 95vw;
+        max-width: 800px;
+        height: 100vh;
+        background: linear-gradient(145deg, #FFFFFF 0%, #FFFEF7 100%);
+        border-radius: clamp(20px, 4vw, 32px);
+        box-shadow: 0 clamp(12px, 3vw, 25px) clamp(30px, 5vw, 50px) rgba(0, 0, 0, 0.15);
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        padding: clamp(8px, 1.5vw, 16px);
+        overflow: hidden;
+        margin: 0 auto;
+      }
+      /* Fun title styling */
+      .fun-title {
+        font-family: "Fredoka", sans-serif;
+        font-size: clamp(1.3rem, 3.5vw, 1.8rem);
+        font-weight: 700;
+        text-align: center;
+        background: linear-gradient(135deg, var(--primary-orange), var(--primary-pink));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: clamp(6px, 1vw, 8px);
+        line-height: 1.1;
+      }
+
+      /* Enhanced answer buttons */
+      .answer-button {
+        background: linear-gradient(145deg, var(--primary-yellow), var(--primary-orange));
+        color: var(--text-dark);
+        font-weight: 700;
+        font-size: clamp(0.75rem, 1.8vw, 0.95rem);
+        border: 2px solid var(--primary-orange);
+        border-radius: clamp(6px, 1.2vw, 10px);
+        padding: clamp(4px, 1vw, 8px);
+        margin: 1px;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 2px 4px rgba(255, 107, 53, 0.3);
+        position: relative;
+        overflow: hidden;
+        min-height: clamp(28px, 6vw, 38px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        line-height: 1.0;
+      }
+
+      .answer-button::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.3);
+        transform: translate(-50%, -50%);
+        transition: width 0.6s, height 0.6s;
+      }
+
+      .answer-button:hover {
+        transform: translateY(-4px) scale(1.02);
+        box-shadow: 0 12px 24px rgba(0, 122, 255, 0.4);
+      }
+
+      .answer-button:hover::before {
+        width: 300px;
+        height: 300px;
+      }
+
+      .answer-button.correct {
+        background: linear-gradient(145deg, var(--primary-green), #6BCF7F);
+        animation: correct-bounce 0.8s ease-out forwards;
+        color: white;
+        border-color: var(--primary-green);
+      }
+
+      .answer-button.incorrect {
+        background: linear-gradient(145deg, var(--primary-pink), #FF8FA3);
+        animation: incorrect-shake 0.6s ease-out forwards;
+        color: white;
+        border-color: var(--primary-pink);
+      }
+      /* Enhanced keyframe animations for kid-friendly feedback */
+      @keyframes correct-bounce {
+        0% { transform: scale(1) rotate(0deg); }
+        25% { transform: scale(1.15) rotate(3deg); }
+        50% { transform: scale(1.2) rotate(-3deg); }
+        75% { transform: scale(1.1) rotate(1deg); }
+        100% { transform: scale(1) rotate(0deg); }
+      }
+
+      @keyframes incorrect-shake {
+        0%, 100% { transform: translateX(0) rotate(0deg); }
+        10%, 30%, 50%, 70%, 90% { transform: translateX(-10px) rotate(-2deg); }
+        20%, 40%, 60%, 80% { transform: translateX(10px) rotate(2deg); }
+      }
+      .fade-in {
+        animation: fadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* Fun animations for kid engagement */
+      @keyframes bounce-slow {
+        0%, 100% { transform: translateY(0) rotate(0deg); }
+        50% { transform: translateY(-12px) rotate(2deg); }
+      }
+
+      .animate-bounce-slow {
+        animation: bounce-slow 3s infinite ease-in-out;
+      }
+
+      @keyframes float {
+        0%, 100% { transform: translateY(0) rotate(0deg); }
+        33% { transform: translateY(-8px) rotate(1deg); }
+        66% { transform: translateY(4px) rotate(-1deg); }
+      }
+
+      .animate-float {
+        animation: float 4s infinite ease-in-out;
+      }
+
+      @keyframes pulse-glow {
+        0%, 100% { box-shadow: 0 0 20px rgba(255, 149, 0, 0.4); }
+        50% { box-shadow: 0 0 30px rgba(255, 149, 0, 0.6); }
+      }
+
+      /* Enhanced control buttons - vibrant colors */
+      .control-button {
+        background: linear-gradient(145deg, var(--primary-blue), var(--primary-purple));
+        color: white;
+        font-weight: 700;
+        font-size: clamp(0.8rem, 2vw, 0.9rem);
+        border: 2px solid var(--primary-purple);
+        border-radius: clamp(16px, 3vw, 20px);
+        padding: clamp(8px, 2vw, 12px) clamp(14px, 3vw, 18px);
+        margin: 3px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 3px 6px rgba(199, 125, 255, 0.3);
+        min-height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .control-button:hover {
+        background: linear-gradient(145deg, var(--primary-purple), #9B59B6);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(199, 125, 255, 0.4);
+      }
+
+      .control-button:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 4px rgba(199, 125, 255, 0.3);
+      }
+
+      /* Main content area - no scrolling */
+      .quiz-content-area {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        flex: 1;
+        overflow: hidden;
+        padding: clamp(4px, 0.8vw, 6px) 0;
+        gap: clamp(6px, 1vw, 8px);
+      }
+
+      /* Bottom section styling - compact */
+      .quiz-bottom-section {
+        width: 100%;
+        padding: clamp(4px, 0.8vw, 6px) 0 0;
+        border-top: 2px solid var(--primary-yellow);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        gap: clamp(4px, 0.8vw, 6px);
+      }
+
+      .control-buttons-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: center;
+        align-items: center;
+      }
+      /* Responsive question display - compact */
+      .question-display {
+        font-size: clamp(1rem, 3vw, 1.3rem);
+        font-weight: 600;
+        color: var(--text-dark);
+        text-align: center;
+        background: linear-gradient(145deg, var(--light-yellow), var(--light-orange));
+        border-radius: clamp(12px, 2.5vw, 18px);
+        width: 100%;
+        box-shadow: 0 3px 8px rgba(255, 107, 53, 0.15);
+        border: 3px solid var(--primary-orange);
+        position: relative;
+        line-height: 1.3;
+        flex-shrink: 0;
+        padding: clamp(8px, 1.5vw, 12px) clamp(12px, 2.5vw, 16px);
+      }
+
+      
+      /* Answer buttons grid - ultra compact */
+      .answer-buttons-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: clamp(1px, 0.5vw, 3px);
+        width: 100%;
+        max-width: 500px;
+        flex: 1;
+      }
+
+      @media (min-width: 480px) {
+        .answer-buttons-grid {
+          grid-template-columns: 1fr 1fr;
+          gap: clamp(6px, 1.5vw, 8px);
+        }
+      }
+
+      /* Lives and timer display - more compact */
+      .game-stats {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+        gap: clamp(6px, 1vw, 8px);
+        margin-bottom: clamp(6px, 1vw, 8px);
+      }
+
+      .lives-container {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: clamp(1rem, 2.5vw, 1.3rem);
+        font-weight: 700;
+        color: var(--primary-pink);
+        background: var(--light-pink);
+        padding: 4px 8px;
+        border-radius: 12px;
+        border: 2px solid var(--primary-pink);
+      }
+
+      .heart {
+        font-size: clamp(1.2rem, 3vw, 1.4rem);
+        display: inline-block;
+        animation: heartbeat 1.5s infinite ease-in-out;
+      }
+
+      @keyframes heartbeat {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+      }
+
+      .timer-container {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: clamp(1rem, 2.5vw, 1.3rem);
+        font-weight: 700;
+        color: var(--primary-orange);
+        background: var(--light-orange);
+        padding: 4px 8px;
+        border-radius: 12px;
+        border: 2px solid var(--primary-orange);
+      }
+
+      .timer-icon {
+        font-size: clamp(1.2rem, 3vw, 1.4rem);
+        animation: pulse 1s infinite ease-in-out;
+      }
+
+      @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+      }
+
+      /* Start screen enhancements */
+      .start-screen {
+        background: linear-gradient(145deg, rgba(255,255,255,0.95), rgba(255,244,230,0.95));
+        backdrop-filter: blur(10px);
+      }
+
+      .start-content {
+        text-align: center;
+        padding: clamp(24px, 5vw, 48px);
+        background: white;
+        border-radius: clamp(24px, 5vw, 32px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        border: 3px solid var(--primary-orange);
+        max-width: 90vw;
+        margin: 0 auto;
+      }
+
+      .start-title {
+        font-family: "Fredoka", sans-serif;
+        font-size: clamp(2rem, 6vw, 3.5rem);
+        font-weight: 800;
+        margin-bottom: clamp(16px, 3vw, 24px);
+        line-height: 1.2;
+        background: linear-gradient(135deg, var(--primary-orange), var(--primary-purple));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .start-description {
+        font-size: clamp(1rem, 3vw, 1.25rem);
+        color: #4B5563;
+        margin-bottom: clamp(24px, 5vw, 40px);
+        line-height: 1.5;
+        max-width: 400px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      .start-button {
+        background: linear-gradient(145deg, var(--primary-orange), var(--primary-pink));
+        color: white;
+        font-family: "Fredoka", sans-serif;
+        font-size: clamp(1.25rem, 4vw, 1.75rem);
+        font-weight: 700;
+        border: none;
+        border-radius: clamp(32px, 6vw, 48px);
+        padding: clamp(20px, 5vw, 28px) clamp(40px, 8vw, 56px);
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 10px 25px rgba(255, 149, 0, 0.4);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .start-button::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.2);
+        transform: translate(-50%, -50%);
+        transition: width 0.8s, height 0.8s;
+      }
+
+      .start-button:hover {
+        transform: translateY(-4px) scale(1.05);
+        box-shadow: 0 15px 35px rgba(255, 149, 0, 0.5);
+      }
+
+      .start-button:hover::before {
+        width: 400px;
+        height: 400px;
+      }
+
+      /* Score display */
+      .score-display {
+        font-size: clamp(1.125rem, 3vw, 1.5rem);
+        font-weight: 600;
+        color: var(--text-dark);
+        text-align: center;
+      }
+
+      .score-number {
+        color: var(--primary-blue);
+        font-weight: 800;
+        font-size: clamp(1.25rem, 3.5vw, 1.75rem);
+      }
+
+      /* Feedback message - compact */
+      .feedback-message {
+        font-size: clamp(0.8rem, 2vw, 1rem);
+        font-weight: 700;
+        text-align: center;
+        min-height: clamp(20px, 4vw, 28px);
+        max-height: clamp(24px, 5vw, 32px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        line-height: 1.1;
+      }
+
+      .feedback-message.correct {
+        color: var(--primary-green);
+      }
+
+      .feedback-message.incorrect {
+        color: var(--primary-pink);
+      }
+
+      /* Play again button */
+      .play-again-button {
+        background: linear-gradient(145deg, var(--primary-green), #30D158);
+        color: white;
+        font-family: "Fredoka", sans-serif;
+        font-size: clamp(1.125rem, 3.5vw, 1.5rem);
+        font-weight: 700;
+        border: none;
+        border-radius: clamp(24px, 5vw, 32px);
+        padding: clamp(16px, 4vw, 24px) clamp(32px, 6vw, 48px);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 8px 16px rgba(52, 199, 89, 0.3);
+      }
+
+      .play-again-button:hover {
+        background: linear-gradient(145deg, #28A745, #30D158);
+        transform: translateY(-2px);
+        box-shadow: 0 12px 24px rgba(52, 199, 89, 0.4);
+      }
+
+      /* Responsive improvements for very small screens */
+      @media (max-height: 700px) {
+        .quiz-container {
+          height: 100vh;
+          padding: clamp(6px, 1vw, 10px);
+        }
+
+        .fun-title {
+          font-size: clamp(1.1rem, 3vw, 1.4rem);
+          margin-bottom: clamp(3px, 0.8vw, 5px);
+        }
+
+        .quiz-content-area {
+          gap: clamp(3px, 0.8vw, 4px);
+          padding: clamp(3px, 0.6vw, 4px) 0;
+        }
+
+        .question-display {
+          padding: clamp(6px, 1.2vw, 10px);
+          font-size: clamp(0.8rem, 2vw, 0.95rem);
+        }
+
+        .answer-button {
+          padding: clamp(3px, 0.8vw, 6px);
+          min-height: clamp(24px, 5vw, 32px);
+          font-size: clamp(0.65rem, 1.5vw, 0.85rem);
+          margin: 1px;
+        }
+
+        .answer-buttons-grid {
+          gap: 1px;
+        }
+
+        .game-stats {
+          margin-bottom: clamp(3px, 0.8vw, 4px);
+          gap: clamp(4px, 0.8vw, 6px);
+        }
+
+        .quiz-bottom-section {
+          padding: clamp(3px, 0.6vw, 4px) 0 0;
+          gap: clamp(3px, 0.6vw, 4px);
+        }
+
+        .feedback-message {
+          min-height: clamp(16px, 3vw, 20px);
+          font-size: clamp(0.7rem, 1.8vw, 0.8rem);
+        }
+
+        .lives-container, .timer-container {
+          font-size: clamp(0.7rem, 1.8vw, 0.9rem);
+          padding: 2px 6px;
+        }
+      }
+
+      @media (max-width: 380px) {
+        .answer-buttons-grid {
+          gap: 1px;
+        }
+
+        .answer-button {
+          margin: 0;
+          padding: clamp(2px, 0.6vw, 4px);
+          min-height: clamp(20px, 4vw, 26px);
+          font-size: clamp(0.55rem, 1.3vw, 0.7rem);
+          border-radius: clamp(4px, 0.8vw, 6px);
+        }
+
+        .control-button {
+          font-size: clamp(0.5rem, 1.2vw, 0.7rem);
+          padding: clamp(3px, 0.8vw, 5px) clamp(6px, 1.2vw, 8px);
+          min-height: 28px;
+        }
+
+        .fun-title {
+          font-size: clamp(0.9rem, 2.2vw, 1.1rem);
+        }
+
+        .question-display {
+          padding: clamp(4px, 1vw, 8px);
+          font-size: clamp(0.65rem, 1.5vw, 0.8rem);
+        }
+
+        .feedback-message {
+          min-height: clamp(12px, 2vw, 16px);
+          font-size: clamp(0.55rem, 1.3vw, 0.65rem);
+        }
+      }
+
+      /* Dark mode support */
+      @media (prefers-color-scheme: dark) {
+        body {
+          background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+        }
+
+        .quiz-container {
+          background: linear-gradient(145deg, #1f2937 0%, #111827 100%);
+        }
+
+        .question-display {
+          background: linear-gradient(145deg, #374151, #1f2937);
+          color: white;
+          border-color: var(--primary-orange);
+        }
+
+        .start-content {
+          background: #1f2937;
+          border-color: var(--primary-orange);
+        }
+
+        .start-description {
+          color: #d1d5db;
+        }
+      }
+    </style>
+  </head>
+  <body class="flex items-center justify-center min-h-screen p-0">
+    <!-- Welcome/Start Screen -->
+    <div id="start-screen" class="absolute inset-0 flex items-center justify-center start-screen z-10 fade-in">
+      <div class="start-content">
+        <div class="start-title animate-bounce-slow">
+          ⏳ History Quiz Adventure! 🗺️
+        </div>
+        <p class="start-description">
+          Travel through time and test your knowledge of the past!
+        </p>
+        <button id="start-button" class="start-button">
+          🚀 Start Adventure!
+        </button>
+      </div>
+    </div>
+
+    <!-- Main Quiz Container (initially hidden) -->
+    <main id="quiz-game-container" class="quiz-container hidden fade-in">
+      <header>
+        <h1 class="fun-title">
+          History Quiz Adventure!
+        </h1>
+      </header>
+
+      <!-- Game Stats Container -->
+      <section class="game-stats">
+        <div class="lives-container">
+          <span>Lives:</span>
+          <span id="lives-display" class="hearts">
+            <span class="heart">❤️</span>
+            <span class="heart">❤️</span>
+            <span class="heart">❤️</span>
+          </span>
+        </div>
+
+        <div class="timer-container">
+          <span class="timer-icon">⏰</span>
+          <span id="timer-display">50s</span>
+        </div>
+      </section>
+
+      <!-- Main Content Area -->
+      <section class="quiz-content-area">
+        <article id="question-display" class="question-display">
+          Loading question...
+        </article>
+
+        <div id="answer-buttons" class="answer-buttons-grid">
+          <!-- Buttons will be dynamically added here by JavaScript -->
+        </div>
+
+        <div id="feedback-message" class="feedback-message"></div>
+      </section>
+
+      <!-- Bottom Section -->
+      <footer class="quiz-bottom-section">
+        <div class="score-display">
+          Score: <span id="score-display" class="score-number">0</span>
+        </div>
+
+        <button id="play-again-button" class="play-again-button hidden" onclick="resetGame()">
+          🎮 Play Again!
+        </button>
+
+        <div id="control-buttons-container" class="control-buttons-container">
+          <button id="reset-button" class="control-button" onclick="resetGame()">
+            🔄 Reset
+          </button>
+          <button id="sound-toggle-button" class="control-button" onclick="toggleSound()">
+            🔊 Sound On
+          </button>
+        </div>
+      </footer>
+    </main>
+
+    <script>
+      // Array of quiz questions (expanded to a significant number of unique questions)
+      const allQuestions = [
+        // Ancient Civilizations
+        {
+          question: "Which ancient civilization built the pyramids?",
+          options: ["Roman", "Greek", "Egyptian", "Viking"],
+          answer: 2,
+        },
+        {
+          question: "Who was the first emperor of Rome?",
+          options: ["Julius Caesar", "Nero", "Augustus", "Caligula"],
+          answer: 2,
+        },
+        {
+          question: "Which city was famously destroyed by a volcano in 79 AD?",
+          options: ["Athens", "Rome", "Pompeii", "Alexandria"],
+          answer: 2,
+        },
+        {
+          question: "The Great Wall was built in which country?",
+          options: ["Japan", "India", "China", "Korea"],
+          answer: 2,
+        },
+        {
+          question:
+            "What mythical creature guarded the labyrinth in ancient Greek mythology?",
+          options: ["Centaur", "Sphinx", "Minotaur", "Hydra"],
+          answer: 2,
+        },
+        {
+          question:
+            "Which river was essential to the survival of Ancient Egypt?",
+          options: ["Amazon", "Tigris", "Nile", "Yellow"],
+          answer: 2,
+        },
+        {
+          question: "What were ancient Roman gladiators famous for?",
+          options: [
+            "Building bridges",
+            "Fighting in arenas",
+            "Writing poetry",
+            "Exploring new lands",
+          ],
+          answer: 1,
+        },
+        {
+          question: "Who was a famous Greek philosopher who taught Plato?",
+          options: ["Aristotle", "Socrates", "Pythagoras", "Homer"],
+          answer: 1,
+        },
+        {
+          question: "Which empire was ruled by Genghis Khan?",
+          options: [
+            "Roman Empire",
+            "Mongol Empire",
+            "Ottoman Empire",
+            "Persian Empire",
+          ],
+          answer: 1,
+        },
+        {
+          question: "What was the capital city of the Byzantine Empire?",
+          options: ["Rome", "Athens", "Constantinople", "Cairo"],
+          answer: 2,
+        },
+
+        // Explorers & Discoveries
+        {
+          question: "Who was the first European to sail to India?",
+          options: [
+            "Christopher Columbus",
+            "Ferdinand Magellan",
+            "Vasco da Gama",
+            "Marco Polo",
+          ],
+          answer: 2,
+        },
+        {
+          question:
+            "In what year did Christopher Columbus first arrive in the Americas?",
+          options: ["1492", "1500", "1488", "1512"],
+          answer: 0,
+        },
+        {
+          question: "Who was the first person to sail around the world?",
+          options: [
+            "Captain Cook",
+            "Francis Drake",
+            "Amerigo Vespucci",
+            "Ferdinand Magellan",
+          ],
+          answer: 3,
+        },
+        {
+          question:
+            "Which explorer's expedition was the first to circumnavigate the globe?",
+          options: [
+            "Vasco da Gama",
+            "Christopher Columbus",
+            "Ferdinand Magellan",
+            "James Cook",
+          ],
+          answer: 2,
+        },
+        {
+          question: "Who discovered America (for Europeans)?",
+          options: [
+            "Leif Erikson",
+            "Vasco da Gama",
+            "Christopher Columbus",
+            "Marco Polo",
+          ],
+          answer: 2,
+        },
+        {
+          question:
+            "What instrument helped sailors navigate by showing their latitude?",
+          options: ["Compass", "Telescope", "Astrolabe", "Sextant"],
+          answer: 2,
+        },
+        {
+          question: "Who invented the printing press?",
+          options: [
+            "Leonardo da Vinci",
+            "Isaac Newton",
+            "Johannes Gutenberg",
+            "Galileo Galilei",
+          ],
+          answer: 2,
+        },
+        {
+          question: "What discovery is Isaac Newton most famous for?",
+          options: ["Electricity", "Gravity", "Evolution", "Microscope"],
+          answer: 1,
+        },
+        {
+          question: "Who invented the light bulb?",
+          options: [
+            "Nikola Tesla",
+            "Alexander Graham Bell",
+            "Thomas Edison",
+            "Marie Curie",
+          ],
+          answer: 2,
+        },
+        {
+          question: "Which scientist developed the theory of relativity?",
+          options: [
+            "Isaac Newton",
+            "Albert Einstein",
+            "Stephen Hawking",
+            "Niels Bohr",
+          ],
+          answer: 1,
+        },
+
+        // World Events & Conflicts
+        {
+          question:
+            "The American Revolution was a war for independence from which country?",
+          options: ["France", "Spain", "Great Britain", "Germany"],
+          answer: 2,
+        },
+        {
+          question: "What major event started in 1914 and ended in 1918?",
+          options: [
+            "World War II",
+            "The Cold War",
+            "World War I",
+            "The Great Depression",
+          ],
+          answer: 2,
+        },
+        {
+          question: "Who was the leader of Nazi Germany during World War II?",
+          options: [
+            "Winston Churchill",
+            "Joseph Stalin",
+            "Benito Mussolini",
+            "Adolf Hitler",
+          ],
+          answer: 3,
+        },
+        {
+          question:
+            "The Berlin Wall was a symbol of division between which two ideologies?",
+          options: [
+            "Democracy and Monarchy",
+            "Capitalism and Communism",
+            "Socialism and Anarchy",
+            "Federalism and Republic",
+          ],
+          answer: 1,
+        },
+        {
+          question: "What year did the Titanic sink?",
+          options: ["1905", "1912", "1920", "1931"],
+          answer: 1,
+        },
+        {
+          question: "What event officially began World War II in Europe?",
+          options: [
+            "Bombing of Pearl Harbor",
+            "Invasion of Poland",
+            "Battle of Britain",
+            "Fall of France",
+          ],
+          answer: 1,
+        },
+        {
+          question: "Who led the Civil Rights Movement in the United States?",
+          options: [
+            "Rosa Parks",
+            "Malcolm X",
+            "Martin Luther King Jr.",
+            "Harriet Tubman",
+          ],
+          answer: 2,
+        },
+        {
+          question:
+            "What was the period of intense political and military tension between the US and Soviet Union called?",
+          options: [
+            "The Great War",
+            "The Space Race",
+            "The Cold War",
+            "The Korean War",
+          ],
+          answer: 2,
+        },
+        {
+          question:
+            "Which country gifted the Statue of Liberty to the United States?",
+          options: ["Italy", "Germany", "France", "Spain"],
+          answer: 2,
+        },
+        {
+          question:
+            "What was the name of the ship that brought the Pilgrims to America?",
+          options: ["Santa Maria", "Nina", "Pinta", "Mayflower"],
+          answer: 3,
+        },
+
+        // Famous People
+        {
+          question: "Who was the first president of the United States?",
+          options: [
+            "Thomas Jefferson",
+            "Abraham Lincoln",
+            "George Washington",
+            "John Adams",
+          ],
+          answer: 2,
+        },
+        {
+          question: "Who wrote the play 'Romeo and Juliet'?",
+          options: [
+            "Charles Dickens",
+            "Jane Austen",
+            "William Shakespeare",
+            "Mark Twain",
+          ],
+          answer: 2,
+        },
+        {
+          question: "Which famous artist painted the Mona Lisa?",
+          options: [
+            "Vincent van Gogh",
+            "Pablo Picasso",
+            "Leonardo da Vinci",
+            "Claude Monet",
+          ],
+          answer: 2,
+        },
+        {
+          question: "Who was a key figure in the women's suffrage movement?",
+          options: [
+            "Clara Barton",
+            "Susan B. Anthony",
+            "Eleanor Roosevelt",
+            "Harriet Tubman",
+          ],
+          answer: 1,
+        },
+        {
+          question:
+            "Which historical figure is known for saying 'I have a dream'?",
+          options: [
+            "Nelson Mandela",
+            "Mahatma Gandhi",
+            "Martin Luther King Jr.",
+            "Abraham Lincoln",
+          ],
+          answer: 2,
+        },
+        {
+          question: "Who was the queen of England for over 60 years?",
+          options: [
+            "Queen Victoria",
+            "Queen Elizabeth I",
+            "Queen Elizabeth II",
+            "Queen Mary",
+          ],
+          answer: 2,
+        },
+        {
+          question: "Who was a famous Roman general known for his conquests?",
+          options: ["Nero", "Augustus", "Hannibal", "Julius Caesar"],
+          answer: 3,
+        },
+        {
+          question: "Which French military leader conquered much of Europe?",
+          options: [
+            "Louis XIV",
+            "Charles de Gaulle",
+            "Napoleon Bonaparte",
+            "Joan of Arc",
+          ],
+          answer: 2,
+        },
+        {
+          question:
+            "Who was the ancient Egyptian queen associated with Julius Caesar and Mark Antony?",
+          options: ["Nefertiti", "Hatshepsut", "Cleopatra", "Sobekneferu"],
+          answer: 2,
+        },
+        {
+          question:
+            "Which Greek warrior fought in the Trojan War and is famous for his vulnerable heel?",
+          options: ["Odysseus", "Hector", "Achilles", "Perseus"],
+          answer: 2,
+        },
+      ];
+
+      // Duplicate questions to reach at least 1000 for demonstration purposes.
+      // In a real application, you'd load a larger unique dataset.
+      let questions = [];
+      const targetQuestionCount = 1000;
+      while (questions.length < targetQuestionCount) {
+        questions = questions.concat(allQuestions);
+      }
+      // Trim to exact target count if necessary
+      questions = questions.slice(0, targetQuestionCount);
+
+      let currentQuestionIndex = 0; // Tracks the current question
+      let score = 0; // Tracks the player's score
+      let lives = 3; // Initial number of lives
+      const initialTimerSeconds = 50; // Initial time for each question
+      let timerSeconds = initialTimerSeconds; // Current timer value
+      let countdownInterval; // Variable to hold the timer interval
+      let soundOn = true; // State for sound toggle
+
+      // Get references to HTML elements
+      const startScreen = document.getElementById("start-screen");
+      const startButton = document.getElementById("start-button");
+      const quizGameContainer = document.getElementById("quiz-game-container");
+      const questionDisplay = document.getElementById("question-display");
+      const answerButtonsContainer = document.getElementById("answer-buttons");
+      const scoreDisplay = document.getElementById("score-display");
+      const feedbackMessage = document.getElementById("feedback-message");
+      const playAgainButton = document.getElementById("play-again-button");
+      const livesDisplay = document.getElementById("lives-display");
+      const timerDisplay = document.getElementById("timer-display");
+      const controlButtonsContainer = document.getElementById(
+        "control-buttons-container"
+      );
+      const soundToggleButton = document.getElementById("sound-toggle-button");
+
+      // Audio Context and simple sound generators
+      let audioContext;
+
+      /**
+       * Initializes the AudioContext and creates simple sound generators.
+       */
+      function setupAudio() {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      }
+
+      /**
+       * Plays a simple beep sound if sound is enabled.
+       * @param {number} frequency - The frequency of the beep.
+       * @param {number} duration - The duration of the beep in seconds.
+       * @param {number} volume - The volume (0 to 1).
+       */
+      function playBeep(frequency, duration, volume) {
+        if (!soundOn) return; // Do not play sound if disabled
+
+        if (!audioContext) {
+          setupAudio(); // Initialize if not already done
+        }
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        oscillator.frequency.value = frequency;
+        gainNode.gain.value = volume;
+
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + duration);
+      }
+
+      function playCorrectSound() {
+        playBeep(880, 0.1, 0.3); // High pitch, short for correct
+      }
+
+      function playIncorrectSound() {
+        playBeep(220, 0.2, 0.3); // Low pitch, slightly longer for incorrect
+      }
+
+      function playTimeoutSound() {
+        playBeep(440, 0.1, 0.4); // Medium pitch, sharp for timeout
+        setTimeout(() => playBeep(330, 0.1, 0.4), 150); // Double beep for urgency
+      }
+
+      /**
+       * Toggles sound on/off and updates the button text.
+       */
+      function toggleSound() {
+        soundOn = !soundOn;
+        soundToggleButton.textContent = soundOn ? "🔊 Sound On" : "🔇 Sound Off";
+      }
+
+      /**
+       * Shuffles an array using the Fisher-Yates (Knuth) algorithm.
+       * @param {Array} array - The array to shuffle.
+       */
+      function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [array[i], array[j]] = [array[j], array[i]]; // Swap elements
+        }
+      }
+
+      /**
+       * Starts the quiz game, hiding the start screen and shuffling questions.
+       */
+      function startGame() {
+        startScreen.classList.add("hidden"); // Hide start screen
+        quizGameContainer.classList.remove("hidden"); // Show quiz container
+        quizGameContainer.classList.add("fade-in"); // Add fade-in animation
+        shuffleArray(questions); // Randomize the questions
+        lives = 3; // Reset lives for a new game
+        score = 0; // Reset score
+        currentQuestionIndex = 0; // Start from the first question
+        loadQuestion(); // Load the first question
+        updateLivesDisplay(); // Update lives display
+      }
+
+      /**
+       * Updates the lives display with heart emojis.
+       */
+      function updateLivesDisplay() {
+        let hearts = "";
+        for (let i = 0; i < lives; i++) {
+          hearts += '<span class="heart">❤️</span>';
+        }
+        for (let i = lives; i < 3; i++) {
+          hearts += '<span class="heart" style="opacity: 0.3;">🤍</span>';
+        }
+        livesDisplay.innerHTML = hearts; // Use innerHTML to render HTML elements
+      }
+
+      /**
+       * Updates the timer display and handles timeout.
+       */
+      function updateTimer() {
+        timerSeconds--;
+        timerDisplay.textContent = `${timerSeconds}s`;
+
+        if (timerSeconds <= 0) {
+          clearInterval(countdownInterval); // Stop the timer
+
+          // Check if currentQuestionIndex is still valid BEFORE accessing question data
+          if (currentQuestionIndex < questions.length) {
+            playTimeoutSound();
+            feedbackMessage.textContent =
+              "⏱️ Time's up! The correct answer was: " +
+              questions[currentQuestionIndex].options[
+                questions[currentQuestionIndex].answer
+              ];
+            feedbackMessage.classList.add("incorrect");
+            // Apply visual feedback for timeout
+            Array.from(answerButtonsContainer.children).forEach((button) => {
+              button.disabled = true; // Disable all buttons
+            });
+            // Ensure the correct answer button exists before trying to add class
+            const correctButton = Array.from(answerButtonsContainer.children)[
+              questions[currentQuestionIndex].answer
+            ];
+            if (correctButton) {
+              correctButton.classList.add("correct");
+            }
+
+            handleIncorrectAnswer(); // Decrement lives and check game over
+
+            // Move to the next question after a short delay
+            setTimeout(() => {
+              // Only advance if game is not over
+              if (lives > 0) {
+                currentQuestionIndex++;
+              }
+              loadQuestion();
+            }, 2000); // Wait 2 seconds for feedback
+          } else {
+            // If currentQuestionIndex is out of bounds, the game is likely already over or resetting
+            // Just ensure feedback and buttons are cleared if needed, and prevent further actions.
+            feedbackMessage.textContent = "";
+            answerButtonsContainer.innerHTML = "";
+            clearInterval(countdownInterval); // Ensure timer is fully stopped
+            // Potentially call showResult() if not already done, but loadQuestion() usually handles it.
+          }
+        }
+      }
+
+      /**
+       * Loads and displays the current question and its answer options.
+       */
+      function loadQuestion() {
+        // Clear any previous feedback and ensure play again button is hidden
+        feedbackMessage.textContent = "";
+        feedbackMessage.classList.remove("correct", "incorrect");
+        playAgainButton.classList.add("hidden");
+        scoreDisplay.textContent = score; // Update score display
+
+        // If all questions have been answered, show the final result
+        if (currentQuestionIndex >= questions.length) {
+          showResult(true); // true means quiz completed successfully
+          return;
+        }
+
+        // Reset timer for the new question
+        clearInterval(countdownInterval);
+        timerSeconds = initialTimerSeconds;
+        timerDisplay.textContent = `${timerSeconds}s`;
+        countdownInterval = setInterval(updateTimer, 1000); // Start the timer
+
+        const currentQuestion = questions[currentQuestionIndex];
+        questionDisplay.textContent = currentQuestion.question; // Set the question text
+        answerButtonsContainer.innerHTML = ""; // Clear previous answer buttons
+
+        // Create buttons for each answer option
+        currentQuestion.options.forEach((option, index) => {
+          const button = document.createElement("button");
+          button.textContent = option;
+          button.classList.add("answer-button");
+          // Add click event listener to check the answer
+          button.onclick = () => checkAnswer(index, button);
+          answerButtonsContainer.appendChild(button); // Add button to container
+        });
+      }
+
+      /**
+       * Handles logic for an incorrect answer: decrements lives and checks for game over.
+       */
+      function handleIncorrectAnswer() {
+        lives--;
+        updateLivesDisplay(); // Update the visual lives display
+
+        if (lives <= 0) {
+          clearInterval(countdownInterval); // Stop the timer if game over
+          showResult(false); // false means game over due to lives
+        }
+      }
+
+      /**
+       * Checks if the selected answer is correct, updates score, and provides feedback.
+       * @param {number} selectedOptionIndex - The index of the option selected by the user.
+       * @param {HTMLElement} clickedButton - The button element that was clicked.
+       */
+      function checkAnswer(selectedOptionIndex, clickedButton) {
+        clearInterval(countdownInterval); // Stop the timer once an answer is chosen
+
+        const currentQuestion = questions[currentQuestionIndex];
+        const isCorrect = selectedOptionIndex === currentQuestion.answer;
+
+        // Disable all buttons to prevent multiple clicks
+        Array.from(answerButtonsContainer.children).forEach((button) => {
+          button.disabled = true;
+        });
+
+        // Apply visual feedback to the clicked button and the correct answer button
+        if (isCorrect) {
+          clickedButton.classList.add("correct");
+          playCorrectSound();
+          score++;
+          feedbackMessage.textContent = "🎉 Awesome! Correct answer!";
+          feedbackMessage.classList.add("correct");
+        } else {
+          clickedButton.classList.add("incorrect");
+          playIncorrectSound();
+          // Also highlight the correct answer
+          Array.from(answerButtonsContainer.children)[
+            currentQuestion.answer
+          ].classList.add("correct");
+          feedbackMessage.textContent =
+            "🤔 Oops! The correct answer was: " +
+            currentQuestion.options[currentQuestion.answer];
+          feedbackMessage.classList.add("incorrect");
+          handleIncorrectAnswer(); // Decrement lives and check game over
+        }
+        scoreDisplay.textContent = score;
+
+        // Move to the next question after a short delay, only if game is not over
+        if (lives > 0) {
+          setTimeout(() => {
+            currentQuestionIndex++;
+            loadQuestion();
+          }, 2000); // Wait 2 seconds before loading next question to allow feedback to be seen
+        }
+      }
+
+      /**
+       * Displays the final score and the "Play Again" button.
+       * @param {boolean} quizCompleted - True if all questions were answered, false if lives ran out.
+       */
+      function showResult(quizCompleted) {
+        answerButtonsContainer.innerHTML = ""; // Clear answer buttons
+        feedbackMessage.classList.remove("correct", "incorrect"); // Clear previous feedback colors
+        clearInterval(countdownInterval); // Ensure timer is stopped
+
+        if (quizCompleted) {
+          questionDisplay.innerHTML = `🎊 <strong>Quiz Completed!</strong><br>You answered all questions. Your final score is <strong>${score}</strong> questions!`;
+          feedbackMessage.textContent = "🌟 Amazing work, time explorer!";
+          feedbackMessage.classList.add("correct");
+        } else {
+          questionDisplay.innerHTML = `💔 <strong>Game Over!</strong><br>You ran out of lives. Your final score was <strong>${score}</strong>.`;
+          feedbackMessage.textContent = "🎯 Better luck next time!";
+          feedbackMessage.classList.add("incorrect");
+        }
+        playAgainButton.classList.remove("hidden"); // Show the play again button
+      }
+
+      /**
+       * Resets the game state and starts a new quiz.
+       */
+      function resetGame() {
+        clearInterval(countdownInterval); // Stop any active timer
+        currentQuestionIndex = 0;
+        score = 0;
+        lives = 3; // Reset lives
+        scoreDisplay.textContent = score;
+        updateLivesDisplay(); // Update lives display to full
+        shuffleArray(questions); // Reshuffle questions for a new game
+        loadQuestion(); // Start the first question
+      }
+
+      // Event listener for the start button
+      startButton.addEventListener("click", startGame);
+
+      // Initial setup for audio context when the page loads
+      document.addEventListener("DOMContentLoaded", () => {
+        setupAudio(); // Initialize audio context
+      });
+    </script>
+  </body>
+</html>
