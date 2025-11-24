@@ -632,9 +632,6 @@
           player.x = canvas.width / 2 - player.width / 2;
           player.y = canvas.height - player.height - 10;
         }
-        if (!gameOver && player) {
-          draw();
-        }
         console.log(
           "Canvas resized:",
           canvas.width,
@@ -688,6 +685,17 @@
         asteroids = [];
         gameOver = false;
         player = new Player();
+
+        // Reset input state
+        inputState.left = false;
+        inputState.right = false;
+        inputState.keyboard.left = false;
+        inputState.keyboard.right = false;
+        inputState.touch.left = false;
+        inputState.touch.right = false;
+        inputState.buttons.left = false;
+        inputState.buttons.right = false;
+
         updateDisplay();
         gameOverOverlay.classList.remove("visible");
         startScreen.style.display = "none";
@@ -718,7 +726,31 @@
       function update() {
         if (gameOver) {
           stopAutoShoot();
+          // Reset input state when game is over
+          inputState.left = false;
+          inputState.right = false;
+          inputState.keyboard.left = false;
+          inputState.keyboard.right = false;
+          inputState.touch.left = false;
+          inputState.touch.right = false;
+          inputState.buttons.left = false;
+          inputState.buttons.right = false;
           return;
+        }
+
+        // Handle input processing within game loop
+        if (player && !gameOver && startScreen.style.display === "none") {
+          // Aggregate all input sources
+          inputState.left = inputState.keyboard.left || inputState.touch.left || inputState.buttons.left;
+          inputState.right = inputState.keyboard.right || inputState.touch.right || inputState.buttons.right;
+
+          // Apply movement
+          if (inputState.left) {
+            player.move("left");
+          }
+          if (inputState.right) {
+            player.move("right");
+          }
         }
 
         if (score >= stage * SCORE_PER_STAGE && stage < 10) {
@@ -862,27 +894,7 @@
         }
       };
 
-      // Function to update input state and handle continuous movement
-      function updateInputState() {
-        // Aggregate all input sources
-        inputState.left = inputState.keyboard.left || inputState.touch.left || inputState.buttons.left;
-        inputState.right = inputState.keyboard.right || inputState.touch.right || inputState.buttons.right;
-
-        // Apply movement
-        if (inputState.left) {
-          player.move("left");
-        }
-        if (inputState.right) {
-          player.move("right");
-        }
-
-        // Continue checking for movement
-        requestAnimationFrame(updateInputState);
-      }
-
-      // Start the input update loop
-      updateInputState();
-
+  
       leftButton.addEventListener("touchstart", (e) => {
         e.preventDefault();
         if (!gameOver && startScreen.style.display === "none") {

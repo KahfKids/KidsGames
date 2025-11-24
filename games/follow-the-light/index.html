@@ -1,386 +1,760 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Follow the Lights!</title>
-    <!-- KidsGames PWA Support -->
-    <link rel="manifest" href="/KidsGames/manifest.json" />
-    <meta name="theme-color" content="#4f391a" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <link rel="apple-touch-icon" href="/KidsGames/icons/icon-192x192.png" />
-    <!-- Tailwind CSS for styling -->
-    <link
-      href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css"
-      rel="stylesheet"
-    />
-    <!-- Google Fonts - Inter for a modern, kid-friendly look -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap"
-      rel="stylesheet"
-    />
-    <!-- Tone.js for generating sounds dynamically -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
-    <style>
-      /* Apply Inter font to the entire body */
-      body {
-        font-family: "Inter", sans-serif;
-      }
-      /* Custom active states for game pads during flash/click */
-      /* These classes provide a brighter color and a glow effect */
-      .game-pad.active-red {
-        background-color: #ef4444; /* Brighter red */
-        box-shadow: 0 0 20px 5px #ef4444; /* Red glow */
-      }
-      .game-pad.active-blue {
-        background-color: #3b82f6; /* Brighter blue */
-        box-shadow: 0 0 20px 5px #3b82f6; /* Blue glow */
-      }
-      .game-pad.active-green {
-        background-color: #22c55e; /* Brighter green */
-        box-shadow: 0 0 20px 5px #22c55e; /* Green glow */
-      }
-      .game-pad.active-yellow {
-        background-color: #eab308; /* Brighter yellow */
-        box-shadow: 0 0 20px 5px #eab308; /* Yellow glow */
-      }
-    </style>
-  </head>
-  <body>
-    <!-- Main container for the game, centering content and applying a background gradient -->
-    <div
-      class="min-h-screen bg-gradient-to-br from-blue-200 to-purple-200 flex flex-col items-center justify-center p-4"
-    >
-      <!-- Game card container, with rounded corners, shadow, and a playful slight rotation -->
-      <div
-        class="bg-white rounded-3xl shadow-2xl p-6 md:p-8 w-full max-w-md border-b-8 border-r-8 border-gray-300 transform rotate-1"
-      >
-        <!-- Game Title with a pulse animation and emojis for kid-friendliness -->
-        <h1
-          class="text-4xl md:text-5xl font-extrabold text-center text-purple-700 mb-6 font-inter drop-shadow-lg"
-        >
-          <span class="block animate-pulse">✨ Follow the Lights! ✨</span>
-        </h1>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>Follow the Lights!</title>
 
-        <!-- Game status display area -->
-        <div
-          id="game-status"
-          class="text-center text-xl md:text-2xl mb-4 text-gray-700 font-inter font-semibold"
-        >
-          Press Play Now!
-        </div>
-        <!-- Score display area -->
-        <div
-          id="score"
-          class="text-center text-3xl md:text-4xl font-bold text-green-700 mb-8 font-inter drop-shadow"
-        >
-          Score: 0
-        </div>
+  <!-- KidsGames PWA Support -->
+  <link rel="manifest" href="/KidsGames/manifest.json" />
+  <meta name="theme-color" content="#8b5cf6" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <link rel="apple-touch-icon" href="/KidsGames/icons/icon-192x192.png" />
 
-        <!-- Game pads container for circular arrangement -->
-        <!-- This container defines the area where the circular pads are positioned -->
-        <div
-          id="game-pads"
-          class="relative w-64 h-64 md:w-72 md:h-72 mx-auto mt-8 mb-10"
-        >
-          <!-- Each game pad is now absolutely positioned to form a circle -->
-          <!-- The 'top', 'right', 'bottom', 'left' and '-translate-x/-y-1/2' classes -->
-          <!-- precisely place them at the edges of the central container. -->
-          <button
-            id="pad-0"
-            class="game-pad w-28 h-28 md:w-32 md:h-32 bg-red-500 hover:bg-red-600 active:bg-red-700 focus:outline-none focus:ring-6 focus:ring-red-300 transition-all duration-150 rounded-full aspect-square flex items-center justify-center text-white text-6xl font-extrabold shadow-xl border-b-4 border-r-4 border-red-700 transform hover:scale-105 active:scale-95 absolute top-0 left-1/2 -translate-x-1/2"
-          ></button>
-          <button
-            id="pad-1"
-            class="game-pad w-28 h-28 md:w-32 md:h-32 bg-blue-500 hover:bg-blue-600 active:bg-blue-700 focus:outline-none focus:ring-6 focus:ring-blue-300 transition-all duration-150 rounded-full aspect-square flex items-center justify-center text-white text-6xl font-extrabold shadow-xl border-b-4 border-r-4 border-blue-700 transform hover:scale-105 active:scale-95 absolute top-1/2 right-0 -translate-y-1/2"
-          ></button>
-          <button
-            id="pad-2"
-            class="game-pad w-28 h-28 md:w-32 md:h-32 bg-green-500 hover:bg-green-600 active:bg-green-700 focus:outline-none focus:ring-6 focus:ring-green-300 transition-all duration-150 rounded-full aspect-square flex items-center justify-center text-white text-6xl font-extrabold shadow-xl border-b-4 border-r-4 border-green-700 transform hover:scale-105 active:scale-95 absolute bottom-0 left-1/2 -translate-x-1/2"
-          ></button>
-          <button
-            id="pad-3"
-            class="game-pad w-28 h-28 md:w-32 md:h-32 bg-yellow-500 hover:bg-yellow-600 active:bg-yellow-700 focus:outline-none focus:ring-6 focus:ring-yellow-300 transition-all duration-150 rounded-full aspect-square flex items-center justify-center text-white text-6xl font-extrabold shadow-xl border-b-4 border-r-4 border-yellow-700 transform hover:scale-105 active:scale-95 absolute top-1/2 left-0 -translate-y-1/2"
-          ></button>
-        </div>
+  <!-- Google Fonts - Poppins for modern, clean look -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 
-        <!-- Start Game Button -->
-        <div class="mt-10 text-center">
-          <button
-            id="start-button"
-            class="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold py-4 px-10 rounded-full shadow-2xl transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-6 focus:ring-indigo-300 font-inter text-xl md:text-2xl border-b-4 border-r-4 border-indigo-800"
-          >
-            Play Now!
-          </button>
-        </div>
+  <!-- Tone.js for sound -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+      position: fixed;
+      top: 0;
+      left: 0;
+      background: linear-gradient(135deg, #ff6b6b 0%, #feca57 25%, #48dbfb 50%, #ff9ff3 75%, #54a0ff 100%);
+      background-size: 400% 400%;
+      animation: gradientShift 15s ease infinite;
+      color: #2d3748;
+    }
+
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .game-container {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* Header Section */
+    .header {
+      padding: 1rem 1.5rem;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.85));
+      backdrop-filter: blur(10px);
+      border-bottom: 3px solid #ff6b6b;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 10;
+    }
+
+    .game-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      text-align: center;
+      flex: 1;
+      background: linear-gradient(135deg, #ff6b6b, #feca57);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .score-display {
+      background: linear-gradient(135deg, #ff6b6b, #feca57);
+      color: white;
+      padding: 0.6rem 1.2rem;
+      border-radius: 2rem;
+      font-weight: 700;
+      min-width: 90px;
+      text-align: center;
+      box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+      border: 2px solid rgba(255, 255, 255, 0.8);
+    }
+
+    /* Game Status */
+    .game-status {
+      text-align: center;
+      padding: 1rem;
+      font-size: 1.2rem;
+      font-weight: 600;
+      min-height: 3rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.8));
+      color: #2d3748;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      border-bottom: 2px solid #feca57;
+    }
+
+    /* Game Board */
+    .game-board {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+      position: relative;
+    }
+
+    .pads-container {
+      position: relative;
+      width: min(80vw, 400px);
+      height: min(80vw, 400px);
+      max-width: 400px;
+      max-height: 400px;
+    }
+
+    /* Game Pads */
+    .game-pad {
+      position: absolute;
+      width: min(35vw, 120px);
+      height: min(35vw, 120px);
+      border-radius: 50%;
+      border: 3px solid rgba(255, 255, 255, 0.8);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 700;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Diamond Layout */
+    .pad-top {
+      background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .pad-right {
+      background: linear-gradient(135deg, #4ecdc4, #44a3aa);
+      top: 50%;
+      right: 0;
+      transform: translateY(-50%);
+    }
+
+    .pad-bottom {
+      background: linear-gradient(135deg, #95e1d3, #3fc1c9);
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .pad-left {
+      background: linear-gradient(135deg, #f9ca24, #f0b90b);
+      top: 50%;
+      left: 0;
+      transform: translateY(-50%);
+    }
+
+    /* Active State */
+    .game-pad.active {
+      transform: scale(1.15) !important;
+      z-index: 100;
+      box-shadow: 0 0 40px 15px currentColor, 0 0 80px 30px rgba(255, 255, 255, 0.3);
+    }
+
+    .pad-top.active {
+      box-shadow: 0 0 40px 15px rgba(255, 107, 107, 0.8), 0 0 80px 30px rgba(255, 107, 107, 0.4);
+    }
+
+    .pad-right.active {
+      box-shadow: 0 0 40px 15px rgba(78, 205, 196, 0.8), 0 0 80px 30px rgba(78, 205, 196, 0.4);
+    }
+
+    .pad-bottom.active {
+      box-shadow: 0 0 40px 15px rgba(149, 225, 211, 0.8), 0 0 80px 30px rgba(149, 225, 211, 0.4);
+    }
+
+    .pad-left.active {
+      box-shadow: 0 0 40px 15px rgba(249, 202, 36, 0.8), 0 0 80px 30px rgba(249, 202, 36, 0.4);
+    }
+
+    /* Pad Content */
+    .pad-shape {
+      font-size: 2.8rem;
+      margin-bottom: 0.2rem;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+    }
+
+    .pad-label {
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Control Section */
+    .control-section {
+      padding: 1.5rem;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.85));
+      backdrop-filter: blur(10px);
+      border-top: 3px solid #48dbfb;
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .timer-bar {
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+
+    .timer-display {
+      width: 60px;
+      height: 60px;
+      margin: 0 auto 0.5rem;
+      position: relative;
+    }
+
+    .timer-circle {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: conic-gradient(#ff6b6b 0deg, #feca57 90deg, #48dbfb 180deg, #ff9ff3 270deg, #ff6b6b 360deg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: white;
+      position: relative;
+      border: 3px solid rgba(255, 255, 255, 0.8);
+      box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+    }
+
+    .timer-circle::before {
+      content: '';
+      position: absolute;
+      inset: 6px;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 50%;
+    }
+
+    .timer-circle span {
+      position: relative;
+      z-index: 1;
+      color: #2d3748;
+      font-weight: 800;
+    }
+
+    .timer-circle.urgent {
+      background: conic-gradient(#ef4444 0deg, rgba(255, 255, 255, 0.2) 0deg);
+      animation: pulse 1s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    .start-button {
+      width: 100%;
+      padding: 1.2rem 2rem;
+      font-size: 1.3rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 2rem;
+      background: linear-gradient(135deg, #ff6b6b, #feca57);
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      border: 3px solid rgba(255, 255, 255, 0.8);
+    }
+
+    .start-button:hover:not(:disabled) {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(255, 107, 107, 0.5);
+      background: linear-gradient(135deg, #ff5252, #ffb142);
+    }
+
+    .start-button:active:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+    }
+
+    .start-button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Particle Effects */
+    .particle {
+      position: absolute;
+      pointer-events: none;
+      animation: particle-float 1.5s ease-out forwards;
+      z-index: 200;
+      font-size: 1.5rem;
+    }
+
+    @keyframes particle-float {
+      0% {
+        transform: translateY(0) scale(0) rotate(0deg);
+        opacity: 1;
+      }
+      50% {
+        transform: translateY(-20px) scale(1) rotate(180deg);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(-40px) scale(0) rotate(360deg);
+        opacity: 0;
+      }
+    }
+
+    /* Combo Display */
+    .combo-display {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: linear-gradient(135deg, #ffd700, #ff6b6b);
+      color: white;
+      padding: 1rem 2rem;
+      border-radius: 2rem;
+      font-weight: 600;
+      font-size: 1.5rem;
+      box-shadow: 0 8px 32px rgba(255, 215, 0, 0.4);
+      animation: combo-bounce 1s ease-out;
+      z-index: 300;
+    }
+
+    @keyframes combo-bounce {
+      0% {
+        transform: translate(-50%, -50%) scale(0) rotate(-180deg);
+        opacity: 0;
+      }
+      50% {
+        transform: translate(-50%, -50%) scale(1.2) rotate(0deg);
+      }
+      100% {
+        transform: translate(-50%, -50%) scale(1) rotate(0deg);
+        opacity: 1;
+      }
+    }
+
+    /* Responsive Design */
+    @media (min-width: 768px) {
+      .header {
+        padding: 1.5rem 2rem;
+      }
+
+      .game-title {
+        font-size: 2rem;
+      }
+
+      .pads-container {
+        width: min(60vw, 500px);
+        height: min(60vw, 500px);
+      }
+
+      .game-pad {
+        width: min(25vw, 150px);
+        height: min(25vw, 150px);
+      }
+
+      .pad-shape {
+        font-size: 3rem;
+      }
+
+      .control-section {
+        padding: 2rem;
+      }
+    }
+
+    @media (orientation: landscape) and (max-height: 700px) {
+      .header {
+        padding: 0.75rem 1rem;
+      }
+
+      .game-title {
+        font-size: 1.25rem;
+      }
+
+      .game-status {
+        padding: 0.5rem;
+        min-height: 2rem;
+      }
+
+      .game-board {
+        padding: 1rem;
+      }
+
+      .control-section {
+        padding: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <!-- Header -->
+    <div class="header">
+      <div class="score-display">Level <span id="level">1</span></div>
+      <div class="game-title">✨ Follow the Lights! ✨</div>
+      <div class="score-display">Score <span id="score">0</span></div>
+    </div>
+
+    <!-- Game Status -->
+    <div id="game-status" class="game-status">Press Start to Play!</div>
+
+    <!-- Game Board -->
+    <div class="game-board">
+      <div class="pads-container" id="game-pads">
+        <!-- Red Pad - Top -->
+        <button id="pad-0" class="game-pad pad-top" data-color="red">
+          <span class="pad-shape">●</span>
+          <span class="pad-label">RED</span>
+        </button>
+
+        <!-- Blue Pad - Right -->
+        <button id="pad-1" class="game-pad pad-right" data-color="blue">
+          <span class="pad-shape">■</span>
+          <span class="pad-label">BLUE</span>
+        </button>
+
+        <!-- Green Pad - Bottom -->
+        <button id="pad-2" class="game-pad pad-bottom" data-color="green">
+          <span class="pad-shape">▲</span>
+          <span class="pad-label">GREEN</span>
+        </button>
+
+        <!-- Yellow Pad - Left -->
+        <button id="pad-3" class="game-pad pad-left" data-color="yellow">
+          <span class="pad-shape">★</span>
+          <span class="pad-label">YELLOW</span>
+        </button>
       </div>
     </div>
 
-    <script>
-      // --- Game Variables ---
-      const gamePads = document.querySelectorAll(".game-pad"); // Select all game pad buttons
-      const startButton = document.getElementById("start-button"); // Start game button
-      const gameStatusDisplay = document.getElementById("game-status"); // Element to display game status messages
-      const scoreDisplay = document.getElementById("score"); // Element to display current score
+    <!-- Control Section -->
+    <div class="control-section">
+      <div class="timer-bar">
+        <div class="timer-display">
+          <div id="timer-circle" class="timer-circle">
+            <span id="timer-text">10</span>
+          </div>
+        </div>
+      </div>
+      <button id="start-button" class="start-button">Start Game</button>
+    </div>
+  </div>
 
-      let gameSequence = []; // Stores the sequence of pads generated by the game
-      let playerSequence = []; // Stores the sequence of pads clicked by the player
-      let score = 0; // Current score
-      let gameOn = false; // Flag to indicate if the game is currently active
-      let showingSequence = false; // Flag to indicate if the game is currently showing the sequence
-      let canClick = false; // Flag to indicate if the player can currently click on pads
-      let sequenceSpeed = 800; // Time in milliseconds for each light/sound in the sequence
-      const padColors = ["red", "blue", "green", "yellow"]; // Array of base colors for pads
+  <script>
+    // Game Variables
+    const gamePads = document.querySelectorAll('.game-pad');
+    const startButton = document.getElementById('start-button');
+    const gameStatusDisplay = document.getElementById('game-status');
+    const scoreDisplay = document.getElementById('score');
+    const levelDisplay = document.getElementById('level');
+    const timerCircle = document.getElementById('timer-circle');
+    const timerText = document.getElementById('timer-text');
+    const gamePadsContainer = document.getElementById('game-pads');
 
-      // --- Tone.js Initialization ---
-      // Using Tone.MembraneSynth for softer, percussive click-like sounds for each pad.
-      // This avoids musical notes and provides a more abstract sound effect.
-      const padSynth = new Tone.MembraneSynth({
-        pitchDecay: 0.02, // Controls how quickly the pitch drops for a percussive effect
-        octaves: 1, // Range of pitch drop for the percussive sound
-        envelope: {
-          attack: 0.001, // Very fast attack for an immediate click
-          decay: 0.2, // Short decay
-          sustain: 0.01, // Very brief sustain
-          release: 0.3, // Gentle release to avoid abruptness
-        },
-      }).toDestination();
+    let gameSequence = [];
+    let playerSequence = [];
+    let score = 0;
+    let level = 1;
+    let combo = 0;
+    let gameOn = false;
+    let showingSequence = false;
+    let canClick = false;
+    let sequenceSpeed = 800;
+    let turnTimer = null;
+    let turnStartTime = null;
 
-      // A separate Tone.Synth for the game over sound, low frequency for a 'thud'
-      const gameOverSynth = new Tone.Synth({
-        oscillator: {
-          type: "sine", // Use sine wave for a clean, soft tone
-        },
-        envelope: {
-          attack: 0.01,
-          decay: 0.4,
-          sustain: 0.01,
-          release: 0.8, // Longer release for a fading effect, less jarring
-        },
-      }).toDestination();
+    const padColors = ['red', 'blue', 'green', 'yellow'];
+    const encouragementMessages = [
+      'Great!', 'Awesome!', 'Fantastic!', 'Perfect!',
+      'Amazing!', 'Super!', 'Wonderful!', 'Excellent!'
+    ];
 
-      // Mapping of pad indices to specific low frequencies for distinct non-musical sounds
-      // These frequencies are chosen to be low and non-harmonic to avoid a musical feel.
-      const padFrequencies = [
-        70, // Red pad (low frequency for a soft thump)
-        90, // Blue pad
-        110, // Green pad
-        130, // Yellow pad
-      ];
+    // Sound Setup
+    const padSynth = new Tone.MembraneSynth({
+      pitchDecay: 0.02,
+      octaves: 1,
+      envelope: {
+        attack: 0.001,
+        decay: 0.2,
+        sustain: 0.01,
+        release: 0.3,
+      },
+    }).toDestination();
 
-      // --- Game Logic Functions ---
+    const gameOverSynth = new Tone.Synth({
+      oscillator: { type: 'sine' },
+      envelope: {
+        attack: 0.01,
+        decay: 0.4,
+        sustain: 0.01,
+        release: 0.8,
+      },
+    }).toDestination();
 
-      /**
-       * Initializes and starts a new game.
-       * Resets game state, generates the first sequence item, and starts playback.
-       */
-      function startGame() {
-        // Tone.js requires a user gesture to start its audio context.
-        // Calling Tone.start() ensures audio will play.
-        Tone.start();
+    const padFrequencies = [70, 90, 110, 130];
 
-        // Reset all game-related variables for a new game
-        gameSequence = [];
-        playerSequence = [];
-        score = 0;
-        updateScore(); // Update the score display
-        gameOn = true;
-        showingSequence = false;
-        canClick = false;
-        sequenceSpeed = 800; // Reset speed to initial value for a new game
-        gameStatusDisplay.textContent = "Get Ready!"; // Inform player to get ready
-        startButton.disabled = true; // Disable the start button while the game is active
+    // Helper Functions
+    function createParticles(padIndex) {
+      const pad = gamePads[padIndex];
+      const rect = pad.getBoundingClientRect();
+      const containerRect = gamePadsContainer.getBoundingClientRect();
+      const colors = ['#ff6b6b', '#4ecdc4', '#95e1d3', '#f9ca24'];
+      const emojis = ['✨', '⭐', '💫', '🌟'];
 
-        addNextToSequence(); // Add the first random pad to the sequence
-        // Wait a short moment before starting the first sequence playback
-        setTimeout(playSequence, 1000);
+      for (let i = 0; i < 8; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        particle.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+        particle.style.left = `${rect.left - containerRect.left + rect.width / 2 - 15 + (Math.random() - 0.5) * 60}px`;
+        particle.style.top = `${rect.top - containerRect.top + rect.height / 2 - 15 + (Math.random() - 0.5) * 60}px`;
+        particle.style.color = colors[padIndex];
+        particle.style.fontSize = `${16 + Math.random() * 8}px`;
+
+        gamePadsContainer.appendChild(particle);
+        setTimeout(() => particle.remove(), 1500);
       }
+    }
 
-      /**
-       * Adds a new random pad to the end of the `gameSequence`.
-       */
-      function addNextToSequence() {
-        // Generate a random index corresponding to one of the game pads
-        const randomPadIndex = Math.floor(Math.random() * gamePads.length);
-        gameSequence.push(randomPadIndex); // Add the random pad index to the sequence
-      }
+    function startTurnTimer(duration = 10) {
+      turnStartTime = Date.now();
+      const durationMs = duration * 1000;
 
-      /**
-       * Plays the current game sequence visually (flashing pads) and audibly (playing tones).
-       * Manages delays between flashes and transitions to player's turn.
-       */
-      function playSequence() {
-        showingSequence = true; // Indicate that the game is currently showing the sequence
-        canClick = false; // Disable player input during sequence playback
-        gameStatusDisplay.textContent = "Watch carefully..."; // Instruct the player
-        playerSequence = []; // Clear the player's input for the new round
+      timerCircle.classList.remove('urgent');
+      timerText.textContent = duration;
 
-        let i = 0; // Index to iterate through the gameSequence
-        // Set up an interval to play each step of the sequence with a delay
-        const interval = setInterval(() => {
-          if (i < gameSequence.length) {
-            const padIndex = gameSequence[i];
-            flashPad(padIndex); // Flash the visual element
-            playTone(padIndex); // Play the corresponding sound
-            i++;
-          } else {
-            clearInterval(interval); // Stop the interval when the sequence is fully played
-            showingSequence = false; // Sequence is no longer showing
-            canClick = true; // Enable player input
-            gameStatusDisplay.textContent = "Your turn!"; // Prompt player to respond
+      turnTimer = setInterval(() => {
+        const elapsed = Date.now() - turnStartTime;
+        const remaining = Math.max(0, durationMs - elapsed);
+        const secondsLeft = Math.ceil(remaining / 1000);
+
+        timerText.textContent = secondsLeft;
+
+        // Update circular progress
+        const progress = (remaining / durationMs) * 360;
+        const color = remaining < durationMs * 0.3 ? '#ef4444' :
+                     remaining < durationMs * 0.6 ? '#f59e0b' : '#10b981';
+        timerCircle.style.background = `conic-gradient(${color} ${progress}deg, rgba(255, 255, 255, 0.2) ${progress}deg)`;
+
+        if (remaining < durationMs * 0.3) {
+          timerCircle.classList.add('urgent');
+        }
+
+        if (remaining <= 0) {
+          clearInterval(turnTimer);
+          if (gameOn) {
+            gameOver("Time's up! ⏰");
           }
-        }, sequenceSpeed); // The delay between each step in the sequence
-      }
-
-      /**
-       * Flashes a specific game pad by temporarily changing its style.
-       * @param {number} padIndex - The index of the pad to flash (0-3).
-       */
-      function flashPad(padIndex) {
-        const pad = gamePads[padIndex]; // Get the actual pad element
-        const colorPrefix = padColors[padIndex]; // Get the base color string (e.g., 'red')
-
-        // Add the active class which applies a brighter color and glow effect
-        const activeClassName = `active-${colorPrefix}`;
-        pad.classList.add(activeClassName);
-
-        // Temporarily remove original Tailwind background, hover, and active classes
-        // to allow the custom active class to take full effect without conflicts.
-        pad.classList.remove(`bg-${colorPrefix}-500`);
-        pad.classList.remove(`hover:bg-${colorPrefix}-600`);
-        pad.classList.remove(`active:bg-${colorPrefix}-700`);
-
-        // Set a timeout to revert the pad to its original appearance after a short duration
-        setTimeout(() => {
-          pad.classList.remove(activeClassName); // Remove the active class
-          // Add back the original Tailwind classes
-          pad.classList.add(`bg-${colorPrefix}-500`);
-          pad.classList.add(`hover:bg-${colorPrefix}-600`);
-          pad.classList.add(`active:bg-${colorPrefix}-700`);
-        }, sequenceSpeed / 2); // Flash duration is half of the sequence step speed
-      }
-
-      /**
-       * Plays the sound associated with a specific pad using Tone.js.
-       * @param {number} padIndex - The index of the pad whose sound to play.
-       */
-      function playTone(padIndex) {
-        // Play the corresponding non-musical frequency using the MembraneSynth
-        // The duration is set to '8n' (an 8th note) but the envelope ensures it's a short percussive sound
-        padSynth.triggerAttackRelease(padFrequencies[padIndex], "8n");
-      }
-
-      /**
-       * Handles a player's click (or touch) on a game pad.
-       * Validates the input against the game sequence.
-       * @param {Event} event - The click or touch event object.
-       */
-      function handlePadClick(event) {
-        // Ignore clicks if the game is not on, sequence is showing, or player cannot click
-        if (!gameOn || showingSequence || !canClick) {
-          return;
         }
+      }, 100);
+    }
 
-        // Find the closest game pad element that was clicked
-        const clickedPad = event.target.closest(".game-pad");
-        if (!clickedPad) return; // If no game pad was clicked, exit
+    function stopTurnTimer() {
+      if (turnTimer) {
+        clearInterval(turnTimer);
+        turnTimer = null;
+      }
+      timerCircle.classList.remove('urgent');
+      timerText.textContent = '10';
+      timerCircle.style.background = 'conic-gradient(#10b981 0deg, rgba(255, 255, 255, 0.2) 0deg)';
+    }
 
-        // Determine the index of the clicked pad
-        const clickedPadIndex = Array.from(gamePads).indexOf(clickedPad);
-        playerSequence.push(clickedPadIndex); // Add the clicked pad to the player's sequence
+    function showCombo() {
+      // Combo display removed to eliminate distraction
+      // Combo is still tracked internally for game mechanics
+    }
 
-        flashPad(clickedPadIndex); // Flash the clicked pad visually
-        playTone(clickedPadIndex); // Play the corresponding sound
+    function updateScore() {
+      scoreDisplay.textContent = score;
+    }
 
-        // Check if the player's last input matches the game's sequence at that position
-        if (
-          playerSequence[playerSequence.length - 1] !==
-          gameSequence[playerSequence.length - 1]
-        ) {
-          gameOver(); // If mismatch, end the game
-          return;
+    function updateLevel() {
+      level = Math.floor(score / 3) + 1;
+      levelDisplay.textContent = level;
+    }
+
+    // Game Logic
+    function startGame() {
+      Tone.start();
+
+      gameSequence = [];
+      playerSequence = [];
+      score = 0;
+      level = 1;
+      combo = 0;
+      updateScore();
+      updateLevel();
+      gameOn = true;
+      showingSequence = false;
+      canClick = false;
+      sequenceSpeed = 800;
+      gameStatusDisplay.textContent = 'Get Ready!';
+      startButton.disabled = true;
+
+      addNextToSequence();
+      setTimeout(playSequence, 1000);
+    }
+
+    function addNextToSequence() {
+      const randomPadIndex = Math.floor(Math.random() * gamePads.length);
+      gameSequence.push(randomPadIndex);
+    }
+
+    function playSequence() {
+      showingSequence = true;
+      canClick = false;
+      stopTurnTimer();
+      gameStatusDisplay.textContent = 'Watch carefully...';
+      playerSequence = [];
+
+      let i = 0;
+      const interval = setInterval(() => {
+        if (i < gameSequence.length) {
+          const padIndex = gameSequence[i];
+          flashPad(padIndex);
+          playTone(padIndex);
+          i++;
+        } else {
+          clearInterval(interval);
+          showingSequence = false;
+          canClick = true;
+          gameStatusDisplay.textContent = 'Your turn!';
+          startTurnTimer(Math.max(5, 15 - Math.floor(score / 3)));
         }
+      }, sequenceSpeed);
+    }
 
-        // If the player has successfully completed the current sequence length
-        if (playerSequence.length === gameSequence.length) {
-          setTimeout(nextRound, 1000); // Wait a short moment before starting the next round
-        }
+    function flashPad(padIndex) {
+      const pad = gamePads[padIndex];
+      pad.classList.add('active');
+
+      setTimeout(() => {
+        pad.classList.remove('active');
+      }, sequenceSpeed / 2);
+    }
+
+    function playTone(padIndex) {
+      padSynth.triggerAttackRelease(padFrequencies[padIndex], '8n');
+    }
+
+    function handlePadClick(event) {
+      if (!gameOn || showingSequence || !canClick) return;
+
+      const clickedPad = event.target.closest('.game-pad');
+      if (!clickedPad) return;
+
+      const clickedPadIndex = Array.from(gamePads).indexOf(clickedPad);
+      playerSequence.push(clickedPadIndex);
+
+      flashPad(clickedPadIndex);
+      playTone(clickedPadIndex);
+
+      if (playerSequence[playerSequence.length - 1] !== gameSequence[playerSequence.length - 1]) {
+        combo = 0;
+        gameOver();
+        return;
       }
 
-      /**
-       * Advances the game to the next round.
-       * Increments score, adds a new item to the sequence, and prepares for next playback.
-       */
-      function nextRound() {
-        score++; // Increment the player's score
-        updateScore(); // Update the score display
-        gameStatusDisplay.textContent = "Good job!"; // Provide positive feedback
-
-        // Slightly increase the game speed for the next round, with a minimum speed limit
-        sequenceSpeed = Math.max(200, sequenceSpeed - 50); // Speed cannot go below 200ms per step
-
-        addNextToSequence(); // Add a new random pad to the game sequence
-        // Wait a longer moment before the next sequence starts to give player a breather
-        setTimeout(playSequence, 1500);
+      combo++;
+      if (combo > 1) {
+        showCombo();
+      } else {
+        const randomMessage = encouragementMessages[Math.floor(Math.random() * encouragementMessages.length)];
+        gameStatusDisplay.textContent = randomMessage;
       }
 
-      /**
-       * Ends the game, displays a "Game Over" message, and re-enables the start button.
-       */
-      function gameOver() {
-        gameOn = false; // Set game state to off
-        canClick = false; // Disable further player input
-        gameStatusDisplay.textContent = `Game Over! You reached level ${score}.`; // Display final message
-        startButton.disabled = false; // Re-enable the start button so player can play again
-        scoreDisplay.textContent = `Final Score: ${score}`; // Update score display to show final score
-
-        // Play a distinctive, soft 'game over' sound using the dedicated synth
-        gameOverSynth.triggerAttackRelease(40, "1s"); // Play a very low 40Hz note for 1 second, fading out
+      if (playerSequence.length === gameSequence.length) {
+        stopTurnTimer();
+        setTimeout(nextRound, 1000);
       }
+    }
 
-      /**
-       * Updates the text content of the score display element.
-       */
-      function updateScore() {
-        scoreDisplay.textContent = `Score: ${score}`;
-      }
+    function nextRound() {
+      score++;
+      updateScore();
+      updateLevel();
+      createParticles(gameSequence[gameSequence.length - 1]);
+      gameStatusDisplay.textContent = 'Great job! Ready for next?';
 
-      // --- Event Listeners ---
-      // Listen for clicks on the start game button to initiate the game
-      startButton.addEventListener("click", startGame);
+      sequenceSpeed = Math.max(200, sequenceSpeed - 50);
+      addNextToSequence();
+      setTimeout(playSequence, 1500);
+    }
 
-      // Add click and touch listeners to each game pad for interaction
-      gamePads.forEach((pad) => {
-        pad.addEventListener("click", handlePadClick);
-        // Add 'touchstart' event for better responsiveness on mobile devices.
-        // e.preventDefault() prevents default touch behaviors like scrolling/zooming.
-        pad.addEventListener("touchstart", (e) => {
-          e.preventDefault();
-          handlePadClick(e);
-        });
+    function gameOver(message = null) {
+      gameOn = false;
+      canClick = false;
+      stopTurnTimer();
+
+      const finalMessage = message || `Game Over! You reached level ${level}.`;
+      gameStatusDisplay.textContent = finalMessage;
+      startButton.disabled = false;
+
+      gameOverSynth.triggerAttackRelease(40, '1s');
+    }
+
+    // Event Listeners
+    startButton.addEventListener('click', startGame);
+
+    gamePads.forEach((pad) => {
+      pad.addEventListener('click', handlePadClick);
+      pad.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        handlePadClick(e);
       });
+    });
 
-      // Initial setup when the page loads
-      updateScore(); // Display initial score (0)
-    </script>
+    // Initialize
+    updateScore();
+    updateLevel();
+  </script>
 
-    <!-- KidsGames PWA Service Worker -->
-    <script>
-      if ("serviceWorker" in navigator) {
-        window.addEventListener("load", () => {
-          navigator.serviceWorker
-            .register("/KidsGames/sw.js")
-            .then((registration) => {
-              console.log("[PWA] Service Worker registered for free game");
-            })
-            .catch((error) => {
-              console.log("[PWA] Service Worker registration failed:", error);
-            });
-        });
-      }
-    </script>
-  </body>
+  <!-- KidsGames PWA Service Worker -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker
+          .register('/KidsGames/sw.js')
+          .then((registration) => {
+            console.log('[PWA] Service Worker registered for free game');
+          })
+          .catch((error) => {
+            console.log('[PWA] Service Worker registration failed:', error);
+          });
+      });
+    }
+  </script>
+</body>
 </html>

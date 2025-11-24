@@ -165,7 +165,8 @@
         touch-action: manipulation; /* Improve touch responsiveness */
       }
 
-      .touch-button:active {
+      .touch-button:active,
+      .touch-button.active {
         transform: scale(0.95);
         background: linear-gradient(180deg, rgba(0, 224, 255, 0.9), rgba(0, 136, 255, 0.9));
         box-shadow: 0 2px 10px rgba(0, 114, 255, 0.6);
@@ -319,7 +320,6 @@
       <h1>Breakout Game</h1>
       <div class="game-info">
         <span id="score">Score: 0</span>
-        <span id="lives">Lives: 3</span>
       </div>
       <canvas id="gameCanvas"></canvas>
       <div class="controls">
@@ -355,7 +355,6 @@
 
       // Get game info and control elements
       const scoreDisplay = document.getElementById("score");
-      const livesDisplay = document.getElementById("lives");
       const startButton = document.getElementById("startButton");
       const restartButton = document.getElementById("restartButton");
       const messageBox = document.getElementById("messageBox");
@@ -370,6 +369,9 @@
       let animationFrameId;
       let lastFrameTime = 0;
       let targetFPS = 60;
+      let frameCount = 0;
+      let lastPerformanceCheck = 0;
+      let slowFrameCount = 0;
 
       // Scaling variables for responsive design
       let scaleFactor = 1;
@@ -400,6 +402,8 @@
       let paddleX; // Paddle position
 
       // Brick properties
+      let baseBrickRowCount = 6;
+      let baseBrickColumnCount = 8;
       let brickRowCount = 6;
       let brickColumnCount = 8;
       let baseBrickWidth = 75;
@@ -429,13 +433,118 @@
 
       // Game state
       let score = 0;
-      let lives = 3;
+
+      // Sound system
+      let audioContext;
+      let masterVolume = 0.3;
+      let soundEnabled = true;
+
+      /**
+       * Initialize audio context for sound effects
+       */
+      function initAudio() {
+        try {
+          audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        } catch (e) {
+          console.log('Web Audio API not supported:', e);
+          soundEnabled = false;
+        }
+      }
+
+      /**
+       * Create a simple sound effect using Web Audio API
+       */
+      function playSound(type) {
+        if (!soundEnabled || !audioContext) return;
+
+        try {
+          const oscillator = audioContext.createOscillator();
+          const gainNode = audioContext.createGain();
+
+          oscillator.connect(gainNode);
+          gainNode.connect(audioContext.destination);
+
+          const currentTime = audioContext.currentTime;
+
+          switch(type) {
+            case 'paddle':
+              oscillator.frequency.setValueAtTime(300, currentTime);
+              oscillator.frequency.exponentialRampToValueAtTime(200, currentTime + 0.1);
+              gainNode.gain.setValueAtTime(masterVolume, currentTime);
+              gainNode.gain.exponentialRampToValueAtTime(0.01, currentTime + 0.1);
+              oscillator.start(currentTime);
+              oscillator.stop(currentTime + 0.1);
+              break;
+
+            case 'brick':
+              oscillator.frequency.setValueAtTime(500, currentTime);
+              oscillator.frequency.exponentialRampToValueAtTime(150, currentTime + 0.15);
+              gainNode.gain.setValueAtTime(masterVolume * 0.7, currentTime);
+              gainNode.gain.exponentialRampToValueAtTime(0.01, currentTime + 0.15);
+              oscillator.start(currentTime);
+              oscillator.stop(currentTime + 0.15);
+              break;
+
+            case 'powerup':
+              oscillator.frequency.setValueAtTime(200, currentTime);
+              oscillator.frequency.exponentialRampToValueAtTime(800, currentTime + 0.2);
+              gainNode.gain.setValueAtTime(masterVolume * 0.5, currentTime);
+              gainNode.gain.exponentialRampToValueAtTime(0.01, currentTime + 0.2);
+              oscillator.start(currentTime);
+              oscillator.stop(currentTime + 0.2);
+              break;
+
+            case 'gameOver':
+              oscillator.frequency.setValueAtTime(400, currentTime);
+              oscillator.frequency.exponentialRampToValueAtTime(100, currentTime + 0.5);
+              gainNode.gain.setValueAtTime(masterVolume, currentTime);
+              gainNode.gain.exponentialRampToValueAtTime(0.01, currentTime + 0.5);
+              oscillator.start(currentTime);
+              oscillator.stop(currentTime + 0.5);
+              break;
+
+            case 'levelComplete':
+              oscillator.frequency.setValueAtTime(300, currentTime);
+              oscillator.frequency.exponentialRampToValueAtTime(600, currentTime + 0.1);
+              oscillator.frequency.exponentialRampToValueAtTime(900, currentTime + 0.2);
+              gainNode.gain.setValueAtTime(masterVolume * 0.6, currentTime);
+              gainNode.gain.exponentialRampToValueAtTime(0.01, currentTime + 0.3);
+              oscillator.start(currentTime);
+              oscillator.stop(currentTime + 0.3);
+              break;
+
+            case 'wall':
+              oscillator.frequency.setValueAtTime(250, currentTime);
+              gainNode.gain.setValueAtTime(masterVolume * 0.3, currentTime);
+              gainNode.gain.exponentialRampToValueAtTime(0.01, currentTime + 0.05);
+              oscillator.start(currentTime);
+              oscillator.stop(currentTime + 0.05);
+              break;
+          }
+        } catch (e) {
+          console.log('Error playing sound:', e);
+        }
+      }
+
+      /**
+       * Toggle sound on/off
+       */
+      function toggleSound() {
+        soundEnabled = !soundEnabled;
+      }
 
       // Input handling
       let rightPressed = false;
       let leftPressed = false;
       let touchLeftPressed = false;
       let touchRightPressed = false;
+
+      // Paddle physics variables
+      let paddleVelocity = 0;
+      let paddleAcceleration = 0.6 * scaleFactor;
+      let paddleMaxSpeed = 15 * scaleFactor;
+      let paddleDeceleration = 0.95; // Slight deceleration when no input
+      let paddleTargetX;
 
       /**
        * Creates particle effects for visual feedback
@@ -592,6 +701,52 @@
       }
 
       /**
+       * Updates paddle physics with acceleration-based movement
+       */
+      function updatePaddlePhysics() {
+        // Check if we're using mouse control or keyboard/touch control
+        if (paddleTargetX !== undefined) {
+          // Mouse control: smooth following
+          const targetDiff = paddleTargetX - paddleX;
+          paddleVelocity = targetDiff * 0.2; // Direct proportional control
+        } else {
+          // Keyboard/touch control: acceleration-based
+          if (rightPressed || touchRightPressed) {
+            // Accelerate while button is held
+            paddleVelocity += paddleAcceleration;
+          } else if (leftPressed || touchLeftPressed) {
+            // Accelerate left while button is held
+            paddleVelocity -= paddleAcceleration;
+          } else {
+            // No input: apply slight deceleration (not friction)
+            paddleVelocity *= paddleDeceleration;
+
+            // Stop completely if velocity is very small
+            if (Math.abs(paddleVelocity) < 0.1) {
+              paddleVelocity = 0;
+            }
+          }
+        }
+
+        // Limit to max speed
+        paddleVelocity = Math.max(-paddleMaxSpeed, Math.min(paddleMaxSpeed, paddleVelocity));
+
+        // Update paddle position
+        let newX = paddleX + paddleVelocity;
+
+        // Keep paddle within bounds (no bouncing)
+        if (newX < 0) {
+          newX = 0;
+          paddleVelocity = 0; // Stop completely at left wall
+        } else if (newX + paddleWidth > canvas.width) {
+          newX = canvas.width - paddleWidth;
+          paddleVelocity = 0; // Stop completely at right wall
+        }
+
+        paddleX = newX;
+      }
+
+      /**
        * Updates all game element dimensions based on scale factor
        */
       function updateScaledDimensions() {
@@ -602,8 +757,17 @@
         paddleHeight = basePaddleHeight * scaleFactor;
         paddleWidth = basePaddleWidth * scaleFactor;
 
-        // Scale bricks
-        brickHeight = baseBrickHeight * scaleFactor;
+        // Update paddle physics with new scale factor
+        paddleAcceleration = 0.6 * scaleFactor;
+        paddleMaxSpeed = 15 * scaleFactor;
+        paddleVelocity = 0; // Reset velocity to prevent sudden movement on resize
+
+        // Reset brick column count to base for responsive adjustments
+        brickColumnCount = baseBrickColumnCount;
+        brickRowCount = baseBrickRowCount;
+
+        // Scale bricks with mobile-friendly sizing
+        brickHeight = window.innerWidth < 768 ? (baseBrickHeight * 1.5) * scaleFactor : baseBrickHeight * scaleFactor;
         brickOffsetTop = baseBrickOffsetTop * scaleFactor;
         brickOffsetLeft = baseBrickOffsetLeft * scaleFactor;
 
@@ -615,13 +779,24 @@
         brickWidth = (availableBrickWidth - totalPaddingWidth) / brickColumnCount;
         brickPadding = baseBrickPadding * scaleFactor;
 
-        // Ensure minimum brick width for playability
-        if (brickWidth < 40 * scaleFactor) {
-          brickWidth = 40 * scaleFactor;
+        // Ensure minimum brick width for playability with mobile-friendly sizing
+        const minBrickWidth = window.innerWidth < 768 ? 50 * scaleFactor : 40 * scaleFactor;
+
+        // Adjust brick layout for very small screens
+        if (window.innerWidth < 480) {
+          // Use fewer columns on very small screens
+          const effectiveColumns = Math.floor(availableBrickWidth / minBrickWidth);
+          if (effectiveColumns < brickColumnCount) {
+            brickColumnCount = Math.max(effectiveColumns, 5); // Minimum 5 columns
+          }
+        }
+
+        if (brickWidth < minBrickWidth) {
+          brickWidth = minBrickWidth;
           // Recalculate padding to fit if bricks are at minimum size
           const usedBricksWidth = brickColumnCount * brickWidth;
           const remainingSpace = availableBrickWidth - usedBricksWidth;
-          brickPadding = Math.max(remainingSpace / (brickColumnCount - 1), 5 * scaleFactor);
+          brickPadding = Math.max(remainingSpace / (brickColumnCount - 1), 8 * scaleFactor);
         }
       }
 
@@ -635,16 +810,18 @@
 
         // Initial ball position and speed
         x = canvas.width / 2;
-        y = canvas.height - 30 * scaleFactor;
+        y = canvas.height - 60 * scaleFactor; // Start higher to prevent immediate bottom collision
         // Set initial ball speed with kid-friendly physics
         speedMultiplier = 1;
         ballSpeed = baseBallSpeed * scaleFactor * 1.0; // Normal starting speed for kids
         const initialAngle = (Math.random() - 0.5) * Math.PI / 6; // Gentle angles for kids
         dx = Math.sin(initialAngle) * ballSpeed; // Horizontal speed
-        dy = -Math.abs(Math.cos(initialAngle) * ballSpeed); // Vertical speed (upwards)
+        dy = -Math.abs(Math.cos(initialAngle) * ballSpeed); // Always start moving upward
 
-        // Initial paddle position
+        // Initial paddle position and physics
         paddleX = (canvas.width - paddleWidth) / 2;
+        paddleVelocity = 0;
+        paddleTargetX = paddleX;
 
         // Initialize bricks array with varied types
         bricks = [];
@@ -684,13 +861,18 @@
 
         // Reset game state
         score = 0;
-        lives = 3;
         currentLevel = 1;
         comboCount = 0;
         lastHitTime = 0;
         particles = [];
         activePowerUps = [];
         ballSpeed = baseBallSpeed * scaleFactor;
+
+        // Reset performance monitoring
+        frameCount = 0;
+        lastPerformanceCheck = 0;
+        slowFrameCount = 0;
+        targetFPS = 60;
         updateGameInfo(); // Update display
         gameRunning = false; // Game is paused initially
         messageBox.style.display = "none"; // Hide any previous messages
@@ -714,11 +896,10 @@
       }
 
       /**
-       * Updates the score and lives display on the screen.
+       * Updates the score display on the screen.
        */
       function updateGameInfo() {
         scoreDisplay.textContent = `Score: ${score}`;
-        livesDisplay.textContent = `Lives: ${lives}`;
       }
 
       /**
@@ -812,6 +993,9 @@
        * Enhanced collision detection with better physics and brick effects.
        */
       function collisionDetection() {
+        let collisionCount = 0;
+        const maxCollisionsPerFrame = 3; // Prevent multiple collisions in same frame
+
         for (let c = 0; c < brickColumnCount; c++) {
           for (let r = 0; r < brickRowCount; r++) {
             const brick = bricks[c][r];
@@ -829,6 +1013,12 @@
 
               if (ballRight > brickLeft && ballLeft < brickRight &&
                   ballBottom > brickTop && ballTop < brickBottom) {
+
+                // Prevent infinite collision loops
+                collisionCount++;
+                if (collisionCount > maxCollisionsPerFrame) {
+                  break; // Exit early to prevent game hanging
+                }
 
                 // Determine collision side for realistic physics
                 const overlapLeft = ballRight - brickLeft;
@@ -849,11 +1039,15 @@
                   const points = brick.points * combo;
                   score += points;
 
+                  // Play brick break sound
+                  playSound('brick');
+
                   // Create particles for visual feedback
                   createParticles(brick.x + brickWidth/2, brick.y + brickHeight/2, brick.color, 12);
 
                   // Apply power-up if present
                   if (brick.powerUp) {
+                    playSound('powerup'); // Play power-up sound
                     applyPowerUp(brick.powerUp);
                   }
 
@@ -861,6 +1055,7 @@
                   const totalBricks = brickRowCount * brickColumnCount;
                   const remainingBricks = bricks.flat().filter(b => b.status === 1).length;
                   if (remainingBricks === 0) {
+                    playSound('levelComplete'); // Play level complete sound
                     showMessage(`LEVEL ${currentLevel} COMPLETE! 🎉 Score: ${score}`, true);
                     gameRunning = false;
                     cancelAnimationFrame(animationFrameId);
@@ -878,22 +1073,22 @@
                   dx = -dx;
                   // Increase speed slightly on brick hits
                   increaseSpeed();
-                  // Adjust ball position to prevent getting stuck
+                  // Adjust ball position to prevent getting stuck with buffer
                   if (overlapLeft < overlapRight) {
-                    x = brickLeft - ballRadius;
+                    x = brickLeft - ballRadius - 1;
                   } else {
-                    x = brickRight + ballRadius;
+                    x = brickRight + ballRadius + 1;
                   }
                 } else {
                   // Top/Bottom collision
                   dy = -dy;
                   // Increase speed slightly on brick hits
                   increaseSpeed();
-                  // Adjust ball position to prevent getting stuck
+                  // Adjust ball position to prevent getting stuck with buffer
                   if (overlapTop < overlapBottom) {
-                    y = brickTop - ballRadius;
+                    y = brickTop - ballRadius - 1;
                   } else {
-                    y = brickBottom + ballRadius;
+                    y = brickBottom + ballRadius + 1;
                   }
                 }
                 return; // Exit after first collision to prevent multiple hits
@@ -907,6 +1102,13 @@
        * Main drawing function. Clears canvas and redraws all game elements with enhanced features.
        */
       function draw() {
+        // Safety check for canvas context
+        if (!ctx || !canvas) {
+          console.error('Canvas context not available');
+          gameRunning = false;
+          return;
+        }
+
         ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear entire canvas
 
         drawBricks();
@@ -939,47 +1141,21 @@
           ctx.fillText(powerUpTexts, canvas.width / 2, canvas.height - 20 * scaleFactor);
         }
 
-        // Draw friendly speed indicator for kids
-        const speedPercent = Math.round((speedMultiplier / maxSpeedMultiplier) * 100);
-        let speedEmoji = '🐢'; // Turtle for slow
-        let speedText = 'GENTLE';
-
-        if (speedPercent > 75) {
-          speedEmoji = '🚀'; // Rocket for fastest
-          speedText = 'SUPER FAST!';
-        } else if (speedPercent > 50) {
-          speedEmoji = '🏃'; // Runner for medium-fast
-          speedText = 'FAST!';
-        } else if (speedPercent > 25) {
-          speedEmoji = '🚶'; // Walker for medium
-          speedText = 'MEDIUM';
-        }
-
-        ctx.fillStyle = '#ffffff';
-        ctx.font = `bold ${14 * scaleFactor}px Arial`;
-        ctx.textAlign = 'left';
-        ctx.fillText(`${speedEmoji} ${speedText}`, 20 * scaleFactor, 40 * scaleFactor);
-
-        // Add gentle sparkles when going fast (not intimidating)
-        if (speedMultiplier > 1.4) {
-          ctx.fillStyle = '#ffff00';
-          ctx.globalAlpha = 0.6;
-          for (let i = 0; i < 2; i++) {
-            const sparkleX = x + (Math.random() - 0.5) * 30 * scaleFactor;
-            const sparkleY = y + (Math.random() - 0.5) * 30 * scaleFactor;
-            ctx.beginPath();
-            ctx.arc(sparkleX, sparkleY, 2 * scaleFactor, 0, Math.PI * 2);
-            ctx.fill();
-          }
-          ctx.globalAlpha = 1;
-        }
-
-        // Ball movement and wall collision
-        if (x + dx > canvas.width - ballRadius || x + dx < ballRadius) {
-          dx = -dx; // Reverse horizontal direction if hitting side walls
+        
+        // Ball movement and wall collision with improved boundary checking
+        if (x + dx > canvas.width - ballRadius) {
+          dx = -dx; // Reverse horizontal direction if hitting right wall
+          x = canvas.width - ballRadius; // Keep ball inside bounds
+          playSound('wall'); // Play wall hit sound
+        } else if (x + dx < ballRadius) {
+          dx = -dx; // Reverse horizontal direction if hitting left wall
+          x = ballRadius; // Keep ball inside bounds
+          playSound('wall'); // Play wall hit sound
         }
         if (y + dy < ballRadius) {
           dy = -dy; // Reverse vertical direction if hitting top wall
+          y = ballRadius; // Keep ball inside bounds
+          playSound('wall'); // Play wall hit sound
         } else if (y + dy > canvas.height - ballRadius - paddleHeight) {
           // Enhanced paddle collision detection
           const ballBottom = y + ballRadius;
@@ -992,8 +1168,16 @@
             dx = deflection.dx;
             dy = deflection.dy;
 
-            // Prevent ball from getting stuck in paddle
-            y = paddleTop - ballRadius;
+            // Prevent ball from getting stuck in paddle with better positioning
+            y = paddleTop - ballRadius - 1; // Add 1 pixel buffer
+
+            // Ensure ball is moving upward after paddle hit
+            if (dy > 0) {
+              dy = -Math.abs(dy);
+            }
+
+            // Play paddle hit sound
+            playSound('paddle');
 
             // Create impact effect
             createParticles(x, paddleTop, '#00c6ff', 3);
@@ -1004,49 +1188,26 @@
               comboCount = 0;
             }
           } else if (ballBottom > paddleBottom) {
-            // Ball hits bottom (misses paddle)
-            lives--;
-            comboCount = 0; // Reset combo on life loss
-            updateGameInfo(); // Update lives display
+            // Ball hits bottom (misses paddle) - game over
+            comboCount = 0; // Reset combo
 
-            // Create fail effect
-            createParticles(x, canvas.height - 20, '#ff0000', 8);
+            // Create game over effect
+            createParticles(x, canvas.height - 20, '#ff0000', 15);
 
-            if (lives === 0) {
-              showMessage(`GAME OVER! 💔 Final Score: ${score}`, false);
-              gameRunning = false;
-              cancelAnimationFrame(animationFrameId); // Stop the game loop
-            } else {
-              // Reset ball and paddle position for next life with increased difficulty
-              x = canvas.width / 2;
-              y = canvas.height - 30 * scaleFactor;
+            // Play game over sound
+            playSound('gameOver');
 
-              // Gentle speed increase with each life lost for kids
-              speedMultiplier = 1 + ((4 - lives) * 0.15); // Much gentler multiplier for kids
-              ballSpeed = baseBallSpeed * scaleFactor * speedMultiplier;
-              const angle = (Math.random() - 0.5) * Math.PI / 4; // Reasonable angles for kids
-              dx = Math.sin(angle) * ballSpeed;
-              dy = -Math.abs(Math.cos(angle) * ballSpeed);
-
-              // Encouraging visual effect for kids
-              createParticles(canvas.width/2, canvas.height/2, '#45b7d1', 10);
-
-              paddleX = (canvas.width - paddleWidth) / 2;
-              gameRunning = false; // Pause game until player restarts
-              startButton.style.display = "inline-flex"; // Show start button
-              restartButton.style.display = "none"; // Hide restart button
-            }
+            // Show game over message
+            showMessage(`GAME OVER! 💔 Final Score: ${score}`, false);
+            gameRunning = false;
+            cancelAnimationFrame(animationFrameId); // Stop the game loop
           }
         }
 
-        // Paddle movement (scaled speed)
-        const paddleSpeed = 7 * scaleFactor;
-        if ((rightPressed || touchRightPressed) && paddleX < canvas.width - paddleWidth) {
-          paddleX += paddleSpeed; // Move right
-        } else if ((leftPressed || touchLeftPressed) && paddleX > 0) {
-          paddleX -= paddleSpeed; // Move left
-        }
+        // Update paddle physics with realistic movement
+        updatePaddlePhysics();
 
+        // Update ball position
         x += dx; // Update ball x position
         y += dy; // Update ball y position
       }
@@ -1056,12 +1217,40 @@
        */
       function gameLoop(currentTime) {
         if (gameRunning) {
-          // Frame rate limiting for better performance on mobile
-          if (currentTime - lastFrameTime >= 1000 / targetFPS) {
-            draw();
-            lastFrameTime = currentTime;
+          try {
+            // Performance monitoring - check every 2 seconds
+            frameCount++;
+            if (currentTime - lastPerformanceCheck > 2000) {
+              const fps = frameCount / ((currentTime - lastPerformanceCheck) / 1000);
+              if (fps < 30) {
+                slowFrameCount++;
+                // Reduce target FPS if consistently slow
+                if (slowFrameCount > 3 && targetFPS > 30) {
+                  targetFPS = Math.max(30, targetFPS - 10);
+                  console.log('Reducing target FPS to:', targetFPS);
+                }
+              } else {
+                slowFrameCount = 0; // Reset counter if performance is good
+              }
+              frameCount = 0;
+              lastPerformanceCheck = currentTime;
+            }
+
+            // Frame rate limiting for better performance on mobile
+            if (currentTime - lastFrameTime >= 1000 / targetFPS) {
+              draw();
+              lastFrameTime = currentTime;
+            }
+            animationFrameId = requestAnimationFrame(gameLoop);
+          } catch (error) {
+            console.error('Game loop error:', error);
+            // Emergency game state reset
+            gameRunning = false;
+            showMessage('Game encountered an error. Please restart.', false);
+            if (animationFrameId) {
+              cancelAnimationFrame(animationFrameId);
+            }
           }
-          animationFrameId = requestAnimationFrame(gameLoop);
         }
       }
 
@@ -1085,8 +1274,10 @@
       document.addEventListener("keydown", (e) => {
         if (e.key === "Right" || e.key === "ArrowRight") {
           rightPressed = true;
+          paddleTargetX = undefined; // Clear mouse target to prevent conflicts
         } else if (e.key === "Left" || e.key === "ArrowLeft") {
           leftPressed = true;
+          paddleTargetX = undefined; // Clear mouse target to prevent conflicts
         }
       });
 
@@ -1109,6 +1300,7 @@
           if (e.touches.length > 0) {
             touchStartX = e.touches[0].clientX;
             paddleStartTouchX = paddleX;
+            paddleTargetX = undefined; // Clear mouse target to prevent conflicts
           }
         },
         { passive: false }
@@ -1121,37 +1313,37 @@
           if (e.touches.length > 0) {
             const touchCurrentX = e.touches[0].clientX;
             const touchDeltaX = touchCurrentX - touchStartX;
-            let newPaddleX = paddleStartTouchX + touchDeltaX;
 
-            // Clamp paddle to canvas boundaries
-            if (newPaddleX < 0) {
-              newPaddleX = 0;
-            } else if (newPaddleX + paddleWidth > canvas.width) {
-              newPaddleX = canvas.width - paddleWidth;
+            // Use acceleration-based movement instead of direct position setting
+            if (touchDeltaX > 20) {
+              touchRightPressed = true;
+              touchLeftPressed = false;
+            } else if (touchDeltaX < -20) {
+              touchLeftPressed = true;
+              touchRightPressed = false;
+            } else {
+              touchLeftPressed = false;
+              touchRightPressed = false;
             }
-            paddleX = newPaddleX;
           }
         },
         { passive: false }
       );
 
       canvas.addEventListener("touchend", () => {
-        // No specific action needed on touchend for continuous movement
+        // Clear touch input when touch ends
+        touchLeftPressed = false;
+        touchRightPressed = false;
       });
 
-      // Handle mouse movement for paddle control
+      // Handle mouse movement for paddle control with physics
       canvas.addEventListener("mousemove", (e) => {
         const relativeX = e.clientX - canvas.getBoundingClientRect().left;
         if (relativeX > 0 && relativeX < canvas.width) {
-          // Center the paddle based on mouse position
-          paddleX = relativeX - paddleWidth / 2;
-          // Clamp paddle to canvas boundaries
-          if (paddleX < 0) {
-            paddleX = 0;
-          }
-          if (paddleX + paddleWidth > canvas.width) {
-            paddleX = canvas.width - paddleWidth;
-          }
+          // Set target position for smooth following
+          paddleTargetX = relativeX - paddleWidth / 2;
+          // Clamp to canvas boundaries
+          paddleTargetX = Math.max(0, Math.min(canvas.width - paddleWidth, paddleTargetX));
         }
       });
 
@@ -1179,6 +1371,8 @@
       function handleTouchStart(button, direction) {
         return (e) => {
           e.preventDefault();
+          paddleTargetX = undefined; // Clear mouse target to prevent conflicts
+          button.classList.add('active'); // Add visual feedback
           if (direction === 'left') {
             touchLeftPressed = true;
           } else {
@@ -1190,6 +1384,7 @@
       function handleTouchEnd(button, direction) {
         return (e) => {
           e.preventDefault();
+          button.classList.remove('active'); // Remove visual feedback
           if (direction === 'left') {
             touchLeftPressed = false;
           } else {
@@ -1201,6 +1396,7 @@
       // Left button touch events
       leftButton.addEventListener("touchstart", handleTouchStart(leftButton, 'left'), { passive: false });
       leftButton.addEventListener("touchend", handleTouchEnd(leftButton, 'left'), { passive: false });
+      leftButton.addEventListener("touchcancel", handleTouchEnd(leftButton, 'left'), { passive: false });
       leftButton.addEventListener("mousedown", handleTouchStart(leftButton, 'left'));
       leftButton.addEventListener("mouseup", handleTouchEnd(leftButton, 'left'));
       leftButton.addEventListener("mouseleave", handleTouchEnd(leftButton, 'left'));
@@ -1208,6 +1404,7 @@
       // Right button touch events
       rightButton.addEventListener("touchstart", handleTouchStart(rightButton, 'right'), { passive: false });
       rightButton.addEventListener("touchend", handleTouchEnd(rightButton, 'right'), { passive: false });
+      rightButton.addEventListener("touchcancel", handleTouchEnd(rightButton, 'right'), { passive: false });
       rightButton.addEventListener("mousedown", handleTouchStart(rightButton, 'right'));
       rightButton.addEventListener("mouseup", handleTouchEnd(rightButton, 'right'));
       rightButton.addEventListener("mouseleave", handleTouchEnd(rightButton, 'right'));
@@ -1241,6 +1438,7 @@
 
       // Initialize game on window load
       window.onload = function () {
+        initAudio(); // Initialize audio system
         initGame(); // Initialize game state
 
         // Add event listener for window resize to make the canvas responsive
