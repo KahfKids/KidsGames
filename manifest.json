@@ -1,6 +1,7 @@
 {
   "name": "Kahf KidsGames - Educational Games for Children",
   "short_name": "KidsGames",
+  "version": "1.2.0",
   "description": "A collection of fun and educational games for kids including Islamic games, puzzles, and learning activities",
   "start_url": "/KidsGames/",
   "display": "standalone",
