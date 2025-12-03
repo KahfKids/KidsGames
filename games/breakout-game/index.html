@@ -132,57 +132,41 @@
         margin-right: 5px; /* Space between icon and text */
       }
 
-      /* Touch controls styling */
-      .touch-controls {
+      /* Swipe area styling */
+      .swipe-area {
         position: relative;
-        margin-top: 30px; /* Add space above controls */
+        margin-top: 20px;
         display: none; /* Hidden by default on desktop */
-        gap: 20px;
-        z-index: 100;
-        justify-content: center;
         width: 100%;
-      }
-
-      .touch-button {
-        width: 60px;
-        height: 60px;
-        min-width: 60px; /* Ensure minimum touch target size */
-        min-height: 60px;
-        background: linear-gradient(180deg, rgba(0, 198, 255, 0.8), rgba(0, 114, 255, 0.8));
-        border: 2px solid #009ffd;
-        border-radius: 50%;
-        color: white;
-        font-size: 24px;
-        display: flex;
-        align-items: center;
+        height: 80px;
+        background: rgba(0, 114, 255, 0.1);
+        border: 2px solid rgba(0, 198, 255, 0.3);
+        border-radius: 15px;
         justify-content: center;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        box-shadow: 0 4px 15px rgba(0, 114, 255, 0.4);
-        user-select: none;
-        -webkit-user-select: none;
-        -webkit-touch-callout: none;
-        touch-action: manipulation; /* Improve touch responsiveness */
+        align-items: center;
+        touch-action: none; /* Prevent default touch actions */
+        z-index: 100;
       }
 
-      .touch-button:active,
-      .touch-button.active {
-        transform: scale(0.95);
-        background: linear-gradient(180deg, rgba(0, 224, 255, 0.9), rgba(0, 136, 255, 0.9));
-        box-shadow: 0 2px 10px rgba(0, 114, 255, 0.6);
+      .swipe-instructions {
+        text-align: center;
+        color: #ccc;
+        font-size: 0.9em;
+        animation: pulse 2s infinite;
       }
 
-      .touch-button-left {
-        left: -10px;
+      .swipe-instructions p {
+        margin: 5px 0;
       }
 
-      .touch-button-right {
-        right: -10px;
+      .swipe-instructions i {
+        font-size: 1.5em;
+        color: #00c6ff;
       }
 
-      /* Show touch controls on mobile devices */
+      /* Show swipe area on mobile devices */
       @media (max-width: 768px), (pointer: coarse) {
-        .touch-controls {
+        .swipe-area {
           display: flex;
         }
       }
@@ -241,6 +225,15 @@
         }
       }
 
+      @keyframes pulse {
+        0%, 100% {
+          opacity: 0.7;
+        }
+        50% {
+          opacity: 1;
+        }
+      }
+
       /* Responsive adjustments */
       @media (max-width: 768px) {
         h1 {
@@ -259,15 +252,15 @@
           font-size: 1.2em;
           padding: 20px;
         }
-        .touch-controls {
-          margin-top: 40px; /* More space on smaller screens */
-        }
-        .touch-button {
-          width: 70px;
+        .swipe-area {
           height: 70px;
-          min-width: 70px;
-          min-height: 70px;
-          font-size: 28px;
+          margin-top: 30px; /* More space on smaller screens */
+        }
+        .swipe-instructions {
+          font-size: 0.8em;
+        }
+        .swipe-instructions i {
+          font-size: 1.3em;
         }
       }
 
@@ -291,26 +284,25 @@
           font-size: 1em;
           padding: 15px;
         }
-        .touch-controls {
-          margin-top: 50px;
-          gap: 30px;
+        .swipe-area {
+          height: 60px;
+          margin-top: 40px;
         }
-        .touch-button {
-          width: 80px;
-          height: 80px;
-          min-width: 80px;
-          min-height: 80px;
-          font-size: 32px;
+        .swipe-instructions {
+          font-size: 0.7em;
+        }
+        .swipe-instructions i {
+          font-size: 1.2em;
         }
         /* Ensure safe areas for notched devices */
         .game-container {
           padding-left: env(safe-area-inset-left);
           padding-right: env(safe-area-inset-right);
         }
-        .touch-controls {
+        .swipe-area {
           padding-left: calc(20px + env(safe-area-inset-left));
           padding-right: calc(20px + env(safe-area-inset-right));
-          margin-top: calc(50px + env(safe-area-inset-bottom));
+          margin-top: calc(30px + env(safe-area-inset-bottom));
         }
       }
     </style>
@@ -331,14 +323,12 @@
         </button>
       </div>
 
-      <!-- Touch controls for mobile -->
-      <div class="touch-controls" id="touchControls">
-        <button id="leftButton" class="touch-button touch-button-left">
-          <i class="fas fa-chevron-left"></i>
-        </button>
-        <button id="rightButton" class="touch-button touch-button-right">
-          <i class="fas fa-chevron-right"></i>
-        </button>
+      <!-- Swipe area for mobile -->
+      <div class="swipe-area" id="swipeArea">
+        <div class="swipe-instructions" id="swipeInstructions">
+          <p><i class="fas fa-hand-point-up"></i></p>
+          <p>Swipe Here</p>
+        </div>
       </div>
     </div>
 
@@ -360,9 +350,8 @@
       const messageBox = document.getElementById("messageBox");
       const messageText = document.getElementById("messageText");
       const messageBoxButton = document.getElementById("messageBoxButton");
-      const touchControls = document.getElementById("touchControls");
-      const leftButton = document.getElementById("leftButton");
-      const rightButton = document.getElementById("rightButton");
+      const swipeInstructions = document.getElementById("swipeInstructions");
+      const swipeArea = document.getElementById("swipeArea");
 
       // Game variables
       let gameRunning = false;
@@ -420,11 +409,11 @@
 
       // Brick types with different properties
       const brickTypes = {
-        normal: { color: '#ff6b6b', hits: 1, points: 10, powerUp: null },
-        strong: { color: '#ff3838', hits: 2, points: 20, powerUp: null },
-        bonus: { color: '#4ecdc4', hits: 1, points: 50, powerUp: 'bonus' },
-        powerUp: { color: '#45b7d1', hits: 1, points: 30, powerUp: 'expand' },
-        speedUp: { color: '#f9ca24', hits: 1, points: 25, powerUp: 'slow' }
+        normal: { color: "#ff6b6b", hits: 1, points: 10, powerUp: null },
+        strong: { color: "#ff3838", hits: 2, points: 20, powerUp: null },
+        bonus: { color: "#4ecdc4", hits: 1, points: 50, powerUp: "bonus" },
+        powerUp: { color: "#45b7d1", hits: 1, points: 30, powerUp: "expand" },
+        speedUp: { color: "#f9ca24", hits: 1, points: 25, powerUp: "slow" },
       };
 
       // Power-up effects
@@ -444,9 +433,10 @@
        */
       function initAudio() {
         try {
-          audioContext = new (window.AudioContext || window.webkitAudioContext)();
+          audioContext = new (window.AudioContext ||
+            window.webkitAudioContext)();
         } catch (e) {
-          console.log('Web Audio API not supported:', e);
+          console.log("Web Audio API not supported:", e);
           soundEnabled = false;
         }
       }
@@ -466,63 +456,99 @@
 
           const currentTime = audioContext.currentTime;
 
-          switch(type) {
-            case 'paddle':
+          switch (type) {
+            case "paddle":
               oscillator.frequency.setValueAtTime(300, currentTime);
-              oscillator.frequency.exponentialRampToValueAtTime(200, currentTime + 0.1);
+              oscillator.frequency.exponentialRampToValueAtTime(
+                200,
+                currentTime + 0.1
+              );
               gainNode.gain.setValueAtTime(masterVolume, currentTime);
-              gainNode.gain.exponentialRampToValueAtTime(0.01, currentTime + 0.1);
+              gainNode.gain.exponentialRampToValueAtTime(
+                0.01,
+                currentTime + 0.1
+              );
               oscillator.start(currentTime);
               oscillator.stop(currentTime + 0.1);
               break;
 
-            case 'brick':
+            case "brick":
               oscillator.frequency.setValueAtTime(500, currentTime);
-              oscillator.frequency.exponentialRampToValueAtTime(150, currentTime + 0.15);
+              oscillator.frequency.exponentialRampToValueAtTime(
+                150,
+                currentTime + 0.15
+              );
               gainNode.gain.setValueAtTime(masterVolume * 0.7, currentTime);
-              gainNode.gain.exponentialRampToValueAtTime(0.01, currentTime + 0.15);
+              gainNode.gain.exponentialRampToValueAtTime(
+                0.01,
+                currentTime + 0.15
+              );
               oscillator.start(currentTime);
               oscillator.stop(currentTime + 0.15);
               break;
 
-            case 'powerup':
+            case "powerup":
               oscillator.frequency.setValueAtTime(200, currentTime);
-              oscillator.frequency.exponentialRampToValueAtTime(800, currentTime + 0.2);
+              oscillator.frequency.exponentialRampToValueAtTime(
+                800,
+                currentTime + 0.2
+              );
               gainNode.gain.setValueAtTime(masterVolume * 0.5, currentTime);
-              gainNode.gain.exponentialRampToValueAtTime(0.01, currentTime + 0.2);
+              gainNode.gain.exponentialRampToValueAtTime(
+                0.01,
+                currentTime + 0.2
+              );
               oscillator.start(currentTime);
               oscillator.stop(currentTime + 0.2);
               break;
 
-            case 'gameOver':
+            case "gameOver":
               oscillator.frequency.setValueAtTime(400, currentTime);
-              oscillator.frequency.exponentialRampToValueAtTime(100, currentTime + 0.5);
+              oscillator.frequency.exponentialRampToValueAtTime(
+                100,
+                currentTime + 0.5
+              );
               gainNode.gain.setValueAtTime(masterVolume, currentTime);
-              gainNode.gain.exponentialRampToValueAtTime(0.01, currentTime + 0.5);
+              gainNode.gain.exponentialRampToValueAtTime(
+                0.01,
+                currentTime + 0.5
+              );
               oscillator.start(currentTime);
               oscillator.stop(currentTime + 0.5);
               break;
 
-            case 'levelComplete':
+            case "levelComplete":
               oscillator.frequency.setValueAtTime(300, currentTime);
-              oscillator.frequency.exponentialRampToValueAtTime(600, currentTime + 0.1);
-              oscillator.frequency.exponentialRampToValueAtTime(900, currentTime + 0.2);
+              oscillator.frequency.exponentialRampToValueAtTime(
+                600,
+                currentTime + 0.1
+              );
+              oscillator.frequency.exponentialRampToValueAtTime(
+                900,
+                currentTime + 0.2
+              );
               gainNode.gain.setValueAtTime(masterVolume * 0.6, currentTime);
-              gainNode.gain.exponentialRampToValueAtTime(0.01, currentTime + 0.3);
+              gainNode.gain.exponentialRampToValueAtTime(
+                0.01,
+                currentTime + 0.3
+              );
               oscillator.start(currentTime);
               oscillator.stop(currentTime + 0.3);
               break;
 
-            case 'wall':
+            case "wall":
               oscillator.frequency.setValueAtTime(250, currentTime);
               gainNode.gain.setValueAtTime(masterVolume * 0.3, currentTime);
-              gainNode.gain.exponentialRampToValueAtTime(0.01, currentTime + 0.05);
+              gainNode.gain.exponentialRampToValueAtTime(
+                0.01,
+                currentTime + 0.05
+              );
               oscillator.start(currentTime);
               oscillator.stop(currentTime + 0.05);
               break;
           }
         } catch (e) {
-          console.log('Error playing sound:', e);
+          console.log("Error playing sound:", e);
         }
       }
 
@@ -558,7 +584,7 @@
             vy: (Math.random() - 0.5) * 6 * scaleFactor,
             life: 30,
             color: color,
-            size: Math.random() * 4 + 2
+            size: Math.random() * 4 + 2,
           });
         }
       }
@@ -567,7 +593,7 @@
        * Updates and draws particles
        */
       function updateParticles() {
-        particles = particles.filter(particle => {
+        particles = particles.filter((particle) => {
           particle.x += particle.vx;
           particle.y += particle.vy;
           particle.vy += 0.2; // gravity
@@ -576,7 +602,12 @@
           if (particle.life > 0) {
             ctx.globalAlpha = particle.life / 30;
             ctx.fillStyle = particle.color;
-            ctx.fillRect(particle.x, particle.y, particle.size * scaleFactor, particle.size * scaleFactor);
+            ctx.fillRect(
+              particle.x,
+              particle.y,
+              particle.size * scaleFactor,
+              particle.size * scaleFactor
+            );
             ctx.globalAlpha = 1;
             return true;
           }
@@ -602,15 +633,16 @@
        * Calculates realistic ball deflection from paddle with gentle speed boost
        */
       function calculatePaddleDeflection(ballX) {
-        const relativeIntersectX = (ballX - (paddleX + paddleWidth / 2)) / (paddleWidth / 2);
-        const bounceAngle = relativeIntersectX * Math.PI / 3; // Max 60 degree angle
+        const relativeIntersectX =
+          (ballX - (paddleX + paddleWidth / 2)) / (paddleWidth / 2);
+        const bounceAngle = (relativeIntersectX * Math.PI) / 3; // Max 60 degree angle
 
         // Very gentle speed increase for kids
         increaseSpeed();
         const speed = Math.sqrt(dx * dx + dy * dy) * 1.02; // Much gentler speed increase
         return {
           dx: speed * Math.sin(bounceAngle),
-          dy: -Math.abs(speed * Math.cos(bounceAngle))
+          dy: -Math.abs(speed * Math.cos(bounceAngle)),
         };
       }
 
@@ -619,7 +651,8 @@
        */
       function updateCombo() {
         const currentTime = Date.now();
-        if (currentTime - lastHitTime < 1000) { // Within 1 second
+        if (currentTime - lastHitTime < 1000) {
+          // Within 1 second
           comboCount++;
         } else {
           comboCount = 1;
@@ -634,26 +667,31 @@
       function applyPowerUp(type) {
         const powerUp = {
           type: type,
-          endTime: Date.now() + powerUpDuration
+          endTime: Date.now() + powerUpDuration,
         };
 
         // Apply immediate effect
-        switch(type) {
-          case 'expand':
+        switch (type) {
+          case "expand":
             paddleWidth = basePaddleWidth * 1.5 * scaleFactor;
-            createParticles(paddleX + paddleWidth/2, canvas.height - paddleHeight, '#45b7d1', 15);
+            createParticles(
+              paddleX + paddleWidth / 2,
+              canvas.height - paddleHeight,
+              "#45b7d1",
+              15
+            );
             break;
-          case 'slow':
+          case "slow":
             const currentSpeed = Math.sqrt(dx * dx + dy * dy);
             const newSpeed = currentSpeed * 0.7;
             const angle = Math.atan2(dy, dx);
             dx = Math.cos(angle) * newSpeed;
             dy = Math.sin(angle) * newSpeed;
-            createParticles(x, y, '#f9ca24', 10);
+            createParticles(x, y, "#f9ca24", 10);
             break;
-          case 'bonus':
+          case "bonus":
             score += 100;
-            createParticles(canvas.width/2, canvas.height/2, '#4ecdc4', 20);
+            createParticles(canvas.width / 2, canvas.height / 2, "#4ecdc4", 20);
             break;
         }
 
@@ -665,11 +703,11 @@
        */
       function updatePowerUps() {
         const currentTime = Date.now();
-        activePowerUps = activePowerUps.filter(powerUp => {
+        activePowerUps = activePowerUps.filter((powerUp) => {
           if (currentTime > powerUp.endTime) {
             // Remove expired power-up effect
-            switch(powerUp.type) {
-              case 'expand':
+            switch (powerUp.type) {
+              case "expand":
                 paddleWidth = basePaddleWidth * scaleFactor;
                 break;
             }
@@ -729,7 +767,10 @@
         }
 
         // Limit to max speed
-        paddleVelocity = Math.max(-paddleMaxSpeed, Math.min(paddleMaxSpeed, paddleVelocity));
+        paddleVelocity = Math.max(
+          -paddleMaxSpeed,
+          Math.min(paddleMaxSpeed, paddleVelocity)
+        );
 
         // Update paddle position
         let newX = paddleX + paddleVelocity;
@@ -767,25 +808,33 @@
         brickRowCount = baseBrickRowCount;
 
         // Scale bricks with mobile-friendly sizing
-        brickHeight = window.innerWidth < 768 ? (baseBrickHeight * 1.5) * scaleFactor : baseBrickHeight * scaleFactor;
+        brickHeight =
+          window.innerWidth < 768
+            ? baseBrickHeight * 1.5 * scaleFactor
+            : baseBrickHeight * scaleFactor;
         brickOffsetTop = baseBrickOffsetTop * scaleFactor;
         brickOffsetLeft = baseBrickOffsetLeft * scaleFactor;
 
         // Calculate brick dimensions to fill canvas width properly
         const availableBrickWidth = canvas.width - 2 * brickOffsetLeft;
-        const totalPaddingWidth = (brickColumnCount - 1) * (baseBrickPadding * scaleFactor);
+        const totalPaddingWidth =
+          (brickColumnCount - 1) * (baseBrickPadding * scaleFactor);
 
         // Calculate brick width to fill available space perfectly
-        brickWidth = (availableBrickWidth - totalPaddingWidth) / brickColumnCount;
+        brickWidth =
+          (availableBrickWidth - totalPaddingWidth) / brickColumnCount;
         brickPadding = baseBrickPadding * scaleFactor;
 
         // Ensure minimum brick width for playability with mobile-friendly sizing
-        const minBrickWidth = window.innerWidth < 768 ? 50 * scaleFactor : 40 * scaleFactor;
+        const minBrickWidth =
+          window.innerWidth < 768 ? 50 * scaleFactor : 40 * scaleFactor;
 
         // Adjust brick layout for very small screens
         if (window.innerWidth < 480) {
           // Use fewer columns on very small screens
-          const effectiveColumns = Math.floor(availableBrickWidth / minBrickWidth);
+          const effectiveColumns = Math.floor(
+            availableBrickWidth / minBrickWidth
+          );
           if (effectiveColumns < brickColumnCount) {
             brickColumnCount = Math.max(effectiveColumns, 5); // Minimum 5 columns
           }
@@ -796,7 +845,10 @@
           // Recalculate padding to fit if bricks are at minimum size
           const usedBricksWidth = brickColumnCount * brickWidth;
           const remainingSpace = availableBrickWidth - usedBricksWidth;
-          brickPadding = Math.max(remainingSpace / (brickColumnCount - 1), 8 * scaleFactor);
+          brickPadding = Math.max(
+            remainingSpace / (brickColumnCount - 1),
+            8 * scaleFactor
+          );
         }
       }
 
@@ -814,7 +866,7 @@
         // Set initial ball speed with kid-friendly physics
         speedMultiplier = 1;
         ballSpeed = baseBallSpeed * scaleFactor * 1.0; // Normal starting speed for kids
-        const initialAngle = (Math.random() - 0.5) * Math.PI / 6; // Gentle angles for kids
+        const initialAngle = ((Math.random() - 0.5) * Math.PI) / 6; // Gentle angles for kids
         dx = Math.sin(initialAngle) * ballSpeed; // Horizontal speed
         dy = -Math.abs(Math.cos(initialAngle) * ballSpeed); // Always start moving upward
 
@@ -829,19 +881,19 @@
           bricks[c] = [];
           for (let r = 0; r < brickRowCount; r++) {
             // Create varied brick layout based on row
-            let type = 'normal';
+            let type = "normal";
             if (r === 0) {
               // Top row - strong bricks
-              type = 'strong';
+              type = "strong";
             } else if (r === 1 && Math.random() > 0.6) {
               // Second row - occasional power-ups
-              type = 'powerUp';
+              type = "powerUp";
             } else if (r === 2 && Math.random() > 0.7) {
               // Third row - occasional bonus bricks
-              type = 'bonus';
+              type = "bonus";
             } else if (r === 3 && Math.random() > 0.8) {
               // Fourth row - occasional speed control
-              type = 'speedUp';
+              type = "speedUp";
             }
 
             const brickType = brickTypes[type];
@@ -854,7 +906,7 @@
               maxHits: brickType.hits,
               color: brickType.color,
               points: brickType.points,
-              powerUp: brickType.powerUp
+              powerUp: brickType.powerUp,
             };
           }
         }
@@ -950,12 +1002,12 @@
               ctx.fillStyle = brick.color;
 
               // Add visual effect for damaged strong bricks
-              if (brick.type === 'strong' && brick.hits < brick.maxHits) {
+              if (brick.type === "strong" && brick.hits < brick.maxHits) {
                 ctx.globalAlpha = 0.7;
               }
 
               // Add glow effect for special bricks
-              if (brick.type === 'bonus' || brick.type === 'powerUp') {
+              if (brick.type === "bonus" || brick.type === "powerUp") {
                 ctx.shadowBlur = 10 * scaleFactor;
                 ctx.shadowColor = brick.color;
               }
@@ -966,23 +1018,31 @@
               ctx.shadowBlur = 0;
 
               // Draw hits remaining for strong bricks
-              if (brick.type === 'strong' && brick.hits > 1) {
-                ctx.fillStyle = '#ffffff';
+              if (brick.type === "strong" && brick.hits > 1) {
+                ctx.fillStyle = "#ffffff";
                 ctx.font = `${12 * scaleFactor}px Arial`;
-                ctx.textAlign = 'center';
-                ctx.fillText(brick.hits, brickX + brickWidth / 2, brickY + brickHeight / 2 + 4 * scaleFactor);
+                ctx.textAlign = "center";
+                ctx.fillText(
+                  brick.hits,
+                  brickX + brickWidth / 2,
+                  brickY + brickHeight / 2 + 4 * scaleFactor
+                );
               }
 
               // Draw icon for special bricks
               if (brick.powerUp) {
-                ctx.fillStyle = '#ffffff';
+                ctx.fillStyle = "#ffffff";
                 ctx.font = `${14 * scaleFactor}px FontAwesome`;
-                ctx.textAlign = 'center';
-                let icon = '';
-                if (brick.powerUp === 'expand') icon = '↔';
-                else if (brick.powerUp === 'bonus') icon = '★';
-                else if (brick.powerUp === 'slow') icon = '⚡';
-                ctx.fillText(icon, brickX + brickWidth / 2, brickY + brickHeight / 2 + 4 * scaleFactor);
+                ctx.textAlign = "center";
+                let icon = "";
+                if (brick.powerUp === "expand") icon = "↔";
+                else if (brick.powerUp === "bonus") icon = "★";
+                else if (brick.powerUp === "slow") icon = "⚡";
+                ctx.fillText(
+                  icon,
+                  brickX + brickWidth / 2,
+                  brickY + brickHeight / 2 + 4 * scaleFactor
+                );
               }
             }
           }
@@ -1011,9 +1071,12 @@
               const brickTop = brick.y;
               const brickBottom = brick.y + brickHeight;
 
-              if (ballRight > brickLeft && ballLeft < brickRight &&
-                  ballBottom > brickTop && ballTop < brickBottom) {
-
+              if (
+                ballRight > brickLeft &&
+                ballLeft < brickRight &&
+                ballBottom > brickTop &&
+                ballTop < brickBottom
+              ) {
                 // Prevent infinite collision loops
                 collisionCount++;
                 if (collisionCount > maxCollisionsPerFrame) {
@@ -1040,29 +1103,44 @@
                   score += points;
 
                   // Play brick break sound
-                  playSound('brick');
+                  playSound("brick");
 
                   // Create particles for visual feedback
-                  createParticles(brick.x + brickWidth/2, brick.y + brickHeight/2, brick.color, 12);
+                  createParticles(
+                    brick.x + brickWidth / 2,
+                    brick.y + brickHeight / 2,
+                    brick.color,
+                    12
+                  );
 
                   // Apply power-up if present
                   if (brick.powerUp) {
-                    playSound('powerup'); // Play power-up sound
+                    playSound("powerup"); // Play power-up sound
                     applyPowerUp(brick.powerUp);
                   }
 
                   // Check for win condition
                   const totalBricks = brickRowCount * brickColumnCount;
-                  const remainingBricks = bricks.flat().filter(b => b.status === 1).length;
+                  const remainingBricks = bricks
+                    .flat()
+                    .filter((b) => b.status === 1).length;
                   if (remainingBricks === 0) {
-                    playSound('levelComplete'); // Play level complete sound
-                    showMessage(`LEVEL ${currentLevel} COMPLETE! 🎉 Score: ${score}`, true);
+                    playSound("levelComplete"); // Play level complete sound
+                    showMessage(
+                      `LEVEL ${currentLevel} COMPLETE! 🎉 Score: ${score}`,
+                      true
+                    );
                     gameRunning = false;
                     cancelAnimationFrame(animationFrameId);
                   }
                 } else {
                   // Brick damaged but not destroyed
-                  createParticles(brick.x + brickWidth/2, brick.y + brickHeight/2, brick.color, 5);
+                  createParticles(
+                    brick.x + brickWidth / 2,
+                    brick.y + brickHeight / 2,
+                    brick.color,
+                    5
+                  );
                 }
 
                 updateGameInfo();
@@ -1104,7 +1182,7 @@
       function draw() {
         // Safety check for canvas context
         if (!ctx || !canvas) {
-          console.error('Canvas context not available');
+          console.error("Canvas context not available");
           gameRunning = false;
           return;
         }
@@ -1122,47 +1200,60 @@
 
         // Draw combo indicator
         if (comboCount > 1) {
-          ctx.fillStyle = '#ffff00';
+          ctx.fillStyle = "#ffff00";
           ctx.font = `bold ${20 * scaleFactor}px Arial`;
-          ctx.textAlign = 'center';
-          ctx.fillText(`${comboCount}x COMBO!`, canvas.width / 2, 50 * scaleFactor);
+          ctx.textAlign = "center";
+          ctx.fillText(
+            `${comboCount}x COMBO!`,
+            canvas.width / 2,
+            50 * scaleFactor
+          );
         }
 
         // Draw active power-ups indicator
         if (activePowerUps.length > 0) {
-          const powerUpTexts = activePowerUps.map(pu => {
-            const timeLeft = Math.ceil((pu.endTime - Date.now()) / 1000);
-            return `${pu.type.toUpperCase()}: ${timeLeft}s`;
-          }).join(' | ');
+          const powerUpTexts = activePowerUps
+            .map((pu) => {
+              const timeLeft = Math.ceil((pu.endTime - Date.now()) / 1000);
+              return `${pu.type.toUpperCase()}: ${timeLeft}s`;
+            })
+            .join(" | ");
 
-          ctx.fillStyle = '#00ff00';
+          ctx.fillStyle = "#00ff00";
           ctx.font = `${14 * scaleFactor}px Arial`;
-          ctx.textAlign = 'center';
-          ctx.fillText(powerUpTexts, canvas.width / 2, canvas.height - 20 * scaleFactor);
+          ctx.textAlign = "center";
+          ctx.fillText(
+            powerUpTexts,
+            canvas.width / 2,
+            canvas.height - 20 * scaleFactor
+          );
         }
 
-        
         // Ball movement and wall collision with improved boundary checking
         if (x + dx > canvas.width - ballRadius) {
           dx = -dx; // Reverse horizontal direction if hitting right wall
           x = canvas.width - ballRadius; // Keep ball inside bounds
-          playSound('wall'); // Play wall hit sound
+          playSound("wall"); // Play wall hit sound
         } else if (x + dx < ballRadius) {
           dx = -dx; // Reverse horizontal direction if hitting left wall
           x = ballRadius; // Keep ball inside bounds
-          playSound('wall'); // Play wall hit sound
+          playSound("wall"); // Play wall hit sound
         }
         if (y + dy < ballRadius) {
           dy = -dy; // Reverse vertical direction if hitting top wall
           y = ballRadius; // Keep ball inside bounds
-          playSound('wall'); // Play wall hit sound
+          playSound("wall"); // Play wall hit sound
         } else if (y + dy > canvas.height - ballRadius - paddleHeight) {
           // Enhanced paddle collision detection
           const ballBottom = y + ballRadius;
           const paddleTop = canvas.height - paddleHeight;
           const paddleBottom = canvas.height;
 
-          if (ballBottom >= paddleTop && x >= paddleX && x <= paddleX + paddleWidth) {
+          if (
+            ballBottom >= paddleTop &&
+            x >= paddleX &&
+            x <= paddleX + paddleWidth
+          ) {
             // Ball hits paddle - use realistic physics
             const deflection = calculatePaddleDeflection(x);
             dx = deflection.dx;
@@ -1177,10 +1268,10 @@
             }
 
             // Play paddle hit sound
-            playSound('paddle');
+            playSound("paddle");
 
             // Create impact effect
-            createParticles(x, paddleTop, '#00c6ff', 3);
+            createParticles(x, paddleTop, "#00c6ff", 3);
 
             // Reset combo if ball has been in play for a while
             const timeSinceLastHit = Date.now() - lastHitTime;
@@ -1192,10 +1283,10 @@
             comboCount = 0; // Reset combo
 
             // Create game over effect
-            createParticles(x, canvas.height - 20, '#ff0000', 15);
+            createParticles(x, canvas.height - 20, "#ff0000", 15);
 
             // Play game over sound
-            playSound('gameOver');
+            playSound("gameOver");
 
             // Show game over message
             showMessage(`GAME OVER! 💔 Final Score: ${score}`, false);
@@ -1221,13 +1312,14 @@
             // Performance monitoring - check every 2 seconds
             frameCount++;
             if (currentTime - lastPerformanceCheck > 2000) {
-              const fps = frameCount / ((currentTime - lastPerformanceCheck) / 1000);
+              const fps =
+                frameCount / ((currentTime - lastPerformanceCheck) / 1000);
               if (fps < 30) {
                 slowFrameCount++;
                 // Reduce target FPS if consistently slow
                 if (slowFrameCount > 3 && targetFPS > 30) {
                   targetFPS = Math.max(30, targetFPS - 10);
-                  console.log('Reducing target FPS to:', targetFPS);
+                  console.log("Reducing target FPS to:", targetFPS);
                 }
               } else {
                 slowFrameCount = 0; // Reset counter if performance is good
@@ -1243,10 +1335,10 @@
             }
             animationFrameId = requestAnimationFrame(gameLoop);
           } catch (error) {
-            console.error('Game loop error:', error);
+            console.error("Game loop error:", error);
             // Emergency game state reset
             gameRunning = false;
-            showMessage('Game encountered an error. Please restart.', false);
+            showMessage("Game encountered an error. Please restart.", false);
             if (animationFrameId) {
               cancelAnimationFrame(animationFrameId);
             }
@@ -1289,53 +1381,6 @@
         }
       });
 
-      // Event Listeners for Touch Input (for paddle movement)
-      let touchStartX = 0;
-      let paddleStartTouchX = 0;
-
-      canvas.addEventListener(
-        "touchstart",
-        (e) => {
-          e.preventDefault(); // Prevent scrolling
-          if (e.touches.length > 0) {
-            touchStartX = e.touches[0].clientX;
-            paddleStartTouchX = paddleX;
-            paddleTargetX = undefined; // Clear mouse target to prevent conflicts
-          }
-        },
-        { passive: false }
-      ); // Set passive to false to allow preventDefault
-
-      canvas.addEventListener(
-        "touchmove",
-        (e) => {
-          e.preventDefault(); // Prevent scrolling
-          if (e.touches.length > 0) {
-            const touchCurrentX = e.touches[0].clientX;
-            const touchDeltaX = touchCurrentX - touchStartX;
-
-            // Use acceleration-based movement instead of direct position setting
-            if (touchDeltaX > 20) {
-              touchRightPressed = true;
-              touchLeftPressed = false;
-            } else if (touchDeltaX < -20) {
-              touchLeftPressed = true;
-              touchRightPressed = false;
-            } else {
-              touchLeftPressed = false;
-              touchRightPressed = false;
-            }
-          }
-        },
-        { passive: false }
-      );
-
-      canvas.addEventListener("touchend", () => {
-        // Clear touch input when touch ends
-        touchLeftPressed = false;
-        touchRightPressed = false;
-      });
-
       // Handle mouse movement for paddle control with physics
       canvas.addEventListener("mousemove", (e) => {
         const relativeX = e.clientX - canvas.getBoundingClientRect().left;
@@ -1343,7 +1388,10 @@
           // Set target position for smooth following
           paddleTargetX = relativeX - paddleWidth / 2;
           // Clamp to canvas boundaries
-          paddleTargetX = Math.max(0, Math.min(canvas.width - paddleWidth, paddleTargetX));
+          paddleTargetX = Math.max(
+            0,
+            Math.min(canvas.width - paddleWidth, paddleTargetX)
+          );
         }
       });
 
@@ -1367,51 +1415,73 @@
         gameLoop(); // Start new game loop
       });
 
-      // Touch button event handlers
-      function handleTouchStart(button, direction) {
-        return (e) => {
-          e.preventDefault();
-          paddleTargetX = undefined; // Clear mouse target to prevent conflicts
-          button.classList.add('active'); // Add visual feedback
-          if (direction === 'left') {
-            touchLeftPressed = true;
-          } else {
-            touchRightPressed = true;
-          }
-        };
-      }
+      // Swipe gesture handling for paddle control
+      let touchStartX = 0;
+      let touchStartY = 0;
+      let swipeActive = false;
 
-      function handleTouchEnd(button, direction) {
-        return (e) => {
-          e.preventDefault();
-          button.classList.remove('active'); // Remove visual feedback
-          if (direction === 'left') {
+      swipeArea.addEventListener("touchstart", (e) => {
+        if (!gameRunning) return;
+
+        const touch = e.touches[0];
+        touchStartX = touch.clientX;
+        touchStartY = touch.clientY;
+        swipeActive = true;
+        paddleTargetX = undefined; // Clear mouse target to prevent conflicts
+      }, { passive: true });
+
+      swipeArea.addEventListener("touchmove", (e) => {
+        if (!gameRunning || !swipeActive) return;
+
+        e.preventDefault(); // Prevent scrolling during swipe
+        const touch = e.touches[0];
+        const touchCurrentX = touch.clientX;
+        const touchCurrentY = touch.clientY;
+
+        const deltaX = touchCurrentX - touchStartX;
+        const deltaY = touchCurrentY - touchStartY;
+
+        // Detect horizontal swipe (ignore vertical swipes)
+        if (Math.abs(deltaX) > Math.abs(deltaY)) {
+          // Horizontal swipe detected
+          if (deltaX > 20) {
+            // Swipe right
+            touchRightPressed = true;
             touchLeftPressed = false;
+          } else if (deltaX < -20) {
+            // Swipe left
+            touchLeftPressed = true;
+            touchRightPressed = false;
           } else {
+            // No significant movement
+            touchLeftPressed = false;
             touchRightPressed = false;
           }
-        };
-      }
+        }
+      }, { passive: false });
 
-      // Left button touch events
-      leftButton.addEventListener("touchstart", handleTouchStart(leftButton, 'left'), { passive: false });
-      leftButton.addEventListener("touchend", handleTouchEnd(leftButton, 'left'), { passive: false });
-      leftButton.addEventListener("touchcancel", handleTouchEnd(leftButton, 'left'), { passive: false });
-      leftButton.addEventListener("mousedown", handleTouchStart(leftButton, 'left'));
-      leftButton.addEventListener("mouseup", handleTouchEnd(leftButton, 'left'));
-      leftButton.addEventListener("mouseleave", handleTouchEnd(leftButton, 'left'));
+      swipeArea.addEventListener("touchend", () => {
+        swipeActive = false;
+        touchLeftPressed = false;
+        touchRightPressed = false;
+      });
 
-      // Right button touch events
-      rightButton.addEventListener("touchstart", handleTouchStart(rightButton, 'right'), { passive: false });
-      rightButton.addEventListener("touchend", handleTouchEnd(rightButton, 'right'), { passive: false });
-      rightButton.addEventListener("touchcancel", handleTouchEnd(rightButton, 'right'), { passive: false });
-      rightButton.addEventListener("mousedown", handleTouchStart(rightButton, 'right'));
-      rightButton.addEventListener("mouseup", handleTouchEnd(rightButton, 'right'));
-      rightButton.addEventListener("mouseleave", handleTouchEnd(rightButton, 'right'));
+      swipeArea.addEventListener("touchcancel", () => {
+        swipeActive = false;
+        touchLeftPressed = false;
+        touchRightPressed = false;
+      });
 
-      // Prevent touch scroll on the buttons
-      leftButton.addEventListener("touchmove", (e) => e.preventDefault(), { passive: false });
-      rightButton.addEventListener("touchmove", (e) => e.preventDefault(), { passive: false });
+      // Hide swipe instructions after first interaction
+      swipeArea.addEventListener("touchstart", () => {
+        if (swipeInstructions.style.display !== "none") {
+          swipeInstructions.style.display = "none";
+        }
+      }, { once: true });
+
+      // // Prevent touch scroll on the buttons
+      // leftButton.addEventListener("touchmove", (e) => e.preventDefault(), { passive: false });
+      // rightButton.addEventListener("touchmove", (e) => e.preventDefault(), { passive: false });
 
       // Message Box Button Handler (for Play Again)
       messageBoxButton.addEventListener("click", () => {
@@ -1482,13 +1552,17 @@
 
         // Prevent zoom on double tap for mobile
         let lastTouchEnd = 0;
-        document.addEventListener('touchend', function (event) {
-          const now = (new Date()).getTime();
-          if (now - lastTouchEnd <= 300) {
-            event.preventDefault();
-          }
-          lastTouchEnd = now;
-        }, false);
+        document.addEventListener(
+          "touchend",
+          function (event) {
+            const now = new Date().getTime();
+            if (now - lastTouchEnd <= 300) {
+              event.preventDefault();
+            }
+            lastTouchEnd = now;
+          },
+          false
+        );
 
         // Initial draw to show elements before game starts
         drawPaddle();

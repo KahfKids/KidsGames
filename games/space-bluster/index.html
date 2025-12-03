@@ -87,6 +87,51 @@
         flex-shrink: 0; /* Prevent controls from shrinking */
       }
 
+      .swipe-area {
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        right: 20px;
+        height: 80px;
+        background: linear-gradient(145deg, rgba(0, 255, 255, 0.1), rgba(0, 255, 255, 0.05));
+        border: 2px solid rgba(0, 255, 255, 0.3);
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(0, 255, 255, 0.7);
+        font-size: 0.9em;
+        font-weight: bold;
+        touch-action: none;
+        transition: all 0.3s ease;
+        z-index: 5;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 4px 20px rgba(0, 255, 255, 0.2);
+      }
+
+      .swipe-area.active {
+        background: linear-gradient(145deg, rgba(0, 255, 255, 0.2), rgba(0, 255, 255, 0.1));
+        border-color: rgba(0, 255, 255, 0.6);
+        color: rgba(0, 255, 255, 1);
+        transform: scale(1.02);
+        box-shadow: 0 6px 25px rgba(0, 255, 255, 0.4);
+      }
+
+      .swipe-indicator {
+        position: absolute;
+        bottom: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 0.8em;
+        color: rgba(0, 255, 255, 0.6);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+
+      .swipe-area.active .swipe-indicator {
+        opacity: 1;
+      }
+
       .control-button {
         background: linear-gradient(145deg, #00b3b3, #008080);
         color: white;
@@ -101,8 +146,8 @@
         flex: 1; /* Allow buttons to grow */
         min-width: 120px; /* Minimum width for buttons */
         min-height: 60px; /* Minimum height for better touch targets */
-        /* Re-enable display for control buttons */
-        display: block;
+        /* Hide control buttons since we're using swipe controls */
+        display: none;
         /* Better touch support */
         -webkit-tap-highlight-color: transparent;
         touch-action: manipulation;
@@ -277,7 +322,7 @@
           font-size: 1em; /* Slightly smaller font */
           min-width: unset; /* Remove min-width to allow full flexibility */
           flex: 1 1 auto; /* Allow items to shrink and grow */
-          display: block; /* Ensure buttons are visible on small screens */
+          display: none; /* Hide buttons on mobile too */
         }
         #shootButton {
           display: none; /* Keep shoot button hidden even on small screens if auto-shooting */
@@ -383,6 +428,12 @@
         <button id="shootButton" class="control-button">Shoot!</button>
       </div>
 
+      <!-- Swipe Control Area -->
+      <div id="swipeArea" class="swipe-area">
+        ← Swipe to Move →
+        <div class="swipe-indicator">Swipe detected!</div>
+      </div>
+
       <div id="gameOverOverlay" class="game-over-overlay">
         <h2>Game Over!</h2>
         <p id="finalScore"></p>
@@ -392,7 +443,7 @@
       <div id="startScreen" class="start-screen">
         <h1>Asteroid Blaster</h1>
         <p>Clear the asteroid field!</p>
-        <p>🎮 Arrow/WASD keys 📱 Tap sides 🖱️ Click/hold</p>
+        <p>🎮 Arrow/WASD keys 📱 Swipe below 🖱️ Click sides</p>
         <p>Auto-shooting enabled</p>
         <button id="startButton">Play!</button>
       </div>
@@ -412,6 +463,7 @@
       const shootButton = document.getElementById("shootButton");
       const startScreen = document.getElementById("startScreen");
       const startButton = document.getElementById("startButton");
+      const swipeArea = document.getElementById("swipeArea");
 
       // Game constants and variables
       let player;
@@ -422,6 +474,16 @@
       let gameOver = false;
       let animationFrameId;
       let autoShootIntervalId;
+
+      // Swipe control variables
+      let touchStartX = 0;
+      let touchStartTime = 0;
+      let isSwiping = false;
+      let swipeVelocityX = 0;
+      let playerVelocityX = 0;
+      let swipeAcceleration = 3.0;
+      let swipeFriction = 0.92;
+      let maxSwipeVelocity = 30;
 
       // Base game difficulty parameters
       let PLAYER_SPEED = 5;
@@ -495,6 +557,7 @@
           this.x = canvas.width / 2 - this.width / 2;
           this.y = canvas.height - this.height - 10;
           this.color = "#00aaff";
+          this.velocityX = 0;
         }
 
         draw() {
@@ -519,6 +582,29 @@
           }
           if (this.x + this.width > canvas.width) {
             this.x = canvas.width - this.width;
+          }
+        }
+
+        updatePhysics() {
+          // Apply velocity to position
+          this.x += this.velocityX;
+
+          // Apply less friction for smoother movement
+          this.velocityX *= swipeFriction;
+
+          // Stop very small movement
+          if (Math.abs(this.velocityX) < 0.05) {
+            this.velocityX = 0;
+          }
+
+          // Keep player in bounds with bounce effect
+          if (this.x < 0) {
+            this.x = 0;
+            this.velocityX = Math.abs(this.velocityX) * 0.3; // Small bounce
+          }
+          if (this.x + this.width > canvas.width) {
+            this.x = canvas.width - this.width;
+            this.velocityX = -Math.abs(this.velocityX) * 0.3; // Small bounce
           }
         }
 
@@ -696,6 +782,16 @@
         inputState.buttons.left = false;
         inputState.buttons.right = false;
 
+        // Reset swipe control variables
+        touchStartX = 0;
+        touchStartTime = 0;
+        isSwiping = false;
+        swipeVelocityX = 0;
+        playerVelocityX = 0;
+        if (player) {
+          player.velocityX = 0;
+        }
+
         updateDisplay();
         gameOverOverlay.classList.remove("visible");
         startScreen.style.display = "none";
@@ -744,13 +840,16 @@
           inputState.left = inputState.keyboard.left || inputState.touch.left || inputState.buttons.left;
           inputState.right = inputState.keyboard.right || inputState.touch.right || inputState.buttons.right;
 
-          // Apply movement
+          // Apply movement (keyboard and button input)
           if (inputState.left) {
             player.move("left");
           }
           if (inputState.right) {
             player.move("right");
           }
+
+          // Update physics for swipe controls
+          player.updatePhysics();
         }
 
         if (score >= stage * SCORE_PER_STAGE && stage < 10) {
@@ -982,6 +1081,69 @@
         inputState.touch.right = false;
       }
 
+      // Swipe Control Functions
+      function handleSwipeStart(e) {
+        e.preventDefault();
+        if (gameOver || startScreen.style.display !== "none") return;
+
+        isSwiping = true;
+        swipeArea.classList.add('active');
+
+        if (e.touches && e.touches.length > 0) {
+          touchStartX = e.touches[0].clientX;
+        } else {
+          touchStartX = e.clientX;
+        }
+        touchStartTime = Date.now();
+        swipeVelocityX = 0;
+      }
+
+      function handleSwipeMove(e) {
+        e.preventDefault();
+        if (!isSwiping || gameOver || startScreen.style.display !== "none") return;
+
+        let currentX;
+        if (e.touches && e.touches.length > 0) {
+          currentX = e.touches[0].clientX;
+        } else {
+          currentX = e.clientX;
+        }
+
+        const deltaX = currentX - touchStartX;
+        const deltaTime = Date.now() - touchStartTime;
+
+        // More responsive swipe calculation
+        if (deltaTime > 0) {
+          const instantVelocity = (deltaX / deltaTime) * 15; // Increased scale factor
+          swipeVelocityX = Math.max(-maxSwipeVelocity, Math.min(maxSwipeVelocity, instantVelocity));
+        }
+
+        if (player) {
+          // Apply velocity more directly for immediate response
+          player.velocityX = swipeVelocityX;
+
+          // Also apply direct position adjustment for instant feedback
+          player.x += deltaX * 0.3; // Direct manipulation factor
+
+          // Keep player in bounds immediately
+          player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
+        }
+
+        touchStartX = currentX;
+        touchStartTime = Date.now();
+      }
+
+      function handleSwipeEnd(e) {
+        e.preventDefault();
+        isSwiping = false;
+        swipeArea.classList.remove('active');
+
+        // Apply momentum from the last swipe with better preservation
+        if (player) {
+          player.velocityX = swipeVelocityX * 0.7; // Better momentum preservation
+        }
+      }
+
       // Touch event listeners
       canvas.addEventListener("touchstart", handleCanvasTouchStart);
       canvas.addEventListener("touchmove", handleCanvasTouchStart);
@@ -997,6 +1159,18 @@
           handleCanvasTouchStart(e);
         }
       });
+
+      // Swipe control event listeners
+      swipeArea.addEventListener("touchstart", handleSwipeStart);
+      swipeArea.addEventListener("touchmove", handleSwipeMove);
+      swipeArea.addEventListener("touchend", handleSwipeEnd);
+      swipeArea.addEventListener("touchcancel", handleSwipeEnd);
+
+      // Mouse events for desktop testing
+      swipeArea.addEventListener("mousedown", handleSwipeStart);
+      swipeArea.addEventListener("mousemove", handleSwipeMove);
+      swipeArea.addEventListener("mouseup", handleSwipeEnd);
+      swipeArea.addEventListener("mouseleave", handleSwipeEnd);
 
       restartButton.addEventListener("click", initGame);
 

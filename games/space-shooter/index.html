@@ -9,6 +9,8 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <link rel="apple-touch-icon" href="/KidsGames/icons/icon-192x192.png" />
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
@@ -76,27 +78,75 @@
         transform: translateX(-50%);
       }
 
-      /* Mobile Controls */
-      #mobileControls {
+      
+      /* Swipe area for mobile controls */
+      .swipe-area {
         position: fixed;
-        bottom: 30px;
-        width: 100%;
-        z-index: 100;
+        bottom: 20px;
+        left: 20px;
+        right: 20px;
+        width: auto;
+        height: 80px;
+        background: rgba(255, 255, 255, 0.2);
+        border: 2px dashed rgba(255, 255, 255, 0.6);
+        border-radius: 15px;
         display: flex;
-        justify-content: space-between;
+        justify-content: center;
         align-items: center;
-        padding: 0 30px;
-        box-sizing: border-box;
-        pointer-events: none; /* Allow touch through to game area */
+        touch-action: none;
+        -webkit-tap-highlight-color: transparent;
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-touch-callout: none;
+        pointer-events: auto;
+        z-index: 1000;
+        transition: all 0.2s ease;
       }
 
-      #mobileControls > * {
-        pointer-events: auto; /* Re-enable touch for controls */
+      .swipe-area.swipe-active {
+        background: rgba(255, 255, 255, 0.4);
+        border-color: rgba(255, 255, 255, 0.9);
+        transform: scale(1.02);
       }
 
-      .movement-controls {
-        display: flex;
-        gap: 10px;
+      .swipe-instructions {
+        position: absolute;
+        color: white;
+        font-size: 14px;
+        font-weight: bold;
+        font-family: Arial, sans-serif;
+        text-align: center;
+        pointer-events: none;
+        opacity: 0.9;
+        z-index: 1001;
+        animation: swipePulse 2s infinite ease-in-out;
+        left: 50%;
+        transform: translateX(-50%);
+      }
+
+      .swipe-instructions.hidden {
+        display: none;
+      }
+
+      @keyframes swipePulse {
+        0%, 100% { transform: translateX(-50%) translateY(0) scale(1); opacity: 0.9; }
+        50% { transform: translateX(-50%) translateY(-3px) scale(1.05); opacity: 1; }
+      }
+
+      .swipe-indicator {
+        position: absolute;
+        bottom: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        color: rgba(255, 255, 255, 0.4);
+        font-size: 12px;
+        font-family: Arial, sans-serif;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+      }
+
+      .swipe-indicator.hidden {
+        opacity: 0;
       }
 
       .control-button {
@@ -116,8 +166,8 @@
         user-select: none;
         -webkit-user-select: none;
         -webkit-touch-callout: none;
-        position: relative;
-        z-index: 1000;
+        position: absolute;
+        z-index: 1001; /* Higher than swipe area */
         transition: all 0.1s ease;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
       }
@@ -129,22 +179,7 @@
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
       }
 
-      #shootButton {
-        background: rgba(0, 255, 0, 0.3);
-        font-size: 18px;
-        font-weight: bold;
-        width: 90px;
-        height: 80px;
-        border-color: #00ff00;
-        border-width: 4px;
-      }
-
-      #shootButton:active,
-      #shootButton.pressed {
-        background: rgba(0, 255, 0, 0.5);
-        border-color: #00ff00;
-      }
-
+      
       @media (max-width: 1024px) {
         /* #mobileControls {
           display: block;
@@ -199,21 +234,23 @@
         <rect id="bullet" width="8" height="20" fill="#00ff00" />
       </defs>
     </svg>
-    <div id="mobileControls">
-      <div class="movement-controls">
-        <button class="control-button" id="leftButton">←</button>
-        <button class="control-button" id="rightButton">→</button>
+    <!-- Swipe area for mobile -->
+    <div class="swipe-area" id="swipeArea">
+      <div class="swipe-instructions" id="swipeInstructions">
+        <p><i class="fas fa-hand-point-up"></i></p>
+        <p>Swipe Here</p>
       </div>
-      <button class="control-button" id="shootButton">SHOOT</button>
+      <div class="swipe-indicator" id="swipeIndicator">← Swipe →</div>
     </div>
-    <button id="restartButton">Restart Game</button>
+
+        <button id="restartButton">Restart Game</button>
     <script>
       const svg = document.getElementById("gameArea");
       const scoreElement = document.getElementById("scoreElement");
       const restartButton = document.getElementById("restartButton");
-      const leftButton = document.getElementById("leftButton");
-      const rightButton = document.getElementById("rightButton");
-      const shootButton = document.getElementById("shootButton");
+      const swipeArea = document.getElementById("swipeArea");
+      const swipeInstructions = document.getElementById("swipeInstructions");
+      const swipeIndicator = document.getElementById("swipeIndicator");
 
       // Get SVG dimensions and scaling
       let svgRect = svg.getBoundingClientRect();
@@ -262,6 +299,20 @@
       let isKeyboardLeft = false;
       let isKeyboardRight = false;
 
+      // Swipe control variables
+      let touchStartX = 0;
+      let swipeActive = false;
+      let playerSwipeVelocity = 0;
+      let swipeAcceleration = 1.5; // Increased for better responsiveness
+      let swipeFriction = 0.88; // Less friction for longer momentum
+      let maxSwipeVelocity = 20; // Increased for faster movement
+      let playerTargetX = player.x; // Add this for smooth swipe movement
+      let hasInteracted = false;
+
+      // Auto-shooting variables
+      let autoShootInterval = null;
+      let autoShootRate = 500; // Shoot every 500ms (2 shots per second)
+
       // Input mode detection
       let inputMode = 'mixed'; // 'keyboard', 'touch', 'mouse', 'mixed'
 
@@ -297,6 +348,12 @@
         restartButton.style.display = "none";
         lastShotTime = 0;
 
+        // Reset swipe variables
+        playerSwipeVelocity = 0;
+        swipeActive = false;
+        playerTargetX = 300;
+        hasInteracted = false;
+
         player.x = 300;
         player.y = 370;
         player.element = createSVGElement("use", {
@@ -306,6 +363,9 @@
         svg.appendChild(player.element);
 
         createEnemies();
+
+        // Start auto-shooting
+        startAutoShoot();
 
         if (gameLoop) clearInterval(gameLoop);
         gameLoop = setInterval(update, 1000 / 60);
@@ -355,6 +415,23 @@
           });
           svg.appendChild(bullet.element);
           lastShotTime = currentTime;
+        }
+      }
+
+      function startAutoShoot() {
+        if (autoShootInterval) return; // Already shooting
+
+        autoShootInterval = setInterval(() => {
+          if (!gameIsOver) {
+            shoot();
+          }
+        }, autoShootRate);
+      }
+
+      function stopAutoShoot() {
+        if (autoShootInterval) {
+          clearInterval(autoShootInterval);
+          autoShootInterval = null;
         }
       }
 
@@ -415,6 +492,7 @@
         if (allEnemiesDefeated) {
           clearInterval(gameLoop);
           gameIsOver = true;
+          stopAutoShoot();
 
           const winText = createSVGElement("text", {
             x: "300",
@@ -439,6 +517,7 @@
           if (enemy.alive && enemy.y + enemyHeight / 2 >= player.y - 10) {
             clearInterval(gameLoop);
             gameIsOver = true;
+            stopAutoShoot();
 
             const gameOverText = createSVGElement("text", {
               x: "300",
@@ -466,10 +545,31 @@
           let moveRight = isRightPressed || isKeyboardRight;
 
           if (moveLeft) {
-            player.x = Math.max(20, player.x - player.speed);
+            playerSwipeVelocity = -player.speed;
+          } else if (moveRight) {
+            playerSwipeVelocity = player.speed;
+          } else if (swipeActive || playerSwipeVelocity !== 0) {
+            // Apply swipe physics
+            playerSwipeVelocity *= swipeFriction;
+
+            if (Math.abs(playerSwipeVelocity) < 0.1) {
+              playerSwipeVelocity = 0;
+            }
           }
-          if (moveRight) {
-            player.x = Math.min(viewBox.width - 20, player.x + player.speed);
+
+          // Apply swipe velocity to player position
+          if (playerSwipeVelocity !== 0) {
+            // Direct position update with velocity for immediate response
+            player.x += playerSwipeVelocity;
+            player.x = Math.max(20, Math.min(viewBox.width - 20, player.x));
+          } else {
+            // Regular button movement
+            if (moveLeft) {
+              player.x = Math.max(20, player.x - player.speed);
+            }
+            if (moveRight) {
+              player.x = Math.min(viewBox.width - 20, player.x + player.speed);
+            }
           }
         }
 
@@ -520,11 +620,11 @@
       function updateControlInstructions() {
         const instructions = document.querySelector('.instructions');
         if (inputMode === 'keyboard') {
-          instructions.innerHTML = 'Use Arrow Keys/WASD to move, Space to shoot';
+          instructions.innerHTML = 'Use Arrow Keys/WASD to move, Auto-shooting enabled';
         } else if (inputMode === 'touch') {
-          instructions.innerHTML = 'Use buttons to move and shoot<br>Or touch/drag on game area';
+          instructions.innerHTML = 'Swipe in the swipe area to move<br>Auto-shooting enabled<br>Or touch/drag on game area';
         } else {
-          instructions.innerHTML = 'Use arrows/WASD to move, Space to shoot<br>Or use mouse/touch controls';
+          instructions.innerHTML = 'Use arrows/WASD to move or swipe<br>Auto-shooting enabled';
         }
       }
 
@@ -547,11 +647,7 @@
             e.preventDefault();
             isKeyboardRight = true;
             break;
-          case ' ':
-          case 'Enter':
-            e.preventDefault();
-            shoot();
-            break;
+          // Removed space/enter shooting since we have auto-shoot
         }
       }
 
@@ -589,115 +685,125 @@
         }
       }
 
-      // Mouse/Touch shoot handler
-      function handleShoot(e) {
+      
+      // Swipe Area Event Listeners
+      swipeArea.addEventListener("touchstart", (e) => {
         if (gameIsOver) return;
 
-        const isTouch = e.type.includes("touch");
-        if (isTouch) {
-          detectInputMode('touch');
-        } else {
-          detectInputMode('mouse');
+        const touch = e.touches[0];
+        touchStartX = touch.clientX;
+        swipeActive = true;
+        playerTargetX = undefined;
+
+        // Visual feedback
+        swipeArea.classList.add('swipe-active');
+        swipeIndicator.classList.add('hidden');
+
+        // Hide instructions on first interaction
+        if (!hasInteracted) {
+          hasInteracted = true;
+          swipeInstructions.classList.add('hidden');
         }
 
+        detectInputMode('touch');
+      }, { passive: true });
+
+      swipeArea.addEventListener("touchmove", (e) => {
+        if (!swipeActive || gameIsOver) return;
+
+        const touch = e.touches[0];
+        const touchX = touch.clientX;
+        const deltaX = touchX - touchStartX;
+
+        // Apply velocity based on swipe speed with improved physics
+        const swipeVelocity = deltaX * swipeAcceleration;
+
+        // Add to existing velocity for momentum-based movement
+        playerSwipeVelocity += swipeVelocity;
+
+        // Apply limits
+        playerSwipeVelocity = Math.max(-maxSwipeVelocity, Math.min(maxSwipeVelocity, playerSwipeVelocity));
+
+        // Update touch start for continuous swipe
+        touchStartX = touchX;
+      }, { passive: true });
+
+      swipeArea.addEventListener("touchend", (e) => {
+        if (!swipeActive) return;
+
+        swipeActive = false;
+        swipeArea.classList.remove('swipe-active');
+
+        // Allow momentum to continue player movement
+      }, { passive: true });
+
+      swipeArea.addEventListener("touchcancel", (e) => {
+        if (!swipeActive) return;
+
+        swipeActive = false;
+        swipeArea.classList.remove('swipe-active');
+        playerSwipeVelocity = 0;
+      }, { passive: true });
+
+      // Mouse fallback for swipe area (for desktop testing)
+      swipeArea.addEventListener("mousedown", (e) => {
+        if (gameIsOver) return;
+
+        touchStartX = e.clientX;
+        swipeActive = true;
+        playerTargetX = undefined;
+
+        // Visual feedback
+        swipeArea.classList.add('swipe-active');
+        swipeIndicator.classList.add('hidden');
+
+        // Hide instructions on first interaction
+        if (!hasInteracted) {
+          hasInteracted = true;
+          swipeInstructions.classList.add('hidden');
+        }
+
+        detectInputMode('mouse');
         e.preventDefault();
-        shoot();
-      }
+      });
 
-      // Mobile Control Button Events
-      function addVisualFeedback(button, isPressed) {
-        if (isPressed) {
-          button.classList.add('pressed');
-        } else {
-          button.classList.remove('pressed');
-        }
-      }
+      swipeArea.addEventListener("mousemove", (e) => {
+        if (!swipeActive || gameIsOver) return;
 
-      leftButton.addEventListener(
-        "touchstart",
-        (e) => {
-          e.preventDefault();
-          isLeftPressed = true;
-          addVisualFeedback(leftButton, true);
-          detectInputMode('touch');
-        },
-        { passive: false }
-      );
-      leftButton.addEventListener(
-        "touchend",
-        (e) => {
-          e.preventDefault();
-          isLeftPressed = false;
-          addVisualFeedback(leftButton, false);
-        },
-        { passive: false }
-      );
-      leftButton.addEventListener(
-        "touchcancel",
-        (e) => {
-          e.preventDefault();
-          isLeftPressed = false;
-          addVisualFeedback(leftButton, false);
-        },
-        { passive: false }
-      );
+        const deltaX = e.clientX - touchStartX;
 
-      rightButton.addEventListener(
-        "touchstart",
-        (e) => {
-          e.preventDefault();
-          isRightPressed = true;
-          addVisualFeedback(rightButton, true);
-          detectInputMode('touch');
-        },
-        { passive: false }
-      );
-      rightButton.addEventListener(
-        "touchend",
-        (e) => {
-          e.preventDefault();
-          isRightPressed = false;
-          addVisualFeedback(rightButton, false);
-        },
-        { passive: false }
-      );
-      rightButton.addEventListener(
-        "touchcancel",
-        (e) => {
-          e.preventDefault();
-          isRightPressed = false;
-          addVisualFeedback(rightButton, false);
-        },
-        { passive: false }
-      );
+        // Apply velocity based on mouse drag speed with improved physics
+        const swipeVelocity = deltaX * swipeAcceleration;
 
-      shootButton.addEventListener(
-        "touchstart",
-        (e) => {
-          e.preventDefault();
-          shoot();
-          addVisualFeedback(shootButton, true);
-          detectInputMode('touch');
-        },
-        { passive: false }
-      );
-      shootButton.addEventListener(
-        "touchend",
-        (e) => {
-          e.preventDefault();
-          addVisualFeedback(shootButton, false);
-        },
-        { passive: false }
-      );
-      shootButton.addEventListener(
-        "touchcancel",
-        (e) => {
-          e.preventDefault();
-          addVisualFeedback(shootButton, false);
-        },
-        { passive: false }
-      );
+        // Add to existing velocity for momentum-based movement
+        playerSwipeVelocity += swipeVelocity;
 
+        // Apply limits
+        playerSwipeVelocity = Math.max(-maxSwipeVelocity, Math.min(maxSwipeVelocity, playerSwipeVelocity));
+
+        // Update touch start for continuous drag
+        touchStartX = e.clientX;
+      });
+
+      swipeArea.addEventListener("mouseup", (e) => {
+        if (!swipeActive) return;
+
+        swipeActive = false;
+        swipeArea.classList.remove('swipe-active');
+
+        // Allow momentum to continue player movement
+        e.preventDefault();
+      });
+
+      swipeArea.addEventListener("mouseleave", (e) => {
+        if (!swipeActive) return;
+
+        swipeActive = false;
+        swipeArea.classList.remove('swipe-active');
+        playerSwipeVelocity = 0;
+      });
+
+      
       // Haptic feedback function
       function triggerHaptic() {
         if ('vibrate' in navigator) {
@@ -705,95 +811,7 @@
         }
       }
 
-      // Add pointer events for better touch support
-      leftButton.addEventListener(
-        "pointerdown",
-        (e) => {
-          e.preventDefault();
-          isLeftPressed = true;
-          addVisualFeedback(leftButton, true);
-          detectInputMode('touch');
-          triggerHaptic();
-        },
-        { passive: false }
-      );
-      leftButton.addEventListener(
-        "pointerup",
-        (e) => {
-          e.preventDefault();
-          isLeftPressed = false;
-          addVisualFeedback(leftButton, false);
-        },
-        { passive: false }
-      );
-      leftButton.addEventListener(
-        "pointercancel",
-        (e) => {
-          e.preventDefault();
-          isLeftPressed = false;
-          addVisualFeedback(leftButton, false);
-        },
-        { passive: false }
-      );
-
-      rightButton.addEventListener(
-        "pointerdown",
-        (e) => {
-          e.preventDefault();
-          isRightPressed = true;
-          addVisualFeedback(rightButton, true);
-          detectInputMode('touch');
-          triggerHaptic();
-        },
-        { passive: false }
-      );
-      rightButton.addEventListener(
-        "pointerup",
-        (e) => {
-          e.preventDefault();
-          isRightPressed = false;
-          addVisualFeedback(rightButton, false);
-        },
-        { passive: false }
-      );
-      rightButton.addEventListener(
-        "pointercancel",
-        (e) => {
-          e.preventDefault();
-          isRightPressed = false;
-          addVisualFeedback(rightButton, false);
-        },
-        { passive: false }
-      );
-
-      shootButton.addEventListener(
-        "pointerdown",
-        (e) => {
-          e.preventDefault();
-          shoot();
-          addVisualFeedback(shootButton, true);
-          detectInputMode('touch');
-          triggerHaptic();
-        },
-        { passive: false }
-      );
-      shootButton.addEventListener(
-        "pointerup",
-        (e) => {
-          e.preventDefault();
-          addVisualFeedback(shootButton, false);
-        },
-        { passive: false }
-      );
-      shootButton.addEventListener(
-        "pointercancel",
-        (e) => {
-          e.preventDefault();
-          addVisualFeedback(shootButton, false);
-        },
-        { passive: false }
-      );
-
+      
       // Keyboard Event Listeners
       document.addEventListener("keydown", handleKeyDown);
       document.addEventListener("keyup", handleKeyUp);
@@ -810,10 +828,8 @@
         // Only handle touch if it starts on the SVG, not on buttons
         if (e.target === svg) {
           handleMove(e);
-          handleShoot(e);
         }
       });
-      svg.addEventListener("mousedown", handleShoot);
       restartButton.addEventListener("click", initGame);
       restartButton.addEventListener("touchstart", (e) => {
         e.preventDefault();
