@@ -1,7 +1,7 @@
-const CACHE_NAME = 'kidsgames-v1.2.0';
-const STATIC_CACHE = 'kidsgames-static-v1.2.0';
-const GAMES_CACHE = 'kidsgames-games-v1.2.0';
-const PREMIUM_CACHE = 'kidsgames-premium-v1.2.0';
+const CACHE_NAME = 'kidsgames-v1.3.0';
+const STATIC_CACHE = 'kidsgames-static-v1.3.0';
+const GAMES_CACHE = 'kidsgames-games-v1.3.0';
+const PREMIUM_CACHE = 'kidsgames-premium-v1.3.0';
 
 // Core files that should be cached immediately
 const STATIC_ASSETS = [
@@ -258,7 +258,6 @@ const STATIC_ASSETS = [
 // Game directories to cache on-demand
 const GAME_PATHS = [
   '/KidsGames/games/',
-  '/KidsGames/premium-games/',
   '/KidsGames/read/'
 ];
 
@@ -267,7 +266,7 @@ const PREMIUM_SECRET_PATTERN = /secret=kahf-kids-games-premium-games-AXjKIWUY/i;
 
 // Install event - cache core assets
 self.addEventListener('install', (event) => {
-  console.log('[SW] Installing service worker v1.2.0');
+  console.log('[SW] Installing service worker v1.3.0');
 
   event.waitUntil(
     caches.open(STATIC_CACHE)
@@ -281,7 +280,7 @@ self.addEventListener('install', (event) => {
 
 // Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Activating service worker v1.2.0');
+  console.log('[SW] Activating service worker v1.3.0');
 
   event.waitUntil(
     caches.keys()
@@ -289,9 +288,9 @@ self.addEventListener('activate', (event) => {
         return Promise.all(
           cacheNames.map((cacheName) => {
             if (cacheName !== STATIC_CACHE &&
-                cacheName !== GAMES_CACHE &&
-                cacheName !== PREMIUM_CACHE &&
-                cacheName !== CACHE_NAME) {
+              cacheName !== GAMES_CACHE &&
+              cacheName !== PREMIUM_CACHE &&
+              cacheName !== CACHE_NAME) {
               console.log('[SW] Deleting old cache:', cacheName);
               return caches.delete(cacheName);
             }
@@ -341,13 +340,13 @@ function isGameAsset(pathname) {
   }
 
   return GAME_PATHS.some(gamePath => pathname.startsWith(gamePath)) ||
-         (pathname.startsWith('/KidsGames/') && pathname.match(/\.(js|css|png|jpg|jpeg|gif|svg|webp|ico|woff2?)$/i));
+    (pathname.startsWith('/KidsGames/') && pathname.match(/\.(js|css|png|jpg|jpeg|gif|svg|webp|ico|woff2?)$/i));
 }
 
 // Determine if request is for premium game assets
 function isPremiumGameAsset(pathname) {
   return pathname.includes('/KidsGames/premium-games/') ||
-         pathname.match(/KidsGames.*premium-games/i);
+    pathname.match(/KidsGames.*premium-games/i);
 }
 
 // Determine appropriate cache for game assets
@@ -558,4 +557,4 @@ self.addEventListener('message', (event) => {
   }
 });
 
-console.log('[SW] KidsGames Service Worker v1.2.0 loaded');
+console.log('[SW] KidsGames Service Worker v1.3.0 loaded');

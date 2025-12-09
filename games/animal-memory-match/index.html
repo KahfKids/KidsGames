@@ -1,0 +1,1160 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- KidsGames PWA Support -->
+  <link rel="manifest" href="/KidsGames/manifest.json" />
+  <meta name="theme-color" content="#4f391a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <link rel="apple-touch-icon" href="/KidsGames/icons/icon-192x192.png" />
+  <title>Animal Memory Match - 100+ Levels</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- <script>
+      // Function to get query parameter by name
+      function getQueryParam(name) {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get(name);
+      }
+
+      // Check for the secret query parameter
+      const secret = getQueryParam("secret");
+      if (secret !== "kahf-kids-games-premium-games-AXjKIWUY") {
+        // Redirect if the secret is not correct
+        window.history.back();
+      }
+    </script> -->
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap");
+
+    body {
+      font-family: "Nunito", sans-serif;
+      background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .card {
+      perspective: 1000px;
+      transform-style: preserve-3d;
+      transition: transform 0.5s;
+    }
+
+    .card-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transition: transform 0.6s;
+      transform-style: preserve-3d;
+    }
+
+    .card.flipped .card-inner {
+      transform: rotateY(180deg);
+    }
+
+    .card-front,
+    .card-back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card-front {
+      background: linear-gradient(45deg,
+          #ff9a9e 0%,
+          #fad0c4 99%,
+          #fad0c4 100%);
+      transform: rotateY(180deg);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .card-back {
+      background: linear-gradient(120deg, #89f7fe 0%, #66a6ff 100%);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .confetti {
+      position: fixed;
+      width: 10px;
+      height: 10px;
+      background-color: #f00;
+      animation: confetti-fall 3s linear forwards;
+      z-index: 100;
+    }
+
+    @keyframes confetti-fall {
+      0% {
+        transform: translateY(-100vh) rotate(0deg);
+        opacity: 1;
+      }
+
+      100% {
+        transform: translateY(100vh) rotate(360deg);
+        opacity: 0;
+      }
+    }
+
+    .bounce {
+      animation: bounce 0.5s;
+    }
+
+    @keyframes bounce {
+
+      0%,
+      100% {
+        transform: scale(1);
+      }
+
+      50% {
+        transform: scale(1.1);
+      }
+    }
+
+    .shake {
+      animation: shake 0.5s;
+    }
+
+    @keyframes shake {
+
+      0%,
+      100% {
+        transform: translateX(0);
+      }
+
+      20%,
+      60% {
+        transform: translateX(-5px);
+      }
+
+      40%,
+      80% {
+        transform: translateX(5px);
+      }
+    }
+
+    .level-btn {
+      transition: all 0.3s ease;
+    }
+
+    .level-btn:hover {
+      transform: translateY(-3px);
+    }
+
+    .progress-bar {
+      transition: width 0.5s ease;
+    }
+
+    .timer-bar {
+      transition: width 0.1s linear;
+    }
+
+    /* Level selection scrollbar */
+    .level-selector::-webkit-scrollbar {
+      height: 8px;
+    }
+
+    .level-selector::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 10px;
+    }
+
+    .level-selector::-webkit-scrollbar-thumb {
+      background: #888;
+      border-radius: 10px;
+    }
+
+    .level-selector::-webkit-scrollbar-thumb:hover {
+      background: #555;
+    }
+
+    /* Slide animations */
+    @keyframes slideInRight {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    @keyframes slideInLeft {
+      from {
+        transform: translateX(-100%);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    .slide-in-right {
+      animation: slideInRight 0.5s forwards;
+    }
+
+    .slide-in-left {
+      animation: slideInLeft 0.5s forwards;
+    }
+
+    /* Star rating */
+    .star {
+      transition: all 0.3s ease;
+    }
+
+    .star-filled {
+      color: #ffd700;
+    }
+
+    .star-empty {
+      color: #d1d5db;
+    }
+  </style>
+</head>
+
+<body class="p-4">
+  <div id="game-container" class="max-w-md mx-auto">
+    <!-- Header -->
+    <div class="text-center mb-4">
+      <h1 class="text-3xl font-bold text-indigo-900 mb-1">
+        Animal Memory Match
+      </h1>
+      <p class="text-lg text-indigo-700">100+ Levels of Fun!</p>
+    </div>
+
+    <!-- Level Info -->
+    <div class="bg-white rounded-lg p-3 shadow-md mb-4 flex justify-between items-center">
+      <div class="flex items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-purple-600 mr-2" fill="none" viewBox="0 0 24 24"
+          stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+        </svg>
+        <span id="current-level" class="font-bold text-gray-700">Level 1</span>
+      </div>
+      <div class="flex items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-yellow-500 mr-1" fill="none" viewBox="0 0 24 24"
+          stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span id="time-left" class="font-bold text-gray-700">Time: 30s</span>
+      </div>
+    </div>
+
+    <!-- Game Stats -->
+    <div class="flex justify-between items-center mb-4">
+      <div class="bg-white rounded-lg p-3 shadow-md flex items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-500 mr-1" fill="none" viewBox="0 0 24 24"
+          stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+        </svg>
+        <span id="moves" class="font-bold text-gray-700">Moves: 0</span>
+      </div>
+
+      <div class="bg-white rounded-lg p-3 shadow-md flex items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-500 mr-1" fill="none" viewBox="0 0 24 24"
+          stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+        </svg>
+        <span id="matches" class="font-bold text-gray-700">Matches: 0</span>
+      </div>
+    </div>
+
+    <!-- Timer Bar -->
+    <div class="w-full bg-gray-200 rounded-full h-3 mb-2 overflow-hidden">
+      <div id="timer-bar" class="timer-bar bg-gradient-to-r from-red-500 to-yellow-500 h-3 rounded-full w-full"></div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="w-full bg-gray-200 rounded-full h-3 mb-4 overflow-hidden">
+      <div id="progress-bar" class="progress-bar bg-gradient-to-r from-green-400 to-blue-500 h-3 rounded-full w-0">
+      </div>
+    </div>
+
+    <!-- Game Board -->
+    <div id="game-board" class="grid grid-cols-2 gap-3 mb-6">
+      <!-- Cards will be inserted here by JavaScript -->
+    </div>
+
+    <!-- Level Selection -->
+    <div class="bg-white rounded-lg p-4 shadow-md mb-4">
+      <h2 class="text-lg font-bold text-center text-indigo-800 mb-3">
+        Select Level
+      </h2>
+      <div id="level-selector" class="level-selector flex space-x-2 overflow-x-auto pb-2">
+        <!-- Level buttons will be inserted here by JavaScript -->
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="grid grid-cols-2 gap-3 mb-4">
+      <button id="prev-level-btn"
+        class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg shadow-md flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24"
+          stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+        Previous
+      </button>
+      <button id="next-level-btn"
+        class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg shadow-md flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed">
+        Next
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-1" fill="none" viewBox="0 0 24 24"
+          stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Reset Button -->
+    <button id="reset-btn"
+      class="w-full bg-pink-600 hover:bg-pink-700 text-white font-bold py-3 px-4 rounded-lg shadow-lg transition duration-300 ease-in-out transform hover:scale-105 flex items-center justify-center">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24"
+        stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+      </svg>
+      Restart Level
+    </button>
+  </div>
+
+  <!-- Level Complete Modal -->
+  <div id="level-complete-modal"
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-xl p-6 max-w-sm w-full mx-4 shadow-2xl transform transition-all">
+      <div class="text-center">
+        <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-green-500" fill="none" viewBox="0 0 24 24"
+            stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <h3 class="text-2xl font-bold text-gray-900 mb-2">Level Complete!</h3>
+        <div class="mb-4">
+          <p class="text-gray-600 mb-1">You completed the level in:</p>
+          <p id="final-moves" class="text-xl font-bold text-indigo-600">
+            0 moves
+          </p>
+          <p id="final-time" class="text-lg text-indigo-600">Time: 0s</p>
+
+          <div class="flex justify-center my-3">
+            <div id="star-rating" class="flex space-x-2">
+              <svg class="star w-8 h-8" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                fill="currentColor"></svg>
+              <svg class="star w-8 h-8" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                fill="currentColor"></svg>
+              <svg class="star w-8 h-8" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                fill="currentColor"></svg>
+            </div>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <button id="replay-btn"
+            class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg shadow-md">
+            Replay
+          </button>
+          <button id="next-level-modal-btn"
+            class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg shadow-md">
+            Next Level
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Game Over Modal -->
+  <div id="game-over-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-xl p-6 max-w-sm w-full mx-4 shadow-2xl transform transition-all">
+      <div class="text-center">
+        <div class="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-red-500" fill="none" viewBox="0 0 24 24"
+            stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <h3 class="text-2xl font-bold text-gray-900 mb-2">Time's Up!</h3>
+        <p class="text-gray-600 mb-4">Don't worry, you can try again!</p>
+        <button id="try-again-btn"
+          class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg shadow-md">
+          Try Again
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Game state
+    let state = {
+      cards: [],
+      flippedCards: [],
+      matchedPairs: 0,
+      totalPairs: 0,
+      moves: 0,
+      canFlip: true,
+      gameStarted: false,
+      currentLevel: 1,
+      maxUnlockedLevel: 1,
+      timeLeft: 30,
+      timerInterval: null,
+      levelData: [],
+      stars: 0,
+    };
+
+    // Animal emojis for cards
+    const animals = [
+      "🐶",
+      "🐱",
+      "🐭",
+      "🐹",
+      "🐰",
+      "🦊",
+      "🐻",
+      "🐼",
+      "🐨",
+      "🐯",
+      "🦁",
+      "🐮",
+      "🐧",
+      "🐸",
+      "🐵",
+      "🐔",
+      "🦆",
+      "🐙",
+      "🦋",
+      "🐢",
+      "🐬",
+      "🦉",
+      "🦒",
+      "🐘",
+      "🦓",
+      "🦍",
+      "🐊",
+      "🐅",
+      "🐆",
+      "🦏",
+      "🐪",
+      "🐫",
+      "🦙",
+      "🦘",
+      "🦡",
+      "🐿️",
+      "🦔",
+      "🦦",
+      "🦥",
+      "🐁",
+      "🐀",
+      "🦝",
+      "🦨",
+      "🦇",
+      "🐓",
+      "🦃",
+      "🦚",
+      "🦜",
+      "🦢",
+      "🦩",
+      "🕊️",
+      "🐕",
+      "🦮",
+      "🐩",
+      "🐈",
+      "🐇",
+      "🐎",
+      "🐕",
+      "🐄",
+      "🐏",
+      "🐑",
+      "🦌",
+      "🐒",
+      "🦧",
+      "🦮",
+      "🐕‍🦺",
+      "🐩",
+      "🐈",
+      "🐈‍⬛",
+      "🐂",
+      "🐃",
+      "🐄",
+      "🐕",
+      "🐏",
+      "🐑",
+      "🐐",
+      "🦙",
+      "🦛",
+      "🦏",
+      "🐘",
+      "🦒",
+      "🦬",
+      "🦣",
+      "🦘",
+      "🦥",
+      "🦦",
+      "🦫",
+      "🦇",
+      "🐻‍❄️",
+      "🐨",
+      "🐼",
+      "🦥",
+      "🦦",
+      "🦨",
+      "🦘",
+      "🦡",
+    ];
+
+    // Generate level data for 100+ levels
+    function generateLevelData() {
+      const levelData = [];
+
+      // First 10 levels: 2x2 grid (4 cards, 2 pairs)
+      for (let i = 1; i <= 10; i++) {
+        levelData.push({
+          level: i,
+          cardCount: 4,
+          gridCols: 2,
+          timeLimit: 30 - (i - 1),
+        });
+      }
+
+      // Levels 11-20: 2x3 grid (6 cards, 3 pairs)
+      for (let i = 11; i <= 20; i++) {
+        levelData.push({
+          level: i,
+          cardCount: 6,
+          gridCols: 3,
+          timeLimit: 40 - (i - 11),
+        });
+      }
+
+      // Levels 21-30: 3x2 grid (6 cards, 3 pairs)
+      for (let i = 21; i <= 30; i++) {
+        levelData.push({
+          level: i,
+          cardCount: 6,
+          gridCols: 2,
+          timeLimit: 35 - (i - 21),
+        });
+      }
+
+      // Levels 31-40: 2x4 grid (8 cards, 4 pairs)
+      for (let i = 31; i <= 40; i++) {
+        levelData.push({
+          level: i,
+          cardCount: 8,
+          gridCols: 4,
+          timeLimit: 45 - (i - 31),
+        });
+      }
+
+      // Levels 41-50: 3x4 grid (12 cards, 6 pairs)
+      for (let i = 41; i <= 50; i++) {
+        levelData.push({
+          level: i,
+          cardCount: 12,
+          gridCols: 4,
+          timeLimit: 60 - (i - 41),
+        });
+      }
+
+      // Levels 51-60: 4x3 grid (12 cards, 6 pairs)
+      for (let i = 51; i <= 60; i++) {
+        levelData.push({
+          level: i,
+          cardCount: 12,
+          gridCols: 3,
+          timeLimit: 55 - (i - 51),
+        });
+      }
+
+      // Levels 61-70: 4x4 grid (16 cards, 8 pairs)
+      for (let i = 61; i <= 70; i++) {
+        levelData.push({
+          level: i,
+          cardCount: 16,
+          gridCols: 4,
+          timeLimit: 70 - (i - 61),
+        });
+      }
+
+      // Levels 71-80: 4x5 grid (20 cards, 10 pairs)
+      for (let i = 71; i <= 80; i++) {
+        levelData.push({
+          level: i,
+          cardCount: 20,
+          gridCols: 5,
+          timeLimit: 80 - (i - 71),
+        });
+      }
+
+      // Levels 81-90: 5x4 grid (20 cards, 10 pairs)
+      for (let i = 81; i <= 90; i++) {
+        levelData.push({
+          level: i,
+          cardCount: 20,
+          gridCols: 4,
+          timeLimit: 75 - (i - 81),
+        });
+      }
+
+      // Levels 91-100: 5x5 grid (24 cards, 12 pairs) - 24 instead of 25 to have even pairs
+      for (let i = 91; i <= 100; i++) {
+        levelData.push({
+          level: i,
+          cardCount: 24,
+          gridCols: 5,
+          timeLimit: 90 - (i - 91),
+        });
+      }
+
+      // Bonus levels 101-110: 6x5 grid (30 cards, 15 pairs) - 30 instead of 36 to have even pairs
+      for (let i = 101; i <= 110; i++) {
+        levelData.push({
+          level: i,
+          cardCount: 30,
+          gridCols: 5,
+          timeLimit: 100 - (i - 101),
+        });
+      }
+
+      return levelData;
+    }
+
+    // Initialize the game
+    function initGame(level) {
+      // Clear any existing timer
+      if (state.timerInterval) {
+        clearInterval(state.timerInterval);
+        state.timerInterval = null;
+      }
+
+      // Get level data
+      const levelInfo = state.levelData[level - 1];
+      const cardCount = levelInfo.cardCount;
+      const gridCols = levelInfo.gridCols;
+      const timeLimit = levelInfo.timeLimit;
+
+      // Reset game state
+      state = {
+        ...state,
+        cards: [],
+        flippedCards: [],
+        matchedPairs: 0,
+        totalPairs: cardCount / 2,
+        moves: 0,
+        canFlip: true,
+        gameStarted: false,
+        currentLevel: level,
+        timeLeft: timeLimit,
+        timerInterval: null,
+        stars: 0,
+      };
+
+      // Update UI
+      document.getElementById("current-level").textContent = `Level ${level}`;
+      document.getElementById(
+        "time-left"
+      ).textContent = `Time: ${timeLimit}s`;
+      document.getElementById("moves").textContent = `Moves: 0`;
+      document.getElementById("matches").textContent = `Matches: 0`;
+      document.getElementById("progress-bar").style.width = "0%";
+      document.getElementById("timer-bar").style.width = "100%";
+
+      // Update navigation buttons
+      document.getElementById("prev-level-btn").disabled = level <= 1;
+      document.getElementById("next-level-btn").disabled =
+        level >= state.maxUnlockedLevel;
+
+      // Create shuffled array of animal pairs
+      const shuffledAnimals = getShuffledAnimals(cardCount);
+
+      // Update grid layout
+      const gameBoard = document.getElementById("game-board");
+      gameBoard.className = `grid grid-cols-${gridCols} gap-3 mb-6`;
+
+      // Clear previous cards
+      gameBoard.innerHTML = "";
+
+      // Create cards
+      shuffledAnimals.forEach((animal, index) => {
+        const card = createCard(animal, index);
+        gameBoard.appendChild(card);
+        state.cards.push({
+          id: index,
+          animal: animal,
+          isFlipped: false,
+          isMatched: false,
+        });
+      });
+
+      // Highlight current level button
+      const levelButtons = document.querySelectorAll(".level-btn");
+      levelButtons.forEach((btn) => {
+        btn.classList.remove(
+          "bg-green-600",
+          "ring-2",
+          "ring-green-400",
+          "ring-offset-2"
+        );
+        if (parseInt(btn.dataset.level) === level) {
+          btn.classList.add(
+            "bg-green-600",
+            "ring-2",
+            "ring-green-400",
+            "ring-offset-2"
+          );
+        }
+
+        // Update button colors based on unlocked status
+        if (parseInt(btn.dataset.level) <= state.maxUnlockedLevel) {
+          btn.disabled = false;
+          if (parseInt(btn.dataset.level) < level) {
+            btn.classList.add("bg-green-500");
+            btn.classList.remove("bg-gray-400");
+          }
+        } else {
+          btn.disabled = true;
+          btn.classList.add("bg-gray-400");
+          btn.classList.remove("bg-green-500", "bg-indigo-500");
+        }
+      });
+
+      // Add slide-in animation to game board
+      gameBoard.classList.add("slide-in-right");
+      setTimeout(() => {
+        gameBoard.classList.remove("slide-in-right");
+      }, 500);
+    }
+
+    // Get shuffled array of animal pairs
+    function getShuffledAnimals(count) {
+      const pairs = [];
+      for (let i = 0; i < count / 2; i++) {
+        const animal = animals[i % animals.length];
+        pairs.push(animal, animal);
+      }
+
+      // Shuffle the array
+      for (let i = pairs.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [pairs[i], pairs[j]] = [pairs[j], pairs[i]];
+      }
+
+      return pairs;
+    }
+
+    // Create a card element
+    function createCard(animal, index) {
+      const card = document.createElement("div");
+      card.className = "card aspect-square";
+      card.dataset.index = index;
+
+      card.innerHTML = `
+                <div class="card-inner w-full h-full">
+                    <div class="card-back flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <div class="card-front">
+                        <span class="text-9xl">${animal}</span>
+                    </div>
+                </div>
+            `;
+
+      card.addEventListener("click", () => flipCard(index));
+
+      return card;
+    }
+
+    // Start the timer
+    function startTimer() {
+      if (state.timerInterval) return;
+
+      const timerBar = document.getElementById("timer-bar");
+      const timeLeftDisplay = document.getElementById("time-left");
+      const levelInfo = state.levelData[state.currentLevel - 1];
+      const timeLimit = levelInfo.timeLimit;
+
+      state.timeLeft = timeLimit;
+      timeLeftDisplay.textContent = `Time: ${state.timeLeft}s`;
+      timerBar.style.width = "100%";
+
+      state.timerInterval = setInterval(() => {
+        state.timeLeft--;
+        timeLeftDisplay.textContent = `Time: ${state.timeLeft}s`;
+        timerBar.style.width = `${(state.timeLeft / timeLimit) * 100}%`;
+
+        if (state.timeLeft <= 0) {
+          clearInterval(state.timerInterval);
+          state.timerInterval = null;
+          gameOver();
+        }
+      }, 1000);
+    }
+
+    // Flip a card
+    function flipCard(index) {
+      // Check if card can be flipped
+      if (
+        !state.canFlip ||
+        state.cards[index].isFlipped ||
+        state.cards[index].isMatched
+      ) {
+        return;
+      }
+
+      // Start game on first flip
+      if (!state.gameStarted) {
+        state.gameStarted = true;
+        startTimer();
+      }
+
+      // Flip the card
+      state.cards[index].isFlipped = true;
+      const cardElement = document.querySelector(
+        `.card[data-index="${index}"]`
+      );
+      cardElement.classList.add("flipped");
+
+      // Add to flipped cards
+      state.flippedCards.push(index);
+
+      // Check for match if two cards are flipped
+      if (state.flippedCards.length === 2) {
+        state.moves++;
+        document.getElementById(
+          "moves"
+        ).textContent = `Moves: ${state.moves}`;
+
+        const [firstIndex, secondIndex] = state.flippedCards;
+
+        if (
+          state.cards[firstIndex].animal === state.cards[secondIndex].animal
+        ) {
+          // Match found
+          state.cards[firstIndex].isMatched = true;
+          state.cards[secondIndex].isMatched = true;
+          state.matchedPairs++;
+
+          // Update UI
+          document.getElementById(
+            "matches"
+          ).textContent = `Matches: ${state.matchedPairs}`;
+          document.getElementById("progress-bar").style.width = `${(state.matchedPairs / state.totalPairs) * 100
+            }%`;
+
+          // Add bounce animation to matched cards
+          const firstCard = document.querySelector(
+            `.card[data-index="${firstIndex}"]`
+          );
+          const secondCard = document.querySelector(
+            `.card[data-index="${secondIndex}"]`
+          );
+          firstCard.classList.add("bounce");
+          secondCard.classList.add("bounce");
+
+          // Remove animation class after it completes
+          setTimeout(() => {
+            firstCard.classList.remove("bounce");
+            secondCard.classList.remove("bounce");
+          }, 500);
+
+          // Reset flipped cards
+          state.flippedCards = [];
+
+          // Check for level completion
+          if (state.matchedPairs === state.totalPairs) {
+            setTimeout(() => {
+              levelComplete();
+            }, 500);
+          }
+        } else {
+          // No match
+          state.canFlip = false;
+
+          // Add shake animation to non-matching cards
+          const firstCard = document.querySelector(
+            `.card[data-index="${firstIndex}"]`
+          );
+          const secondCard = document.querySelector(
+            `.card[data-index="${secondIndex}"]`
+          );
+          firstCard.classList.add("shake");
+          secondCard.classList.add("shake");
+
+          // Flip cards back after delay
+          setTimeout(() => {
+            state.cards[firstIndex].isFlipped = false;
+            state.cards[secondIndex].isFlipped = false;
+
+            firstCard.classList.remove("flipped", "shake");
+            secondCard.classList.remove("flipped", "shake");
+
+            state.flippedCards = [];
+            state.canFlip = true;
+          }, 1000);
+        }
+      }
+    }
+
+    // Level complete
+    function levelComplete() {
+      // Stop the timer
+      if (state.timerInterval) {
+        clearInterval(state.timerInterval);
+        state.timerInterval = null;
+      }
+
+      // Calculate stars based on moves and time
+      const levelInfo = state.levelData[state.currentLevel - 1];
+      const optimalMoves = levelInfo.cardCount;
+      const timeLimit = levelInfo.timeLimit;
+
+      let stars = 3;
+      if (state.moves > optimalMoves * 1.5) {
+        stars = 2;
+      }
+      if (state.moves > optimalMoves * 2) {
+        stars = 1;
+      }
+
+      state.stars = stars;
+
+      // Update star display
+      const starElements = document.querySelectorAll("#star-rating .star");
+      starElements.forEach((star, index) => {
+        if (index < stars) {
+          star.classList.add("star-filled");
+          star.classList.remove("star-empty");
+          star.innerHTML = `<path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>`;
+        } else {
+          star.classList.add("star-empty");
+          star.classList.remove("star-filled");
+          star.innerHTML = `<path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>`;
+        }
+      });
+
+      // Update modal content
+      document.getElementById(
+        "final-moves"
+      ).textContent = `${state.moves} moves`;
+      document.getElementById("final-time").textContent = `Time: ${timeLimit - state.timeLeft
+        }s`;
+
+      // Show modal
+      document
+        .getElementById("level-complete-modal")
+        .classList.remove("hidden");
+
+      // Unlock next level if not already unlocked
+      if (state.currentLevel >= state.maxUnlockedLevel) {
+        state.maxUnlockedLevel = Math.min(
+          state.currentLevel + 1,
+          state.levelData.length
+        );
+
+        // Update level buttons
+        updateLevelButtons();
+      }
+
+      // Create confetti effect
+      createConfetti();
+    }
+
+    // Game over
+    function gameOver() {
+      state.canFlip = false;
+      document.getElementById("game-over-modal").classList.remove("hidden");
+    }
+
+    // Create confetti effect
+    function createConfetti() {
+      const colors = [
+        "#ff0000",
+        "#00ff00",
+        "#0000ff",
+        "#ffff00",
+        "#ff00ff",
+        "#00ffff",
+      ];
+
+      for (let i = 0; i < 50; i++) {
+        const confetti = document.createElement("div");
+        confetti.className = "confetti";
+        confetti.style.left = `${Math.random() * 100}vw`;
+        confetti.style.backgroundColor =
+          colors[Math.floor(Math.random() * colors.length)];
+        confetti.style.animationDuration = `${Math.random() * 3 + 2}s`;
+        document.body.appendChild(confetti);
+
+        // Remove confetti after animation
+        setTimeout(() => {
+          confetti.remove();
+        }, 5000);
+      }
+    }
+
+    // Create level buttons
+    function createLevelButtons() {
+      const levelSelector = document.getElementById("level-selector");
+      levelSelector.innerHTML = "";
+
+      state.levelData.forEach((levelInfo, index) => {
+        const level = index + 1;
+        const button = document.createElement("button");
+        button.className = `level-btn min-w-[40px] h-10 rounded-lg shadow-md font-bold text-white ${level <= state.maxUnlockedLevel
+            ? "bg-indigo-500 hover:bg-indigo-600"
+            : "bg-gray-400 cursor-not-allowed"
+          }`;
+        button.textContent = level;
+        button.dataset.level = level;
+        button.disabled = level > state.maxUnlockedLevel;
+
+        if (level === state.currentLevel) {
+          button.classList.add(
+            "bg-green-600",
+            "ring-2",
+            "ring-green-400",
+            "ring-offset-2"
+          );
+        }
+
+        button.addEventListener("click", () => {
+          if (level <= state.maxUnlockedLevel) {
+            initGame(level);
+          }
+        });
+
+        levelSelector.appendChild(button);
+      });
+    }
+
+    // Update level buttons
+    function updateLevelButtons() {
+      const levelButtons = document.querySelectorAll(".level-btn");
+      levelButtons.forEach((btn) => {
+        const level = parseInt(btn.dataset.level);
+        if (level <= state.maxUnlockedLevel) {
+          btn.disabled = false;
+          btn.classList.remove("bg-gray-400", "cursor-not-allowed");
+          btn.classList.add("bg-indigo-500", "hover:bg-indigo-600");
+        }
+      });
+    }
+
+    // Event listeners
+    document.getElementById("reset-btn").addEventListener("click", () => {
+      initGame(state.currentLevel);
+    });
+
+    document
+      .getElementById("prev-level-btn")
+      .addEventListener("click", () => {
+        if (state.currentLevel > 1) {
+          initGame(state.currentLevel - 1);
+        }
+      });
+
+    document
+      .getElementById("next-level-btn")
+      .addEventListener("click", () => {
+        if (state.currentLevel < state.maxUnlockedLevel) {
+          initGame(state.currentLevel + 1);
+        }
+      });
+
+    document.getElementById("replay-btn").addEventListener("click", () => {
+      document.getElementById("level-complete-modal").classList.add("hidden");
+      initGame(state.currentLevel);
+    });
+
+    document
+      .getElementById("next-level-modal-btn")
+      .addEventListener("click", () => {
+        document
+          .getElementById("level-complete-modal")
+          .classList.add("hidden");
+        if (state.currentLevel < state.levelData.length) {
+          initGame(state.currentLevel + 1);
+        }
+      });
+
+    document.getElementById("try-again-btn").addEventListener("click", () => {
+      document.getElementById("game-over-modal").classList.add("hidden");
+      initGame(state.currentLevel);
+    });
+
+    // Initialize game
+    window.onload = () => {
+      state.levelData = generateLevelData();
+      createLevelButtons();
+      initGame(1);
+    };
+  </script>
+  <script>
+    (function () {
+      function c() {
+        var b = a.contentDocument || a.contentWindow.document;
+        if (b) {
+          var d = b.createElement("script");
+          d.innerHTML =
+            "window.__CF$cv$params={r:'942d6e8f23eaa481',t:'MTc0Nzc2MDg2Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";
+          b.getElementsByTagName("head")[0].appendChild(d);
+        }
+      }
+      if (document.body) {
+        var a = document.createElement("iframe");
+        a.height = 1;
+        a.width = 1;
+        a.style.position = "absolute";
+        a.style.top = 0;
+        a.style.left = 0;
+        a.style.border = "none";
+        a.style.visibility = "hidden";
+        document.body.appendChild(a);
+        if ("loading" !== document.readyState) c();
+        else if (window.addEventListener)
+          document.addEventListener("DOMContentLoaded", c);
+        else {
+          var e = document.onreadystatechange || function () { };
+          document.onreadystatechange = function (b) {
+            e(b);
+            "loading" !== document.readyState &&
+              ((document.onreadystatechange = e), c());
+          };
+        }
+      }
+    })();
+  </script>
+
+  <!-- KidsGames PWA Service Worker -->
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker
+          .register("/KidsGames/sw.js")
+          .then((registration) => {
+            console.log("[PWA] Service Worker registered for premium game");
+          })
+          .catch((error) => {
+            console.log("[PWA] Service Worker registration failed:", error);
+          });
+      });
+    }
+  </script>
+</body>
+
+</html>

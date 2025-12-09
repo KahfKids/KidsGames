@@ -1,176 +1,178 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Kahf KidsGames</title>
 
-    <!-- PWA Meta Tags -->
-    <meta name="theme-color" content="#4f391a" />
-    <meta name="background-color" content="#ece4d9" />
-    <meta name="description" content="A collection of fun and educational games for kids including Islamic games, puzzles, and learning activities" />
-    <meta name="keywords" content="kids games, educational games, islamic games, children games, learning games" />
-    <meta name="author" content="Kahf KidsGames" />
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Kahf KidsGames</title>
 
-    <!-- Apple Touch Icon -->
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="apple-mobile-web-app-title" content="KidsGames" />
-    <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+  <!-- PWA Meta Tags -->
+  <meta name="theme-color" content="#4f391a" />
+  <meta name="background-color" content="#ece4d9" />
+  <meta name="description"
+    content="A collection of fun and educational games for kids including Islamic games, puzzles, and learning activities" />
+  <meta name="keywords" content="kids games, educational games, islamic games, children games, learning games" />
+  <meta name="author" content="Kahf KidsGames" />
 
-    <!-- PWA Manifest -->
-    <link rel="manifest" href="/KidsGames/manifest.json" />
+  <!-- Apple Touch Icon -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="KidsGames" />
+  <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
 
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32x32.png" />
-    <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-16x16.png" />
-    <link rel="shortcut icon" href="/favicon.ico" />
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/KidsGames/manifest.json" />
 
-    <!-- Microsoft Tile -->
-    <meta name="msapplication-TileColor" content="#4f391a" />
-    <meta name="msapplication-config" content="/browserconfig.xml" />
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32x32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-16x16.png" />
+  <link rel="shortcut icon" href="/favicon.ico" />
 
-      <script>
-      // Disable right click
-      document.addEventListener('contextmenu', (e) => e.preventDefault());
+  <!-- Microsoft Tile -->
+  <meta name="msapplication-TileColor" content="#4f391a" />
+  <meta name="msapplication-config" content="/browserconfig.xml" />
 
-      // Disable inspect element
-      document.addEventListener('keydown', function(e) {
-        // Disable F12
-        if(e.keyCode == 123) {
-          e.preventDefault();
+  <script>
+    // Disable right click
+    document.addEventListener('contextmenu', (e) => e.preventDefault());
+
+    // Disable inspect element
+    document.addEventListener('keydown', function (e) {
+      // Disable F12
+      if (e.keyCode == 123) {
+        e.preventDefault();
+      }
+      // Disable Ctrl+Shift+I
+      if (e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) {
+        e.preventDefault();
+      }
+      // Disable Ctrl+Shift+J
+      if (e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) {
+        e.preventDefault();
+      }
+      // Disable Ctrl+U (View Source)
+      if (e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) {
+        e.preventDefault();
+      }
+    });
+
+    function getQueryParam(param) {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get(param);
+    }
+
+    function applyThemeColors() {
+      const brightness = getQueryParam("brightness") || "Light";
+      const theme = getQueryParam("theme") || "Normal";
+      const hideHeader = getQueryParam("hideHeader") || "false";
+      const isWeb = getQueryParam("isWeb") || "true";
+      const isPremiumPurchased = getQueryParam("isPremiumPurchased") || "false";
+
+      // // Handle premium games display
+      // const gameLinks = document.querySelectorAll('.game-link');
+      // gameLinks.forEach(link => {
+      //   const gameTitle = link.querySelector('.game-title').textContent;
+      //   const allowedGames = ['Math Challenge', 'Shape Pattern', 'Kids Maze Adventure', 'Islamic Shapes', 'Islamic Good Deeds', 'Baloon Pop', 'Animal Memory Match'];
+
+      //   // Check if it's a premium game
+      //   if (link.href.includes('premium-games')) {
+      //     const gameCard = link.querySelector('.game-card');
+      //     if (isPremiumPurchased === "false") {
+      //       gameCard.classList.add('premium-locked');
+      //     } else {
+      //       gameCard.classList.remove('premium-locked');
+      //     }
+      //     gameCard.classList.add('premium-game');
+      //   }
+
+      //   // Hide premium games if not web
+      //   if (isWeb === "true" && allowedGames.includes(gameTitle)) {
+      //     link.style.display = 'none';
+      //   }
+      // });
+
+      let bgColor = "#ece4d9";
+      let contentBg = "#eed9bb";
+      let textColor = "#4f391a";
+      let bottomPadding = "24px";
+      let contentBottomPadding = "24px";
+      if (brightness === "Dark") {
+        if (theme === "Normal") {
+          bgColor = "#564630";
+          contentBg = "#382811";
+          textColor = "#ffffff";
+        } else if (theme === "Youtube") {
+          bgColor = "#0f0f0f";
+          contentBg = "#0f0f0f";
+          textColor = "#ffffff";
+          bottomPadding = "0px";
+          contentBottomPadding = "200px";
         }
-        // Disable Ctrl+Shift+I
-        if(e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) {
-          e.preventDefault();
+      } else if (brightness === "Light") {
+        if (theme === "Youtube") {
+          bgColor = "#ffffff";
+          contentBg = "#ffffff";
+          textColor = "#000000";
+          bottomPadding = "0px";
+          contentBottomPadding = "200px";
         }
-        // Disable Ctrl+Shift+J
-        if(e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) {
-          e.preventDefault();
-        }
-        // Disable Ctrl+U (View Source)
-        if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) {
-          e.preventDefault();
-        }
-      });
-
-      function getQueryParam(param) {
-        const urlParams = new URLSearchParams(window.location.search);
-        return urlParams.get(param);
       }
 
-      function applyThemeColors() {
-        const brightness = getQueryParam("brightness") || "Light";
-        const theme = getQueryParam("theme") || "Normal";
-        const hideHeader = getQueryParam("hideHeader") || "false";
-        const isWeb = getQueryParam("isWeb") || "true";
-        const isPremiumPurchased = getQueryParam("isPremiumPurchased") || "false";
-        
-        // Handle premium games display
-        const gameLinks = document.querySelectorAll('.game-link');
-        gameLinks.forEach(link => {
-          const gameTitle = link.querySelector('.game-title').textContent;
-          const allowedGames = ['Math Challenge', 'Shape Pattern', 'Kids Maze Adventure', 'Islamic Shapes', 'Islamic Good Deeds', 'Baloon Pop', 'Animal Memory Match'];
-          
-          // Check if it's a premium game
-          if (link.href.includes('premium-games')) {
-            const gameCard = link.querySelector('.game-card');
-            if (isPremiumPurchased === "false") {
-              gameCard.classList.add('premium-locked');
-            } else {
-              gameCard.classList.remove('premium-locked');
-            }
-            gameCard.classList.add('premium-game');
-          }
-          
-          // Hide premium games if not web
-          if (isWeb === "true" && allowedGames.includes(gameTitle)) {
-            link.style.display = 'none';
-          }
-        });
-        
-        let bgColor = "#ece4d9";
-        let contentBg = "#eed9bb";
-        let textColor = "#4f391a";
-        let bottomPadding = "24px";
-        let contentBottomPadding = "24px";
-        if (brightness === "Dark") {
-          if (theme === "Normal") {
-            bgColor = "#564630";
-            contentBg = "#382811";
-            textColor = "#ffffff";
-          } else if (theme === "Youtube") {
-            bgColor = "#0f0f0f";
-            contentBg = "#0f0f0f";
-            textColor = "#ffffff";
-            bottomPadding = "0px";
-            contentBottomPadding = "200px";
-          }
-        } else if (brightness === "Light") {
-          if (theme === "Youtube") {
-            bgColor = "#ffffff";
-            contentBg = "#ffffff";
-            textColor = "#000000";
-            bottomPadding = "0px";
-            contentBottomPadding = "200px";
-          }
-        }
-
-        if (hideHeader === "true") {
-          document.querySelector(".header").style.display = "none";
-        }
-
-        document.documentElement.style.setProperty("--main-bg", bgColor);
-        document.documentElement.style.setProperty("--content-bg", contentBg);
-        document.documentElement.style.setProperty("--text-color", textColor);
-        document.documentElement.style.setProperty(
-          "--bottom-padding",
-          bottomPadding
-        );
-        document.documentElement.style.setProperty(
-          "--content-bottom-padding",
-          contentBottomPadding
-        );
+      if (hideHeader === "true") {
+        document.querySelector(".header").style.display = "none";
       }
 
-      window.addEventListener("load", applyThemeColors);
+      document.documentElement.style.setProperty("--main-bg", bgColor);
+      document.documentElement.style.setProperty("--content-bg", contentBg);
+      document.documentElement.style.setProperty("--text-color", textColor);
+      document.documentElement.style.setProperty(
+        "--bottom-padding",
+        bottomPadding
+      );
+      document.documentElement.style.setProperty(
+        "--content-bottom-padding",
+        contentBottomPadding
+      );
+    }
 
-      // PWA Service Worker Registration
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/KidsGames/sw.js')
-            .then(registration => {
-              console.log('[PWA] Service Worker registered successfully:', registration.scope);
+    window.addEventListener("load", applyThemeColors);
 
-              // Check for service worker updates
-              registration.addEventListener('updatefound', () => {
-                const newWorker = registration.installing;
-                newWorker.addEventListener('statechange', () => {
-                  if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                    // New content is available
-                    if (confirm('New version available! Reload to update?')) {
-                      window.location.reload();
-                    }
+    // PWA Service Worker Registration
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/KidsGames/sw.js')
+          .then(registration => {
+            console.log('[PWA] Service Worker registered successfully:', registration.scope);
+
+            // Check for service worker updates
+            registration.addEventListener('updatefound', () => {
+              const newWorker = registration.installing;
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  // New content is available
+                  if (confirm('New version available! Reload to update?')) {
+                    window.location.reload();
                   }
-                });
+                }
               });
-            })
-            .catch(error => {
-              console.log('[PWA] Service Worker registration failed:', error);
             });
-        });
-      }
+          })
+          .catch(error => {
+            console.log('[PWA] Service Worker registration failed:', error);
+          });
+      });
+    }
 
-  
-      // Offline indicator
-      function updateOnlineStatus() {
-        const offlineIndicator = document.getElementById('offline-indicator');
-        if (!navigator.onLine) {
-          if (!offlineIndicator) {
-            const indicator = document.createElement('div');
-            indicator.id = 'offline-indicator';
-            indicator.textContent = '📵 Offline - Some features may be limited';
-            indicator.style.cssText = `
+
+    // Offline indicator
+    function updateOnlineStatus() {
+      const offlineIndicator = document.getElementById('offline-indicator');
+      if (!navigator.onLine) {
+        if (!offlineIndicator) {
+          const indicator = document.createElement('div');
+          indicator.id = 'offline-indicator';
+          indicator.textContent = '📵 Offline - Some features may be limited';
+          indicator.style.cssText = `
               position: fixed;
               top: 0;
               left: 0;
@@ -183,508 +185,427 @@
               z-index: 9999;
               font-size: 14px;
             `;
-            document.body.appendChild(indicator);
-          }
-        } else {
-          if (offlineIndicator) {
-            offlineIndicator.remove();
-          }
+          document.body.appendChild(indicator);
+        }
+      } else {
+        if (offlineIndicator) {
+          offlineIndicator.remove();
         }
       }
+    }
 
-      window.addEventListener('online', updateOnlineStatus);
-      window.addEventListener('offline', updateOnlineStatus);
-      updateOnlineStatus();
-    </script>
-    <style>
-      :root {
-        --main-bg: #ece4d9;
-        --content-bg: #eed9bb;
-        --text-color: #4f391a;
-        --bottom-padding: 24px;
-        --content-bottom-padding: 24px;
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+    updateOnlineStatus();
+  </script>
+  <style>
+    :root {
+      --main-bg: #ece4d9;
+      --content-bg: #eed9bb;
+      --text-color: #4f391a;
+      --bottom-padding: 24px;
+      --content-bottom-padding: 24px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+        sans-serif;
+    }
+
+    body {
+      background: #f5f5f5;
+    }
+
+    .app-container {
+      width: 100%;
+      min-height: 100vh;
+      background: var(--main-bg);
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 24px;
+      background: var(--main-bg);
+      top: 0;
+    }
+
+    .title-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .game-icon {
+      width: 24px;
+      height: 24px;
+    }
+
+    .header h1 {
+      font-size: 24px;
+      color: var(--text-color);
+    }
+
+    .search-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #ffd8d8;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .search-icon {
+      color: #ff6b6b;
+      width: 20px;
+      height: 20px;
+    }
+
+    .content-container {
+      background: var(--content-bg);
+      border-top-left-radius: 40px;
+      border-top-right-radius: 40px;
+      padding-top: var(--bottom-padding);
+      padding-bottom: var(--content-bottom-padding);
+      padding-left: 0;
+      padding-right: 0;
+      min-height: calc(100vh - 72px);
+    }
+
+    .games-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 16px;
+      padding: 0 24px 24px 24px;
+      width: 100%;
+    }
+
+    .game-link {
+      text-decoration: none;
+      color: inherit;
+      display: block;
+      transform: translateY(0);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      width: 100%;
+    }
+
+    .game-link:hover {
+      transform: translateY(-4px);
+    }
+
+    .game-link:active {
+      transform: translateY(0);
+    }
+
+    .game-card {
+      aspect-ratio: 1;
+      border-radius: 16px;
+      border: 2px solid #000;
+      overflow: hidden;
+      position: relative;
+      background: white;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      transition: box-shadow 0.2s ease;
+      width: 100%;
+    }
+
+    .game-link:hover .game-card {
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+    }
+
+    .game-link:active .game-card {
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .game-thumbnail {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .game-title {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      text-align: left;
+      font-weight: bold;
+      text-transform: uppercase;
+      font-size: 14px;
+      color: white;
+      padding: 16px;
+      z-index: 2;
+      text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000,
+        1px 1px 0 #000;
+    }
+
+    .premium-locked {
+      position: relative;
+    }
+
+    .premium-locked::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.7);
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .premium-game::before {
+      content: "👑";
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      font-size: 20px;
+      z-index: 3;
+      animation: blink 1.5s infinite;
+      pointer-events: none;
+    }
+
+    @keyframes blink {
+      0% {
+        opacity: 1;
       }
 
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-          sans-serif;
+      50% {
+        opacity: 0.3;
       }
 
-      body {
-        background: #f5f5f5;
+      100% {
+        opacity: 1;
       }
+    }
 
-      .app-container {
-        width: 100%;
-        min-height: 100vh;
-        background: var(--main-bg);
-      }
-
-      .header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 16px 24px;
-        background: var(--main-bg);
-        top: 0;
-      }
-
-      .title-container {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
-
+    /* Responsive breakpoints */
+    @media (min-width: 700px) {
       .game-icon {
-        width: 24px;
-        height: 24px;
+        width: 32px;
+        height: 32px;
       }
 
       .header h1 {
-        font-size: 24px;
-        color: var(--text-color);
+        font-size: 32px;
       }
 
-      .search-btn {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        background: #ffd8d8;
-        border: none;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-      }
-
-      .search-icon {
-        color: #ff6b6b;
-        width: 20px;
-        height: 20px;
-      }
-
-      .content-container {
+      .header {
         background: var(--content-bg);
         border-top-left-radius: 40px;
         border-top-right-radius: 40px;
-        padding-top: var(--bottom-padding);
-        padding-bottom: var(--content-bottom-padding);
-        padding-left: 0;
-        padding-right: 0;
-        min-height: calc(100vh - 72px);
+      }
+
+      .content-container {
+        border-radius: 0;
       }
 
       .games-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-        gap: 16px;
-        padding: 0 24px 24px 24px;
-        width: 100%;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 24px;
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .games-grid {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 32px;
+        padding: 0 32px 32px 32px;
       }
 
-      .game-link {
-        text-decoration: none;
-        color: inherit;
-        display: block;
-        transform: translateY(0);
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-        width: 100%;
+      .header {
+        padding: 16px 32px;
+      }
+    }
+
+    @media (max-width: 380px) {
+      .games-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        padding: 0 12px 24px 12px;
       }
 
-      .game-link:hover {
-        transform: translateY(-4px);
-      }
-
-      .game-link:active {
-        transform: translateY(0);
-      }
-
-      .game-card {
-        aspect-ratio: 1;
-        border-radius: 16px;
-        border: 2px solid #000;
-        overflow: hidden;
-        position: relative;
-        background: white;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        transition: box-shadow 0.2s ease;
-        width: 100%;
-      }
-
-      .game-link:hover .game-card {
-        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
-      }
-
-      .game-link:active .game-card {
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-      }
-
-      .game-thumbnail {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        display: block;
+      .header {
+        padding: 16px 12px;
       }
 
       .game-title {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        text-align: left;
-        font-weight: bold;
-        text-transform: uppercase;
-        font-size: 14px;
-        color: white;
-        padding: 16px;
-        z-index: 2;
-        text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000,
-          1px 1px 0 #000;
+        font-size: 12px;
+        padding: 12px;
       }
+    }
+  </style>
+</head>
 
-      .premium-locked {
-        position: relative;
-      }
-
-      .premium-locked::after {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.7);
-        z-index: 2;
-        pointer-events: none;
-      }
-
-      .premium-game::before {
-        content: "👑";
-        position: absolute;
-        top: 8px;
-        right: 8px;
-        font-size: 20px;
-        z-index: 3;
-        animation: blink 1.5s infinite;
-        pointer-events: none;
-      }
-
-      @keyframes blink {
-        0% { opacity: 1; }
-        50% { opacity: 0.3; }
-        100% { opacity: 1; }
-      }
-
-      /* Responsive breakpoints */
-      @media (min-width: 700px) {
-        .game-icon {
-          width: 32px;
-          height: 32px;
-        }
-
-        .header h1 {
-          font-size: 32px;
-        }
-
-        .header {
-          background: var(--content-bg);
-          border-top-left-radius: 40px;
-          border-top-right-radius: 40px;
-        }
-
-        .content-container {
-          border-radius: 0;
-        }
-
-        .games-grid {
-          grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-          gap: 24px;
-        }
-      }
-
-      @media (min-width: 1024px) {
-        .games-grid {
-          grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-          gap: 32px;
-          padding: 0 32px 32px 32px;
-        }
-
-        .header {
-          padding: 16px 32px;
-        }
-      }
-
-      @media (max-width: 380px) {
-        .games-grid {
-          grid-template-columns: repeat(2, 1fr);
-          gap: 12px;
-          padding: 0 12px 24px 12px;
-        }
-
-        .header {
-          padding: 16px 12px;
-        }
-
-        .game-title {
-          font-size: 12px;
-          padding: 12px;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <div class="app-container">
-      <div class="header">
-        <div class="title-container">
-          <svg
-            class="game-icon"
-            width="22"
-            height="16"
-            viewBox="0 0 22 16"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M16 0C19.3137 0 22 2.68629 22 6V10C22 13.3137 19.3137 16 16 16H6C2.68629 16 0 13.3137 0 10V6C0 2.68629 2.68629 0 6 0H16ZM9 5H7V7H5V9H6.999L7 11H9L8.999 9H11V7H9V5ZM17 9H15V11H17V9ZM15 5H13V7H15V5Z"
-              fill="var(--text-color)"
-            />
-          </svg>
-          <h1>Games</h1>
-        </div>
-      </div>
-
-      <div class="content-container">
-        <div class="games-grid">
-          <!-- Free Games -->
-          <a href="./games/quran-quest/index.html" class="game-link">
-            <div class="game-card">
-              <img
-                src="./quran-quest.jpeg"
-                alt="Quran Quest"
-                class="game-thumbnail"
-              />
-              <div class="game-title">Quran Quest</div>
-            </div>
-          </a>
-          <a href="./games/tower-blocks/index.html" class="game-link">
-            <div class="game-card">
-              <img
-                src="./tower-blocks.jpeg"
-                alt="Tower Blocks"
-                class="game-thumbnail"
-              />
-              <div class="game-title">Tower Blocks</div>
-            </div>
-          </a>
-          <a href="./games/breakout-game/index.html" class="game-link">
-            <div class="game-card">
-              <img
-                src="./breakout.png"
-                alt="Breakout Game"
-                class="game-thumbnail"
-              />
-              <div class="game-title">Breakout Game</div>
-            </div>
-          </a>
-          <a href="./games/islamic-checkers/index.html" class="game-link">
-            <div class="game-card">
-              <img
-                src="./checkers.jpeg"
-                alt="Checkers"
-                class="game-thumbnail"
-              />
-              <div class="game-title">Checkers</div>
-            </div>
-          </a>
-          <a href="./games/follow-the-light/index.html" class="game-link">
-            <div class="game-card">
-              <img
-                src="./follow-the-light.png"
-                alt="Follow the Light"
-                class="game-thumbnail"
-              />
-              <div class="game-title">Follow the Light</div>
-            </div>
-          </a>
-          <a href="./games/30-seconds-challenge/index.html" class="game-link">
-            <div class="game-card">
-              <img
-                src="./30s-chellenge.jpeg"
-                alt="30 Seconds Challenge"
-                class="game-thumbnail"
-              />
-              <div class="game-title">30 Seconds Challenge</div>
-            </div>
-          </a>
-          <a href="./games/tic-tac-toe/index.html" class="game-link">
-            <div class="game-card">
-              <img
-                src="./tic-tac-toe.jpeg"
-                alt="Tic Tac Toe"
-                class="game-thumbnail"
-              />
-              <div class="game-title">Tic Tac Toe</div>
-            </div>
-          </a>
-          <a href="./games/2048/index.html" class="game-link">
-            <div class="game-card">
-              <img src="./2048.jpeg" alt="2048" class="game-thumbnail" />
-              <div class="game-title">2048</div>
-            </div>
-          </a>
-          <a href="./games/hextris/index.html" class="game-link">
-            <div class="game-card">
-              <img src="./hextris.jpeg" alt="Hextris" class="game-thumbnail" />
-              <div class="game-title">Hextris</div>
-            </div>
-          </a>
-          <a href="./games/geography-quiz/index.html" class="game-link">
-            <div class="game-card">
-              <img
-                src="./geography-quiz.png"
-                alt="Geography Quiz"
-                class="game-thumbnail"
-              />
-              <div class="game-title">Geography Quiz</div>
-            </div>
-          </a>
-          <a href="./games/space-shooter/index.html" class="game-link">
-            <div class="game-card">
-              <img
-                src="./space-shooter.jpeg"
-                alt="Space Shooter"
-                class="game-thumbnail"
-              />
-              <div class="game-title">Space Shooter</div>
-            </div>
-          </a>
-          <a href="./games/history-quiz/index.html" class="game-link">
-            <div class="game-card">
-              <img
-                src="./history-quiz.png"
-                alt="History Quiz"
-                class="game-thumbnail"
-              />
-              <div class="game-title">History Quiz</div>
-            </div>
-          </a>
-          <a href="./games/jannah-garden/index.html" class="game-link">
-            <div class="game-card">
-              <img
-                src="./jannah-garden.png"
-                alt="Jannah Garden"
-                class="game-thumbnail"
-              />
-              <div class="game-title">Jannah Garden</div>
-            </div>
-          </a>
-          <a href="./games/space-bluster/index.html" class="game-link">
-            <div class="game-card">
-              <img
-                src="./space-bluster.png"
-                alt="Space Bluster"
-                class="game-thumbnail"
-              />
-              <div class="game-title">Space Bluster</div>
-            </div>
-          </a>
-          <a href="./games/science-quiz/index.html" class="game-link">
-            <div class="game-card">
-              <img
-                src="./science-quiz.png"
-                alt="Science Quiz"
-                class="game-thumbnail"
-              />
-              <div class="game-title">Science Quiz</div>
-            </div>
-          </a>
-          <a href="./games/solar-system/index.html" class="game-link">
-            <div class="game-card">
-              <img
-                src="./solar-system.png"
-                alt="Solar System"
-                class="game-thumbnail"
-              />
-              <div class="game-title">Solar System</div>
-            </div>
-          </a>
-
-          <!-- Premium Games -->
-          <a href="./premium-games/animal-memory-match/index.html" class="game-link">
-            <div class="game-card">
-              <img
-                src="./animal-memory-match.png"
-                alt="Animal Memory Match"
-                class="game-thumbnail"
-              />
-              <div class="game-title">Animal Memory Match</div>
-            </div>
-          </a>
-          <a href="./premium-games/balloon-pop-adventure/index.html" class="game-link">
-            <div class="game-card">
-              <img
-                src="./balloon-pop-adventure.jpeg"
-                alt="Baloon Pop"
-                class="game-thumbnail"
-              />
-              <div class="game-title">Baloon Pop</div>
-            </div>
-          </a>
-          <a href="./premium-games/islamic-good-deeds-game/index.html" class="game-link">
-            <div class="game-card">
-              <img
-                src="./islamic-good-deeds-game.png"
-                alt="Islamic Good Deeds Game"
-                class="game-thumbnail"
-              />
-              <div class="game-title">Islamic Good Deeds</div>
-            </div>
-          </a>
-          <a href="./premium-games/islamic-shapes-drawing-game/index.html" class="game-link">
-            <div class="game-card">
-              <img
-                src="./islamic-shapes-drawing-game.jpeg"
-                alt="Islamic Shapes Drawing Game"
-                class="game-thumbnail"
-              />
-              <div class="game-title">Islamic Shapes</div>
-            </div>
-          </a>
-          <a href="./premium-games/math-challenge/index.html" class="game-link">
-            <div class="game-card">
-              <img
-                src="./math-challenge.png"
-                alt="Math Challenge"
-                class="game-thumbnail"
-              />
-              <div class="game-title">Math Challenge</div>
-            </div>
-          </a>
-          <a href="./premium-games/shape-pattern-game-2/index.html" class="game-link">
-            <div class="game-card">
-              <img
-                src="./shape-pattern-game-2.png"
-                alt="Shape Pattern"
-                class="game-thumbnail"
-              />
-              <div class="game-title">Shape Pattern</div>
-            </div>
-          </a>
-          <a href="./premium-games/islamic-maze-adventure-4/index.html" class="game-link">
-            <div class="game-card">
-              <img
-                src="./kids-maze-adventure.png"
-                alt="Kids Maze Adventure"
-                class="game-thumbnail"
-              />
-              <div class="game-title">Kids Maze Adventure</div>
-            </div>
-          </a>
-        </div>
+<body>
+  <div class="app-container">
+    <div class="header">
+      <div class="title-container">
+        <svg class="game-icon" width="22" height="16" viewBox="0 0 22 16" fill="none"
+          xmlns="http://www.w3.org/2000/svg">
+          <path
+            d="M16 0C19.3137 0 22 2.68629 22 6V10C22 13.3137 19.3137 16 16 16H6C2.68629 16 0 13.3137 0 10V6C0 2.68629 2.68629 0 6 0H16ZM9 5H7V7H5V9H6.999L7 11H9L8.999 9H11V7H9V5ZM17 9H15V11H17V9ZM15 5H13V7H15V5Z"
+            fill="var(--text-color)" />
+        </svg>
+        <h1>Games</h1>
       </div>
     </div>
-  </body>
+
+    <div class="content-container">
+      <div class="games-grid">
+        <!-- Free Games -->
+        <a href="./games/quran-quest/index.html" class="game-link">
+          <div class="game-card">
+            <img src="./quran-quest.jpeg" alt="Quran Quest" class="game-thumbnail" />
+            <div class="game-title">Quran Quest</div>
+          </div>
+        </a>
+        <a href="./games/tower-blocks/index.html" class="game-link">
+          <div class="game-card">
+            <img src="./tower-blocks.jpeg" alt="Tower Blocks" class="game-thumbnail" />
+            <div class="game-title">Tower Blocks</div>
+          </div>
+        </a>
+        <a href="./games/breakout-game/index.html" class="game-link">
+          <div class="game-card">
+            <img src="./breakout.png" alt="Breakout Game" class="game-thumbnail" />
+            <div class="game-title">Breakout Game</div>
+          </div>
+        </a>
+        <a href="./games/islamic-checkers/index.html" class="game-link">
+          <div class="game-card">
+            <img src="./checkers.jpeg" alt="Checkers" class="game-thumbnail" />
+            <div class="game-title">Checkers</div>
+          </div>
+        </a>
+        <a href="./games/follow-the-light/index.html" class="game-link">
+          <div class="game-card">
+            <img src="./follow-the-light.png" alt="Follow the Light" class="game-thumbnail" />
+            <div class="game-title">Follow the Light</div>
+          </div>
+        </a>
+        <a href="./games/30-seconds-challenge/index.html" class="game-link">
+          <div class="game-card">
+            <img src="./30s-chellenge.jpeg" alt="30 Seconds Challenge" class="game-thumbnail" />
+            <div class="game-title">30 Seconds Challenge</div>
+          </div>
+        </a>
+        <a href="./games/tic-tac-toe/index.html" class="game-link">
+          <div class="game-card">
+            <img src="./tic-tac-toe.jpeg" alt="Tic Tac Toe" class="game-thumbnail" />
+            <div class="game-title">Tic Tac Toe</div>
+          </div>
+        </a>
+        <a href="./games/2048/index.html" class="game-link">
+          <div class="game-card">
+            <img src="./2048.jpeg" alt="2048" class="game-thumbnail" />
+            <div class="game-title">2048</div>
+          </div>
+        </a>
+        <a href="./games/hextris/index.html" class="game-link">
+          <div class="game-card">
+            <img src="./hextris.jpeg" alt="Hextris" class="game-thumbnail" />
+            <div class="game-title">Hextris</div>
+          </div>
+        </a>
+        <a href="./games/geography-quiz/index.html" class="game-link">
+          <div class="game-card">
+            <img src="./geography-quiz.png" alt="Geography Quiz" class="game-thumbnail" />
+            <div class="game-title">Geography Quiz</div>
+          </div>
+        </a>
+        <a href="./games/space-shooter/index.html" class="game-link">
+          <div class="game-card">
+            <img src="./space-shooter.jpeg" alt="Space Shooter" class="game-thumbnail" />
+            <div class="game-title">Space Shooter</div>
+          </div>
+        </a>
+        <a href="./games/history-quiz/index.html" class="game-link">
+          <div class="game-card">
+            <img src="./history-quiz.png" alt="History Quiz" class="game-thumbnail" />
+            <div class="game-title">History Quiz</div>
+          </div>
+        </a>
+        <a href="./games/jannah-garden/index.html" class="game-link">
+          <div class="game-card">
+            <img src="./jannah-garden.png" alt="Jannah Garden" class="game-thumbnail" />
+            <div class="game-title">Jannah Garden</div>
+          </div>
+        </a>
+        <a href="./games/space-bluster/index.html" class="game-link">
+          <div class="game-card">
+            <img src="./space-bluster.png" alt="Space Bluster" class="game-thumbnail" />
+            <div class="game-title">Space Bluster</div>
+          </div>
+        </a>
+        <a href="./games/science-quiz/index.html" class="game-link">
+          <div class="game-card">
+            <img src="./science-quiz.png" alt="Science Quiz" class="game-thumbnail" />
+            <div class="game-title">Science Quiz</div>
+          </div>
+        </a>
+        <a href="./games/solar-system/index.html" class="game-link">
+          <div class="game-card">
+            <img src="./solar-system.png" alt="Solar System" class="game-thumbnail" />
+            <div class="game-title">Solar System</div>
+          </div>
+        </a>
+
+        <!-- Premium Games -->
+        <a href="./games/animal-memory-match/index.html" class="game-link">
+          <div class="game-card">
+            <img src="./animal-memory-match.png" alt="Animal Memory Match" class="game-thumbnail" />
+            <div class="game-title">Animal Memory Match</div>
+          </div>
+        </a>
+        <a href="./games/balloon-pop-adventure/index.html" class="game-link">
+          <div class="game-card">
+            <img src="./balloon-pop-adventure.jpeg" alt="Baloon Pop" class="game-thumbnail" />
+            <div class="game-title">Baloon Pop</div>
+          </div>
+        </a>
+        <a href="./games/islamic-good-deeds-game/index.html" class="game-link">
+          <div class="game-card">
+            <img src="./islamic-good-deeds-game.png" alt="Islamic Good Deeds Game" class="game-thumbnail" />
+            <div class="game-title">Islamic Good Deeds</div>
+          </div>
+        </a>
+        <a href="./games/islamic-shapes-drawing-game/index.html" class="game-link">
+          <div class="game-card">
+            <img src="./islamic-shapes-drawing-game.jpeg" alt="Islamic Shapes Drawing Game" class="game-thumbnail" />
+            <div class="game-title">Islamic Shapes</div>
+          </div>
+        </a>
+        <a href="./games/math-challenge/index.html" class="game-link">
+          <div class="game-card">
+            <img src="./math-challenge.png" alt="Math Challenge" class="game-thumbnail" />
+            <div class="game-title">Math Challenge</div>
+          </div>
+        </a>
+        <a href="./games/shape-pattern-game-2/index.html" class="game-link">
+          <div class="game-card">
+            <img src="./shape-pattern-game-2.png" alt="Shape Pattern" class="game-thumbnail" />
+            <div class="game-title">Shape Pattern</div>
+          </div>
+        </a>
+        <a href="./games/islamic-maze-adventure-4/index.html" class="game-link">
+          <div class="game-card">
+            <img src="./kids-maze-adventure.png" alt="Kids Maze Adventure" class="game-thumbnail" />
+            <div class="game-title">Kids Maze Adventure</div>
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+</body>
+
 </html>
