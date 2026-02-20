@@ -1,0 +1,1632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ramadan Quest - রমাদান কোয়েস্ট</title>
+    <link rel="manifest" href="/KidsGames/manifest.json">
+    <meta name="theme-color" content="#1a5f2a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans Bengali', sans-serif;
+            background: linear-gradient(135deg, #1a5f2a 0%, #0d3d18 100%);
+            min-height: 100vh;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        .header {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .lang-btn, .settings-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .lang-btn.active {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .game-title {
+            text-align: center;
+            padding: 30px 0;
+        }
+
+        .game-title h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-title .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .moon-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .start-screen, .quiz-screen, .result-screen {
+            text-align: center;
+        }
+
+        .start-btn, .next-btn, .restart-btn, .share-btn {
+            background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+            border: none;
+            color: #333;
+            padding: 15px 40px;
+            border-radius: 30px;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 10px;
+            box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4);
+            transition: transform 0.2s;
+        }
+
+        .start-btn:hover, .next-btn:hover, .restart-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .progress-bar {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            height: 10px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #ffc107, #ff9800);
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+
+        .question-counter {
+            font-size: 1.1em;
+            opacity: 0.8;
+            margin-bottom: 10px;
+        }
+
+        .score-display {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 20px;
+            border-radius: 20px;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+
+        .question-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 25px;
+            margin: 20px 0;
+            backdrop-filter: blur(10px);
+        }
+
+        .question-text {
+            font-size: 1.3em;
+            line-height: 1.5;
+            margin-bottom: 25px;
+        }
+
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.15);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 15px;
+            font-size: 1.1em;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s;
+        }
+
+        .option-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+            border-color: #ffc107;
+        }
+
+        .option-btn.selected {
+            background: rgba(255, 193, 7, 0.3);
+            border-color: #ffc107;
+        }
+
+        .option-btn.correct {
+            background: rgba(76, 175, 80, 0.5);
+            border-color: #4caf50;
+        }
+
+        .option-btn.wrong {
+            background: rgba(244, 67, 54, 0.5);
+            border-color: #f44336;
+        }
+
+        .result-screen h2 {
+            font-size: 2em;
+            margin-bottom: 20px;
+        }
+
+        .final-score {
+            font-size: 3em;
+            font-weight: bold;
+            color: #ffc107;
+            margin: 20px 0;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin: 20px 0;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #ffc107;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .settings-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .settings-content {
+            background: linear-gradient(135deg, #2d7d3e 0%, #1a5f2a 100%);
+            padding: 30px;
+            border-radius: 20px;
+            max-width: 350px;
+            width: 90%;
+            text-align: center;
+        }
+
+        .settings-content h3 {
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .setting-group {
+            margin: 15px 0;
+            text-align: left;
+        }
+
+        .setting-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .setting-group select {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            border: none;
+            font-size: 1em;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+        }
+
+        .close-settings {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 10px 30px;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        .points-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 193, 7, 0.95);
+            color: #333;
+            padding: 20px 40px;
+            border-radius: 15px;
+            font-size: 1.5em;
+            font-weight: bold;
+            z-index: 1000;
+            animation: popIn 0.3s ease;
+        }
+
+        @keyframes popIn {
+            0% { transform: translate(-50%, -50%) scale(0); }
+            80% { transform: translate(-50%, -50%) scale(1.1); }
+            100% { transform: translate(-50%, -50%) scale(1); }
+        }
+
+        .high-score {
+            background: rgba(255, 193, 7, 0.2);
+            padding: 10px 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            display: inline-block;
+        }
+
+        @media (max-width: 480px) {
+            .game-title h1 {
+                font-size: 1.8em;
+            }
+
+            .question-text {
+                font-size: 1.1em;
+            }
+
+            .option-btn {
+                padding: 12px 15px;
+                font-size: 1em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-spacer"></div>
+        <div class="header-actions">
+            <button class="lang-btn" onclick="toggleLanguage()">BN</button>
+            <button class="settings-btn" onclick="openSettings()">⚙️</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Start Screen -->
+        <div class="start-screen" id="startScreen">
+            <div class="game-title">
+                <span class="moon-icon">🌙</span>
+                <h1 data-i18n="title">Ramadan Quest</h1>
+                <p class="subtitle" data-i18n="subtitle">Islamic Knowledge Quiz</p>
+            </div>
+
+            <div class="high-score" id="highScoreDisplay">
+                <span data-i18n="highScore">High Score:</span> <span id="highScoreValue">0</span>
+            </div>
+
+            <button class="start-btn" onclick="startQuiz()" data-i18n="startQuiz">Start Quiz</button>
+        </div>
+
+        <!-- Quiz Screen -->
+        <div class="quiz-screen hidden" id="quizScreen">
+            <div class="score-display">
+                <span data-i18n="score">Score:</span> <span id="currentScore">0</span>
+            </div>
+
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+            </div>
+
+            <div class="question-counter">
+                <span data-i18n="question">Question</span> <span id="questionNum">1</span>/<span id="totalQuestions">10</span>
+            </div>
+
+            <div class="question-card">
+                <div class="question-text" id="questionText"></div>
+                <div class="options-container" id="optionsContainer"></div>
+            </div>
+
+            <button class="next-btn hidden" id="nextBtn" onclick="nextQuestion()" data-i18n="next">Next Question</button>
+        </div>
+
+        <!-- Result Screen -->
+        <div class="result-screen hidden" id="resultScreen">
+            <h2 data-i18n="quizComplete">Quiz Complete!</h2>
+            <div class="final-score" id="finalScore">0</div>
+            <p data-i18n="points">points</p>
+
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="correctCount">0</div>
+                    <div class="stat-label" data-i18n="correct">Correct</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="wrongCount">0</div>
+                    <div class="stat-label" data-i18n="wrong">Wrong</div>
+                </div>
+            </div>
+
+            <div class="high-score" id="newHighScore" style="display: none;">
+                <span>🎉</span> <span data-i18n="newHighScore">New High Score!</span>
+            </div>
+
+            <button class="restart-btn" onclick="restartQuiz()" data-i18n="playAgain">Play Again</button>
+            <button class="share-btn" onclick="shareScore()" data-i18n="share">Share Score</button>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="settings-modal hidden" id="settingsModal">
+        <div class="settings-content">
+            <h3 data-i18n="settings">Settings</h3>
+
+            <div class="setting-group">
+                <label data-i18n="questionCount">Number of Questions:</label>
+                <select id="questionCountSelect">
+                    <option value="5">5</option>
+                    <option value="10" selected>10</option>
+                    <option value="15">15</option>
+                    <option value="20">20</option>
+                </select>
+            </div>
+
+            <button class="close-settings" onclick="closeSettings()" data-i18n="close">Close</button>
+        </div>
+    </div>
+
+    <script>
+        // Translations
+        const translations = {
+            en: {
+                title: "Ramadan Quest",
+                subtitle: "Islamic Knowledge Quiz",
+                back: "Back",
+                highScore: "High Score:",
+                startQuiz: "Start Quiz",
+                score: "Score:",
+                question: "Question",
+                next: "Next Question",
+                quizComplete: "Quiz Complete!",
+                points: "points",
+                correct: "Correct",
+                wrong: "Wrong",
+                newHighScore: "New High Score!",
+                playAgain: "Play Again",
+                share: "Share Score",
+                settings: "Settings",
+                questionCount: "Number of Questions:",
+                close: "Close",
+                shareText: "I scored {score} points in Ramadan Quest quiz! Can you beat my score?",
+                finish: "Finish"
+            },
+            bn: {
+                title: "রমাদান কোয়েস্ট",
+                subtitle: "ইসলামিক জ্ঞান কুইজ",
+                back: "পিছনে",
+                highScore: "সর্বোচ্চ স্কোর:",
+                startQuiz: "কুইজ শুরু করুন",
+                score: "স্কোর:",
+                question: "প্রশ্ন",
+                next: "পরবর্তী প্রশ্ন",
+                quizComplete: "কুইজ সম্পন্ন!",
+                points: "পয়েন্ট",
+                correct: "সঠিক",
+                wrong: "ভুল",
+                newHighScore: "নতুন সর্বোচ্চ স্কোর!",
+                playAgain: "আবার খেলুন",
+                share: "শেয়ার করুন",
+                settings: "সেটিংস",
+                questionCount: "প্রশ্নের সংখ্যা:",
+                close: "বন্ধ করুন",
+                shareText: "আমি রমাদান কোয়েস্ট কুইজে {score} পয়েন্ট পেয়েছি! আপনি কি আমার স্কোর কে হারাতে পারবেন?",
+                finish: "সমাপ্ত"
+            }
+        };
+
+        // Questions database with translations
+        const questions = [
+            // Ramadan & Fasting (1-30)
+            {
+                question: { en: "What is the ninth month of the Islamic calendar called?", bn: "ইসলামি ক্যালেন্ডারের নবম মাসের নাম কী?" },
+                options: {
+                    en: ["Ramadan", "Shaban", "Shawwal", "Muharram"],
+                    bn: ["রমজান", "শাবান", "শাওয়াল", "মুহররম"]
+                },
+                answer: { en: "Ramadan", bn: "রমজান" }
+            },
+            {
+                question: { en: "What do Muslims do during Ramadan?", bn: "রমজান মাসে মুসলমানরা কী করে?" },
+                options: {
+                    en: ["Fast from dawn to sunset", "Eat extra food", "Sleep all day", "Travel"],
+                    bn: ["ভোর থেকে সূর্যাস্ত পর্যন্ত রোজা রাখে", "বেশি খাবার খায়", "সারাদিন ঘুমায়", "ভ্রমণ করে"]
+                },
+                answer: { en: "Fast from dawn to sunset", bn: "ভোর থেকে সূর্যাস্ত পর্যন্ত রোজা রাখে" }
+            },
+            {
+                question: { en: "What is the meal eaten before dawn during Ramadan called?", bn: "রমজানে ভোরে খাওয়া খাবারকে কী বলা হয়?" },
+                options: {
+                    en: ["Suhoor", "Iftar", "Lunch", "Dinner"],
+                    bn: ["সেহরি", "ইফতার", "লাঞ্চ", "ডিনার"]
+                },
+                answer: { en: "Suhoor", bn: "সেহরি" }
+            },
+            {
+                question: { en: "What is the meal eaten to break the fast called?", bn: "রোজা ভাঙার খাবারকে কী বলা হয়?" },
+                options: {
+                    en: ["Iftar", "Suhoor", "Breakfast", "Snack"],
+                    bn: ["ইফতার", "সেহরি", "ব্রেকফাস্ট", "স্ন্যাকস"]
+                },
+                answer: { en: "Iftar", bn: "ইফতার" }
+            },
+            {
+                question: { en: "Which holy book was revealed in Ramadan?", bn: "কোন গ্রন্থ রমজান মাসে অবতীর্ণ হয়েছিল?" },
+                options: {
+                    en: ["Quran", "Torah", "Injeel", "Zabur"],
+                    bn: ["কুরআন", "তওরাত", "ইঞ্জিল", "যাবুর"]
+                },
+                answer: { en: "Quran", bn: "কুরআন" }
+            },
+            {
+                question: { en: "What is the special night in Ramadan when Quran was revealed?", bn: "রমজানে কুরআন অবতীর্ণের বিশেষ রাতকে কী বলা হয়?" },
+                options: {
+                    en: ["Laylatul Qadr", "Shab-e-Meraj", "Shab-e-Barat", "Eid night"],
+                    bn: ["শবে কদর", "শবে মেরাজ", "শবে বরাত", "ঈদের রাত"]
+                },
+                answer: { en: "Laylatul Qadr", bn: "শবে কদর" }
+            },
+            {
+                question: { en: "Which festival comes after Ramadan?", bn: "রমজানের পর কোন উৎসব আসে?" },
+                options: {
+                    en: ["Eid-ul-Fitr", "Eid-ul-Adha", "Mawlid", "Hajj"],
+                    bn: ["ঈদুল ফিতর", "ঈদুল আযহা", "মওলিদ", "হজ"]
+                },
+                answer: { en: "Eid-ul-Fitr", bn: "ঈদুল ফিতর" }
+            },
+            {
+                question: { en: "What is the act of giving charity in Ramadan called?", bn: "রমজানে দান করাকে কী বলা হয়?" },
+                options: {
+                    en: ["Zakat", "Fasting", "Prayer", "Hajj"],
+                    bn: ["যাকাত", "রোজা", "নামাজ", "হজ"]
+                },
+                answer: { en: "Zakat", bn: "যাকাত" }
+            },
+            {
+                question: { en: "How many days does Ramadan typically last?", bn: "রমজান সাধারণত কত দিন স্থায়ী হয়?" },
+                options: {
+                    en: ["29 or 30 days", "28 days", "31 days", "27 days"],
+                    bn: ["২৯ বা ৩০ দিন", "২৮ দিন", "৩১ দিন", "২৭ দিন"]
+                },
+                answer: { en: "29 or 30 days", bn: "২৯ বা ৩০ দিন" }
+            },
+            {
+                question: { en: "What should Muslims do more during Ramadan?", bn: "রমজানে মুসলমানদের আরও বেশি কী করা উচিত?" },
+                options: {
+                    en: ["Worship and good deeds", "Sleep", "Play games", "Watch TV"],
+                    bn: ["ইবাদত ও ভালো কাজ", "ঘুমানো", "খেলা", "টিভি দেখা"]
+                },
+                answer: { en: "Worship and good deeds", bn: "ইবাদত ও ভালো কাজ" }
+            },
+            {
+                question: { en: "Who is exempt from fasting during Ramadan?", bn: "রমজানে কারা রোজা থেকে মুক্ত?" },
+                options: {
+                    en: ["Children, elderly, and sick", "Only children", "Only elderly", "Nobody"],
+                    bn: ["শিশু, বৃদ্ধ ও অসুস্থ ব্যক্তি", "শুধু শিশুরা", "শুধু বৃদ্ধরা", "কেউ না"]
+                },
+                answer: { en: "Children, elderly, and sick", bn: "শিশু, বৃদ্ধ ও অসুস্থ ব্যক্তি" }
+            },
+            {
+                question: { en: "What is the purpose of fasting in Ramadan?", bn: "রমজানে রোজার উদ্দেশ্য কী?" },
+                options: {
+                    en: ["To gain taqwa (God consciousness)", "To lose weight", "To save money", "To sleep more"],
+                    bn: ["তাকওয়া অর্জন করা", "ওজন কমানো", "টাকা বাঁচানো", "বেশি ঘুমানো"]
+                },
+                answer: { en: "To gain taqwa (God consciousness)", bn: "তাকওয়া অর্জন করা" }
+            },
+            {
+                question: { en: "What do Muslims recite more during Ramadan?", bn: "রমজানে মুসলমানরা আরও বেশি কী পড়ে?" },
+                options: {
+                    en: ["Quran", "Newspaper", "Novels", "Magazines"],
+                    bn: ["কুরআন", "সংবাদপত্র", "উপন্যাস", "ম্যাগাজিন"]
+                },
+                answer: { en: "Quran", bn: "কুরআন" }
+            },
+            {
+                question: { en: "What is the special prayer in Ramadan called?", bn: "রমজানের বিশেষ নামাজকে কী বলা হয়?" },
+                options: {
+                    en: ["Taraweeh", "Fajr", "Dhuhr", "Asr"],
+                    bn: ["তারাবিহ", "ফজর", "যোহর", "আসর"]
+                },
+                answer: { en: "Taraweeh", bn: "তারাবিহ" }
+            },
+            {
+                question: { en: "What should be avoided during fasting?", bn: "রোজার সময় কী পরিহার করা উচিত?" },
+                options: {
+                    en: ["Eating, drinking, and bad deeds", "Only eating", "Only drinking", "Nothing"],
+                    bn: ["খাওয়া, পান করা ও খারাপ কাজ", "শুধু খাওয়া", "শুধু পান করা", "কিছুই না"]
+                },
+                answer: { en: "Eating, drinking, and bad deeds", bn: ["খাওয়া, পান করা ও খারাপ কাজ"] }
+            },
+            {
+                question: { en: "What date is Laylatul Qadr believed to be in the last 10 nights?", bn: "শবে কদর শেষ ১০ রাতের কোন তারিখে বলে বিশ্বাস করা হয়?" },
+                options: {
+                    en: ["Odd nights (21, 23, 25, 27, 29)", "First 10 nights", "Middle nights", "Any night"],
+                    bn: ["বেজোড় রাত (২১, ২৩, ২৫, ২৭, ২৯)", "প্রথম ১০ রাত", "মাঝের রাত", "যেকোনো রাত"]
+                },
+                answer: { en: "Odd nights (21, 23, 25, 27, 29)", bn: "বেজোড় রাত (২১, ২৩, ২৫, ২৭, ২৯)" }
+            },
+            {
+                question: { en: "What is I'tikaf in Ramadan?", bn: "রমজানে ইতিকাফ কী?" },
+                options: {
+                    en: ["Staying in mosque for worship", "Fasting", "Praying", "Giving charity"],
+                    bn: ["ইবাদতের জন্য মসজিদে অবস্থান", "রোজা রাখা", "নামাজ পড়া", "দান করা"]
+                },
+                answer: { en: "Staying in mosque for worship", bn: "ইবাদতের জন্য মসজিদে অবস্থান" }
+            },
+            {
+                question: { en: "What is Fitrana?", bn: "ফিতরানা কী?" },
+                options: {
+                    en: ["Charity given before Eid", "A type of food", "A prayer", "A greeting"],
+                    bn: ["ঈদের আগে দেওয়া দান", "এক ধরনের খাবার", "একটি নামাজ", "একটি শুভেচ্ছা"]
+                },
+                answer: { en: "Charity given before Eid", bn: "ঈদের আগে দেওয়া দান" }
+            },
+            {
+                question: { en: "How many pillars of Islam is fasting?", bn: "ইসলামের কত নম্বর স্তম্ভ রোজা?" },
+                options: {
+                    en: ["Fourth pillar", "First pillar", "Second pillar", "Fifth pillar"],
+                    bn: ["চতুর্থ স্তম্ভ", "প্রথম স্তম্ভ", "দ্বিতীয় স্তম্ভ", "পঞ্চম স্তম্ভ"]
+                },
+                answer: { en: "Fourth pillar", bn: "চতুর্থ স্তম্ভ" }
+            },
+            {
+                question: { en: "What is the reward for good deeds in Ramadan?", bn: "রমজানে ভালো কাজের পুরস্কার কত?" },
+                options: {
+                    en: ["Multiplied many times", "Same as normal", "Less than normal", "No reward"],
+                    bn: ["অনেক গুণ বেশি", "স্বাভাবিকের মতো", "স্বাভাবিকের চেয়ে কম", "কোনো পুরস্কার নেই"]
+                },
+                answer: { en: "Multiplied many times", bn: "অনেক গুণ বেশি" }
+            },
+            {
+                question: { en: "What is the first thing to eat when breaking fast?", bn: "রোজা ভাঙার সময় প্রথমে কী খাওয়া উচিত?" },
+                options: {
+                    en: ["Dates and water", "Rice", "Meat", "Sweets"],
+                    bn: ["খেজুর ও পানি", "ভাত", "মাংস", "মিষ্টি"]
+                },
+                answer: { en: "Dates and water", bn: "খেজুর ও পানি" }
+            },
+            {
+                question: { en: "Which prophet used to fast most?", bn: "কোন নবী সবচেয়ে বেশি রোজা রাখতেন?" },
+                options: {
+                    en: ["Prophet Dawud (David)", "Prophet Muhammad", "Prophet Ibrahim", "Prophet Musa"],
+                    bn: ["হযরত দাউদ (আ.)", "হযরত মুহাম্মদ (সা.)", "হযরত ইব্রাহিম (আ.)", "হযরত মুসা (আ.)"]
+                },
+                answer: { en: "Prophet Dawud (David)", bn: "হযরত দাউদ (আ.)" }
+            },
+            {
+                question: { en: "What happens to the gates of Paradise in Ramadan?", bn: "রমজানে জান্নাতের দরজাগুলোর কী হয়?" },
+                options: {
+                    en: ["They are opened", "They are closed", "Nothing changes", "They are locked"],
+                    bn: ["খুলে যায়", "বন্ধ হয়ে যায়", "কিছুই হয় না", "তালাবদ্ধ থাকে"]
+                },
+                answer: { en: "They are opened", bn: "খুলে যায়" }
+            },
+            {
+                question: { en: "What happens to the gates of Hell in Ramadan?", bn: "রমজানে জাহান্নামের দরজাগুলোর কী হয়?" },
+                options: {
+                    en: ["They are closed", "They are opened", "Nothing changes", "They increase"],
+                    bn: ["বন্ধ হয়ে যায়", "খুলে যায়", "কিছুই হয় না", "বেড়ে যায়"]
+                },
+                answer: { en: "They are closed", bn: "বন্ধ হয়ে যায়" }
+            },
+            {
+                question: { en: "What is the meaning of the word 'Ramadan'?", bn: "'রমজান' শব্দের অর্থ কী?" },
+                options: {
+                    en: ["Burning/Scorching heat", "Cool breeze", "Rain", "Harvest"],
+                    bn: ["জ্বলন্ত/তীব্র তাপ", "শীতল বাতাস", "বৃষ্টি", "ফসল কাটা"]
+                },
+                answer: { en: "Burning/Scorching heat", bn: "জ্বলন্ত/তীব্র তাপ" }
+            },
+            {
+                question: { en: "What is the supplication when breaking fast?", bn: "রোজা ভাঙার সময়ের দোয়া কী?" },
+                options: {
+                    en: ["Allahumma inni laka sumtu...", "Bismillah", "Alhamdulillah", "SubhanAllah"],
+                    bn: ["আল্লাহুম্মা ইন্নি লাকা সুমতু...", "বিসমিল্লাহ", "আলহামদুলিল্লাহ", "সুবহানাল্লাহ"]
+                },
+                answer: { en: "Allahumma inni laka sumtu...", bn: "আল্লাহুম্মা ইন্নি লাকা সুমতু..." }
+            },
+            {
+                question: { en: "What type of moon sighting declares the start of Ramadan?", bn: "রমজানের শুরু কোন চাঁদ দেখার মাধ্যমে ঘোষণা করা হয়?" },
+                options: {
+                    en: ["New crescent moon", "Full moon", "Half moon", "No moon"],
+                    bn: ["নতুন অর্ধচন্দ্র", "পূর্ণিমা", "অর্ধচন্দ্র", "অমাবস্যা"]
+                },
+                answer: { en: "New crescent moon", bn: "নতুন অর্ধচন্দ্র" }
+            },
+            {
+                question: { en: "What is fasting called in Arabic?", bn: "আরবিতে রোজাকে কী বলা হয়?" },
+                options: {
+                    en: ["Sawm", "Salah", "Zakat", "Hajj"],
+                    bn: ["সাওম", "সালাত", "যাকাত", "হজ"]
+                },
+                answer: { en: "Sawm", bn: "সাওম" }
+            },
+            {
+                question: { en: "What is the night prayer during the last 10 nights of Ramadan called?", bn: "রমজানের শেষ ১০ রাতের রাতের নামাজকে কী বলা হয়?" },
+                options: {
+                    en: ["Qiyam al-Layl", "Fajr", "Isha", "Maghrib"],
+                    bn: ["কিয়ামুল লাইল", "ফজর", "ইশা", "মাগরিব"]
+                },
+                answer: { en: "Qiyam al-Layl", bn: "কিয়ামুল লাইল" }
+            },
+            {
+                question: { en: "What is the recommended act to do before fasting?", bn: "রোজা রাখার আগে কী করা সুন্নত?" },
+                options: {
+                    en: ["Eat Suhoor", "Sleep", "Exercise", "Read news"],
+                    bn: ["সেহরি খাওয়া", "ঘুমানো", "ব্যায়াম করা", "খবর পড়া"]
+                },
+                answer: { en: "Eat Suhoor", bn: "সেহরি খাওয়া" }
+            },
+            // Parents Respect (31-50)
+            {
+                question: { en: "What does Islam say about parents?", bn: "ইসলাম পিতামাতা সম্পর্কে কী বলে?" },
+                options: {
+                    en: ["They deserve highest respect", "Ignore them", "Disobey them", "Leave them"],
+                    bn: ["তারা সর্বোচ্চ সম্মানের যোগ্য", "তাদের উপেক্ষা করো", "তাদের অবাধ্য হও", "তাদের ছেড়ে দাও"]
+                },
+                answer: { en: "They deserve highest respect", bn: "তারা সর্বোচ্চ সম্মানের যোগ্য" }
+            },
+            {
+                question: { en: "After Allah, who deserves the most gratitude?", bn: "আল্লাহর পরে কার প্রতি সবচেয়ে কৃতজ্ঞতা প্রকাশ করা উচিত?" },
+                options: {
+                    en: ["Parents", "Friends", "Teachers", "Neighbors"],
+                    bn: ["পিতামাতা", "বন্ধুরা", "শিক্ষকরা", "প্রতিবেশীরা"]
+                },
+                answer: { en: "Parents", bn: "পিতামাতা" }
+            },
+            {
+                question: { en: "What is the dua for parents mentioned in Quran?", bn: "কুরআনে পিতামাতার জন্য কোন দোয়া আছে?" },
+                options: {
+                    en: ["Rabbir hamhuma kama rabbayani saghira", "Bismillah", "Alhamdulillah", "La ilaha illallah"],
+                    bn: ["রাব্বির হামহুমা কামা রাব্বায়ানি সাগিরা", "বিসমিল্লাহ", "আলহামদুলিল্লাহ", "লা ইলাহা ইল্লাল্লাহ"]
+                },
+                answer: { en: "Rabbir hamhuma kama rabbayani saghira", bn: "রাব্বির হামহুমা কামা রাব্বায়ানি সাগিরা" }
+            },
+            {
+                question: { en: "What does 'Umm' mean in Arabic?", bn: "আরবিতে 'উম্ম' শব্দের অর্থ কী?" },
+                options: {
+                    en: ["Mother", "Father", "Sister", "Brother"],
+                    bn: ["মা", "বাবা", "বোন", "ভাই"]
+                },
+                answer: { en: "Mother", bn: "মা" }
+            },
+            {
+                question: { en: "What does 'Ab' mean in Arabic?", bn: "আরবিতে 'আব' শব্দের অর্থ কী?" },
+                options: {
+                    en: ["Father", "Mother", "Uncle", "Grandfather"],
+                    bn: ["বাবা", "মা", "চাচা", "দাদা"]
+                },
+                answer: { en: "Father", bn: "বাবা" }
+            },
+            {
+                question: { en: "How should we speak to parents?", bn: "আমরা কীভাবে পিতামাতার সাথে কথা বলব?" },
+                options: {
+                    en: ["With kindness and respect", "Loudly", "Rudely", "Ignoring them"],
+                    bn: ["ভদ্রতা ও সম্মানের সাথে", "জোরে", "অভদ্রভাবে", "তাদের উপেক্ষা করে"]
+                },
+                answer: { en: "With kindness and respect", bn: "ভদ্রতা ও সম্মানের সাথে" }
+            },
+            {
+                question: { en: "Who has more rights over children?", bn: "সন্তানদের ওপর কার অধিকার বেশি?" },
+                options: {
+                    en: ["Mother", "Father", "Both equally", "Neither"],
+                    bn: ["মা", "বাবা", "উভয়েই সমান", "কেউ না"]
+                },
+                answer: { en: "Mother", bn: "মা" }
+            },
+            {
+                question: { en: "What did Prophet Muhammad say about pleasing parents?", bn: "পিতামাতাকে খুশি করা সম্পর্কে নবী মুহাম্মদ কী বলেছেন?" },
+                options: {
+                    en: ["It pleases Allah", "It's not important", "Only father matters", "Only mother matters"],
+                    bn: ["এটি আল্লাহকে খুশি করে", "এটি গুরুত্বপূর্ণ নয়", "শুধু বাবা গুরুত্বপূর্ণ", "শুধু মা গুরুত্বপূর্ণ"]
+                },
+                answer: { en: "It pleases Allah", bn: "এটি আল্লাহকে খুশি করে" }
+            },
+            {
+                question: { en: "What is disobedience to parents called in Islam?", bn: "ইসলামে পিতামাতার অবাধ্যতাকে কী বলা হয়?" },
+                options: {
+                    en: ["Aq", "Sawm", "Zakat", "Hajj"],
+                    bn: ["আক", "সাওম", "যাকাত", "হজ"]
+                },
+                answer: { en: "Aq", bn: "আক" }
+            },
+            {
+                question: { en: "When parents are old, how should we treat them?", bn: "পিতামাতা বৃদ্ধ হলে আমাদের কী করা উচিত?" },
+                options: {
+                    en: ["Take care of them lovingly", "Send them away", "Ignore them", "Be impatient"],
+                    bn: ["স্নেহের সাথে যত্ন নেওয়া", "তাদের পাঠিয়ে দেওয়া", "তাদের উপেক্ষা করা", "অধৈর্য হওয়া"]
+                },
+                answer: { en: "Take care of them lovingly", bn: "স্নেহের সাথে যত্ন নেওয়া" }
+            },
+            {
+                question: { en: "What does Allah say about saying 'Uff' to parents?", bn: "পিতামাতাকে 'উফ' বলা সম্পর্কে আল্লাহ কী বলেছেন?" },
+                options: {
+                    en: ["Do not even say 'Uff' to them", "It's okay", "Only sometimes", "Only to father"],
+                    bn: ["তাদের এমনকি 'উফ'ও বলো না", "এটা ঠিক আছে", "শুধু মাঝেমধ্যে", "শুধু বাবাকে"]
+                },
+                answer: { en: "Do not even say 'Uff' to them", bn: "তাদের এমনকি 'উফ'ও বলো না" }
+            },
+            {
+                question: { en: "Which surah emphasizes parents' rights?", bn: "কোন সূরায় পিতামাতার অধিকারের ওপর জোর দেওয়া হয়েছে?" },
+                options: {
+                    en: ["Surah Al-Isra", "Surah Al-Fatiha", "Surah Al-Ikhlas", "Surah Al-Nas"],
+                    bn: ["সূরা আল-ইসরা", "সূরা আল-ফাতিহা", "সূরা আল-ইখলাস", "সূরা আন-নাস"]
+                },
+                answer: { en: "Surah Al-Isra", bn: "সূরা আল-ইসরা" }
+            },
+            {
+                question: { en: "What is birr al-walidayn?", bn: "বিররুল ওয়ালিদাইন কী?" },
+                options: {
+                    en: ["Kindness to parents", "Fasting", "Prayer", "Charity"],
+                    bn: ["পিতামাতার প্রতি দয়া", "রোজা", "নামাজ", "দান"]
+                },
+                answer: { en: "Kindness to parents", bn: "পিতামাতার প্রতি দয়া" }
+            },
+            {
+                question: { en: "How many times does mother deserve more care?", bn: "মা কতগুণ বেশি যত্নের যোগ্য?" },
+                options: {
+                    en: ["Three times more than father", "Same as father", "Less than father", "Not at all"],
+                    bn: ["বাবার চেয়ে তিনগুণ বেশি", "বাবার সমান", "বাবার চেয়ে কম", "মোটেই না"]
+                },
+                answer: { en: "Three times more than father", bn: "বাবার চেয়ে তিনগুণ বেশি" }
+            },
+            {
+                question: { en: "What is the reward for serving parents?", bn: "পিতামাতার সেবা করার পুরস্কার কী?" },
+                options: {
+                    en: ["Paradise", "Money", "Fame", "Nothing"],
+                    bn: ["জান্নাত", "টাকা", "খ্যাতি", "কিছুই না"]
+                },
+                answer: { en: "Paradise", bn: "জান্নাত" }
+            },
+            {
+                question: { en: "What should we pray for our parents?", bn: "আমাদের পিতামাতার জন্য কী প্রার্থনা করা উচিত?" },
+                options: {
+                    en: ["Mercy and forgiveness for them", "Nothing", "Money for them", "Long life"],
+                    bn: ["তাদের জন্য রহমত ও ক্ষমা", "কিছুই না", "তাদের জন্য টাকা", "দীর্ঘজীবন"]
+                },
+                answer: { en: "Mercy and forgiveness for them", bn: "তাদের জন্য রহমত ও ক্ষমা" }
+            },
+            {
+                question: { en: "When parents ask us to do something wrong, what should we do?", bn: "পিতামাতা কিছু ভুল বললে আমাদের কী করা উচিত?" },
+                options: {
+                    en: ["Politely refuse but still be kind", "Do it anyway", "Get angry", "Never speak to them"],
+                    bn: ["বিনয়ের সাথে প্রত্যাখ্যান করো কিন্তু ভালো ব্যবহার করো", "যা বলে তাই করো", "রাগ করো", "তাদের সাথে কথা বলো না"]
+                },
+                answer: { en: "Politely refuse but still be kind", bn: "বিনয়ের সাথে প্রত্যাখ্যান করো কিন্তু ভালো ব্যবহার করো" }
+            },
+            {
+                question: { en: "What is silat al-rahm?", bn: "সিলাতুর রাহিম কী?" },
+                options: {
+                    en: ["Maintaining family ties", "Cutting relations", "Travel", "Business"],
+                    bn: ["আত্মীয়তা বজায় রাখা", "সম্পর্ক ছিন্ন করা", "ভ্রমণ", "ব্যবসা"]
+                },
+                answer: { en: "Maintaining family ties", bn: "আত্মীয়তা বজায় রাখা" }
+            },
+            {
+                question: { en: "Who asked about parents' rights after their death?", bn: "পিতামাতার মৃত্যুর পর তাদের অধিকার সম্পর্কে কে জিজ্ঞেস করেছিলেন?" },
+                options: {
+                    en: ["A companion of Prophet", "Prophet Muhammad", "An angel", "A king"],
+                    bn: ["নবীর একজন সাহাবী", "নবী মুহাম্মদ", "একজন ফেরেশতা", "একজন রাজা"]
+                },
+                answer: { en: "A companion of Prophet", bn: "নবীর একজন সাহাবী" }
+            },
+            // Quran & Hadith (51-70)
+            {
+                question: { en: "How many surahs are in the Quran?", bn: "কুরআনে কতটি সূরা আছে?" },
+                options: {
+                    en: ["114", "100", "120", "99"],
+                    bn: ["১১৪", "১০০", "১২০", "৯৯"]
+                },
+                answer: { en: "114", bn: "১১৪" }
+            },
+            {
+                question: { en: "What is the first surah of the Quran?", bn: "কুরআনের প্রথম সূরা কোনটি?" },
+                options: {
+                    en: ["Al-Fatiha", "Al-Baqarah", "Al-Ikhlas", "An-Nas"],
+                    bn: ["আল-ফাতিহা", "আল-বাকারা", "আল-ইখলাস", "আন-নাস"]
+                },
+                answer: { en: "Al-Fatiha", bn: "আল-ফাতিহা" }
+            },
+            {
+                question: { en: "What is the last surah of the Quran?", bn: "কুরআনের শেষ সূরা কোনটি?" },
+                options: {
+                    en: ["An-Nas", "Al-Fatiha", "Al-Ikhlas", "Al-Falaq"],
+                    bn: ["আন-নাস", "আল-ফাতিহা", "আল-ইখলাস", "আল-ফালাক"]
+                },
+                answer: { en: "An-Nas", bn: "আন-নাস" }
+            },
+            {
+                question: { en: "How many verses (ayat) are in the Quran approximately?", bn: "কুরআনে আনুমানিক কতটি আয়াত আছে?" },
+                options: {
+                    en: ["6,236", "5,000", "7,000", "4,500"],
+                    bn: ["৬,২৩৬", "৫,০০০", "৭,০০০", "৪,৫০০"]
+                },
+                answer: { en: "6,236", bn: "৬,২৩৬" }
+            },
+            {
+                question: { en: "What does 'Quran' mean?", bn: "'কুরআন' শব্দের অর্থ কী?" },
+                options: {
+                    en: ["The recitation", "The book", "The guidance", "The light"],
+                    bn: ["তিলাওয়াত", "বই", "হেদায়েত", "নূর"]
+                },
+                answer: { en: "The recitation", bn: "তিলাওয়াত" }
+            },
+            {
+                question: { en: "On what was the Quran first revealed?", bn: "কুরআন প্রথমে কীের ওপর অবতীর্ণ হয়েছিল?" },
+                options: {
+                    en: ["Heart of Prophet Muhammad", "Paper", "Stone", "Tree"],
+                    bn: ["নবী মুহাম্মদের হৃদয়", "কাগজ", "পাথর", "গাছ"]
+                },
+                answer: { en: "Heart of Prophet Muhammad", bn: "নবী মুহাম্মদের হৃদয়" }
+            },
+            {
+                question: { en: "Who was the first to compile the Quran into a book?", bn: "কুরআন প্রথমে কে বই আকারে সংকলন করেছিলেন?" },
+                options: {
+                    en: ["Abu Bakr (RA)", "Umar (RA)", "Uthman (RA)", "Ali (RA)"],
+                    bn: ["আবু বকর (রা.)", "ওমর (রা.)", "ওসমান (রা.)", "আলী (রা.)"]
+                },
+                answer: { en: "Abu Bakr (RA)", bn: "আবু বকর (রা.)" }
+            },
+            {
+                question: { en: "What is Hadith?", bn: "হাদিস কী?" },
+                options: {
+                    en: ["Sayings and actions of Prophet Muhammad", "Verses of Quran", "Islamic law", "Arabic grammar"],
+                    bn: ["নবী মুহাম্মদের কথা ও কাজ", "কুরআনের আয়াত", "ইসলামি আইন", "আরবি ব্যাকরণ"]
+                },
+                answer: { en: "Sayings and actions of Prophet Muhammad", bn: "নবী মুহাম্মদের কথা ও কাজ" }
+            },
+            {
+                question: { en: "What is the longest surah in the Quran?", bn: "কুরআনের দীর্ঘতম সূরা কোনটি?" },
+                options: {
+                    en: ["Al-Baqarah", "Al-Imran", "An-Nisa", "Al-Maidah"],
+                    bn: ["আল-বাকারা", "আলে ইমরান", "আন-নিসা", "আল-মায়েদা"]
+                },
+                answer: { en: "Al-Baqarah", bn: "আল-বাকারা" }
+            },
+            {
+                question: { en: "What is the shortest surah in the Quran?", bn: "কুরআনের ক্ষুদ্রতম সূরা কোনটি?" },
+                options: {
+                    en: ["Al-Kawthar", "Al-Fatiha", "Al-Ikhlas", "An-Nas"],
+                    bn: ["আল-কাউসার", "আল-ফাতিহা", "আল-ইখলাস", "আন-নাস"]
+                },
+                answer: { en: "Al-Kawthar", bn: "আল-কাউসার" }
+            },
+            {
+                question: { en: "Who brought the Quran to Prophet Muhammad?", bn: "নবী মুহাম্মদের কাছে কুরআন কে নিয়ে এসেছিলেন?" },
+                options: {
+                    en: ["Angel Jibreel", "Angel Mikail", "Angel Israfil", "Angel Azrael"],
+                    bn: ["ফেরেশতা জিবরাইল", "ফেরেশতা মিকাইল", "ফেরেশতা ইসরাফিল", "ফেরেশতা আযরাইল"]
+                },
+                answer: { en: "Angel Jibreel", bn: "ফেরেশতা জিবরাইল" }
+            },
+            {
+                question: { en: "How many years did it take for the Quran to be revealed?", bn: "কুরআন অবতীর্ণ হতে কত বছর সময় লেগেছিল?" },
+                options: {
+                    en: ["23 years", "10 years", "30 years", "15 years"],
+                    bn: ["২৩ বছর", "১০ বছর", "৩০ বছর", "১৫ বছর"]
+                },
+                answer: { en: "23 years", bn: "২৩ বছর" }
+            },
+            {
+                question: { en: "What is Surah Al-Ikhlas about?", bn: "সূরা আল-ইখলাস কী সম্পর্কে?" },
+                options: {
+                    en: ["Oneness of Allah", "Stories of prophets", "Paradise", "Hell"],
+                    bn: ["আল্লাহর একত্ববাদ", "নবীদের গল্প", "জান্নাত", "জাহান্নাম"]
+                },
+                answer: { en: "Oneness of Allah", bn: "আল্লাহর একত্ববাদ" }
+            },
+            {
+                question: { en: "What are the people who memorize Quran called?", bn: "কুরআন মুখস্থ করা ব্যক্তিদের কী বলা হয়?" },
+                options: {
+                    en: ["Hafiz/Hafiza", "Qari", "Mufti", "Imam"],
+                    bn: ["হাফেজ/হাফেজা", "কারি", "মুফতি", "ইমাম"]
+                },
+                answer: { en: "Hafiz/Hafiza", bn: "হাফেজ/হাফেজা" }
+            },
+            {
+                question: { en: "What is Ayatul Kursi?", bn: "আয়াতুল কুরসি কী?" },
+                options: {
+                    en: ["Verse about Allah's greatness", "Verse about prophets", "Verse about paradise", "Verse about hell"],
+                    bn: ["আল্লাহর মহত্ত্ব সম্পর্কে আয়াত", "নবীদের সম্পর্কে আয়াত", "জান্নাত সম্পর্কে আয়াত", "জাহান্নাম সম্পর্কে আয়াত"]
+                },
+                answer: { en: "Verse about Allah's greatness", bn: "আল্লাহর মহত্ত্ব সম্পর্কে আয়াত" }
+            },
+            {
+                question: { en: "What is the meaning of Bismillah?", bn: "বিসমিল্লাহর অর্থ কী?" },
+                options: {
+                    en: ["In the name of Allah", "Praise be to Allah", "Allah is great", "There is no god but Allah"],
+                    bn: ["আল্লাহর নামে", "আল্লাহর প্রশংসা", "আল্লাহ মহান", "আল্লাহ ছাড়া কোনো উপাস্য নেই"]
+                },
+                answer: { en: "In the name of Allah", bn: "আল্লাহর নামে" }
+            },
+            {
+                question: { en: "What is Sahih Bukhari?", bn: "সহিহ বুখারি কী?" },
+                options: {
+                    en: ["A collection of authentic Hadith", "A Quran chapter", "A prayer book", "A history book"],
+                    bn: ["বিশুদ্ধ হাদিসের সংকলন", "কুরআনের অধ্যায়", "নামাজের বই", "ইতিহাসের বই"]
+                },
+                answer: { en: "A collection of authentic Hadith", bn: "বিশুদ্ধ হাদিসের সংকলন" }
+            },
+            {
+                question: { en: "Which surah is called 'The Heart of Quran'?", bn: "কোন সূরাকে 'কুরআনের হৃদয়' বলা হয়?" },
+                options: {
+                    en: ["Surah Yasin", "Surah Al-Fatiha", "Surah Al-Baqarah", "Surah Ar-Rahman"],
+                    bn: ["সূরা ইয়াসিন", "সূরা আল-ফাতিহা", "সূরা আল-বাকারা", "সূরা আর-রাহমান"]
+                },
+                answer: { en: "Surah Yasin", bn: "সূরা ইয়াসিন" }
+            },
+            {
+                question: { en: "What is a juz in Quran?", bn: "কুরআনে জুয কী?" },
+                options: {
+                    en: ["One of 30 equal parts", "A chapter", "A verse", "A word"],
+                    bn: ["৩০টি সমান অংশের একটি", "একটি অধ্যায়", "একটি আয়াত", "একটি শব্দ"]
+                },
+                answer: { en: "One of 30 equal parts", bn: "৩০টি সমান অংশের একটি" }
+            },
+            {
+                question: { en: "How many Makki and Madani surahs are there approximately?", bn: "আনুমানিক কতগুলো মক্কী ও মাদানী সূরা আছে?" },
+                options: {
+                    en: ["86 Makki, 28 Madani", "100 Makki, 14 Madani", "70 Makki, 44 Madani", "50 Makki, 64 Madani"],
+                    bn: ["৮৬টি মক্কী, ২৮টি মাদানী", "১০০টি মক্কী, ১৪টি মাদানী", "৭০টি মক্কী, ৪৪টি মাদানী", "৫০টি মক্কী, ৬৪টি মাদানী"]
+                },
+                answer: { en: "86 Makki, 28 Madani", bn: "৮৬টি মক্কী, ২৮টি মাদানী" }
+            },
+            // Prophets & Rasulullah (71-90)
+            {
+                question: { en: "Who was the first prophet?", bn: "প্রথম নবী কে ছিলেন?" },
+                options: {
+                    en: ["Prophet Adam", "Prophet Ibrahim", "Prophet Musa", "Prophet Isa"],
+                    bn: ["নবী আদম", "নবী ইব্রাহিম", "নবী মুসা", "নবী ঈসা"]
+                },
+                answer: { en: "Prophet Adam", bn: "নবী আদম" }
+            },
+            {
+                question: { en: "Who was the last prophet?", bn: "শেষ নবী কে ছিলেন?" },
+                options: {
+                    en: ["Prophet Muhammad (PBUH)", "Prophet Isa", "Prophet Ibrahim", "Prophet Musa"],
+                    bn: ["নবী মুহাম্মদ (সা.)", "নবী ঈসা", "নবী ইব্রাহিম", "নবী মুসা"]
+                },
+                answer: { en: "Prophet Muhammad (PBUH)", bn: "নবী মুহাম্মদ (সা.)" }
+            },
+            {
+                question: { en: "How many prophets are mentioned in the Quran?", bn: "কুরআনে কতজন নবীর উল্লেখ আছে?" },
+                options: {
+                    en: ["25", "20", "30", "50"],
+                    bn: ["২৫জন", "২০জন", "৩০জন", "৫০জন"]
+                },
+                answer: { en: "25", bn: "২৫জন" }
+            },
+            {
+                question: { en: "Which prophet could speak to animals?", bn: "কোন নবী প্রাণীদের সাথে কথা বলতে পারতেন?" },
+                options: {
+                    en: ["Prophet Sulaiman", "Prophet Dawud", "Prophet Musa", "Prophet Isa"],
+                    bn: ["নবী সুলাইমান", "নবী দাউদ", "নবী মুসা", "নবী ঈসা"]
+                },
+                answer: { en: "Prophet Sulaiman", bn: "নবী সুলাইমান" }
+            },
+            {
+                question: { en: "Which prophet was swallowed by a fish?", bn: "কোন নবীকে মাছ গিলে ফেলেছিল?" },
+                options: {
+                    en: ["Prophet Yunus", "Prophet Nuh", "Prophet Ibrahim", "Prophet Musa"],
+                    bn: ["নবী ইউনুস", "নবী নূহ", "নবী ইব্রাহিম", "নবী মুসা"]
+                },
+                answer: { en: "Prophet Yunus", bn: "নবী ইউনুস" }
+            },
+            {
+                question: { en: "Which prophet built the Ark?", bn: "কোন নবী নৌকা তৈরি করেছিলেন?" },
+                options: {
+                    en: ["Prophet Nuh", "Prophet Musa", "Prophet Ibrahim", "Prophet Isa"],
+                    bn: ["নবী নূহ", "নবী মুসা", "নবী ইব্রাহিম", "নবী ঈসা"]
+                },
+                answer: { en: "Prophet Nuh", bn: "নবী নূহ" }
+            },
+            {
+                question: { en: "Which prophet is called 'Father of Prophets'?", bn: "কোন নবীকে 'নবীদের পিতা' বলা হয়?" },
+                options: {
+                    en: ["Prophet Ibrahim", "Prophet Adam", "Prophet Muhammad", "Prophet Musa"],
+                    bn: ["নবী ইব্রাহিম", "নবী আদম", "নবী মুহাম্মদ", "নবী মুসা"]
+                },
+                answer: { en: "Prophet Ibrahim", bn: "নবী ইব্রাহিম" }
+            },
+            {
+                question: { en: "What miracle was given to Prophet Musa?", bn: "নবী মুসাকে কী মুজিজা দেওয়া হয়েছিল?" },
+                options: {
+                    en: ["Staff turning into snake", "Splitting the moon", "Healing the blind", "Speaking in cradle"],
+                    bn: ["লাঠি সাপে পরিণত হওয়া", "চাঁদ দ্বিখণ্ডিত করা", "অন্ধকে সুস্থ করা", "ঝুলিতে কথা বলা"]
+                },
+                answer: { en: "Staff turning into snake", bn: "লাঠি সাপে পরিণত হওয়া" }
+            },
+            {
+                question: { en: "Where was Prophet Muhammad born?", bn: "নবী মুহাম্মদ কোথায় জন্মগ্রহণ করেছিলেন?" },
+                options: {
+                    en: ["Makkah", "Madinah", "Jerusalem", "Egypt"],
+                    bn: ["মক্কা", "মদিনা", "জেরুজালেম", "মিশর"]
+                },
+                answer: { en: "Makkah", bn: "মক্কা" }
+            },
+            {
+                question: { en: "What is the name of Prophet Muhammad's mother?", bn: "নবী মুহাম্মদের মায়ের নাম কী?" },
+                options: {
+                    en: ["Aminah", "Khadijah", "Fatimah", "Aishah"],
+                    bn: ["আমিনা", "খাদিজা", "ফাতিমা", "আয়েশা"]
+                },
+                answer: { en: "Aminah", bn: "আমিনা" }
+            },
+            {
+                question: { en: "What is the name of Prophet Muhammad's first wife?", bn: "নবী মুহাম্মদের প্রথম স্ত্রীর নাম কী?" },
+                options: {
+                    en: ["Khadijah", "Aishah", "Fatimah", "Hafsa"],
+                    bn: ["খাদিজা", "আয়েশা", "ফাতিমা", "হাফসা"]
+                },
+                answer: { en: "Khadijah", bn: "খাদিজা" }
+            },
+            {
+                question: { en: "Which prophet was given the Zabur?", bn: "কোন নবীকে যাবুর দেওয়া হয়েছিল?" },
+                options: {
+                    en: ["Prophet Dawud", "Prophet Musa", "Prophet Isa", "Prophet Ibrahim"],
+                    bn: ["নবী দাউদ", "নবী মুসা", "নবী ঈসা", "নবী ইব্রাহিম"]
+                },
+                answer: { en: "Prophet Dawud", bn: "নবী দাউদ" }
+            },
+            {
+                question: { en: "Which prophet was given the Injeel?", bn: "কোন নবীকে ইঞ্জিল দেওয়া হয়েছিল?" },
+                options: {
+                    en: ["Prophet Isa", "Prophet Musa", "Prophet Ibrahim", "Prophet Muhammad"],
+                    bn: ["নবী ঈসা", "নবী মুসা", "নবী ইব্রাহিম", "নবী মুহাম্মদ"]
+                },
+                answer: { en: "Prophet Isa", bn: "নবী ঈসা" }
+            },
+            {
+                question: { en: "What is the hijrah?", bn: "হিজরত কী?" },
+                options: {
+                    en: ["Migration from Makkah to Madinah", "Birth of Prophet", "First revelation", "Battle"],
+                    bn: ["মক্কা থেকে মদিনায় হিজরত", "নবীর জন্ম", "প্রথম ওহি", "যুদ্ধ"]
+                },
+                answer: { en: "Migration from Makkah to Madinah", bn: "মক্কা থেকে মদিনায় হিজরত" }
+            },
+            {
+                question: { en: "Which prophet is known as 'Kaleemullah' (Speaker with Allah)?", bn: "কোন নবী 'কালেমুল্লাহ' (আল্লাহর সাথে কথা বলা) নামে পরিচিত?" },
+                options: {
+                    en: ["Prophet Musa", "Prophet Muhammad", "Prophet Ibrahim", "Prophet Isa"],
+                    bn: ["নবী মুসা", "নবী মুহাম্মদ", "নবী ইব্রাহিম", "নবী ঈসা"]
+                },
+                answer: { en: "Prophet Musa", bn: "নবী মুসা" }
+            },
+            {
+                question: { en: "Which prophet was thrown into fire but didn't burn?", bn: "কোন নবীকে আগুনে নিক্ষেপ করা হয়েছিল কিন্তু পুড়েনি?" },
+                options: {
+                    en: ["Prophet Ibrahim", "Prophet Musa", "Prophet Isa", "Prophet Nuh"],
+                    bn: ["নবী ইব্রাহিম", "নবী মুসা", "নবী ঈসা", "নবী নূহ"]
+                },
+                answer: { en: "Prophet Ibrahim", bn: "নবী ইব্রাহিম" }
+            },
+            {
+                question: { en: "What is the cave where Prophet Muhammad received first revelation?", bn: "নবী মুহাম্মদ যে গুহায় প্রথম ওহি পেয়েছিলেন?" },
+                options: {
+                    en: ["Cave of Hira", "Cave of Thawr", "Cave of the Seven Sleepers", "Cave of Machpelah"],
+                    bn: ["গারে হেরা", "গারে সাওর", "সাত ঘুমন্তের গুহা", "মাখপেলাহ গুহা"]
+                },
+                answer: { en: "Cave of Hira", bn: "গারে হেরা" }
+            },
+            {
+                question: { en: "Which prophet is associated with the story of the whale?", bn: "কোন নবী তিমির গল্পের সাথে সম্পর্কিত?" },
+                options: {
+                    en: ["Prophet Yunus", "Prophet Nuh", "Prophet Musa", "Prophet Ibrahim"],
+                    bn: ["নবী ইউনুস", "নবী নূহ", "নবী মুসা", "নবী ইব্রাহিম"]
+                },
+                answer: { en: "Prophet Yunus", bn: "নবী ইউনুস" }
+            },
+            {
+                question: { en: "What does 'Rasul' mean?", bn: "'রাসূল' শব্দের অর্থ কী?" },
+                options: {
+                    en: ["Messenger", "Prophet", "Angel", "Believer"],
+                    bn: ["প্রেরিত ব্যক্তি", "নবী", "ফেরেশতা", "বিশ্বাসী"]
+                },
+                answer: { en: "Messenger", bn: "প্রেরিত ব্যক্তি" }
+            },
+            {
+                question: { en: "How many ulul azm prophets are there?", bn: "কতজন উলুল আযম নবী আছেন?" },
+                options: {
+                    en: ["5", "4", "6", "7"],
+                    bn: ["৫জন", "৪জন", "৬জন", "৭জন"]
+                },
+                answer: { en: "5", bn: "৫জন" }
+            },
+            // Dua & Islamic teachings (91-120)
+            {
+                question: { en: "What is dua?", bn: "দোয়া কী?" },
+                options: {
+                    en: ["Supplication to Allah", "Fasting", "Charity", "Pilgrimage"],
+                    bn: ["আল্লাহর কাছে প্রার্থনা", "রোজা", "দান", "হজ"]
+                },
+                answer: { en: "Supplication to Allah", bn: "আল্লাহর কাছে প্রার্থনা" }
+            },
+            {
+                question: { en: "What should we say before eating?", bn: "খাওয়ার আগে আমাদের কী বলা উচিত?" },
+                options: {
+                    en: ["Bismillah", "Alhamdulillah", "SubhanAllah", "Allahu Akbar"],
+                    bn: ["বিসমিল্লাহ", "আলহামদুলিল্লাহ", "সুবহানাল্লাহ", "আল্লাহু আকবর"]
+                },
+                answer: { en: "Bismillah", bn: "বিসমিল্লাহ" }
+            },
+            {
+                question: { en: "What should we say after eating?", bn: "খাওয়ার পর আমাদের কী বলা উচিত?" },
+                options: {
+                    en: ["Alhamdulillah", "Bismillah", "SubhanAllah", "Allahu Akbar"],
+                    bn: ["আলহামদুলিল্লাহ", "বিসমিল্লাহ", "সুবহানাল্লাহ", "আল্লাহু আকবর"]
+                },
+                answer: { en: "Alhamdulillah", bn: "আলহামদুলিল্লাহ" }
+            },
+            {
+                question: { en: "What is the dua when waking up?", bn: "জাগার সময়ের দোয়া কী?" },
+                options: {
+                    en: ["Alhamdulillahillazi ahyana...", "Bismillah", "La ilaha illallah", "Allahu Akbar"],
+                    bn: ["আলহামদুলিল্লাহিল্লাজি আহইয়ানা...", "বিসমিল্লাহ", "লা ইলাহা ইল্লাল্লাহ", "আল্লাহু আকবর"]
+                },
+                answer: { en: "Alhamdulillahillazi ahyana...", bn: "আলহামদুলিল্লাহিল্লাজি আহইয়ানা..." }
+            },
+            {
+                question: { en: "What is the dua when entering the mosque?", bn: "মসজিদে প্রবেশের দোয়া কী?" },
+                options: {
+                    en: ["Allahumma iftah li abwaba rahmatik", "Bismillah", "Alhamdulillah", "SubhanAllah"],
+                    bn: ["আল্লাহুম্মা ইফতাহ লি আবওয়াবা রাহমাতিক", "বিসমিল্লাহ", "আলহামদুলিল্লাহ", "সুবহানাল্লাহ"]
+                },
+                answer: { en: "Allahumma iftah li abwaba rahmatik", bn: "আল্লাহুম্মা ইফতাহ লি আবওয়াবা রাহমাতিক" }
+            },
+            {
+                question: { en: "What does SubhanAllah mean?", bn: "সুবহানাল্লাহর অর্থ কী?" },
+                options: {
+                    en: ["Glory be to Allah", "Thanks to Allah", "Allah is great", "In the name of Allah"],
+                    bn: ["আল্লাহ পবিত্র", "আল্লাহর শুকরিয়া", "আল্লাহ মহান", "আল্লাহর নামে"]
+                },
+                answer: { en: "Glory be to Allah", bn: "আল্লাহ পবিত্র" }
+            },
+            {
+                question: { en: "What does Allahu Akbar mean?", bn: "আল্লাহু আকবরের অর্থ কী?" },
+                options: {
+                    en: ["Allah is the greatest", "Allah is one", "Thanks to Allah", "Glory to Allah"],
+                    bn: ["আল্লাহ সবচেয়ে মহান", "আল্লাহ এক", "আল্লাহর শুকরিয়া", "আল্লাহ পবিত্র"]
+                },
+                answer: { en: "Allah is the greatest", bn: "আল্লাহ সবচেয়ে মহান" }
+            },
+            {
+                question: { en: "What is the Islamic greeting?", bn: "ইসলামি সালাম কী?" },
+                options: {
+                    en: ["Assalamu Alaikum", "Hello", "Good morning", "Hi"],
+                    bn: ["আসসালামু আলাইকুম", "হ্যালো", "সুপ্রভাত", "হাই"]
+                },
+                answer: { en: "Assalamu Alaikum", bn: "আসসালামু আলাইকুম" }
+            },
+            {
+                question: { en: "What should we reply to Assalamu Alaikum?", bn: "আসসালামু আলাইকুমের উত্তর কী বলতে হবে?" },
+                options: {
+                    en: ["Wa Alaikum Assalam", "Hello", "Thank you", "Goodbye"],
+                    bn: ["ওয়া আলাইকুমুস সালাম", "হ্যালো", "ধন্যবাদ", "বিদায়"]
+                },
+                answer: { en: "Wa Alaikum Assalam", bn: "ওয়া আলাইকুমুস সালাম" }
+            },
+            {
+                question: { en: "What is istighfar?", bn: "ইস্তেগফার কী?" },
+                options: {
+                    en: ["Seeking forgiveness from Allah", "Giving charity", "Fasting", "Praying"],
+                    bn: ["আল্লাহর কাছে ক্ষমা প্রার্থনা", "দান করা", "রোজা রাখা", "নামাজ পড়া"]
+                },
+                answer: { en: "Seeking forgiveness from Allah", bn: "আল্লাহর কাছে ক্ষমা প্রার্থনা" }
+            },
+            {
+                question: { en: "What is the best dua for forgiveness?", bn: "ক্ষমার জন্য সেরা দোয়া কোনটি?" },
+                options: {
+                    en: ["Astaghfirullah", "Alhamdulillah", "SubhanAllah", "Bismillah"],
+                    bn: ["আস্তাগফিরুল্লাহ", "আলহামদুলিল্লাহ", "সুবহানাল্লাহ", "বিসমিল্লাহ"]
+                },
+                answer: { en: "Astaghfirullah", bn: "আস্তাগফিরুল্লাহ" }
+            },
+            {
+                question: { en: "What is the dua when sneezing?", bn: "হাঁচির সময়ের দোয়া কী?" },
+                options: {
+                    en: ["Alhamdulillah", "Bismillah", "SubhanAllah", "Allahu Akbar"],
+                    bn: ["আলহামদুলিল্লাহ", "বিসমিল্লাহ", "সুবহানাল্লাহ", "আল্লাহু আকবর"]
+                },
+                answer: { en: "Alhamdulillah", bn: "আলহামদুলিল্লাহ" }
+            },
+            {
+                question: { en: "What should we say when someone sneezes?", bn: "কেউ হাঁচলে আমরা কী বলব?" },
+                options: {
+                    en: ["Yarhamukallah", "Bismillah", "Alhamdulillah", "Assalamu Alaikum"],
+                    bn: ["ইয়ারহামুকাল্লাহ", "বিসমিল্লাহ", "আলহামদুলিল্লাহ", "আসসালামু আলাইকুম"]
+                },
+                answer: { en: "Yarhamukallah", bn: "ইয়ারহামুকাল্লাহ" }
+            },
+            {
+                question: { en: "What is the dua before sleeping?", bn: "ঘুমানোর আগের দোয়া কী?" },
+                options: {
+                    en: ["Bismika Allahumma amutu wa ahya", "Alhamdulillah", "SubhanAllah", "La ilaha illallah"],
+                    bn: ["বিসমিকা আল্লাহুম্মা আমুতু ওয়া আহইয়া", "আলহামদুলিল্লাহ", "সুবহানাল্লাহ", "লা ইলাহা ইল্লাল্লাহ"]
+                },
+                answer: { en: "Bismika Allahumme amutu wa ahya", bn: "বিসমিকা আল্লাহুম্মা আমুতু ওয়া আহইয়া" }
+            },
+            {
+                question: { en: "What is the dua when traveling?", bn: "ভ্রমণের দোয়া কী?" },
+                options: {
+                    en: ["Subhanallazi sakhkhara lana hadha...", "Bismillah", "Alhamdulillah", "Allahu Akbar"],
+                    bn: ["সুবহানাল্লাজি সাখখারা লানা হাজা...", "বিসমিল্লাহ", "আলহামদুলিল্লাহ", "আল্লাহু আকবর"]
+                },
+                answer: { en: "Subhanallazi sakhkhara lana hadha...", bn: "সুবহানাল্লাজি সাখখারা লানা হাজা..." }
+            },
+            {
+                question: { en: "What is adhan?", bn: "আযান কী?" },
+                options: {
+                    en: ["Call to prayer", "Prayer itself", "Quran recitation", "Sermon"],
+                    bn: ["নামাজের আহ্বান", "নামাজ", "কুরআন তিলাওয়াত", "খুতবা"]
+                },
+                answer: { en: "Call to prayer", bn: "নামাজের আহ্বান" }
+            },
+            {
+                question: { en: "What should we say after hearing adhan?", bn: "আযান শুনে কী বলতে হবে?" },
+                options: {
+                    en: ["Repeat the words of adhan", "Remain silent", "Say Alhamdulillah", "Say Allahu Akbar"],
+                    bn: ["আযানের কথাগুলো দোয়া করা", "চুপ থাকা", "আলহামদুলিল্লাহ বলা", "আল্লাহু আকবর বলা"]
+                },
+                answer: { en: "Repeat the words of adhan", bn: "আযানের কথাগুলো দোয়া করা" }
+            },
+            {
+                question: { en: "What is wudu?", bn: "ওজু কী?" },
+                options: {
+                    en: ["Ritual washing before prayer", "Prayer", "Fasting", "Charity"],
+                    bn: ["নামাজের আগে অজু", "নামাজ", "রোজা", "দান"]
+                },
+                answer: { en: "Ritual washing before prayer", bn: "নামাজের আগে অজু" }
+            },
+            {
+                question: { en: "What is the dua before wudu?", bn: "ওজুর আগের দোয়া কী?" },
+                options: {
+                    en: ["Bismillah", "Alhamdulillah", "SubhanAllah", "Allahu Akbar"],
+                    bn: ["বিসমিল্লাহ", "আলহামদুলিল্লাহ", "সুবহানাল্লাহ", "আল্লাহু আকবর"]
+                },
+                answer: { en: "Bismillah", bn: "বিসমিল্লাহ" }
+            },
+            {
+                question: { en: "What is tahajjud?", bn: "তাহাজ্জুদ কী?" },
+                options: {
+                    en: ["Night prayer", "Morning prayer", "Friday prayer", "Eid prayer"],
+                    bn: ["রাতের নামাজ", "সকালের নামাজ", "জুমার নামাজ", "ঈদের নামাজ"]
+                },
+                answer: { en: "Night prayer", bn: "রাতের নামাজ" }
+            },
+            {
+                question: { en: "What does InshaAllah mean?", bn: "ইনশাআল্লাহর অর্থ কী?" },
+                options: {
+                    en: ["If Allah wills", "Thanks to Allah", "Glory to Allah", "Allah is great"],
+                    bn: ["আল্লাহ চাইলে", "আল্লাহর শুকরিয়া", "আল্লাহ পবিত্র", "আল্লাহ মহান"]
+                },
+                answer: { en: "If Allah wills", bn: "আল্লাহ চাইলে" }
+            },
+            {
+                question: { en: "What does MashaAllah mean?", bn: "মাশাআল্লাহর অর্থ কী?" },
+                options: {
+                    en: ["What Allah has willed", "If Allah wills", "Thanks to Allah", "Allah is great"],
+                    bn: ["আল্লাহ যা চেয়েছেন", "আল্লাহ চাইলে", "আল্লাহর শুকরিয়া", "আল্লাহ মহান"]
+                },
+                answer: { en: "What Allah has willed", bn: "আল্লাহ যা চেয়েছেন" }
+            },
+            {
+                question: { en: "What is the dua when entering home?", bn: "বাড়িতে প্রবেশের দোয়া কী?" },
+                options: {
+                    en: ["Bismillahi walajna...", "Alhamdulillah", "SubhanAllah", "Allahu Akbar"],
+                    bn: ["বিসমিল্লাহি ওয়ালাজনা...", "আলহামদুলিল্লাহ", "সুবহানাল্লাহ", "আল্লাহু আকবর"]
+                },
+                answer: { en: "Bismillahi walajna...", bn: "বিসমিল্লাহি ওয়ালাজনা..." }
+            },
+            {
+                question: { en: "What is the dua when leaving home?", bn: "বাড়ি থেকে বের হওয়ার দোয়া কী?" },
+                options: {
+                    en: ["Bismillahi tawakkaltu...", "Alhamdulillah", "SubhanAllah", "Allahu Akbar"],
+                    bn: ["বিসমিল্লাহি তাওয়াক্কালতু...", "আলহামদুলিল্লাহ", "সুবহানাল্লাহ", "আল্লাহু আকবর"]
+                },
+                answer: { en: "Bismillahi tawakkaltu...", bn: "বিসমিল্লাহি তাওয়াক্কালতু..." }
+            },
+            {
+                question: { en: "What is sadaqah?", bn: "সদকা কী?" },
+                options: {
+                    en: ["Voluntary charity", "Obligatory charity", "Prayer", "Fasting"],
+                    bn: ["ঐচ্ছিক দান", "ফরজ দান", "নামাজ", "রোজা"]
+                },
+                answer: { en: "Voluntary charity", bn: "ঐচ্ছিক দান" }
+            },
+            {
+                question: { en: "What is the reward for saying SubhanAllah 33 times, Alhamdulillah 33 times, Allahu Akbar 34 times?", bn: "৩৩ বার সুবহানাল্লাহ, ৩৩ বার আলহামদুলিল্লাহ, ৩৪ বার আল্লাহু আকবর বলার পুরস্কার কী?" },
+                options: {
+                    en: ["Forgiveness of sins", "Wealth", "Long life", "Success in business"],
+                    bn: ["গুনাহ মাফ", "ধনসম্পদ", "দীর্ঘজীবন", "ব্যবসায় সাফল্য"]
+                },
+                answer: { en: "Forgiveness of sins", bn: "গুনাহ মাফ" }
+            },
+            {
+                question: { en: "What is the best time for making dua?", bn: "দোয়া করার সেরা সময় কখন?" },
+                options: {
+                    en: ["Last third of night", "Morning", "Afternoon", "Evening"],
+                    bn: ["রাতের শেষ তৃতীয়াংশ", "সকাল", "দুপুর", "সন্ধ্যা"]
+                },
+                answer: { en: "Last third of night", bn: "রাতের শেষ তৃতীয়াংশ" }
+            },
+            {
+                question: { en: "What should we do before making dua?", bn: "দোয়া করার আগে কী করা উচিত?" },
+                options: {
+                    en: ["Praise Allah and send blessings on Prophet", "Just ask directly", "Remain silent", "Read Quran"],
+                    bn: ["আল্লাহর প্রশংসা ও নবীর ওপর দরুদ", "সরাসরি চাওয়া", "চুপ থাকা", "কুরআন পড়া"]
+                },
+                answer: { en: "Praise Allah and send blessings on Prophet", bn: "আল্লাহর প্রশংসা ও নবীর ওপর দরুদ" }
+            }
+        ];
+
+        // Game state
+        let currentLang = 'en';
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let correctCount = 0;
+        let wrongCount = 0;
+        let questionCount = 10;
+        let shuffledQuestions = [];
+        let selectedAnswer = null;
+        let answered = false;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadHighScore();
+            updateLanguage();
+        });
+
+        // Language functions
+        function toggleLanguage() {
+            currentLang = currentLang === 'en' ? 'bn' : 'en';
+            const btn = document.querySelector('.lang-btn');
+            btn.textContent = currentLang === 'en' ? 'BN' : 'EN';
+            btn.classList.toggle('active', currentLang === 'bn');
+            updateLanguage();
+        }
+
+        function updateLanguage() {
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (translations[currentLang][key]) {
+                    el.textContent = translations[currentLang][key];
+                }
+            });
+
+            // Update next button text based on progress
+            if (!document.getElementById('quizScreen').classList.contains('hidden')) {
+                updateNextButtonText();
+            }
+        }
+
+        function updateNextButtonText() {
+            const nextBtn = document.getElementById('nextBtn');
+            if (currentQuestionIndex >= shuffledQuestions.length - 1) {
+                nextBtn.textContent = translations[currentLang].finish;
+            } else {
+                nextBtn.textContent = translations[currentLang].next;
+            }
+        }
+
+        // Settings functions
+        function openSettings() {
+            document.getElementById('settingsModal').classList.remove('hidden');
+        }
+
+        function closeSettings() {
+            document.getElementById('settingsModal').classList.add('hidden');
+            questionCount = parseInt(document.getElementById('questionCountSelect').value);
+        }
+
+        // High score functions
+        function loadHighScore() {
+            const highScore = localStorage.getItem('ramadanQuestHighScore') || 0;
+            document.getElementById('highScoreValue').textContent = highScore;
+        }
+
+        function saveHighScore(newScore) {
+            const currentHigh = localStorage.getItem('ramadanQuestHighScore') || 0;
+            if (newScore > currentHigh) {
+                localStorage.setItem('ramadanQuestHighScore', newScore);
+                return true;
+            }
+            return false;
+        }
+
+        // Quiz functions
+        function startQuiz() {
+            questionCount = parseInt(document.getElementById('questionCountSelect').value);
+            shuffledQuestions = shuffleArray([...questions]).slice(0, questionCount);
+            currentQuestionIndex = 0;
+            score = 0;
+            correctCount = 0;
+            wrongCount = 0;
+
+            document.getElementById('startScreen').classList.add('hidden');
+            document.getElementById('quizScreen').classList.remove('hidden');
+            document.getElementById('resultScreen').classList.add('hidden');
+
+            document.getElementById('totalQuestions').textContent = shuffledQuestions.length;
+            document.getElementById('currentScore').textContent = score;
+
+            showQuestion();
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function showQuestion() {
+            answered = false;
+            selectedAnswer = null;
+            const question = shuffledQuestions[currentQuestionIndex];
+
+            document.getElementById('questionNum').textContent = currentQuestionIndex + 1;
+            document.getElementById('progressFill').style.width = `${((currentQuestionIndex) / shuffledQuestions.length) * 100}%`;
+            document.getElementById('questionText').textContent = question.question[currentLang];
+
+            const optionsContainer = document.getElementById('optionsContainer');
+            optionsContainer.innerHTML = '';
+
+            const options = question.options[currentLang];
+            options.forEach((option, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.textContent = option;
+                btn.onclick = () => selectAnswer(option, btn);
+                optionsContainer.appendChild(btn);
+            });
+
+            document.getElementById('nextBtn').classList.add('hidden');
+            updateNextButtonText();
+        }
+
+        function selectAnswer(answer, btn) {
+            if (answered) return;
+            answered = true;
+            selectedAnswer = answer;
+
+            const question = shuffledQuestions[currentQuestionIndex];
+            const correctAnswer = question.answer[currentLang];
+            const isCorrect = answer === correctAnswer;
+
+            // Show correct/wrong styling
+            document.querySelectorAll('.option-btn').forEach(optionBtn => {
+                if (optionBtn.textContent === correctAnswer) {
+                    optionBtn.classList.add('correct');
+                } else if (optionBtn.textContent === answer && !isCorrect) {
+                    optionBtn.classList.add('wrong');
+                }
+            });
+
+            if (isCorrect) {
+                correctCount++;
+                const points = 100 + Math.floor(Math.random() * 50); // 100-150 points
+                score += points;
+                showPointsPopup(`+${points}`);
+            } else {
+                wrongCount++;
+            }
+
+            document.getElementById('currentScore').textContent = score;
+            document.getElementById('nextBtn').classList.remove('hidden');
+        }
+
+        function showPointsPopup(text) {
+            const popup = document.createElement('div');
+            popup.className = 'points-popup';
+            popup.textContent = text;
+            document.body.appendChild(popup);
+
+            setTimeout(() => popup.remove(), 1000);
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+
+            if (currentQuestionIndex >= shuffledQuestions.length) {
+                showResults();
+            } else {
+                showQuestion();
+            }
+        }
+
+        function showResults() {
+            document.getElementById('quizScreen').classList.add('hidden');
+            document.getElementById('resultScreen').classList.remove('hidden');
+
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('correctCount').textContent = correctCount;
+            document.getElementById('wrongCount').textContent = wrongCount;
+
+            const isNewHighScore = saveHighScore(score);
+            document.getElementById('newHighScore').style.display = isNewHighScore ? 'inline-block' : 'none';
+
+            if (isNewHighScore) {
+                document.getElementById('highScoreValue').textContent = score;
+            }
+        }
+
+        function restartQuiz() {
+            document.getElementById('resultScreen').classList.add('hidden');
+            document.getElementById('startScreen').classList.remove('hidden');
+            loadHighScore();
+        }
+
+        function shareScore() {
+            const shareText = translations[currentLang].shareText.replace('{score}', score);
+
+            if (navigator.share) {
+                navigator.share({
+                    title: translations[currentLang].title,
+                    text: shareText,
+                    url: window.location.href
+                });
+            } else {
+                // Fallback: copy to clipboard
+                navigator.clipboard.writeText(shareText).then(() => {
+                    alert('Score copied to clipboard!');
+                });
+            }
+        }
+    </script>
+</body>
+</html>

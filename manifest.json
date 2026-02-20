@@ -10,7 +10,12 @@
   "orientation": "any",
   "scope": "/KidsGames/",
   "lang": "en",
-  "categories": ["education", "games", "kids", "children"],
+  "categories": [
+    "education",
+    "games",
+    "kids",
+    "children"
+  ],
   "icons": [
     {
       "src": "/KidsGames/icons/icon-72x72.png",
@@ -120,6 +125,32 @@
       "icons": [
         {
           "src": "/KidsGames/icons/shortcut-hextris.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Ramadan Maze",
+      "short_name": "Ramadan Maze",
+      "description": "Islamic maze adventure game",
+      "url": "/KidsGames/games/ramadan-maze/index.html",
+      "icons": [
+        {
+          "src": "/KidsGames/icons/shortcut-ramadan-maze.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Ramadan Quest",
+      "short_name": "Ramadan Quiz",
+      "description": "Islamic knowledge quiz game",
+      "url": "/KidsGames/games/ramadan-quest/index.html",
+      "icons": [
+        {
+          "src": "/KidsGames/icons/shortcut-ramadan-quest.png",
           "sizes": "96x96",
           "type": "image/png"
         }

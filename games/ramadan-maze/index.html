@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+
+    <!-- KidsGames PWA Support -->
+    <link rel="manifest" href="/KidsGames/manifest.json" />
+    <meta name="theme-color" content="#4f391a" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Ramadan Maze" />
+    <link rel="apple-touch-icon" href="/KidsGames/icons/icon-192x192.png" />
+
+    <!-- SEO -->
+    <title>Ramadan Maze: Iftar Rush</title>
+    <meta name="description" content="Islamic maze adventure game for kids">
+    <meta name="keywords" content="Ramadan, Maze, Islamic games, kids games, educational games, puzzle games">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="KidsGames">
+    <meta property="og:title" content="Ramadan Maze">
+    <meta property="og:description" content="Islamic maze adventure game for kids">
+    <meta property="og:image" content="/KidsGames/ramadan-maze.png">
+    <meta property="og:url" content="/KidsGames/games/ramadan-maze/index.html">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Ramadan Maze">
+    <meta name="twitter:description" content="Islamic maze adventure game for kids">
+    <meta name="twitter:image" content="/KidsGames/ramadan-maze.png">
+
+    <style>
+        :root {
+            --bg-top: #0f2027;
+            --bg-bottom: #203a43;
+            --accent: #ff9f1c;
+            --text: #ffffff;
+            --glass: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+            touch-action: none;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(to bottom, var(--bg-top), var(--bg-bottom));
+            color: var(--text);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* --- Header --- */
+        header {
+            padding: 10px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0,0,0,0.3);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            flex-shrink: 0;
+        }
+
+        .logo {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--accent);
+        }
+
+        .hud {
+            display: flex;
+            gap: 10px;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+
+        .hud-item {
+            background: var(--glass);
+            padding: 4px 8px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* --- Game Area --- */
+        #game-wrapper {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        #game-container {
+            position: relative;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            overflow: hidden;
+            background: #1a1a1a;
+            border: 2px solid var(--accent);
+        }
+
+        canvas {
+            display: block;
+        }
+
+        /* --- Controls --- */
+        #controls-area {
+            padding: 10px 0 20px 0;
+            background: rgba(0,0,0,0.2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        #mobile-controls {
+            display: grid;
+            grid-template-columns: repeat(3, 70px);
+            grid-template-rows: repeat(2, 70px);
+            gap: 12px;
+        }
+
+        .d-btn {
+            background: var(--glass);
+            border: 2px solid rgba(255, 159, 28, 0.5);
+            border-radius: 15px;
+            color: var(--accent);
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.1s, transform 0.05s;
+        }
+
+        .d-btn:active {
+            background: var(--accent);
+            color: #000;
+            transform: scale(0.92);
+        }
+
+        .d-up { grid-column: 2; grid-row: 1; }
+        .d-left { grid-column: 1; grid-row: 2; }
+        .d-down { grid-column: 2; grid-row: 2; }
+        .d-right { grid-column: 3; grid-row: 2; }
+
+        @media (min-width: 768px) {
+            #controls-area { display: none; }
+        }
+
+        /* --- Modals --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 32, 39, 0.95);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .modal {
+            background: linear-gradient(145deg, #2c3e50, #1a252f);
+            border: 2px solid var(--accent);
+            padding: 25px;
+            border-radius: 20px;
+            text-align: center;
+            width: 85%;
+            max-width: 350px;
+            box-shadow: 0 0 40px rgba(255, 159, 28, 0.3);
+        }
+
+        .modal h2 { color: var(--accent); margin-top: 0; font-size: 1.5rem; }
+        .modal p { font-size: 1rem; line-height: 1.4; }
+
+        .stars { font-size: 2rem; margin: 15px 0; color: #555; }
+        .stars .filled { color: #ffd700; }
+
+        .btn {
+            background: var(--accent);
+            border: none;
+            padding: 15px 30px;
+            color: #000;
+            font-weight: bold;
+            font-size: 1.1rem;
+            border-radius: 30px;
+            margin-top: 15px;
+            width: 100%;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(255, 159, 28, 0.4);
+        }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">Ramadan Maze</div>
+        <div class="hud">
+            <div class="hud-item" id="score-hud">0</div>
+            <div class="hud-item" id="time-hud" style="color: #ff6b6b;">60</div>
+        </div>
+    </header>
+
+    <main id="game-wrapper">
+        <div id="game-container">
+            <canvas id="mazeCanvas"></canvas>
+        </div>
+    </main>
+
+    <div id="controls-area">
+        <div id="mobile-controls">
+            <button class="d-btn d-up">&#9650;</button>
+            <button class="d-btn d-left">&#9664;</button>
+            <button class="d-btn d-down">&#9660;</button>
+            <button class="d-btn d-right">&#9654;</button>
+        </div>
+    </div>
+
+    <!-- START MODAL -->
+    <div id="start-modal" class="modal-overlay">
+        <div class="modal">
+            <h2>Ramadan Iftar</h2>
+            <p>Help the kid get home for Iftar!</p>
+            <div style="text-align: left; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 10px; margin: 15px 0;">
+                <p>Reach the House</p>
+                <p>Collect Dates (+5s time)</p>
+                <p>Swipe or Tap buttons</p>
+            </div>
+            <button class="btn" onclick="game.startLevel(1)">START GAME</button>
+        </div>
+    </div>
+
+    <!-- WIN MODAL -->
+    <div id="win-modal" class="modal-overlay hidden">
+        <div class="modal">
+            <h2 style="color: #4caf50;">Iftar Mubarak!</h2>
+            <div class="stars" id="stars-display">&#9733;&#9733;&#9733;</div>
+            <p>Score: <span id="final-score" style="color:white; font-weight:bold;">0</span></p>
+            <button class="btn" id="next-btn" onclick="game.nextLevel()">Next Level</button>
+        </div>
+    </div>
+
+    <!-- GAME OVER MODAL -->
+    <div id="game-over-modal" class="modal-overlay hidden">
+        <div class="modal">
+            <h2 style="color: #ff4444;">Time's Up!</h2>
+            <p>The sun has set. Try to be faster!</p>
+            <button class="btn" onclick="game.retry()">Try Again</button>
+        </div>
+    </div>
+
+    <script>
+        const LEVELS = [
+            { cols: 9, rows: 9, time: 40, dates: 2 },
+            { cols: 13, rows: 13, time: 60, dates: 3 },
+            { cols: 17, rows: 17, time: 90, dates: 5 },
+            { cols: 21, rows: 21, time: 120, dates: 6 }
+        ];
+
+        class MazeGame {
+            constructor() {
+                this.canvas = document.getElementById('mazeCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.isPlaying = false;
+                this.currentLevel = 0;
+                this.score = 0;
+                this.timeLeft = 0;
+                this.timerInterval = null;
+
+                this.cols = 0;
+                this.rows = 0;
+                this.cellSize = 0;
+                this.grid = [];
+                this.player = { x: 0, y: 0 };
+                this.goal = { x: 0, y: 0 };
+                this.dates = [];
+
+                this.colors = {
+                    wall: '#111',
+                    path: '#2c3e50',
+                    player: '#ff9f1c',
+                    roof: '#2ecc71',
+                    house: '#f1c40f'
+                };
+
+                this.initInputs();
+            }
+
+            vibrate(ms) {
+                if (navigator.vibrate) navigator.vibrate(ms);
+            }
+
+            startLevel(lvl) {
+                this.currentLevel = lvl;
+                const config = LEVELS[Math.min(lvl - 1, LEVELS.length - 1)];
+
+                this.timeLeft = config.time;
+                this.score = (lvl > 1) ? this.score : 0;
+                this.dates = [];
+                this.isPlaying = true;
+
+                document.querySelectorAll('.modal-overlay').forEach(el => el.classList.add('hidden'));
+
+                this.generateMaze(config.cols, config.rows, config.dates);
+                this.resizeCanvas();
+                this.updateUI();
+
+                if (this.timerInterval) clearInterval(this.timerInterval);
+                this.timerInterval = setInterval(() => {
+                    this.timeLeft--;
+                    this.updateUI();
+                    if (this.timeLeft <= 0) this.gameOver();
+                }, 1000);
+            }
+
+            resizeCanvas() {
+                const wrapper = document.getElementById('game-wrapper');
+                const padding = 20;
+                const availW = wrapper.clientWidth - padding;
+                const availH = wrapper.clientHeight - padding;
+
+                const maxCellW = Math.floor(availW / this.cols);
+                const maxCellH = Math.floor(availH / this.rows);
+                this.cellSize = Math.min(maxCellW, maxCellH);
+
+                this.canvas.width = this.cellSize * this.cols;
+                this.canvas.height = this.cellSize * this.rows;
+
+                this.draw();
+            }
+
+            updateUI() {
+                document.getElementById('score-hud').textContent = this.score;
+                const timeEl = document.getElementById('time-hud');
+                timeEl.textContent = this.timeLeft;
+                if (this.timeLeft <= 10) timeEl.style.color = '#ff4444';
+                else timeEl.style.color = '#ff6b6b';
+            }
+
+            generateMaze(c, r, dateCount) {
+                this.cols = c; this.rows = r;
+                this.grid = [];
+                for(let y=0; y<r; y++) {
+                    for(let x=0; x<c; x++) {
+                        this.grid.push({ x, y, walls: { t:true, r:true, b:true, l:true }, visited: false });
+                    }
+                }
+
+                let stack = [this.grid[0]];
+                this.grid[0].visited = true;
+
+                while(stack.length > 0) {
+                    let curr = stack[stack.length-1];
+                    let neighbors = this.getNeighbors(curr);
+                    if(neighbors.length > 0) {
+                        let next = neighbors[Math.floor(Math.random()*neighbors.length)];
+                        this.removeWall(curr, next);
+                        next.visited = true;
+                        stack.push(next);
+                    } else {
+                        stack.pop();
+                    }
+                }
+
+                this.player = { x: 0, y: 0 };
+                this.goal = { x: c-1, y: r-1 };
+
+                while(this.dates.length < dateCount) {
+                    let rx = Math.floor(Math.random()*c);
+                    let ry = Math.floor(Math.random()*r);
+                    if((rx!==0||ry!==0) && (rx!==this.goal.x||ry!==this.goal.y)) {
+                        if(!this.dates.some(d=>d.x===rx && d.y===ry)) {
+                            this.dates.push({x:rx, y:ry, collected:false});
+                        }
+                    }
+                }
+            }
+
+            getNeighbors(cell) {
+                const n = [];
+                const {x, y} = cell;
+                if(y>0 && !this.grid[this.idx(x, y-1)].visited) n.push(this.grid[this.idx(x, y-1)]);
+                if(x<this.cols-1 && !this.grid[this.idx(x+1, y)].visited) n.push(this.grid[this.idx(x+1, y)]);
+                if(y<this.rows-1 && !this.grid[this.idx(x, y+1)].visited) n.push(this.grid[this.idx(x, y+1)]);
+                if(x>0 && !this.grid[this.idx(x-1, y)].visited) n.push(this.grid[this.idx(x-1, y)]);
+                return n;
+            }
+
+            idx(x, y) { return x + y * this.cols; }
+
+            removeWall(a, b) {
+                const dx = a.x - b.x;
+                const dy = a.y - b.y;
+                if(dx===1) { a.walls.l=false; b.walls.r=false; }
+                else if(dx===-1) { a.walls.r=false; b.walls.l=false; }
+                if(dy===1) { a.walls.t=false; b.walls.b=false; }
+                else if(dy===-1) { a.walls.b=false; b.walls.t=false; }
+            }
+
+            draw() {
+                const cs = this.cellSize;
+                const ctx = this.ctx;
+
+                ctx.fillStyle = this.colors.path;
+                ctx.fillRect(0,0,this.canvas.width, this.canvas.height);
+
+                ctx.strokeStyle = this.colors.wall;
+                ctx.lineWidth = Math.max(2, cs/10);
+                ctx.beginPath();
+                this.grid.forEach(c => {
+                    const x = c.x * cs; const y = c.y * cs;
+                    if(c.walls.t) { ctx.moveTo(x, y); ctx.lineTo(x+cs, y); }
+                    if(c.walls.r) { ctx.moveTo(x+cs, y); ctx.lineTo(x+cs, y+cs); }
+                    if(c.walls.b) { ctx.moveTo(x+cs, y+cs); ctx.lineTo(x, y+cs); }
+                    if(c.walls.l) { ctx.moveTo(x, y+cs); ctx.lineTo(x, y); }
+                });
+                ctx.stroke();
+
+                ctx.font = `${cs*0.6}px Arial`;
+                ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                this.dates.forEach(d => {
+                    if(!d.collected) ctx.fillText('\uD83C\uDF3E', d.x*cs+cs/2, d.y*cs+cs/2);
+                });
+
+                const gx = this.goal.x*cs, gy = this.goal.y*cs;
+                ctx.fillStyle = this.colors.roof;
+                ctx.beginPath(); ctx.moveTo(gx+cs*0.1, gy+cs*0.4); ctx.lineTo(gx+cs*0.5, gy+cs*0.1); ctx.lineTo(gx+cs*0.9, gy+cs*0.4); ctx.fill();
+                ctx.fillStyle = this.colors.house;
+                ctx.fillRect(gx+cs*0.2, gy+cs*0.4, cs*0.6, cs*0.6);
+
+                ctx.font = `${cs*0.75}px Arial`;
+                ctx.fillText('\uD83E\uDDD2', this.player.x*cs+cs/2, this.player.y*cs+cs/2);
+            }
+
+            move(dx, dy) {
+                if(!this.isPlaying) return;
+
+                const curr = this.grid[this.idx(this.player.x, this.player.y)];
+                let canMove = false;
+
+                if(dx===0 && dy===-1 && !curr.walls.t) canMove = true;
+                if(dx===1 && dy===0 && !curr.walls.r) canMove = true;
+                if(dx===0 && dy===1 && !curr.walls.b) canMove = true;
+                if(dx===-1 && dy===0 && !curr.walls.l) canMove = true;
+
+                if(canMove) {
+                    this.player.x += dx;
+                    this.player.y += dy;
+                    this.checkEntity();
+                    this.draw();
+                    this.vibrate(10);
+                } else {
+                    this.vibrate(30);
+                }
+            }
+
+            checkEntity() {
+                const dIdx = this.dates.findIndex(d => d.x===this.player.x && d.y===this.player.y && !d.collected);
+                if(dIdx !== -1) {
+                    this.dates[dIdx].collected = true;
+                    this.score += 50;
+                    this.timeLeft += 5;
+                    this.updateUI();
+                    this.vibrate([50, 50, 50]);
+                }
+                if(this.player.x === this.goal.x && this.player.y === this.goal.y) {
+                    this.win();
+                }
+            }
+
+            win() {
+                this.isPlaying = false;
+                clearInterval(this.timerInterval);
+                this.vibrate([100, 50, 100]);
+
+                const stars = this.timeLeft > 20 ? 3 : (this.timeLeft > 5 ? 2 : 1);
+                document.getElementById('stars-display').innerHTML = '\u2605'.repeat(stars).split('').map(s => `<span class="filled">${s}</span>`).join('') + '\u2606'.repeat(3-stars);
+                document.getElementById('final-score').textContent = this.score;
+
+                const nextBtn = document.getElementById('next-btn');
+                if(this.currentLevel >= LEVELS.length) {
+                    nextBtn.textContent = "Finish Game";
+                    nextBtn.onclick = () => location.reload();
+                } else {
+                    nextBtn.textContent = "Next Level";
+                    nextBtn.onclick = () => this.startLevel(this.currentLevel+1);
+                }
+                document.getElementById('win-modal').classList.remove('hidden');
+            }
+
+            gameOver() {
+                this.isPlaying = false;
+                clearInterval(this.timerInterval);
+                this.vibrate(300);
+                document.getElementById('game-over-modal').classList.remove('hidden');
+            }
+
+            retry() {
+                this.startLevel(this.currentLevel);
+            }
+
+            nextLevel() {
+                this.startLevel(this.currentLevel + 1);
+            }
+
+            initInputs() {
+                document.querySelector('.d-up').onclick = () => this.move(0, -1);
+                document.querySelector('.d-down').onclick = () => this.move(0, 1);
+                document.querySelector('.d-left').onclick = () => this.move(-1, 0);
+                document.querySelector('.d-right').onclick = () => this.move(1, 0);
+
+                let tsX, tsY;
+
+                this.canvas.addEventListener('touchstart', e => {
+                    e.preventDefault();
+                    tsX = e.touches[0].clientX;
+                    tsY = e.touches[0].clientY;
+                }, {passive: false});
+
+                this.canvas.addEventListener('touchend', e => {
+                    e.preventDefault();
+                    const teX = e.changedTouches[0].clientX;
+                    const teY = e.changedTouches[0].clientY;
+                    const dx = teX - tsX;
+                    const dy = teY - tsY;
+
+                    if(Math.abs(dx) > Math.abs(dy)) {
+                        if(Math.abs(dx) > 30) this.move(dx > 0 ? 1 : -1, 0);
+                    } else {
+                        if(Math.abs(dy) > 30) this.move(0, dy > 0 ? 1 : -1);
+                    }
+                }, {passive: false});
+
+                window.addEventListener('keydown', e => {
+                    if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) e.preventDefault();
+                    if(e.key === 'ArrowUp') this.move(0,-1);
+                    if(e.key === 'ArrowDown') this.move(0,1);
+                    if(e.key === 'ArrowLeft') this.move(-1,0);
+                    if(e.key === 'ArrowRight') this.move(1,0);
+                });
+
+                window.addEventListener('resize', () => {
+                    if(this.isPlaying) this.resizeCanvas();
+                });
+            }
+        }
+
+        const game = new MazeGame();
+    </script>
+
+</body>
+</html>

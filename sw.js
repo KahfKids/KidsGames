@@ -253,6 +253,11 @@ const STATIC_ASSETS = [
   '/KidsGames/images/shelf_glass.png',
   '/KidsGames/images/shelf_metal.png',
   '/KidsGames/images/shelf_wood.png',
+  '/KidsGames/ramadan-maze.png',
+  '/KidsGames/games/ramadan-maze/index.html',
+  '/KidsGames/ramadan-quest.png',
+  '/KidsGames/games/ramadan-quest/index.html',
+  '/KidsGames/icons/shortcut-ramadan-quest.png',
 ];
 
 // Game directories to cache on-demand
