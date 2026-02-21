@@ -33,7 +33,7 @@
 
     body {
       font-family: 'Poppins', sans-serif;
-      height: 100vh;
+      height: 100dvh;
       width: 100vw;
       overflow: hidden;
       position: fixed;
@@ -52,7 +52,7 @@
     }
 
     .game-container {
-      height: 100vh;
+      height: 100dvh;
       display: flex;
       flex-direction: column;
       position: relative;
@@ -123,8 +123,8 @@
 
     .pads-container {
       position: relative;
-      width: min(80vw, 400px);
-      height: min(80vw, 400px);
+      width: min(80vw, 400px, calc(100dvh - 280px));
+      height: min(80vw, 400px, calc(100dvh - 280px));
       max-width: 400px;
       max-height: 400px;
     }
@@ -367,6 +367,34 @@
     }
 
     /* Responsive Design */
+    @media (max-width: 400px) {
+      .header {
+        padding: 0.6rem 0.8rem;
+      }
+
+      .game-title {
+        font-size: 1.2rem;
+      }
+
+      .score-display {
+        padding: 0.5rem 0.8rem;
+        font-size: 0.85rem;
+        min-width: 65px;
+      }
+
+      .game-board {
+        padding: 1rem 0.5rem;
+      }
+
+      .pad-shape {
+        font-size: 2.2rem;
+      }
+
+      .pad-label {
+        font-size: 0.8rem;
+      }
+    }
+
     @media (min-width: 768px) {
       .header {
         padding: 1.5rem 2rem;
@@ -415,6 +443,74 @@
 
       .control-section {
         padding: 1rem;
+      }
+    }
+
+    /* Small height screens - ensure all UI fits in viewport */
+    @media (max-height: 600px) {
+      .header {
+        padding: 0.5rem 1rem;
+      }
+
+      .game-title {
+        font-size: 1.1rem;
+      }
+
+      .score-display {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.85rem;
+        min-width: 70px;
+      }
+
+      .game-status {
+        padding: 0.5rem;
+        min-height: 2rem;
+        font-size: 1rem;
+      }
+
+      .game-board {
+        padding: 0.5rem;
+      }
+
+      .pads-container {
+        width: min(55vw, 45dvh);
+        height: min(55vw, 45dvh);
+      }
+
+      .game-pad {
+        width: min(25vw, 90px);
+        height: min(25vw, 90px);
+      }
+
+      .pad-shape {
+        font-size: 1.8rem;
+      }
+
+      .pad-label {
+        font-size: 0.7rem;
+      }
+
+      .control-section {
+        padding: 0.6rem;
+      }
+
+      .timer-display {
+        width: 40px;
+        height: 40px;
+        margin-bottom: 0.3rem;
+      }
+
+      .timer-circle {
+        font-size: 0.9rem;
+      }
+
+      .timer-circle::before {
+        inset: 5px;
+      }
+
+      .start-button {
+        padding: 0.6rem 1.2rem;
+        font-size: 1rem;
       }
     }
   </style>

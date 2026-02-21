@@ -746,7 +746,7 @@
         if (paddleTargetX !== undefined) {
           // Mouse control: smooth following
           const targetDiff = paddleTargetX - paddleX;
-          paddleVelocity = targetDiff * 0.2; // Direct proportional control
+          paddleVelocity = targetDiff * 0.5; // Direct proportional control - faster response for kids
         } else {
           // Keyboard/touch control: acceleration-based
           if (rightPressed || touchRightPressed) {
@@ -1415,9 +1415,10 @@
         gameLoop(); // Start new game loop
       });
 
-      // Swipe gesture handling for paddle control
+      // Swipe gesture handling for paddle control - Direct finger following
       let touchStartX = 0;
       let touchStartY = 0;
+      let lastTouchX = 0;
       let swipeActive = false;
 
       swipeArea.addEventListener("touchstart", (e) => {
@@ -1426,8 +1427,9 @@
         const touch = e.touches[0];
         touchStartX = touch.clientX;
         touchStartY = touch.clientY;
+        lastTouchX = touch.clientX;
         swipeActive = true;
-        paddleTargetX = undefined; // Clear mouse target to prevent conflicts
+        paddleTargetX = paddleX; // Initialize target to current position
       }, { passive: true });
 
       swipeArea.addEventListener("touchmove", (e) => {
@@ -1436,40 +1438,28 @@
         e.preventDefault(); // Prevent scrolling during swipe
         const touch = e.touches[0];
         const touchCurrentX = touch.clientX;
-        const touchCurrentY = touch.clientY;
 
-        const deltaX = touchCurrentX - touchStartX;
-        const deltaY = touchCurrentY - touchStartY;
+        // Calculate delta from last position (not from start) for 1:1 tracking
+        const deltaX = touchCurrentX - lastTouchX;
+        lastTouchX = touchCurrentX;
 
-        // Detect horizontal swipe (ignore vertical swipes)
-        if (Math.abs(deltaX) > Math.abs(deltaY)) {
-          // Horizontal swipe detected
-          if (deltaX > 20) {
-            // Swipe right
-            touchRightPressed = true;
-            touchLeftPressed = false;
-          } else if (deltaX < -20) {
-            // Swipe left
-            touchLeftPressed = true;
-            touchRightPressed = false;
-          } else {
-            // No significant movement
-            touchLeftPressed = false;
-            touchRightPressed = false;
-          }
-        }
+        // Directly move paddle by the finger movement amount
+        // Scale the delta to match canvas coordinates
+        const swipeRect = swipeArea.getBoundingClientRect();
+        const canvasRect = canvas.getBoundingClientRect();
+        const scaleRatio = canvasRect.width / swipeRect.width;
+
+        // Move paddle by the scaled delta
+        paddleTargetX = paddleX + (deltaX * scaleRatio);
+        paddleTargetX = Math.max(0, Math.min(canvas.width - paddleWidth, paddleTargetX));
       }, { passive: false });
 
       swipeArea.addEventListener("touchend", () => {
         swipeActive = false;
-        touchLeftPressed = false;
-        touchRightPressed = false;
       });
 
       swipeArea.addEventListener("touchcancel", () => {
         swipeActive = false;
-        touchLeftPressed = false;
-        touchRightPressed = false;
       });
 
       // Hide swipe instructions after first interaction

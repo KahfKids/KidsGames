@@ -1437,6 +1437,11 @@
             btn.textContent = currentLang === 'en' ? 'BN' : 'EN';
             btn.classList.toggle('active', currentLang === 'bn');
             updateLanguage();
+
+            // Update question display if quiz is active
+            if (!document.getElementById('quizScreen').classList.contains('hidden')) {
+                showQuestion();
+            }
         }
 
         function updateLanguage() {
