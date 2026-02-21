@@ -742,26 +742,35 @@
        * Updates paddle physics with acceleration-based movement
        */
       function updatePaddlePhysics() {
-        // Check if we're using mouse control or keyboard/touch control
-        if (paddleTargetX !== undefined) {
-          // Mouse control: smooth following
-          const targetDiff = paddleTargetX - paddleX;
-          paddleVelocity = targetDiff * 0.5; // Direct proportional control - faster response for kids
+        // If swipe is active, position is handled directly in touchmove
+        // Just apply friction to velocity for momentum
+        if (swipeActive) {
+          paddleVelocity *= swipeFriction;
+          if (Math.abs(paddleVelocity) < 0.05) {
+            paddleVelocity = 0;
+          }
         } else {
-          // Keyboard/touch control: acceleration-based
-          if (rightPressed || touchRightPressed) {
-            // Accelerate while button is held
-            paddleVelocity += paddleAcceleration;
-          } else if (leftPressed || touchLeftPressed) {
-            // Accelerate left while button is held
-            paddleVelocity -= paddleAcceleration;
+          // Check if we're using mouse control or keyboard/touch control
+          if (paddleTargetX !== undefined) {
+            // Mouse control: smooth following
+            const targetDiff = paddleTargetX - paddleX;
+            paddleVelocity = targetDiff * 0.5; // Direct proportional control - faster response for kids
           } else {
-            // No input: apply slight deceleration (not friction)
-            paddleVelocity *= paddleDeceleration;
+            // Keyboard/touch control: acceleration-based
+            if (rightPressed || touchRightPressed) {
+              // Accelerate while button is held
+              paddleVelocity += paddleAcceleration;
+            } else if (leftPressed || touchLeftPressed) {
+              // Accelerate left while button is held
+              paddleVelocity -= paddleAcceleration;
+            } else {
+              // No input: apply friction-based deceleration for smooth momentum
+              paddleVelocity *= swipeFriction;
 
-            // Stop completely if velocity is very small
-            if (Math.abs(paddleVelocity) < 0.1) {
-              paddleVelocity = 0;
+              // Stop completely if velocity is very small
+              if (Math.abs(paddleVelocity) < 0.05) {
+                paddleVelocity = 0;
+              }
             }
           }
         }
@@ -1415,11 +1424,15 @@
         gameLoop(); // Start new game loop
       });
 
-      // Swipe gesture handling for paddle control - Direct finger following
+      // Swipe gesture handling for paddle control - Direct finger following (space bluster style)
       let touchStartX = 0;
       let touchStartY = 0;
       let lastTouchX = 0;
+      let lastTouchTime = 0;
       let swipeActive = false;
+      let swipeVelocityX = 0;
+      let swipeFriction = 0.92;
+      let maxSwipeVelocity = 20;
 
       swipeArea.addEventListener("touchstart", (e) => {
         if (!gameRunning) return;
@@ -1428,8 +1441,9 @@
         touchStartX = touch.clientX;
         touchStartY = touch.clientY;
         lastTouchX = touch.clientX;
+        lastTouchTime = Date.now();
         swipeActive = true;
-        paddleTargetX = paddleX; // Initialize target to current position
+        swipeVelocityX = 0;
       }, { passive: true });
 
       swipeArea.addEventListener("touchmove", (e) => {
@@ -1439,27 +1453,86 @@
         const touch = e.touches[0];
         const touchCurrentX = touch.clientX;
 
-        // Calculate delta from last position (not from start) for 1:1 tracking
+        // Calculate delta from last position
         const deltaX = touchCurrentX - lastTouchX;
-        lastTouchX = touchCurrentX;
+        const deltaTime = Date.now() - lastTouchTime;
 
-        // Directly move paddle by the finger movement amount
+        // Calculate velocity for momentum (like space bluster)
+        if (deltaTime > 0) {
+          const instantVelocity = (deltaX / deltaTime) * 10;
+          swipeVelocityX = Math.max(-maxSwipeVelocity, Math.min(maxSwipeVelocity, instantVelocity));
+        }
+
+        // Direct position manipulation (like space bluster)
         // Scale the delta to match canvas coordinates
         const swipeRect = swipeArea.getBoundingClientRect();
         const canvasRect = canvas.getBoundingClientRect();
         const scaleRatio = canvasRect.width / swipeRect.width;
 
-        // Move paddle by the scaled delta
-        paddleTargetX = paddleX + (deltaX * scaleRatio);
-        paddleTargetX = Math.max(0, Math.min(canvas.width - paddleWidth, paddleTargetX));
+        // Apply direct position change for immediate response
+        paddleX += deltaX * scaleRatio * 0.8;
+
+        // Also add velocity for momentum
+        paddleVelocity += swipeVelocityX * 0.3;
+
+        // Keep paddle within bounds immediately
+        paddleX = Math.max(0, Math.min(canvas.width - paddleWidth, paddleX));
+
+        lastTouchX = touchCurrentX;
+        lastTouchTime = Date.now();
       }, { passive: false });
 
       swipeArea.addEventListener("touchend", () => {
         swipeActive = false;
+        // Apply momentum from the last swipe (like space bluster)
+        if (Math.abs(swipeVelocityX) > 0.5) {
+          paddleVelocity = swipeVelocityX * 0.5;
+        }
       });
 
       swipeArea.addEventListener("touchcancel", () => {
         swipeActive = false;
+      });
+
+      // Canvas touch support - control paddle by touching/swiping on game area
+      let canvasTouchStartX = 0;
+      let canvasTouchStartTime = 0;
+      let canvasSwipeActive = false;
+
+      canvas.addEventListener("touchstart", (e) => {
+        if (!gameRunning) return;
+
+        const touch = e.touches[0];
+        canvasTouchStartX = touch.clientX;
+        canvasTouchStartTime = Date.now();
+        canvasSwipeActive = true;
+      }, { passive: true });
+
+      canvas.addEventListener("touchmove", (e) => {
+        if (!gameRunning || !canvasSwipeActive) return;
+
+        e.preventDefault();
+        const touch = e.touches[0];
+        const currentX = touch.clientX;
+        const deltaX = currentX - canvasTouchStartX;
+
+        // Direct position manipulation
+        const canvasRect = canvas.getBoundingClientRect();
+        const scaleRatio = canvas.width / canvasRect.width;
+
+        paddleX += deltaX * scaleRatio * 0.8;
+        paddleX = Math.max(0, Math.min(canvas.width - paddleWidth, paddleX));
+
+        canvasTouchStartX = currentX;
+        canvasTouchStartTime = Date.now();
+      }, { passive: false });
+
+      canvas.addEventListener("touchend", () => {
+        canvasSwipeActive = false;
+      });
+
+      canvas.addEventListener("touchcancel", () => {
+        canvasSwipeActive = false;
       });
 
       // Hide swipe instructions after first interaction
@@ -1507,7 +1580,7 @@
           // Re-center paddle and ball after resize
           paddleX = (canvas.width - paddleWidth) / 2;
           x = canvas.width / 2;
-          y = canvas.height - 30 * scaleFactor;
+          y = canvas.height - 60 * scaleFactor;
           // If game is running, redraw immediately
           if (gameRunning) {
             draw();
@@ -1527,7 +1600,7 @@
             // Re-center paddle and ball after orientation change
             paddleX = (canvas.width - paddleWidth) / 2;
             x = canvas.width / 2;
-            y = canvas.height - 30 * scaleFactor;
+            y = canvas.height - 60 * scaleFactor;
             // Redraw the game
             if (gameRunning) {
               draw();
