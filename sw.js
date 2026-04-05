@@ -1,12 +1,13 @@
-const CACHE_NAME = 'kidsgames-v1.3.2';
-const STATIC_CACHE = 'kidsgames-static-v1.3.2';
-const GAMES_CACHE = 'kidsgames-games-v1.3.2';
-const PREMIUM_CACHE = 'kidsgames-premium-v1.3.2';
+const CACHE_NAME = 'kidsgames-v1.3.3';
+const STATIC_CACHE = 'kidsgames-static-v1.3.3';
+const GAMES_CACHE = 'kidsgames-games-v1.3.3';
+const PREMIUM_CACHE = 'kidsgames-premium-v1.3.3';
 
 // Core files that should be cached immediately
 const STATIC_ASSETS = [
   '/KidsGames/',
   '/KidsGames/index.html',
+  '/KidsGames/quizzes.html',
   '/KidsGames/manifest.json',
   '/KidsGames/sw.js',
   '/KidsGames/2048/style/fonts/clear-sans.css',
