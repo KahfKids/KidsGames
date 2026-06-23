@@ -1,7 +1,7 @@
-const CACHE_NAME = 'kidsgames-v1.3.3';
-const STATIC_CACHE = 'kidsgames-static-v1.3.3';
-const GAMES_CACHE = 'kidsgames-games-v1.3.3';
-const PREMIUM_CACHE = 'kidsgames-premium-v1.3.3';
+const CACHE_NAME = 'kidsgames-v1.3.4';
+const STATIC_CACHE = 'kidsgames-static-v1.3.4';
+const GAMES_CACHE = 'kidsgames-games-v1.3.4';
+const PREMIUM_CACHE = 'kidsgames-premium-v1.3.4';
 
 // Core files that should be cached immediately
 const STATIC_ASSETS = [
@@ -272,7 +272,7 @@ const PREMIUM_SECRET_PATTERN = /secret=kahf-kids-games-premium-games-AXjKIWUY/i;
 
 // Install event - cache core assets
 self.addEventListener('install', (event) => {
-  console.log('[SW] Installing service worker v1.3.1');
+  console.log('[SW] Installing service worker v1.3.4');
 
   event.waitUntil(
     caches.open(STATIC_CACHE)
@@ -286,7 +286,7 @@ self.addEventListener('install', (event) => {
 
 // Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Activating service worker v1.3.1');
+  console.log('[SW] Activating service worker v1.3.4');
 
   event.waitUntil(
     caches.keys()
@@ -442,8 +442,8 @@ function getOfflineResponse() {
         <style>
           body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #ece4d9;
-            color: #4f391a;
+            background: #DED9FB;
+            color: #10213D;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -454,10 +454,10 @@ function getOfflineResponse() {
           }
           .offline-container {
             max-width: 400px;
-            background: #eed9bb;
+            background: #FFFFFF;
             padding: 40px;
             border-radius: 20px;
-            border: 2px solid #4f391a;
+            border: 2px solid #6B52D9;
             box-shadow: 0 8px 32px rgba(0,0,0,0.1);
           }
           .offline-icon {
@@ -473,7 +473,7 @@ function getOfflineResponse() {
             line-height: 1.5;
           }
           .retry-btn {
-            background: #ff6b6b;
+            background: #6B52D9;
             color: white;
             border: none;
             padding: 12px 24px;
@@ -483,7 +483,7 @@ function getOfflineResponse() {
             font-weight: bold;
           }
           .retry-btn:hover {
-            background: #ff5252;
+            background: #5C47C6;
           }
         </style>
       </head>
@@ -563,4 +563,4 @@ self.addEventListener('message', (event) => {
   }
 });
 
-console.log('[SW] KidsGames Service Worker v1.3.1 loaded');
+console.log('[SW] KidsGames Service Worker v1.3.4 loaded');
