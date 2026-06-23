@@ -1,7 +1,7 @@
-const CACHE_NAME = 'kidsgames-v1.3.4';
-const STATIC_CACHE = 'kidsgames-static-v1.3.4';
-const GAMES_CACHE = 'kidsgames-games-v1.3.4';
-const PREMIUM_CACHE = 'kidsgames-premium-v1.3.4';
+const CACHE_NAME = 'kidsgames-v1.3.5';
+const STATIC_CACHE = 'kidsgames-static-v1.3.5';
+const GAMES_CACHE = 'kidsgames-games-v1.3.5';
+const PREMIUM_CACHE = 'kidsgames-premium-v1.3.5';
 
 // Core files that should be cached immediately
 const STATIC_ASSETS = [
@@ -272,7 +272,7 @@ const PREMIUM_SECRET_PATTERN = /secret=kahf-kids-games-premium-games-AXjKIWUY/i;
 
 // Install event - cache core assets
 self.addEventListener('install', (event) => {
-  console.log('[SW] Installing service worker v1.3.4');
+  console.log('[SW] Installing service worker v1.3.5');
 
   event.waitUntil(
     caches.open(STATIC_CACHE)
@@ -286,7 +286,7 @@ self.addEventListener('install', (event) => {
 
 // Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Activating service worker v1.3.4');
+  console.log('[SW] Activating service worker v1.3.5');
 
   event.waitUntil(
     caches.keys()
@@ -442,7 +442,7 @@ function getOfflineResponse() {
         <style>
           body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #DED9FB;
+            background: #F7F5FF;
             color: #10213D;
             display: flex;
             justify-content: center;
@@ -563,4 +563,4 @@ self.addEventListener('message', (event) => {
   }
 });
 
-console.log('[SW] KidsGames Service Worker v1.3.4 loaded');
+console.log('[SW] KidsGames Service Worker v1.3.5 loaded');
