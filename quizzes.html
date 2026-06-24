@@ -102,6 +102,7 @@
       let titleOverlay = "linear-gradient(180deg, rgba(16, 33, 61, 0) 0%, rgba(16, 33, 61, 0.72) 100%)";
       let iconBg = "rgba(255, 255, 255, 0.7)";
       let accentColor = "#5A63D8";
+      let contentShadow = "0 -14px 32px rgba(83, 59, 168, 0.14)";
       let bottomPadding = "24px";
       let contentBottomPadding = "24px";
       if (brightness === "Dark") {
@@ -114,6 +115,7 @@
           cardBorder = "rgba(255, 255, 255, 0.1)";
           cardShadow = "0 8px 18px rgba(0, 0, 0, 0.36)";
           cardShadowHover = "0 14px 30px rgba(0, 0, 0, 0.48)";
+          contentShadow = "0 -14px 32px rgba(0, 0, 0, 0.34)";
           titleOverlay = "linear-gradient(180deg, rgba(8, 0, 32, 0) 0%, rgba(8, 0, 32, 0.82) 100%)";
           iconBg = "rgba(255, 255, 255, 0.08)";
           accentColor = "#6A60DA";
@@ -126,6 +128,7 @@
           cardBorder = "rgba(255, 255, 255, 0.12)";
           cardShadow = "0 8px 18px rgba(0, 0, 0, 0.36)";
           cardShadowHover = "0 14px 30px rgba(0, 0, 0, 0.48)";
+          contentShadow = "none";
           titleOverlay = "linear-gradient(180deg, rgba(15, 15, 15, 0) 0%, rgba(15, 15, 15, 0.82) 100%)";
           iconBg = "rgba(255, 255, 255, 0.08)";
           accentColor = "#FFFFFF";
@@ -142,6 +145,7 @@
           cardBorder = "rgba(0, 0, 0, 0.1)";
           iconBg = "rgba(0, 0, 0, 0.05)";
           accentColor = "#030303";
+          contentShadow = "none";
           bottomPadding = "0px";
           contentBottomPadding = "200px";
         }
@@ -149,6 +153,7 @@
 
       if (hideHeader === "true") {
         document.querySelector(".header").style.display = "none";
+        contentShadow = "none";
       }
 
       const root = document.documentElement;
@@ -163,6 +168,7 @@
       root.style.setProperty("--title-overlay", titleOverlay);
       root.style.setProperty("--icon-bg", iconBg);
       root.style.setProperty("--accent-color", accentColor);
+      root.style.setProperty("--content-shadow", contentShadow);
       document.documentElement.style.setProperty(
         "--bottom-padding",
         bottomPadding
@@ -252,6 +258,7 @@
       --title-overlay: linear-gradient(180deg, rgba(16, 33, 61, 0) 0%, rgba(16, 33, 61, 0.72) 100%);
       --icon-bg: rgba(255, 255, 255, 0.7);
       --accent-color: #5A63D8;
+      --content-shadow: 0 -14px 32px rgba(83, 59, 168, 0.14);
       --bottom-padding: 24px;
       --content-bottom-padding: 24px;
     }
@@ -329,7 +336,7 @@
       padding-left: 0;
       padding-right: 0;
       min-height: calc(100vh - 72px);
-      box-shadow: 0 -14px 32px rgba(83, 59, 168, 0.14);
+      box-shadow: var(--content-shadow);
     }
 
     .games-grid {
