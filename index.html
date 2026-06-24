@@ -92,7 +92,6 @@
       // });
 
       let bgColor = "#F7F5FF";
-      let heroTailBg = "#F7F5FF";
       let contentBg = "#F7F5FF";
       let textColor = "#10213D";
       let cardBg = "#F0EDFF";
@@ -108,7 +107,6 @@
       if (brightness === "Dark") {
         if (theme === "Normal") {
           bgColor = "#080020";
-          heroTailBg = "#080020";
           contentBg = "#080020";
           textColor = "#ffffff";
           cardBg = "#19182A";
@@ -121,7 +119,6 @@
           accentColor = "#6A60DA";
         } else if (theme === "Youtube") {
           bgColor = "#0F0F0F";
-          heroTailBg = "#0F0F0F";
           contentBg = "#0F0F0F";
           textColor = "#ffffff";
           cardBg = "#272727";
@@ -138,7 +135,6 @@
       } else if (brightness === "Light") {
         if (theme === "Youtube") {
           bgColor = "#FFFFFF";
-          heroTailBg = "#FFFFFF";
           contentBg = "#FFFFFF";
           textColor = "#0F0F0F";
           cardBg = "#F1F1F1";
@@ -158,7 +154,6 @@
 
       const root = document.documentElement;
       root.style.setProperty("--main-bg", bgColor);
-      root.style.setProperty("--hero-tail-bg", heroTailBg);
       root.style.setProperty("--content-bg", contentBg);
       root.style.setProperty("--text-color", textColor);
       root.style.setProperty("--card-bg", cardBg);
@@ -248,7 +243,6 @@
   <style>
     :root {
       --main-bg: #F7F5FF;
-      --hero-tail-bg: #F7F5FF;
       --content-bg: #F7F5FF;
       --text-color: #10213D;
       --card-bg: #F0EDFF;
@@ -284,7 +278,7 @@
     .app-container {
       width: 100%;
       min-height: 100vh;
-      background: linear-gradient(180deg, var(--main-bg) 0%, var(--hero-tail-bg) 42%, var(--content-bg) 100%);
+      background: var(--main-bg);
     }
 
     .header {
