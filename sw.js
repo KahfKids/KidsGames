@@ -1,4 +1,4 @@
-const CACHE_NAME = 'kidsgames-v1.3.5';
+const CACHE_NAME = 'kidsgames-v1.3.6';
 const STATIC_CACHE = 'kidsgames-static-v1.3.5';
 const GAMES_CACHE = 'kidsgames-games-v1.3.5';
 const PREMIUM_CACHE = 'kidsgames-premium-v1.3.5';
