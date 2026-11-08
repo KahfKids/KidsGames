@@ -1,6 +1,6 @@
-const CACHE_NAME = 'kidsgames-v1.3.9';
-const STATIC_CACHE = 'kidsgames-static-v1.3.5';
-const GAMES_CACHE = 'kidsgames-games-v1.3.8';
+const CACHE_NAME = 'kidsgames-v1.3.10';
+const STATIC_CACHE = 'kidsgames-static-v1.3.10';
+const GAMES_CACHE = 'kidsgames-games-v1.3.10';
 const PREMIUM_CACHE = 'kidsgames-premium-v1.3.5';
 
 // Core files that should be cached immediately
@@ -133,6 +133,14 @@ self.addEventListener('activate', (event) => {
 });
 
 // Fetch event - implement caching strategies
+
+// A copy of the request that skips the browser's HTTP cache, for storing in our caches.
+function freshRequest(request) {
+  if (request.mode === 'navigate') {
+    return new Request(request.url, { cache: 'no-cache', credentials: 'same-origin' });
+  }
+  return new Request(request, { cache: 'no-cache' });
+}
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
@@ -198,7 +206,7 @@ async function cacheFirst(request, cacheName) {
   }
 
   try {
-    const response = await fetch(request);
+    const response = await fetch(freshRequest(request));
     if (response.ok) {
       cache.put(request, response.clone());
     }
@@ -390,7 +398,12 @@ self.addEventListener('message', (event) => {
 
 // Cache each URL on its own; failures are logged and skipped instead of aborting the batch.
 async function cacheEach(cache, urls) {
-  const results = await Promise.allSettled(urls.map(url => cache.add(url)));
+  const results = await Promise.allSettled(urls.map(url =>
+    fetch(new Request(url, { cache: 'no-cache' })).then(res => {
+      if (!res.ok) throw new Error(res.status + ' ' + url);
+      return cache.put(url, res);
+    })
+  ));
   const failed = urls.filter((url, i) => results[i].status === 'rejected');
   if (failed.length) console.warn('[SW] Could not cache', failed.length, 'files:', failed);
 }

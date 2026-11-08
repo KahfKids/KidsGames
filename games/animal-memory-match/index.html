@@ -12,23 +12,9 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <link rel="apple-touch-icon" href="/KidsGames/icons/icon-192x192.png" />
   <title>Animal Memory Match - 100+ Levels</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- <script>
-      // Function to get query parameter by name
-      function getQueryParam(name) {
-        const urlParams = new URLSearchParams(window.location.search);
-        return urlParams.get(name);
-      }
-
-      // Check for the secret query parameter
-      const secret = getQueryParam("secret");
-      if (secret !== "kahf-kids-games-premium-games-AXjKIWUY") {
-        // Redirect if the secret is not correct
-        window.history.back();
-      }
-    </script> -->
+  <link rel="stylesheet" href="tailwind.css" />
   <style>
-    @import url("https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap");
+    @import url("/KidsGames/fonts/fonts.css");
 
     body {
       font-family: "Nunito", sans-serif;
@@ -1104,41 +1090,6 @@
       createLevelButtons();
       initGame(1);
     };
-  </script>
-  <script>
-    (function () {
-      function c() {
-        var b = a.contentDocument || a.contentWindow.document;
-        if (b) {
-          var d = b.createElement("script");
-          d.innerHTML =
-            "window.__CF$cv$params={r:'942d6e8f23eaa481',t:'MTc0Nzc2MDg2Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";
-          b.getElementsByTagName("head")[0].appendChild(d);
-        }
-      }
-      if (document.body) {
-        var a = document.createElement("iframe");
-        a.height = 1;
-        a.width = 1;
-        a.style.position = "absolute";
-        a.style.top = 0;
-        a.style.left = 0;
-        a.style.border = "none";
-        a.style.visibility = "hidden";
-        document.body.appendChild(a);
-        if ("loading" !== document.readyState) c();
-        else if (window.addEventListener)
-          document.addEventListener("DOMContentLoaded", c);
-        else {
-          var e = document.onreadystatechange || function () { };
-          document.onreadystatechange = function (b) {
-            e(b);
-            "loading" !== document.readyState &&
-              ((document.onreadystatechange = e), c());
-          };
-        }
-      }
-    })();
   </script>
 
   <!-- KidsGames PWA Service Worker -->

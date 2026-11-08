@@ -12,13 +12,11 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <link rel="apple-touch-icon" href="/KidsGames/icons/icon-192x192.png" />
 
-  <!-- Google Fonts - Poppins for modern, clean look -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <!-- Local fonts (offline) -->
+  <link rel="stylesheet" href="/KidsGames/fonts/fonts.css" />
 
-  <!-- Tone.js for sound -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
+  <!-- Local Tone.js stand-in (offline) -->
+  <script src="/KidsGames/js/kit/tone-lite.js"></script>
 
   <style>
     * {
@@ -179,9 +177,18 @@
 
     /* Active State */
     .game-pad.active {
-      transform: scale(1.15) !important;
       z-index: 100;
       box-shadow: 0 0 40px 15px currentColor, 0 0 80px 30px rgba(255, 255, 255, 0.3);
+    }
+
+    .pad-top.active,
+    .pad-bottom.active {
+      transform: translateX(-50%) scale(1.15);
+    }
+
+    .pad-left.active,
+    .pad-right.active {
+      transform: translateY(-50%) scale(1.15);
     }
 
     .pad-top.active {
@@ -793,6 +800,7 @@
       }
 
       if (playerSequence.length === gameSequence.length) {
+        canClick = false;
         stopTurnTimer();
         setTimeout(nextRound, 1000);
       }

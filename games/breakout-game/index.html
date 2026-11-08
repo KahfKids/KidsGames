@@ -10,10 +10,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <link rel="apple-touch-icon" href="/KidsGames/icons/icon-192x192.png" />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
-    />
+    <link rel="stylesheet" href="/KidsGames/js/kit/icons.css" />
     <style>
       /* General body styling */
       body {
@@ -745,7 +742,7 @@
       function updatePaddlePhysics() {
         // If swipe is active, position is handled directly in touchmove
         // Just apply friction to velocity for momentum
-        if (swipeActive) {
+        if (swipeActive || canvasSwipeActive) {
           paddleVelocity *= swipeFriction;
           if (Math.abs(paddleVelocity) < 0.05) {
             paddleVelocity = 0;
@@ -1445,6 +1442,7 @@
         lastTouchTime = Date.now();
         swipeActive = true;
         swipeVelocityX = 0;
+        paddleTargetX = undefined; // touch now controls the paddle
       }, { passive: true });
 
       swipeArea.addEventListener("touchmove", (e) => {
@@ -1507,6 +1505,7 @@
         canvasTouchStartX = touch.clientX;
         canvasTouchStartTime = Date.now();
         canvasSwipeActive = true;
+        paddleTargetX = undefined; // touch now controls the paddle
       }, { passive: true });
 
       canvas.addEventListener("touchmove", (e) => {

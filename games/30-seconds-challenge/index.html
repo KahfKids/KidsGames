@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="UTF-8" />
-    <title>CodePen - Untitled</title>
+    <title>30 Seconds Challenge</title>
     <!-- KidsGames PWA Support -->
     <link rel="manifest" href="/KidsGames/manifest.json" />
     <meta name="theme-color" content="#4f391a" />
@@ -195,22 +195,25 @@
     </div>
 
     <script>
+      // Every set is checked so the odd one out is clearly visible (no look-alike pairs) and fits an Islamic kids' app.
       const iconSets = [
-        ["☪️", "☪", "🌙", "🌛", "🌘"],
-        ["﷽", "﷼", "﷽︎", "﷾", "﷿"],
-        ["🕌", "🕍", "🏛️", "⛪", "🏰"],
-        ["📿", "⚜️", "🔯", "✡️", "☪️"],
-        ["🕋", "⬛", "◾", "▪️", "⬜"],
+        ["☪️", "🌙", "🌛", "🌘"],
+        ["🕌", "🕋", "🏛️", "🏰"],
+        ["📿", "⚜️", "☪️", "🌙"],
+        ["🕋", "⬛", "⬜"],
         ["🌙", "🌘", "🌗", "🌖", "🌒"],
         ["۩", "⚜", "❈", "✤", "✺"],
-        ["۞", "☸", "✿", "❀", "✾"],
-        ["﴾", "﴿", "﷼", "﷽", "﷾"],
-        ["۝", "۞", "☯", "✴", "✳"],
-        ["ا", "أ", "إ", "آ", "ٱ"],
-        ["ه", "ە", "ہ", "ھ", "ة"],
-        ["ي", "ى", "ئ", "ی", "ۍ"],
-        ["◈", "◇", "◆", "❖", "❑"],
-        ["▣", "☐", "◻", "▢", "□"],
+        ["۞", "✿", "❀", "✾"],
+        ["﴾", "﴿", "﷼", "﷽"],
+        ["۝", "۞", "✴", "✳"],
+        ["ا", "أ", "إ", "آ"],
+        ["ب", "ت", "ث", "ن", "ي"],
+        ["ج", "ح", "خ"],
+        ["د", "ذ", "ر", "ز"],
+        ["س", "ش", "ص", "ض"],
+        ["ط", "ظ", "ع", "غ"],
+        ["ف", "ق", "ك", "ل"],
+        ["◈", "◇", "◆", "❖"],
       ];
 
       let score = 0;
@@ -218,7 +221,7 @@
       let timerInterval = null;
       let oddOneOutPosition = null;
       let canClick = false;
-      let highScore = parseInt(localStorage.getItem("highScore")) || 0;
+      let highScore = parseInt(localStorage.getItem("kahf-30s-highscore") || localStorage.getItem("highScore")) || 0;
 
       function showGameOver() {
         clearInterval(timerInterval);
@@ -226,7 +229,7 @@
 
         if (score > highScore) {
           highScore = score;
-          localStorage.setItem("highScore", highScore.toString());
+          localStorage.setItem("kahf-30s-highscore", highScore.toString());
         }
 
         const gameOver = document.createElement("div");

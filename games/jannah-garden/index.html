@@ -11,14 +11,11 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <link rel="apple-touch-icon" href="/KidsGames/icons/icon-192x192.png" />
     <!-- Font Awesome for icons -->
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
-    />
-    <!-- Tone.js for sound effects -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
+    <link rel="stylesheet" href="/KidsGames/js/kit/icons.css" />
+    <!-- Local Tone.js stand-in (offline) -->
+    <script src="/KidsGames/js/kit/tone-lite.js"></script>
     <style>
-      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Amiri:wght@400;700&display=swap");
+      @import url("/KidsGames/fonts/fonts.css");
 
       body {
         font-family: "Amiri", serif; /* A classic, elegant font for Jannah theme */
@@ -2628,36 +2625,22 @@
         plantItemAtCoordinates(x, y);
       });
 
-      // Event listener for clearing the garden
+      // Clearing the garden: the first tap asks, a second tap within 3 seconds clears.
+      let clearArmedUntil = 0;
       clearButton.addEventListener("click", () => {
         if (plantedItems.length === 0) {
           showMessage("The garden is already empty!", "info");
           return;
         }
-        // Ask for confirmation using a custom message box instead of alert/confirm
-        showMessage(
-          'Are you sure you want to clear the entire garden? Click "Clear Garden" again to confirm.',
-          "warning"
-        );
-        clearButton.onclick = () => {
-          // Change handler to confirm
-          plantedItems = []; // Clear the array
-          drawGarden(); // Redraw (which clears the canvas)
+        if (Date.now() < clearArmedUntil) {
+          clearArmedUntil = 0;
+          plantedItems = [];
+          drawGarden();
           showMessage("Garden cleared!", "success");
-          // Reset button handler
-          clearButton.onclick = () => {
-            clearButton.dispatchEvent(new Event("click")); // Trigger self again for initial click
-          };
-        };
-        // Revert click handler after a delay if no second click
-        setTimeout(() => {
-          if (clearButton.onclick !== null) {
-            // Check if it hasn't been reset yet
-            clearButton.onclick = () => {
-              clearButton.dispatchEvent(new Event("click"));
-            };
-          }
-        }, 3000); // 3 seconds to confirm
+          return;
+        }
+        clearArmedUntil = Date.now() + 3000;
+        showMessage('Tap "Clear Garden" again to clear everything.', "warning");
       });
 
       // Event listener for undoing the last action

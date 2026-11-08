@@ -482,7 +482,8 @@ function boot(){
   if(isTouch)setupTouch();
   for(const t of['contextmenu','gesturestart','dblclick'])d.addEventListener(t,e=>e.preventDefault());
   setTimeout(()=>document.body.classList.add('hint-off'),12000);
-  fade(.55);openMenu();
+  // Start playing straight away (level 1 on first launch, else where the child left off); the grid button opens level select.
+  setLevel(PROG.cur,true);
   setupOffline();
 }
 boot();

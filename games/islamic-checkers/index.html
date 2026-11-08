@@ -3,7 +3,7 @@
   <head>
     <meta
       name="viewport"
-      content="width=device-width, target-densitydpi=160dpi, initial-scale=1.0, maximum-scale=1, user-scalable=no, minimal-ui"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no, viewport-fit=cover"
     />
     <!-- KidsGames PWA Support -->
     <link rel="manifest" href="/KidsGames/manifest.json" />
@@ -14,20 +14,35 @@
     <meta charset="UTF-8" />
     <title>Islamic Pattern Checkers</title>
     <style>
+      html,
       body {
+        margin: 0;
+        min-height: 100%;
         background-color: #ece4d9;
+        -webkit-tap-highlight-color: transparent;
+        -webkit-user-select: none;
+        user-select: none;
+        touch-action: manipulation;
+      }
+      body {
+        padding: env(safe-area-inset-top) env(safe-area-inset-right)
+          env(safe-area-inset-bottom) env(safe-area-inset-left);
       }
       .board {
-        width: 400px;
-        height: 400px;
+        --size: min(94vw, calc(100dvh - 110px), 600px);
+        width: var(--size);
+        height: var(--size);
         border: 2px solid #8b4513;
         display: grid;
         grid-template-columns: repeat(8, 1fr);
+        grid-template-rows: repeat(8, 1fr);
+        box-sizing: border-box;
       }
 
       .square {
-        width: 50px;
-        height: 50px;
+        position: relative;
+        min-width: 0;
+        min-height: 0;
         display: flex;
         justify-content: center;
         align-items: center;
@@ -43,14 +58,15 @@
       }
 
       .piece {
-        width: 40px;
-        height: 40px;
+        width: 80%;
+        height: 80%;
+        box-sizing: border-box;
         border-radius: 50%;
         border: 2px solid #333;
         display: flex;
         justify-content: center;
         align-items: center;
-        font-size: 24px;
+        font-size: calc(var(--size) / 17);
         cursor: pointer;
       }
 
@@ -67,7 +83,8 @@
       .king::after {
         content: "👑";
         position: absolute;
-        font-size: 14px;
+        top: 2%;
+        font-size: calc(var(--size) / 28);
       }
 
       .selected {
@@ -79,7 +96,9 @@
       }
 
       #turn-indicator {
-        margin: 10px 0;
+        margin: 12px 0 8px;
+        font-size: 18px;
+        font-weight: bold;
         font-family: Arial, sans-serif;
       }
 
@@ -93,7 +112,8 @@
       }
 
       #thinking {
-        margin: 10px 0;
+        height: 20px;
+        margin: 0 0 8px;
         color: #666;
         font-style: italic;
       }
@@ -122,6 +142,21 @@
         font-size: 24px;
         color: #333;
         animation: bounce 1s ease infinite;
+        pointer-events: auto;
+        font-family: Arial, sans-serif;
+        font-weight: bold;
+        white-space: nowrap;
+      }
+      .winner-message button {
+        display: block;
+        margin: 14px auto 0;
+        padding: 12px 28px;
+        font: bold 18px Arial, sans-serif;
+        color: #fff;
+        background: #8b0000;
+        border: 0;
+        border-radius: 24px;
+        cursor: pointer;
       }
 
       @keyframes bounce {
@@ -150,7 +185,7 @@
   <body>
     <div class="container">
       <div id="turn-indicator">Your Turn (Red)</div>
-      <div id="thinking" style="display: none">AI is thinking...</div>
+      <div id="thinking" style="visibility: hidden">AI is thinking...</div>
       <div class="board" id="board"></div>
     </div>
     <div id="celebration-container"></div>
@@ -263,10 +298,10 @@
 
         if (isKing) {
           const directions = [
-            [-1, 0],
-            [1, 0],
-            [0, -1],
-            [0, 1],
+            [-1, -1],
+            [-1, 1],
+            [1, -1],
+            [1, 1],
           ];
 
           directions.forEach(([dRow, dCol]) => {
@@ -342,12 +377,13 @@
       function makeAIMove() {
         if (!gameActive) return;
 
-        document.getElementById("thinking").style.display = "block";
+        document.getElementById("thinking").style.visibility = "visible";
         currentPlayer = "black";
 
         setTimeout(() => {
           const allMoves = getAllPossibleMoves("black");
           if (allMoves.length === 0) {
+            document.getElementById("thinking").style.visibility = "hidden";
             gameActive = false;
             celebrate("You");
             return;
@@ -378,8 +414,12 @@
             const piece = fromSquare.querySelector(".piece");
             movePiece(piece, bestMove.to.row, bestMove.to.col);
           }
+          if (gameActive && getAllPossibleMoves("red").length === 0) {
+            gameActive = false;
+            celebrate("AI");
+          }
 
-          document.getElementById("thinking").style.display = "none";
+          document.getElementById("thinking").style.visibility = "hidden";
         }, 1000);
       }
 
@@ -421,17 +461,34 @@
       function showWinnerMessage(winner) {
         const message = document.createElement("div");
         message.className = "winner-message";
-        message.textContent = `Game Over - ${winner} Wins!`;
-        document.body.appendChild(message);
-
-        setTimeout(() => {
+        message.textContent = winner === "You" ? "You Win! 🎉" : "The AI wins this time!";
+        const again = document.createElement("button");
+        again.textContent = "Play Again";
+        again.addEventListener("click", () => {
           message.remove();
-        }, 5000);
+          resetGame();
+        });
+        message.appendChild(again);
+        document.body.appendChild(message);
       }
 
       function celebrate(winner) {
         createConfetti();
         showWinnerMessage(winner);
+        try {
+          window.KahfBridge && window.KahfBridge.complete();
+        } catch (e) {}
+      }
+
+      function resetGame() {
+        selectedPiece = null;
+        possibleMoves = [];
+        currentPlayer = "red";
+        gameActive = true;
+        document.getElementById("thinking").style.visibility = "hidden";
+        document.getElementById("turn-indicator").textContent = "Your Turn (Red)";
+        document.getElementById("celebration-container").innerHTML = "";
+        initializeBoard();
       }
 
       function movePiece(piece, newRow, newCol) {
