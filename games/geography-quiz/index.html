@@ -572,6 +572,7 @@
         }
       }
     </style>
+    <script src="/KidsGames/js/kahf-bridge.js" defer></script>
   </head>
   <body class="flex items-center justify-center min-h-screen p-0">
     <!-- Welcome/Start Screen -->
@@ -1194,6 +1195,7 @@
        * @param {HTMLElement} clickedButton - The button element that was clicked.
        */
       function checkAnswer(selectedOptionIndex, clickedButton) {
+        window.KahfBridge && window.KahfBridge.answer();
         clearInterval(countdownInterval); // Stop the timer once an answer is chosen
 
         const currentQuestion = questions[currentQuestionIndex];

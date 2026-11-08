@@ -12,6 +12,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <link rel="apple-touch-icon" href="/KidsGames/icons/icon-192x192.png" />
     <title>Document</title>
+    <script src="/KidsGames/js/kahf-bridge.js" defer></script>
   </head>
   <body>
     <style>
@@ -914,6 +915,7 @@
 
       function selectOption(optionElement, selectedAnswer) {
         if (selectedOption !== null) return;
+        window.KahfBridge && window.KahfBridge.answer();
 
         const questionEndTime = new Date();
         const timeForQuestion = questionEndTime - questionStartTime;

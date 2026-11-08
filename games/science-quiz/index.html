@@ -882,6 +882,7 @@
         user-select: none;
       }
     </style>
+    <script src="/KidsGames/js/kahf-bridge.js" defer></script>
   </head>
   <body
     class="flex items-center justify-center min-h-screen p-2 md:p-4 overflow-hidden"
@@ -2173,6 +2174,7 @@
       function checkAnswer(selectedOptionIndex, clickedButton) {
         if (isProcessingAnswer) return;
         isProcessingAnswer = true;
+        window.KahfBridge && window.KahfBridge.answer();
 
         clearInterval(countdownInterval); // Stop the timer once an answer is chosen
 

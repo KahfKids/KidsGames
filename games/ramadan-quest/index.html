@@ -326,6 +326,7 @@
             }
         }
     </style>
+  <script src="/KidsGames/js/kahf-bridge.js" defer></script>
 </head>
 <body>
     <div class="header">
@@ -1547,6 +1548,7 @@
         function selectAnswer(answer, btn) {
             if (answered) return;
             answered = true;
+            window.KahfBridge && window.KahfBridge.answer();
             selectedAnswer = answer;
 
             const question = shuffledQuestions[currentQuestionIndex];
