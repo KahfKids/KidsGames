@@ -126,6 +126,8 @@ Its art belongs to its original author (credited "A game by WAFEE8"), so we **ma
 
 ## 6. Order of work
 
+**Status (2026-11-08):** Phase 0 committed. Phase 1 built and awaiting review: the shared kit (`js/kit/core.js`, `fx.js`, `audio.js`, `ui.js`, `kit.css`) and Breakout rebuilt as **Mosaic Breaker** (`games/breakout-game/`).
+
 1. **Phase 0 urgent fixes** (section 2).
 2. **Kit + one reference game:** build `js/kit/` and rebuild **Breakout** with it as the proof (it touches loop, input, levels, fx and audio). Review it against Spider IK before going wider.
 3. **Rebuild wave:** Space game → Balloon Pop → Board games → Spot the Difference. Remove Islamic Maze 4 and Good Deeds from the catalog as their replacements ship.
