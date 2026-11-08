@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Spider IK</title>
+<meta name="description" content="Guide a little spider through 21 caves. Collect the orbs, dodge the hazards and reach the portal.">
+<meta name="theme-color" content="#0c1b1e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="/KidsGames/manifest.json">
+<link rel="apple-touch-icon" href="/KidsGames/icons/icon-192x192.png">
+<script src="/KidsGames/js/kahf-bridge.js" defer></script>
+<style>
+:root{--bg:#0c1b1e;--pill:rgba(8,18,20,.62);--pill-line:rgba(255,255,255,.18);--ink:#f2f7f6;--accent:#8fe0bd;
+  --st:env(safe-area-inset-top,0px);--sr:env(safe-area-inset-right,0px);--sb:env(safe-area-inset-bottom,0px);--sl:env(safe-area-inset-left,0px)}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%;margin:0;background:var(--bg);overflow:hidden;overscroll-behavior:none;color:var(--ink);
+  font:600 15px/1.2 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;touch-action:none}
+#cv{position:fixed;inset:0;display:block;width:100%;height:100%;touch-action:none}
+button{font:inherit;color:inherit;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+
+/* HUD */
+.hud{position:fixed;z-index:20;top:calc(10px + var(--st));left:calc(10px + var(--sl));display:flex;gap:8px;align-items:center;pointer-events:none}
+.pill{display:flex;align-items:center;gap:6px;height:40px;padding:0 12px;border-radius:20px;background:var(--pill);border:1px solid var(--pill-line);
+  -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);white-space:nowrap;font-variant-numeric:tabular-nums}
+.orb{width:14px;height:14px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff,var(--accent) 55%,#2f8f77);box-shadow:0 0 8px var(--accent)}
+.pill.done{border-color:var(--accent);color:var(--accent)}
+.ibtn{pointer-events:auto;width:44px;height:44px;border-radius:22px;padding:0;border:1px solid var(--pill-line);background:var(--pill);
+  -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.ibtn:active{transform:scale(.92)}
+.ibtn svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+#fs{position:fixed;z-index:20;top:calc(8px + var(--st));right:calc(10px + var(--sr))}
+.hint{position:fixed;z-index:20;left:50%;bottom:calc(14px + var(--sb));transform:translateX(-50%);font-size:13px;opacity:.75;pointer-events:none;white-space:nowrap}
+body.touch .hint,body.hint-off .hint{opacity:0}.hint{transition:opacity 1s}
+.pill[hidden]{display:none}
+/* First-level touch tips, gone once the child has used each control */
+.tip{display:none;position:fixed;z-index:12;pointer-events:none;padding:6px 12px;border-radius:14px;background:rgba(0,0,0,.55);font-size:14px;white-space:nowrap;animation:bob 1.6s ease-in-out infinite}
+body.touch.l1 .tip{display:block}
+body.moved .tip-l,body.jumped .tip-r{display:none!important}
+.tip-l{left:calc(28px + var(--sl));bottom:calc(40px + var(--sb) + clamp(110px,22vmin,150px))}
+.tip-r{right:calc(20px + var(--sr));bottom:calc(40px + var(--sb) + clamp(84px,17vmin,116px))}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+
+/* Touch controls */
+.zone{position:fixed;z-index:10;top:0;bottom:0;touch-action:none;display:none}
+#zl{left:0;width:55%}#zr{right:0;width:45%}
+body.touch .zone,body.touch #joy,body.touch #jb{display:block}
+#joy{display:none;position:fixed;z-index:11;pointer-events:none;width:clamp(110px,22vmin,150px);aspect-ratio:1;border-radius:50%;
+  left:calc(28px + var(--sl) + clamp(55px,11vmin,75px));top:calc(100% - 28px - var(--sb) - clamp(55px,11vmin,75px));transform:translate(-50%,-50%);
+  background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.22);opacity:.7;transition:opacity .2s}
+#joy.on{opacity:1}
+#joy .knob{position:absolute;left:50%;top:50%;width:44%;height:44%;margin:-22% 0 0 -22%;border-radius:50%;background:rgba(255,255,255,.35);border:2px solid rgba(255,255,255,.5)}
+#jb{display:none;position:fixed;z-index:11;pointer-events:none;width:clamp(84px,17vmin,116px);aspect-ratio:1;border-radius:50%;
+  right:calc(28px + var(--sr));bottom:calc(28px + var(--sb));background:rgba(255,255,255,.1);border:2px solid rgba(255,255,255,.3);
+  transition:transform .12s,background .12s}
+#jb svg{position:absolute;inset:26%;width:48%;height:48%;stroke:#fff;fill:none;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round;opacity:.85}
+#jb.on{transform:scale(.88);background:rgba(255,255,255,.28)}
+
+/* Story cards, fades, messages */
+#fade{position:fixed;inset:0;background:#000;opacity:1;pointer-events:none;transition:opacity .45s ease;z-index:50}
+#cards{position:fixed;inset:0;opacity:0;pointer-events:none;transition:opacity 1.6s ease;z-index:60;cursor:pointer}
+#cards .ci{position:absolute;max-width:none;filter:brightness(0) invert(1);-webkit-user-drag:none;pointer-events:none}
+#cards .ring{opacity:0;animation:rfade 1.6s ease 1s forwards,rp 2.4s ease-in-out infinite}
+#cards .iz{animation:iz 5s linear forwards}
+@keyframes rfade{to{opacity:1}}
+@keyframes rp{0%,100%{transform:scale(.92)}50%{transform:scale(1.08)}}
+@keyframes iz{from{transform:scale(1)}to{transform:scale(1.2)}}
+#msg{position:fixed;inset:0;z-index:70;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;text-align:center}
+#msg[hidden]{display:none}
+#msg p{margin:0;font-size:17px;max-width:24em}
+#msg button{pointer-events:auto;padding:12px 24px;border-radius:24px;border:0;background:var(--accent);color:#0c1b1e;cursor:pointer}
+#msg button[hidden]{display:none}
+/* Level select */
+#menu{position:fixed;inset:0;z-index:65;display:flex;align-items:center;justify-content:center;overflow:auto;-webkit-overflow-scrolling:touch;touch-action:pan-y;
+  padding:calc(16px + var(--st)) calc(16px + var(--sr)) calc(16px + var(--sb)) calc(16px + var(--sl));background:rgba(4,10,12,.72);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+#menu[hidden]{display:none}
+body.menu-open .zone,body.menu-open #joy,body.menu-open #jb,body.menu-open .tip,body.menu-open .hud,body.menu-open .hint,body.menu-open #fs{visibility:hidden}
+.mcard{position:relative;width:min(560px,100%);margin:auto;padding:22px 18px 18px;border-radius:24px;background:rgba(12,27,30,.92);border:1px solid var(--pill-line);text-align:center}
+.mcard h1{margin:0 0 6px;font-size:clamp(28px,7vw,40px);letter-spacing:.04em}
+#sub{margin:0 auto 16px;max-width:30em;opacity:.8;font-weight:500}
+.big{display:block;width:100%;max-width:340px;margin:0 auto 18px;padding:16px;border:0;border-radius:18px;background:var(--accent);color:#0c1b1e;font-size:20px;font-weight:800;cursor:pointer}
+.big:active{transform:scale(.97)}
+#mclose{position:absolute;top:12px;right:12px}
+.chap{margin:0 0 12px;text-align:left}
+.chap h2{margin:0 0 6px 2px;font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--c2);opacity:.9}
+.row{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.lv{position:relative;aspect-ratio:1;min-height:48px;border-radius:14px;border:2px solid var(--c);background:rgba(255,255,255,.08);background:color-mix(in srgb,var(--c) 35%,transparent);
+  font-size:20px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
+.lv:active{transform:scale(.94)}
+.lv.cur{box-shadow:0 0 0 3px var(--c2)}
+.lv i{position:absolute;right:5px;bottom:3px;font-style:normal;font-size:12px;color:var(--c2)}
+.lv.locked{opacity:.38;cursor:default;background:transparent}
+.lv svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2}
+@media (max-height:500px) and (orientation:landscape){.mcard{width:min(760px,100%);padding:14px}.mcard h1{font-size:26px}#sub{margin-bottom:10px}.big{padding:12px;margin-bottom:12px}.row{grid-template-columns:repeat(5,1fr)}#grid{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}}
+@media (prefers-reduced-motion:reduce){#cards .ring{animation:rfade 1.6s ease 1s forwards}#cards .iz{animation:none}}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+
+<div class="zone" id="zl" aria-hidden="true"></div>
+<div class="zone" id="zr" aria-hidden="true"></div>
+<div id="joy" aria-hidden="true"><div class="knob"></div></div>
+<div id="jb" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 19V6M6 11l6-6 6 6"/></svg></div>
+
+<div class="hud">
+  <div class="pill" id="st">Level 1 / 21</div>
+  <div class="pill" hidden><span class="orb"></span><span id="orbs">0 / 0</span></div>
+  <button class="ibtn" id="levels" aria-label="Levels"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="1.5"/><rect x="14" y="4" width="6" height="6" rx="1.5"/><rect x="4" y="14" width="6" height="6" rx="1.5"/><rect x="14" y="14" width="6" height="6" rx="1.5"/></svg></button>
+  <button class="ibtn" id="retry" aria-label="Restart level"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v5h5"/></svg></button>
+</div>
+<button class="ibtn" id="fs" hidden aria-label="Fullscreen"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+<div class="tip tip-l" aria-hidden="true">Drag here to crawl</div>
+<div class="tip tip-r" aria-hidden="true">Tap here to jump</div>
+<div class="hint">Arrows / WASD to crawl · Space to jump · R to restart</div>
+
+<div id="cards"></div>
+<div id="fade"></div>
+<div id="menu" hidden>
+  <div class="mcard" role="dialog" aria-modal="true" aria-labelledby="mtitle">
+    <button class="ibtn" id="mclose" hidden aria-label="Back to game"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <h1 id="mtitle">Spider IK</h1>
+    <p id="sub"></p>
+    <button id="play" class="big">Play</button>
+    <div id="grid"></div>
+  </div>
+</div>
+<div id="msg" hidden><p></p><button hidden>Try again</button></div>
+
+<script src="js/assets.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>
