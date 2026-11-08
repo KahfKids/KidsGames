@@ -4,8 +4,15 @@
 (function () {
   'use strict';
   var A = window.MosaicArt, LV = window.MOSAIC_LEVELS, K = window.Kit;
-  var COUNT = LV.list.length, FW = 1000, WALL = 36, IN_L = WALL, IN_R = FW - WALL;
-  var CELL = (IN_R - IN_L) / LV.cols, BW = CELL - 6, BH = 52, ROW = 60, BALL_R = 30, CARPET_H = 38;
+  // The field is at least 1000 units wide and needs FH_MIN units of height (9 tile rows plus room to react).
+  // Portrait screens show it full width; wider screens widen it (tiles stretch) up to FW_MAX, so landscape
+  // tablets and desktops get a big play area instead of a narrow column.
+  var COUNT = LV.list.length, FW_MIN = 1000, FW_MAX = 1500, FH_MIN = 1390, WALL = 36, BH = 52, ROW = 60, BALL_R = 30, CARPET_H = 38;
+  var FW = FW_MIN, IN_L = WALL, IN_R, CELL, BW;
+  function setFieldWidth(fw) { FW = fw; IN_R = FW - WALL; CELL = (IN_R - IN_L) / LV.cols; BW = CELL - 6; }
+  setFieldWidth(FW_MIN);
+  // A wider field gets a wider carpet (part of the extra width) so it plays about the same.
+  function carpetWidth() { return tune ? tune.carpet * (1 + (FW / FW_MIN - 1) * 0.6) : 300; }
 
   var store = K.store('kahf-mosaic-breaker'), progress = K.progress(store, COUNT);
   var canvas = document.getElementById('stage');
@@ -16,20 +23,21 @@
   var state = 'play', bannerT = 0, sinceHit = 0, time = 0, launchedOnce = !!store.get('launched', false), hint = null;
   var keyVel = 0;
 
-  // ---------- layout (game units: the field is 1000 wide, height follows the screen) ----------
+  // ---------- layout (game units: the field is 1000-1500 wide, height follows the screen) ----------
   var G = { s: 1, ox: 0, FH: 1600, ceil: 120, top: 160, padY: 1400, dpr: 1, w: 0, h: 0 };
   var bg = null, bgWorld = -1, pillarImg = null, sprites = {};
   var stage = K.stage(canvas, function (st) {
     G.w = st.w; G.h = st.h; G.dpr = st.dpr;
-    var fieldPx = Math.min(st.w, st.h * 0.72);
-    G.s = fieldPx / FW; G.ox = (st.w - fieldPx) / 2; G.FH = st.h / G.s;
+    G.s = Math.min(st.w / FW_MIN, st.h / FH_MIN);
+    setFieldWidth(Math.min(st.w / G.s, FW_MAX));
+    G.ox = (st.w - FW * G.s) / 2; G.FH = st.h / G.s;
     G.ceil = (st.safe.top + 66) / G.s;
     G.top = G.ceil + 50 + Math.max(0, (G.FH - 1500) * 0.3);
     G.speedMul = K.clamp(G.FH / 1500, 1, 1.25);
     G.padY = G.FH - (st.safe.bottom + 64) / G.s - CARPET_H;
     sprites = {}; bg = null; pillarImg = null;
     layoutBricks();
-    if (carpet) { carpet.y = G.padY; }
+    if (carpet) { carpet.y = G.padY; carpet.base = carpetWidth(); if (!(carpet.wideT > 0)) carpet.w = carpet.base; }
   });
   var ctx = stage.ctx;
 
@@ -47,7 +55,7 @@
 
   // ---------- levels ----------
   function layoutBricks() {
-    bricks.forEach(function (b) { b.x = IN_L + b.c * CELL + 3; b.y = G.top + b.r * ROW; });
+    bricks.forEach(function (b) { b.w = BW; b.x = IN_L + b.c * CELL + 3; b.y = G.top + b.r * ROW; });
   }
   function startLevel(n) {
     level = K.clamp(n, 1, COUNT); world = LV.worldOf(level); tune = LV.tuning(level);
@@ -68,7 +76,7 @@
     });
     layoutBricks();
     lives = 3; livesLost = 0; score = 0; combo = 0; slowT = 0; drops = []; speed = tune.speed * (G.speedMul || 1);
-    carpet = { x: FW / 2, target: FW / 2, y: G.padY, base: tune.carpet, w: tune.carpet, wideT: 0, squash: 0 };
+    carpet = { x: FW / 2, target: FW / 2, y: G.padY, base: carpetWidth(), w: carpetWidth(), wideT: 0, squash: 0 };
     balls = [newStuckBall()];
     makeAmbient();
     K.fx.clear();

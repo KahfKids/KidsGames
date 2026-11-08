@@ -73,13 +73,13 @@
     // ---------- sheets ----------
     // Kit.ui.sheet({ title, text, stars (0-3 or null), buttons: [{ label, icon, primary, row, onClick }], onClose, closeable })
     sheet: function (o) {
-      var veil = el('div', 'kit-veil'), box = el('div', 'kit-sheet');
-      veil.appendChild(box);
+      var veil = el('div', 'kit-veil'), frame = el('div', 'kit-sheet'), box = el('div', 'kit-sheet-in');
+      veil.appendChild(frame); frame.appendChild(box);
       if (o.closeable) {
         var x = el('button', 'kit-btn-icon kit-close', ICON.close);
         x.setAttribute('aria-label', 'Close');
         x.onclick = function () { Kit.sfx && Kit.sfx.play('tap'); close(); if (o.onClose) o.onClose(); };
-        box.appendChild(x);
+        frame.appendChild(x);
       }
       if (o.title) box.appendChild(el('h2', '', o.title));
       if (o.text) box.appendChild(el('p', '', o.text));
@@ -113,7 +113,7 @@
         veil.classList.remove('in');
         setTimeout(function () { veil.remove(); }, 260);
       }
-      return { close: close, el: box };
+      return { close: close, el: frame };
     },
 
     // Kit.ui.levelSelect({ worlds: [{ name, color, from, to }], progress, current, onPick(n), onClose })
