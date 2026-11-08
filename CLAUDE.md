@@ -124,6 +124,19 @@ Themes are controlled via URL parameters:
 - Touch-optimized interfaces
 - Install prompts for standalone app experience
 
+## Kahf activity bridge (every game page)
+
+Every game page includes the shared bridge so the Kahf Kids app can count real learning:
+
+```html
+<script src="/KidsGames/js/kahf-bridge.js" defer></script>
+```
+
+- It reports audio played to the end and active time on its own, and does nothing in a normal browser tab.
+- Quizzes call `window.KahfBridge && window.KahfBridge.answer();` on every answer the child taps (not on timeouts). Optional extras: `KahfBridge.complete()` when a round ends, and `KahfBridge.item(id)` when an item is opened.
+- **New game:** add the script tag. That's all the app needs. The app decides what earns credit, per screen.
+- **Changing `js/kahf-bridge.js`:** bump `GAMES_CACHE` in `sw.js` (it's served cache-first). Keep the app's copy (`KahfKids/expo-app/constants/kahf-bridge-script.ts`) identical. A protocol change bumps `v` on both sides.
+
 ## Development Workflow
 
 ### Adding New Games
