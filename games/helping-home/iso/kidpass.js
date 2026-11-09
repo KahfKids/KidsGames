@@ -16,6 +16,14 @@
   window.FIG_A = function () { return innerWidth <= 560 ? 1.05 : .75; };
   window.HH_CSS_SHAKE = true;
 
+  // Kit sheets always wear the game's paper and ink (the kit's own sheet is dark purple, which made ink text unreadable
+  // on pages that never call HH.mount, e.g. the house's prayer-times sheet).
+  (function () {
+    var st = document.createElement('style');
+    st.textContent = '.kit-sheet{background:var(--paper,#fbf6ea)!important;color:var(--ink,#231e16)!important;border:2.5px solid var(--ink,#231e16)!important;box-shadow:0 6px 0 var(--ink,#231e16)!important}' +
+      '.kit-sheet h2{color:var(--ink,#231e16)}.kit-veil{background:rgba(35,30,22,.35)!important}';
+    (document.head || document.documentElement).appendChild(st);
+  })();
   var CSS = '' +
     'body{padding:0!important;min-height:100dvh;justify-content:flex-start;overscroll-behavior:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}' +
     'body>header,#readout,.controls,.made-with,.actions,.vset,.mcap,.idea{display:none!important}' +
