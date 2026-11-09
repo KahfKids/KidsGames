@@ -38,7 +38,11 @@
     'Play catch with your sister': 'Catch', 'Tidy up': 'Tidy', 'Help set the table': 'Table', 'Help pack the bag': 'Bag', 'Find a shoe': 'Shoe', 'Help fold the washing': 'Fold',
     'Water the plants': 'Water', 'Carry the shopping': 'Shopping', 'Play blocks': 'Blocks', 'Play catch': 'Catch', 'Hide and seek': 'Hide', 'A bedtime story': 'Story' };
   const short = t => SHORT[t.title] || (/^Pick the/.test(t.title) ? 'Pick' : /prayer$/.test(t.title) ? t.title.replace(/ prayer$/, '') : /^Tahajjud/.test(t.title) ? 'Tahajjud' :
-    t.title.split(' ').slice(0, 2).join(' '));
+    shortWord(t.title));
+  // no hand-picked label: the first word that names a thing ("Fill the cat's bowl" -> "Cat")
+  const STOP = /^(help|with|the|a|an|your|my|to|put|take|fill|make|give|play|do|get|in|on|for|and|of|at|into|away|up|out|feed|water|bring|carry|find|set|clear|pack|hang|fold|wipe|sweep|tidy)$/i;
+  function shortWord(title){ const w = String(title).split(/\s+/).map(x => x.replace(/'s$|[^\w']/g, '')).filter(Boolean), k = w.find(x => !STOP.test(x)) || w[w.length - 1] || title;
+    return k.charAt(0).toUpperCase() + k.slice(1); }
   const WHO = { abu: 'Abu', ummi: 'Ummi', sister: 'Your sister', toddler: 'Your little brother' };
   const voiceOf = c => c.kind === 'request' && WHO[c.who] ? WHO[c.who] + ' needs help. ' + c.title : c.kind === 'prayer' ? 'It is time for ' + c.label + '.' : c.title;
 
@@ -58,7 +62,7 @@
   };
 
   /* ---------- state ---------- */
-  let H = null, ST = null, mounted = false, LAST = new Map(), ACT = null, DEMO = null, ONB = null, root = null, strip = null, ghost = null, fx = null, garland = null;
+  let H = null, ST = null, mounted = false, LAST = new Map(), ACT = null, DEMO = null, ONB = null, root = null, strip = null, chip = null, open = false, ghost = null, fx = null, garland = null;
   function load(){ const s = read(KEY, {}) || {}; s.days = s.days || []; s.gifts = s.gifts || []; s.hearts = s.hearts || {}; s.special = s.special || {}; return s; }
   const save = () => write(KEY, ST);
   function winKey(d){ const c = safe(() => HL.current(d), null); return dk(d) + '|' + (c ? c.name : d.getHours() < 5 ? 'night' : 'morning'); }
@@ -134,7 +138,7 @@
     if (c.done) return; c.done = true;
     const byChild = Object.keys(c.got).length > 0 || (c.kind === 'prayer' && prayedNow(c));
     c.quiet = !byChild; save(); paint();
-    if (byChild) reward(c);
+    if (byChild){ reward(c); if (!open) chipCheer(); }
     if (W().cards.every(x => x.done)){ W().finished = true; save();
       if (!W().celebrated){ W().celebrated = true; save(); setTimeout(() => moment(celebrate), byChild ? 1900 : 300); }
       setTimeout(paint, 900); }
@@ -213,8 +217,11 @@
     return `<span class="op">${f('open')}</span><span class="gr">${f('grab')}</span><span class="pt">${f('point')}</span><span class="it"></span>`;
   }
   // is a point in clear view (not under the HUD or the strip)?
-  const onScreen = p => { if (!p) return false; const r = strip.getBoundingClientRect(), side = r.height > r.width;
+  const onScreen = p => { if (!p) return false; const side = open && tabletCol(), r = (open ? strip : chip).getBoundingClientRect();
     return p[0] > (side ? r.right + 12 : 20) && p[0] < innerWidth - 20 && p[1] > 76 && p[1] < (side ? innerHeight - 70 : r.top - 12); };
+  // how much of the bottom the guide covers right now (for HOUSE.focus): only the chip when collapsed
+  const insetBottom = () => { if (open && !tabletCol()) return innerHeight - strip.getBoundingClientRect().top + 8; const r = chip && chip.getBoundingClientRect(); return r && r.height ? innerHeight - r.top + 8 : 84; };
+  const tabletCol = () => matchMedia('(orientation:landscape) and (min-width:700px) and (min-height:600px)').matches;
   function member(c){ tasks(); return c.ids.map(id => LAST.get(id)).find(t => t && !t.done && !c.got[t.id]) || null; }
   function stopDemo(){
     if (!DEMO) return; DEMO.anims.forEach(a => { try { a.cancel(); } catch (e) {} });
@@ -228,12 +235,12 @@
   function show(c, loops, focus, gentle){
     const t = member(c); if (!t){ status(); return; }
     const p = H.toScreen(t.from || t.at), q = H.toScreen(t.to || t.at);
-    if (gentle && (!onScreen(p) || !onScreen(q))){ const b = strip.querySelector(`.hhg-card[data-k="${CSS.escape(c.k)}"]`); if (b) bump(b); idle(); return; }
-    if (focus || !onScreen(p) || !onScreen(q)){ stopDemo(); safe(() => H.focus(t.id, 700, { bottom: strip && innerWidth < innerHeight ? strip.getBoundingClientRect().height + 90 : 0 }), Promise.resolve()).then(() => { if (ACT && ACT.c === c) setTimeout(() => demo(t, loops), 80); }); }
+    if (gentle && (!onScreen(p) || !onScreen(q))){ const b = open ? strip.querySelector(`.hhg-card[data-k="${CSS.escape(c.k)}"]`) : chip; if (b) bump(b); idle(); return; }
+    if (focus || !onScreen(p) || !onScreen(q)){ stopDemo(); safe(() => H.focus(t.id, 700, { bottom: insetBottom() }), Promise.resolve()).then(() => { if (ACT && ACT.c === c) setTimeout(() => demo(t, loops), 80); }); }
     else demo(t, loops);
   }
   function demo(t, loops){
-    stopDemo();
+    stopDemo(); collapse();
     const how = t.how || 'tap', a = H.toScreen(how === 'drag' || how === 'scrub' ? (t.from || t.at) : t.at), b = H.toScreen(t.to || t.at);
     if (t.tapDy){ a[1] += t.tapDy; b[1] += t.tapDy; }             // the request bubble is drawn above its anchor (HOUSE gives tapDy)
     ghost.innerHTML = handHtml();
@@ -305,7 +312,7 @@
   function paint(){
     if (!strip) return;
     const w = W(), box = strip.querySelector('.hhg-cards');
-    cosyPaint(false);
+    cosyPaint(false); chipPaint();
     if (w.finished){
       const avail = pick(tasks(), 1, new Set(w.cards.map(c => c.k))).length > 0, line = closingLine();
       const key = 'fin|' + line + avail;
@@ -331,6 +338,32 @@
       if (em._p !== pips){ em._p = pips; em.innerHTML = pips; } });
   }
   function bump(b){ b.classList.remove('bump'); void b.offsetWidth; b.classList.add('bump'); }
+  /* ---------- the chip (collapsed) and the strip (expanded) ---------- */
+  function expand(){ if (open || !strip) return; open = true; strip.classList.add('open'); chip.classList.add('open'); chip.setAttribute('aria-expanded', 'true'); chipPaint(); }
+  function collapse(){ if (!open || !strip || (ONB && ONB.step === 1)) return; open = false; strip.classList.remove('open'); chip.classList.remove('open'); chip.setAttribute('aria-expanded', 'false'); chipPaint(); }
+  function ringSvg(done, total){
+    const R = 27, L = 2*Math.PI*R, f = total ? Math.min(1, done/total) : 0;
+    return `<svg viewBox="0 0 64 64" class="rg"><circle cx="32" cy="32" r="${R}" fill="#fff9e8" stroke="#e6dcc3" stroke-width="6"/>` +
+      (f ? `<circle cx="32" cy="32" r="${R}" fill="none" stroke="#5cae6a" stroke-width="6" stroke-linecap="round" stroke-dasharray="${(L*f).toFixed(1)} ${L.toFixed(1)}" transform="rotate(-90 32 32)"/>` : '') +
+      `<circle cx="32" cy="32" r="${R + 3.2}" fill="none" stroke="${INK}" stroke-width="2.2"/><circle cx="32" cy="32" r="${R - 3.2}" fill="none" stroke="${INK}" stroke-width="1.4" opacity=".5"/></svg>`;
+  }
+  let chipTick = 0;
+  function chipPaint(){
+    if (!chip || !W()) return;
+    const w = W(), done = w.cards.filter(c => c.done).length, total = w.cards.length;
+    const cur = ACT && !ACT.c.done ? ACT.c : w.cards.find(c => !c.done), fin = w.finished || !cur;
+    const line = fin ? closingLine() : '';
+    const ic = chipTick ? TICK : fin ? icon(/Fajr|Isha|Maghrib/.test(line) ? 'moon' : 'sun') : (cur.icon || icon('star'));
+    const lab = chipTick ? 'Done!' : fin ? 'All done!' : cur.label;
+    const key = [done, total, ic.length, lab, fin].join('|');
+    chip.classList.toggle('next', !fin && !open);
+    chip.classList.toggle('fin', fin); chip.classList.toggle('pray', !fin && cur.kind === 'prayer');
+    if (chip._k === key) return; chip._k = key;
+    chip.querySelector('.ring').innerHTML = ringSvg(done, total) + `<i>${ic}</i>`;
+    chip.querySelector('b').textContent = lab;
+    chip.setAttribute('aria-label', fin ? 'All done' : 'Next: ' + (cur.title || lab));
+  }
+  function chipCheer(){ if (!chip) return; chipTick = 1; chip._k = ''; chipPaint(); bump(chip); clearTimeout(chipCheer.t); chipCheer.t = setTimeout(() => { chipTick = 0; chip._k = ''; chipPaint(); }, 1100); }
   function tapCard(k, b){
     const c = W().cards.find(x => x.k === k); if (!c) return;
     sfx('h_tap'); bump(b);
@@ -339,6 +372,7 @@
     if (ONB && ONB.step === 1) onbTapped(c);
     if (ACT) clearTimeout(ACT.timer);
     ACT = { c, replays: 0, timer: 0 }; paint();
+    setTimeout(collapse, 160);
     show(c, 2, true);
   }
 
@@ -438,22 +472,23 @@
     if (!c){ ST.onboarded = true; save(); return; }
     const pr = w.cards.filter(x => x.kind === 'prayer' && !x.done); w.cards = pr.concat([c], w.cards.filter(x => x !== c && pr.indexOf(x) < 0)); save(); paint();
     ONB = { step: 1, c, veil: el('div', 'hhg-coach') };
-    const b = strip.querySelector(`.hhg-card[data-k="${CSS.escape(c.k)}"]`);
-    strip.classList.add('lift'); document.body.appendChild(ONB.veil); requestAnimationFrame(() => ONB.veil.classList.add('in'));
+    expand();
+    const b = strip.querySelector(`.hhg-card[data-k="${CSS.escape(c.k)}"]`); strip.classList.add('lift'); chip.classList.add('lift'); document.body.appendChild(ONB.veil); requestAnimationFrame(() => ONB.veil.classList.add('in'));
     let taps = 0;
     ONB.veil.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); taps++; if (b) bump(b); say('Tap a picture to help!'); if (taps >= 4) onbEnd(); });
     // the hand taps the card, over and over, until the child does
-    if (b){ const r = b.getBoundingClientRect(), p = [r.left + r.width/2, r.top + r.height*.45];
+    // measured once the strip has slid open
+    if (b) setTimeout(() => { if (!ONB || ONB.step !== 1) return; const r = b.getBoundingClientRect(), p = [r.left + r.width/2, r.top + r.height*.45];
       ghost.innerHTML = handHtml(); ghost.classList.add('on', 'coach');
       const kf = [{ transform: `translate(${p[0] + 30}px,${p[1] + 60}px)`, opacity: 0 }, { transform: `translate(${p[0]}px,${p[1]}px)`, opacity: 1, offset: .35 },
         { transform: `translate(${p[0]}px,${p[1] + 3}px) scale(.85)`, opacity: 1, offset: .5 }, { transform: `translate(${p[0]}px,${p[1]}px)`, opacity: 1, offset: .62 }, { transform: `translate(${p[0] + 24}px,${p[1] + 46}px)`, opacity: 0 }];
       const a1 = ghost.animate(kf, { duration: 1700, iterations: Infinity }), a2 = ghost.querySelector('.pt').animate([{ opacity: 1 }, { opacity: 1 }], { duration: 1700, iterations: Infinity });
       ghost.querySelectorAll('.op,.gr,.it').forEach(e => { e.style.opacity = 0; });
-      ONB.anims = [a1, a2]; }
+      ONB.anims = [a1, a2]; }, 380);
     setTimeout(() => say('Tap a picture to help!'), 700);
   }
   function onbClearCoach(){ if (!ONB) return; (ONB.anims || []).forEach(a => a.cancel()); ONB.anims = null; ghost.classList.remove('on', 'coach'); ghost.querySelectorAll('span').forEach(e => { e.style.opacity = ''; });
-    if (ONB.veil){ const v = ONB.veil; ONB.veil = null; v.classList.remove('in'); setTimeout(() => v.remove(), 250); } strip.classList.remove('lift'); }
+    if (ONB.veil){ const v = ONB.veil; ONB.veil = null; v.classList.remove('in'); setTimeout(() => v.remove(), 250); } strip.classList.remove('lift'); chip.classList.remove('lift'); }
   function onbTapped(){ onbClearCoach(); ONB.step = 2; setTimeout(() => say('Watch my hand. Now you do it!'), 1500); }
   function onbEnd(){ onbClearCoach(); ONB = null; ST.onboarded = true; save(); }
   function onbFirstWin(p){
@@ -474,7 +509,7 @@
       c.got[id] = 1; c.n = (c.n || 0) + 1; save();
       if (p) { sparkle(p, 6, 30); } sfx('g_pop');
       const fin = c.ids.every(x => c.got[x] || !LAST.get(x) || LAST.get(x).done || x === id);
-      if (fin) complete(c); else { const b = strip.querySelector(`.hhg-card[data-k="${CSS.escape(c.k)}"]`); if (b) bump(b); }
+      if (fin) complete(c); else { const b = open ? strip.querySelector(`.hhg-card[data-k="${CSS.escape(c.k)}"]`) : chip; if (b) bump(b); }
       if (ACT && ACT.c === c){ stopDemo(); ACT.replays = 0; clearTimeout(ACT.timer);
         if (c.done){ ACT = null; } else ACT.timer = setTimeout(() => { if (ACT && ACT.c === c && !DEMO) show(c, 1, false, true); }, 1800); }
       paint();
@@ -486,20 +521,36 @@
     soon(500);
   }
   function onUser(e){
-    // the child is doing something in the house: the hand steps aside, and comes back after 8 s with no progress
+    // the child is doing something in the house: the strip folds away, the hand steps aside, and comes back after 8 s with no progress
+    if (e.target.closest && e.target.closest('.hhg-strip,.hhg-chip,.hhg-veil,.hhb,.hhb-btn,.hh-hud,.hh-tray,.kit-sheet,.hhg-coach')) return;
+    collapse();
     if (!ACT) return;
-    if (e.target.closest && e.target.closest('.hhg-strip,.hhg-veil,.hhb,.hhb-btn,.hh-hud,.hh-tray,.kit-sheet')) return;
     if (DEMO) stopDemo();
     idle();
   }
 
   /* ---------- styles ---------- */
   const CSSTEXT = `
-  .hhg-strip{position:fixed;left:0;right:0;margin:0 auto;width:fit-content;bottom:calc(env(safe-area-inset-bottom) + 74px);z-index:6;display:flex;align-items:stretch;gap:6px;padding:6px;box-sizing:border-box;
-    max-width:calc(100vw - 16px);background:#fbf6ea;border:2.5px solid ${INK};border-radius:24px;box-shadow:0 4px 0 ${INK};transition:transform .3s cubic-bezier(.2,1.2,.4,1),opacity .2s;
-    -webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
-  .hhg-strip.lift{z-index:8}
-  body:has(.hh-tray.in) .hhg-strip,body:has(.fam-stage) .hhg-strip,body:has(.hh-teeth) .hhg-strip,body:has(.hh-hp) .hhg-strip,body:has(.kit-veil) .hhg-strip,body:has(.hhb) .hhg-strip,body:has(.hhg-veil) .hhg-strip{opacity:0;pointer-events:none;transform:translateY(30px)}
+  .hhg-strip{position:fixed;left:0;right:0;margin:0 auto;width:fit-content;bottom:calc(env(safe-area-inset-bottom) + 84px);z-index:6;display:flex;align-items:stretch;gap:6px;padding:6px;box-sizing:border-box;
+    max-width:calc(100vw - 16px);background:#fbf6ea;border:2.5px solid ${INK};border-radius:24px;box-shadow:0 4px 0 ${INK};transition:transform .28s cubic-bezier(.2,1.2,.4,1),opacity .18s,visibility 0s .28s;
+    -webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;touch-action:none;
+    opacity:0;visibility:hidden;pointer-events:none;transform:translateY(40px) scale(.96);transform-origin:20% 100%}
+  .hhg-strip.open{opacity:1;visibility:visible;pointer-events:auto;transform:none;transition:transform .32s cubic-bezier(.2,1.25,.4,1),opacity .15s,visibility 0s}
+  .hhg-strip.lift,.hhg-chip.lift{z-index:8}
+  .hhg-chip{all:unset;position:fixed;left:96px;bottom:calc(env(safe-area-inset-bottom) + 8px);z-index:6;box-sizing:border-box;height:64px;max-width:calc(100vw - 180px);padding:4px 10px 4px 4px;
+    display:flex;align-items:center;gap:6px;border-radius:32px;background:#fbf6ea;border:2.5px solid ${INK};box-shadow:0 3px 0 ${INK};cursor:pointer;-webkit-tap-highlight-color:transparent;transition:opacity .2s,transform .2s}
+  .hhg-chip .ring{position:relative;flex:none;width:52px;height:52px}
+  .hhg-chip .ring .rg{position:absolute;inset:0;width:100%;height:100%}
+  .hhg-chip .ring i{position:absolute;inset:11px;display:grid;place-items:center}.hhg-chip .ring i svg{width:100%;height:100%;overflow:visible}
+  .hhg-chip b{font:800 15px/1.05 ui-rounded,"SF Pro Rounded",system-ui,sans-serif;color:${INK};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+  .hhg-chip .chev{flex:none;width:22px;height:22px;transition:transform .25s}.hhg-chip .chev svg{width:100%;height:100%}
+  .hhg-chip.open .chev{transform:rotate(180deg)}
+  .hhg-chip.next{background:#f4b829}.hhg-chip.pray.next{background:#9fdcc4}.hhg-chip.fin{background:#dcefcd}
+  .hhg-chip.next::before{content:"";position:absolute;inset:-3px;border-radius:34px;border:3px solid #f4b829;animation:hhgRing 1.8s ease-out infinite;pointer-events:none}
+  .hhg-chip:active{transform:translateY(2px);box-shadow:0 1px 0 ${INK}}
+  .hhg-chip.bump{animation:hhgPop .45s cubic-bezier(.2,1.5,.4,1)}
+  body:has(.hh-tray.in) .hhg-chip,body:has(.fam-stage) .hhg-chip,body:has(.hh-teeth) .hhg-chip,body:has(.hh-hp) .hhg-chip,body:has(.kit-veil) .hhg-chip,body:has(.hhb) .hhg-chip,body:has(.hhg-veil) .hhg-chip{opacity:0;pointer-events:none}
+  body:has(.hh-tray.in) .hhg-strip,body:has(.fam-stage) .hhg-strip,body:has(.hh-teeth) .hhg-strip,body:has(.hh-hp) .hhg-strip,body:has(.kit-veil) .hhg-strip,body:has(.hhb) .hhg-strip,body:has(.hhg-veil) .hhg-strip{opacity:0;visibility:hidden;pointer-events:none;transform:translateY(30px)}
   .hhg-cards{display:flex;gap:6px;align-items:stretch;min-width:0}
   .hhg-cosy{all:unset;flex:none;box-sizing:border-box;width:46px;border-radius:16px;display:grid;place-items:center;cursor:pointer;background:#efe6cf;border:2px dashed rgba(35,30,22,.35)}
   .hhg-cosy svg{width:36px;height:44px}
@@ -511,7 +562,7 @@
   .hhg-card .f{background:#fff9e8}
   .hhg-card .f i{display:grid;place-items:center;width:38px;height:38px;flex:none}
   .hhg-card .f i svg{width:100%;height:100%;overflow:visible}
-  .hhg-card .f b{font:800 10.5px/1 ui-rounded,"SF Pro Rounded",system-ui,sans-serif;color:${INK};max-width:100%;padding:0 2px;box-sizing:border-box;overflow:hidden;text-align:center;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow-wrap:normal;hyphens:none}
+  .hhg-card .f b{font:800 clamp(9.5px,2.6vw,10.5px)/1 ui-rounded,"SF Pro Rounded",system-ui,sans-serif;color:${INK};max-width:100%;padding:0 2px;box-sizing:border-box;overflow:hidden;text-align:center;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow-wrap:normal;hyphens:none}
   .hhg-card .f em{position:absolute;top:3px;left:0;right:0;display:flex;justify-content:center;gap:2px}
   .hhg-card .f em u{display:block;width:6px;height:6px;border-radius:50%;border:1.4px solid ${INK};background:#fff;box-sizing:border-box}
   .hhg-card .f em u.on{background:#5cae6a}
@@ -535,14 +586,17 @@
   .hhg-fin b{display:block;font:800 17px/1.1 ui-rounded,"SF Pro Rounded",system-ui,sans-serif;color:${INK}}
   .hhg-fin small{display:block;font:700 13px/1.2 ui-rounded,"SF Pro Rounded",system-ui,sans-serif;color:#3c4a33}
   @media (orientation:landscape) and (min-width:700px) and (min-height:600px){
-    .hhg-strip{left:12px;right:auto;margin:0;top:50%;bottom:auto;transform:translateY(-50%);flex-direction:column;max-height:calc(100dvh - 170px);max-width:none}
-    .hhg-cards{flex-direction:column}
-    .hhg-cosy{width:auto;height:52px}
-    .hhg-card{flex:0 1 76px;width:72px;min-height:52px;height:auto}
-    .hhg-fin{flex-direction:column;height:auto;width:72px;padding:10px 4px;text-align:center}.hhg-fin b{font-size:15px}.hhg-fin small{font-size:11.5px}
-    body:has(.hh-tray.in) .hhg-strip,body:has(.fam-stage) .hhg-strip,body:has(.hh-teeth) .hhg-strip,body:has(.hh-hp) .hhg-strip,body:has(.kit-veil) .hhg-strip,body:has(.hhb) .hhg-strip,body:has(.hhg-veil) .hhg-strip{transform:translateY(-50%) translateX(-30px)}
+    .hhg-strip{left:12px;right:auto;margin:0;top:50%;bottom:auto;transform:translateY(-50%) translateX(-40px);transform-origin:0 50%;flex-direction:column;max-height:calc(100dvh - 190px);max-width:none;padding:5px;gap:5px;border-radius:20px}
+    .hhg-strip.open{transform:translateY(-50%)}
+    .hhg-cards{flex-direction:column;gap:5px}
+    .hhg-cosy{width:auto;height:44px}.hhg-cosy svg{height:38px}
+    .hhg-card{flex:none;width:56px;height:56px}
+    .hhg-card .f b{display:none}.hhg-card .f i{width:36px;height:36px}
+    .hhg-card.sel{height:74px}.hhg-card.sel .f b{display:-webkit-box}
+    .hhg-fin{flex-direction:column;height:auto;width:56px;padding:8px 2px;text-align:center}.hhg-fin b{font-size:12px}.hhg-fin small{font-size:10px}
+    body:has(.hh-tray.in) .hhg-strip,body:has(.fam-stage) .hhg-strip,body:has(.hh-teeth) .hhg-strip,body:has(.hh-hp) .hhg-strip,body:has(.kit-veil) .hhg-strip,body:has(.hhb) .hhg-strip,body:has(.hhg-veil) .hhg-strip{transform:translateY(-50%) translateX(-40px)}
   }
-  @media (orientation:landscape) and (max-height:599px){.hhg-strip{bottom:calc(env(safe-area-inset-bottom) + 8px)}.hhg-card,.hhg-fin{height:64px}.hhg-card .f i{width:32px;height:32px}.hhg-cosy svg{height:38px}}
+  @media (orientation:landscape) and (max-height:599px){.hhg-strip{bottom:calc(env(safe-area-inset-bottom) + 80px)}.hhg-card,.hhg-fin{height:64px}.hhg-card .f i{width:32px;height:32px}.hhg-cosy svg{height:38px}}
   .hhg-fx{position:fixed;inset:0;z-index:9;pointer-events:none;overflow:hidden}
   .hhg-fx>*{position:absolute;left:0;top:0;will-change:transform}
   .hhg-spk{width:16px;height:16px;margin:-8px 0 0 -8px;background:radial-gradient(circle,#fff 0 20%,#ffe27a 36%,transparent 64%);clip-path:polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%)}
@@ -619,7 +673,7 @@
   @keyframes hhgDrop{from{transform:translateY(-90px);opacity:0}}
   @keyframes hhgSway{from{transform:rotate(-5deg)}to{transform:rotate(5deg)}}
   @keyframes hhgGl{from{opacity:.4}to{opacity:1}}
-  @media (prefers-reduced-motion:reduce){.hhg-card.next::before,.hhg-ring::before,.hhg-gbox .box,.hhg-gbox .hand,.hhg-garland.drop i,.hhg-garland.drop .glow,.hhg-cbox .who svg{animation:none!important}}
+  @media (prefers-reduced-motion:reduce){.hhg-chip.next::before,.hhg-card.next::before,.hhg-ring::before,.hhg-gbox .box,.hhg-gbox .hand,.hhg-garland.drop i,.hhg-garland.drop .glow,.hhg-cbox .who svg{animation:none!important}}
   `;
 
   /* ---------- sounds: natural only ---------- */
@@ -649,14 +703,25 @@
       say(n >= 6 ? 'Your home is so cosy!' : n ? 'Your home is getting cosy. Every job lights a window.' : 'Every job you do lights a window.'); });
     strip.appendChild(cosy); strip.appendChild(el('div', 'hhg-cards'));
     document.body.appendChild(strip);
+    chip = el('button', 'hhg-chip', '<span class="ring"></span><b></b><span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="#231e16" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 14.5 12 8.5l6 6"/></svg></span>');
+    chip.setAttribute('aria-expanded', 'false');
+    chip.addEventListener('click', e => { e.stopPropagation(); sfx('h_tap'); bump(chip);
+      if (open){ collapse(); return; } expand(); const w = W(), cur = ACT && !ACT.c.done ? ACT.c : w.cards.find(c => !c.done); if (cur) say(voiceOf(cur)); else say('All done! ' + closingLine()); });
+    document.body.appendChild(chip);
+    // swipe down on the strip folds it away
+    { let y0 = null, x0 = 0; strip.addEventListener('pointerdown', e => { y0 = e.clientY; x0 = e.clientX; }); strip.addEventListener('pointercancel', () => { y0 = null; });
+      strip.addEventListener('pointermove', e => { if (y0 == null) return; const dy = e.clientY - y0, dx = e.clientX - x0;
+        if ((!tabletCol() && dy > 28 && dy > Math.abs(dx)) || (tabletCol() && dx < -28 && -dx > Math.abs(dy))){ y0 = null; sfx('h_tap'); collapse(); } });
+      strip.addEventListener('pointerup', () => { y0 = null; }); }
     if (window.HHBook && HHBook.mount) safe(() => HHBook.mount(H), null);
     ensureWin(); status(); paint();
+    if (tabletCol() && ST.onboarded) expand();             // on a tablet the narrow column starts open; it folds away the same way
     if (ST.lastStars == null){ ST.lastStars = safe(() => H.stars(), 0); ST.giftAt = Math.floor(ST.lastStars/5)*5; save(); }
     else setTimeout(() => syncStars(prayerSpot()), 900);       // stars earned away (prayer, washing machine) fly in now
     if (W().celebrated && W().finished) lanterns(false);
     H.on('done', onDone);
     H.on('change', () => soon(400));
-    H.on('camera', () => { if (DEMO){ stopDemo(); idle(); } });
+    H.on('camera', () => { if (DEMO){ stopDemo(); idle(); } if (!ONB) collapse(); });
     document.addEventListener('pointerdown', onUser, true);
     setInterval(() => { if (document.hidden) return; if (ensureWin()){ if (garland){ garland.remove(); garland = null; } ACT = null; stopDemo(); strip.querySelector('.hhg-cards')._k = ''; } status(); }, 30000);
     document.addEventListener('visibilitychange', () => { if (!document.hidden){ ensureWin(); status(); syncStars(center()); } });
@@ -669,5 +734,5 @@
 
   const G = window.HHGuide = { mount, mounted: false,
     // for testing: the strip's cards, a fake finish, and the moments
-    _state: () => ST, _cards: () => W() && W().cards, _gift: () => moment(gift), _done: ev => onDone(ev), _status: () => status(), _celebrate: () => moment(celebrate), _show: k => { const c = W().cards.find(x => x.k === k) || W().cards.find(x => !x.done); if (c){ ACT = { c, replays: 0 }; show(c, 2, true); } } };
+    _state: () => ST, _cards: () => W() && W().cards, _gift: () => moment(gift), _done: ev => onDone(ev), _status: () => status(), _expand: () => expand(), _collapse: () => collapse(), _open: () => open, _celebrate: () => moment(celebrate), _show: k => { const c = W().cards.find(x => x.k === k) || W().cards.find(x => !x.done); if (c){ ACT = { c, replays: 0 }; show(c, 2, true); } } };
 })();
