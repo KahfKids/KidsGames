@@ -1,6 +1,6 @@
-const CACHE_NAME = 'kidsgames-v1.4.0';
-const STATIC_CACHE = 'kidsgames-static-v1.4.0';
-const GAMES_CACHE = 'kidsgames-games-v1.4.0';
+const CACHE_NAME = 'kidsgames-v1.4.1';
+const STATIC_CACHE = 'kidsgames-static-v1.4.1';
+const GAMES_CACHE = 'kidsgames-games-v1.4.1';
 const PREMIUM_CACHE = 'kidsgames-premium-v1.3.5';
 
 // Core files that should be cached immediately
@@ -15,7 +15,7 @@ const STATIC_ASSETS = [
   '/KidsGames/appicon.png',
   '/KidsGames/favicon.ico',
   '/KidsGames/121.png',
-  '/KidsGames/2048.jpeg',
+  '/KidsGames/garden-2048.jpg',
   '/KidsGames/30s-chellenge.jpeg',
   '/KidsGames/601.png',
   '/KidsGames/603.png',
@@ -76,7 +76,8 @@ const STATIC_ASSETS = [
   '/KidsGames/dua_for_kids_-_Aussie_Muslim_Kids_wwwaussiemuslimkidsweeblycom.png',
   '/KidsGames/eating_etiquettes.png',
   '/KidsGames/flappy-bird.png',
-  '/KidsGames/hextris.jpeg',
+  '/KidsGames/hextris.jpg',
+  '/KidsGames/tower-blocks.jpg',
   '/KidsGames/mosaic-breaker.jpg',
   '/KidsGames/star-rangers.jpg',
   '/KidsGames/sharp-eyes.jpg',

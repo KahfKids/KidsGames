@@ -1,3 +1,5 @@
+/* 2048 grid. Based on 2048 by Gabriele Cirulli (MIT licence, see LICENSE.txt).
+   Kahf Kids change: saved stones come back as stones. */
 function Grid(size, previousState) {
   this.size = size;
   this.cells = previousState ? this.fromState(previousState) : this.empty();
@@ -26,7 +28,7 @@ Grid.prototype.fromState = function (state) {
 
     for (var y = 0; y < this.size; y++) {
       var tile = state[x][y];
-      row.push(tile ? new Tile(tile.position, tile.value) : null);
+      row.push(tile ? new Tile(tile.position, tile.value, tile.stone) : null);
     }
   }
 

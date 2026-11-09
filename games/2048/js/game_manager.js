@@ -1,61 +1,29 @@
-function GameManager(size, InputManager, Actuator, StorageManager) {
-  this.size           = size; // Size of the grid
-  this.inputManager   = new InputManager;
-  this.storageManager = new StorageManager;
-  this.actuator       = new Actuator;
-
-  this.startTiles     = 2;
-
-  this.inputManager.on("move", this.move.bind(this));
-  this.inputManager.on("restart", this.restart.bind(this));
-  this.inputManager.on("keepPlaying", this.keepPlaying.bind(this));
-
-  this.setup();
+/* 2048 game manager: the merge rules. Based on 2048 by Gabriele Cirulli (MIT licence, see LICENSE.txt).
+   Kahf Kids changes: no DOM, input or storage here (game.js does that). Boards can be 3x3 or 4x4, start
+   with given tiles, and hold fixed garden stones. move() reports what happened so game.js can animate it,
+   and snapshot()/restore() give the Undo button its history. The sliding and merging rules are unchanged. */
+function GameManager(size, opts) {
+  opts = opts || {};
+  this.size       = size; // Size of the grid
+  this.startTiles = opts.startTiles == null ? 2 : opts.startTiles;
+  this.fourChance = opts.fourChance == null ? 0.1 : opts.fourChance;
+  this.setup(opts);
 }
 
-// Restart the game
-GameManager.prototype.restart = function () {
-  this.storageManager.clearGameState();
-  this.actuator.continueGame(); // Clear the game won/lost message
-  this.setup();
-};
-
-// Keep playing after winning (allows going over 2048)
-GameManager.prototype.keepPlaying = function () {
-  this.keepPlaying = true;
-  this.actuator.continueGame(); // Clear the game won/lost message
-};
-
-// Return true if the game is lost, or has won and the user hasn't kept playing
-GameManager.prototype.isGameTerminated = function () {
-  return this.over || (this.won && !this.keepPlaying);
-};
-
 // Set up the game
-GameManager.prototype.setup = function () {
-  var previousState = this.storageManager.getGameState();
+GameManager.prototype.setup = function (opts) {
+  var self = this;
+  opts = opts || {};
+  this.grid  = new Grid(this.size);
+  this.score = 0;
+  this.over  = false;
 
-  // Reload the game from a previous game if present
-  if (previousState) {
-    this.grid        = new Grid(previousState.grid.size,
-                                previousState.grid.cells); // Reload grid
-    this.score       = previousState.score;
-    this.over        = previousState.over;
-    this.won         = previousState.won;
-    this.keepPlaying = previousState.keepPlaying;
-  } else {
-    this.grid        = new Grid(this.size);
-    this.score       = 0;
-    this.over        = false;
-    this.won         = false;
-    this.keepPlaying = false;
-
-    // Add the initial tiles
-    this.addStartTiles();
-  }
-
-  // Update the actuator
-  this.actuate();
+  (opts.stones || []).forEach(function (p) { self.grid.insertTile(new Tile(p, 0, true)); });
+  (opts.start || []).forEach(function (t) {
+    var cell = t.x != null ? { x: t.x, y: t.y } : self.grid.randomAvailableCell();
+    if (cell && self.grid.cellAvailable(cell)) self.grid.insertTile(new Tile(cell, t.value));
+  });
+  this.addStartTiles();
 };
 
 // Set up the initial tiles to start the game with
@@ -68,45 +36,24 @@ GameManager.prototype.addStartTiles = function () {
 // Adds a tile in a random position
 GameManager.prototype.addRandomTile = function () {
   if (this.grid.cellsAvailable()) {
-    var value = Math.random() < 0.9 ? 2 : 4;
+    var value = Math.random() < 1 - this.fourChance ? 2 : 4;
     var tile = new Tile(this.grid.randomAvailableCell(), value);
 
     this.grid.insertTile(tile);
+    return tile;
   }
+  return null;
 };
 
-// Sends the updated grid to the actuator
-GameManager.prototype.actuate = function () {
-  if (this.storageManager.getBestScore() < this.score) {
-    this.storageManager.setBestScore(this.score);
-  }
-
-  // Clear the state when the game is over (game over only, not win)
-  if (this.over) {
-    this.storageManager.clearGameState();
-  } else {
-    this.storageManager.setGameState(this.serialize());
-  }
-
-  this.actuator.actuate(this.grid, {
-    score:      this.score,
-    over:       this.over,
-    won:        this.won,
-    bestScore:  this.storageManager.getBestScore(),
-    terminated: this.isGameTerminated()
-  });
-
+// Represent the current game as an object (used for Undo and for resuming a level)
+GameManager.prototype.snapshot = function () {
+  return { grid: this.grid.serialize(), score: this.score, over: this.over };
 };
-
-// Represent the current game as an object
-GameManager.prototype.serialize = function () {
-  return {
-    grid:        this.grid.serialize(),
-    score:       this.score,
-    over:        this.over,
-    won:         this.won,
-    keepPlaying: this.keepPlaying
-  };
+GameManager.prototype.restore = function (s) {
+  this.grid  = new Grid(s.grid.size, s.grid.cells);
+  this.size  = s.grid.size;
+  this.score = s.score;
+  this.over  = s.over;
 };
 
 // Save all tile positions and remove merger info
@@ -126,12 +73,14 @@ GameManager.prototype.moveTile = function (tile, cell) {
   tile.updatePosition(cell);
 };
 
-// Move tiles on the grid in the specified direction
+// Move tiles on the grid in the specified direction.
+// Returns { moved, merges: [merged tiles], spawned: tile or null, gained: score }.
 GameManager.prototype.move = function (direction) {
   // 0: up, 1: right, 2: down, 3: left
   var self = this;
+  var result = { moved: false, merges: [], spawned: null, gained: 0 };
 
-  if (this.isGameTerminated()) return; // Don't do anything if the game's over
+  if (this.over) return result; // Don't do anything if the game's over
 
   var cell, tile;
 
@@ -148,12 +97,12 @@ GameManager.prototype.move = function (direction) {
       cell = { x: x, y: y };
       tile = self.grid.cellContent(cell);
 
-      if (tile) {
+      if (tile && !tile.stone) {
         var positions = self.findFarthestPosition(cell, vector);
         var next      = self.grid.cellContent(positions.next);
 
         // Only one merger per row traversal?
-        if (next && next.value === tile.value && !next.mergedFrom) {
+        if (next && !next.stone && next.value === tile.value && !next.mergedFrom) {
           var merged = new Tile(positions.next, tile.value * 2);
           merged.mergedFrom = [tile, next];
 
@@ -165,9 +114,8 @@ GameManager.prototype.move = function (direction) {
 
           // Update the score
           self.score += merged.value;
-
-          // The mighty 2048 tile
-          if (merged.value === 2048) self.won = true;
+          result.gained += merged.value;
+          result.merges.push(merged);
         } else {
           self.moveTile(tile, positions.farthest);
         }
@@ -180,14 +128,14 @@ GameManager.prototype.move = function (direction) {
   });
 
   if (moved) {
-    this.addRandomTile();
+    result.moved = true;
+    result.spawned = this.addRandomTile();
 
     if (!this.movesAvailable()) {
-      this.over = true; // Game over!
+      this.over = true; // No moves left
     }
-
-    this.actuate();
   }
+  return result;
 };
 
 // Get the vector representing the chosen direction
@@ -249,14 +197,14 @@ GameManager.prototype.tileMatchesAvailable = function () {
     for (var y = 0; y < this.size; y++) {
       tile = this.grid.cellContent({ x: x, y: y });
 
-      if (tile) {
+      if (tile && !tile.stone) {
         for (var direction = 0; direction < 4; direction++) {
           var vector = self.getVector(direction);
           var cell   = { x: x + vector.x, y: y + vector.y };
 
           var other  = self.grid.cellContent(cell);
 
-          if (other && other.value === tile.value) {
+          if (other && !other.stone && other.value === tile.value) {
             return true; // These two tiles can be merged
           }
         }
@@ -265,6 +213,13 @@ GameManager.prototype.tileMatchesAvailable = function () {
   }
 
   return false;
+};
+
+// Biggest tile on the board
+GameManager.prototype.maxValue = function () {
+  var m = 0;
+  this.grid.eachCell(function (x, y, t) { if (t && t.value > m) m = t.value; });
+  return m;
 };
 
 GameManager.prototype.positionsEqual = function (first, second) {

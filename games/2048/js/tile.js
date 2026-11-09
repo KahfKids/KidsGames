@@ -1,7 +1,13 @@
-function Tile(position, value) {
+/* 2048 tile. Based on 2048 by Gabriele Cirulli (MIT licence, see LICENSE.txt).
+   Kahf Kids changes: every tile has an id (for slide animations) and a tile can be a fixed stone. */
+var TILE_ID = 0;
+
+function Tile(position, value, stone) {
+  this.id               = ++TILE_ID;
   this.x                = position.x;
   this.y                = position.y;
-  this.value            = value || 2;
+  this.stone            = !!stone;          // a garden stone: never moves, never merges
+  this.value            = this.stone ? 0 : (value || 2);
 
   this.previousPosition = null;
   this.mergedFrom       = null; // Tracks tiles that merged together
@@ -22,6 +28,7 @@ Tile.prototype.serialize = function () {
       x: this.x,
       y: this.y
     },
-    value: this.value
+    value: this.value,
+    stone: this.stone || undefined
   };
 };

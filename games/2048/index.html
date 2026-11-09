@@ -1,126 +1,54 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <title>2048</title>
-    <!-- KidsGames PWA Support -->
-    <link rel="manifest" href="/KidsGames/manifest.json" />
-    <meta name="theme-color" content="#4f391a" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <link rel="apple-touch-icon" href="/KidsGames/icons/icon-192x192.png" />
+<!--
+  2048 Garden (Kahf Kids edition).
+  Based on 2048 by Gabriele Cirulli (https://github.com/gabrielecirulli/2048), MIT licence: see LICENSE.txt.
+  The merge rules (js/game_manager.js, js/grid.js, js/tile.js) come from that game, adapted here.
+  Garden art, levels, sounds and everything else are new, built on the Kahf KidsGames kit.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <title>2048 Garden</title>
+  <meta name="description" content="Swipe the glazed garden tiles, join two the same and reach each goal tile, from 8 on a small tray to 256." />
+  <meta name="theme-color" content="#7cc6ef" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="manifest" href="/KidsGames/manifest.json" />
+  <link rel="icon" href="/KidsGames/icons/icon-192x192.png" />
+  <link rel="apple-touch-icon" href="/KidsGames/icons/icon-192x192.png" />
+  <link rel="stylesheet" href="/KidsGames/js/kit/kit.css" />
+  <style>
+    #g48-undo { position: relative; }
+    #g48-undo.g48-off { opacity: 0.45; }
+    #g48-undo.g48-shake { animation: g48-shake 0.35s; }
+    .g48-badge { position: absolute; top: -5px; right: -5px; min-width: 21px; height: 21px; padding: 0 5px; border-radius: 11px;
+      display: flex; align-items: center; justify-content: center; font: 800 13px/1 Nunito, system-ui, sans-serif;
+      color: #2a1606; background: linear-gradient(180deg, #ffd978, #f6c453); border: 2px solid rgba(20, 12, 40, 0.65); }
+    @keyframes g48-shake { 25% { transform: translateX(-4px); } 50% { transform: translateX(4px); } 75% { transform: translateX(-2px); } }
+  </style>
+  <script src="/KidsGames/js/kahf-bridge.js" defer></script>
+</head>
+<body>
+  <canvas id="stage" class="kit-stage" aria-label="2048 Garden game"></canvas>
 
-    <link href="style/main.css" rel="stylesheet" type="text/css" />
-    <link rel="shortcut icon" href="favicon.ico" />
-    <link rel="apple-touch-icon" href="meta/apple-touch-icon.png" />
-    <link
-      rel="apple-touch-startup-image"
-      href="meta/apple-touch-startup-image-640x1096.png"
-      media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2)"
-    />
-    <!-- iPhone 5+ -->
-    <link
-      rel="apple-touch-startup-image"
-      href="meta/apple-touch-startup-image-640x920.png"
-      media="(device-width: 320px) and (device-height: 480px) and (-webkit-device-pixel-ratio: 2)"
-    />
-    <!-- iPhone, retina -->
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  <script src="/KidsGames/js/kit/core.js"></script>
+  <script src="/KidsGames/js/kit/fx.js"></script>
+  <script src="/KidsGames/js/kit/audio.js"></script>
+  <script src="/KidsGames/js/kit/ui.js"></script>
+  <script src="js/sounds.js"></script>
+  <script src="js/tile.js"></script>
+  <script src="js/grid.js"></script>
+  <script src="js/game_manager.js"></script>
+  <script src="js/art.js"></script>
+  <script src="js/levels.js"></script>
+  <script src="js/game.js"></script>
 
-    <meta name="HandheldFriendly" content="True" />
-    <meta name="MobileOptimized" content="320" />
-    <meta
-      name="viewport"
-      content="width=device-width, target-densitydpi=160dpi, initial-scale=1.0, maximum-scale=1, user-scalable=no, minimal-ui"
-    />
-    <script src="/KidsGames/js/kahf-bridge.js" defer></script>
-  </head>
-  <body>
-    <div class="container">
-      <div class="heading">
-        <h1 class="title">2048</h1>
-        <div class="scores-container">
-          <div class="score-container">0</div>
-          <div class="best-container">0</div>
-        </div>
-      </div>
-
-      <div class="above-game">
-        <a class="restart-button">New Game</a>
-      </div>
-
-      <div class="game-container">
-        <div class="game-message">
-          <p></p>
-          <div class="lower">
-            <a class="keep-playing-button">Keep going</a>
-            <a class="retry-button">Try again</a>
-          </div>
-        </div>
-
-        <div class="grid-container">
-          <div class="grid-row">
-            <div class="grid-cell"></div>
-            <div class="grid-cell"></div>
-            <div class="grid-cell"></div>
-            <div class="grid-cell"></div>
-          </div>
-          <div class="grid-row">
-            <div class="grid-cell"></div>
-            <div class="grid-cell"></div>
-            <div class="grid-cell"></div>
-            <div class="grid-cell"></div>
-          </div>
-          <div class="grid-row">
-            <div class="grid-cell"></div>
-            <div class="grid-cell"></div>
-            <div class="grid-cell"></div>
-            <div class="grid-cell"></div>
-          </div>
-          <div class="grid-row">
-            <div class="grid-cell"></div>
-            <div class="grid-cell"></div>
-            <div class="grid-cell"></div>
-            <div class="grid-cell"></div>
-          </div>
-        </div>
-
-        <div class="tile-container"></div>
-      </div>
-
-      <p class="game-explanation">
-        <strong class="important">How to play:</strong> <strong>Swipe</strong> (or use the
-        arrow keys) to move the tiles. When two tiles with the
-        same number touch, they <strong>merge into one!</strong>
-      </p>
-    </div>
-
-    <script src="js/bind_polyfill.js"></script>
-    <script src="js/classlist_polyfill.js"></script>
-    <script src="js/animframe_polyfill.js"></script>
-    <script src="js/keyboard_input_manager.js"></script>
-    <script src="js/html_actuator.js"></script>
-    <script src="js/grid.js"></script>
-    <script src="js/tile.js"></script>
-    <script src="js/local_storage_manager.js"></script>
-    <script src="js/game_manager.js"></script>
-    <script src="js/application.js"></script>
-
-    <!-- KidsGames PWA Service Worker -->
-    <script>
-      if ("serviceWorker" in navigator) {
-        window.addEventListener("load", () => {
-          navigator.serviceWorker
-            .register("/KidsGames/sw.js")
-            .then((registration) => {
-              console.log("[PWA] Service Worker registered for free game");
-            })
-            .catch((error) => {
-              console.log("[PWA] Service Worker registration failed:", error);
-            });
-        });
-      }
-    </script>
-  </body>
+  <script>
+    if ("serviceWorker" in navigator && location.pathname.indexOf("/KidsGames/") === 0 && !/[?&](debug|nosw)\b/.test(location.search)) {
+      addEventListener("load", function () { navigator.serviceWorker.register("/KidsGames/sw.js").catch(function () {}); });
+    }
+  </script>
+</body>
 </html>

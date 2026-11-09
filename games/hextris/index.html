@@ -1,124 +1,56 @@
 <!DOCTYPE html>
+<!--
+  Hextris, Kahf Kids edition.
+  Based on Hextris by Logan Engstrom and Garrett Finucane (https://github.com/Hextris/hextris),
+  free software under the GNU General Public License v3. This modified version is also GPL v3:
+  see LICENSE.md in this folder. Changes: rebuilt on the Kahf KidsGames kit with a delta-time loop,
+  kid mode, 15 levels and endless mode, new art and sounds.
+-->
 <html lang="en">
-  <head>
-    <title>Hextris</title>
-    <!-- KidsGames PWA Support -->
-    <link rel="manifest" href="/KidsGames/manifest.json" />
-    <meta name="theme-color" content="#4f391a" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <link rel="apple-touch-icon" href="/KidsGames/icons/icon-192x192.png" />
-    <meta
-      name="description"
-      content="An addictive puzzle game inspired by Tetris."
-    />
-    <link rel="manifest" href="manifest.webmanifest" />
-    <meta name="apple-mobile-web-app-title" content="Hextris" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <link
-      rel="apple-touch-icon"
-      sizes="120x120"
-      href="images/icons/apple-touch-120.png"
-    />
-    <link
-      rel="apple-touch-icon"
-      sizes="152x152"
-      href="images/icons/apple-touch-152.png"
-    />
-    <link
-      rel="apple-touch-icon"
-      sizes="167x167"
-      href="images/icons/apple-touch-167.png"
-    />
-    <link
-      rel="apple-touch-icon"
-      sizes="180x180"
-      href="images/icons/apple-touch-180.png"
-    />
-    <link
-      rel="apple-touch-icon"
-      sizes="512x512"
-      href="images/icons/apple-touch-512.png"
-    />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, minimal-ui"
-    />
-    <link rel="icon" type="image/png" href="favicon.ico" />
-    <link rel="stylesheet" href="style/fa/css/font-awesome.min.css" />
-    <link rel="stylesheet" type="text/css" href="style/style.css" />
-    <script type="text/javascript" src="vendor/hammer.min.js"></script>
-    <script type="text/javascript" src="vendor/js.cookie.js"></script>
-    <script type="text/javascript" src="vendor/jsonfn.min.js"></script>
-    <script type="text/javascript" src="vendor/keypress.min.js"></script>
-    <script type="text/javascript" src="vendor/jquery.js"></script>
-    <script type="text/javascript" src="js/save-state.js"></script>
-    <script type="text/javascript" src="js/view.js"></script>
-    <script type="text/javascript" src="js/wavegen.js"></script>
-    <script type="text/javascript" src="js/math.js"></script>
-    <script type="text/javascript" src="js/Block.js"></script>
-    <script type="text/javascript" src="js/Hex.js"></script>
-    <script type="text/javascript" src="js/Text.js"></script>
-    <script type="text/javascript" src="js/comboTimer.js"></script>
-    <script type="text/javascript" src="js/checking.js"></script>
-    <script type="text/javascript" src="js/update.js"></script>
-    <script type="text/javascript" src="js/render.js"></script>
-    <script type="text/javascript" src="js/input.js"></script>
-    <script type="text/javascript" src="js/main.js"></script>
-    <script type="text/javascript" src="js/initialization.js"></script>
-    <script src="vendor/sweet-alert.min.js"></script>
-    <script src="/KidsGames/js/kahf-bridge.js" defer></script>
-  </head>
-  <body>
-    <canvas id="canvas"></canvas>
-    <div id="overlay" class="faded overlay"></div>
-    <div id="startBtn"></div>
-    <div class="faded overlay"></div>
-    <img id="pauseBtn" src="./images/btn_pause.svg" />
-    <img id="restartBtn" src="./images/btn_restart.svg" />
-    <div id="HIGHSCORE">HIGH SCORE</div>
-    <div id="highScoreInGameText">
-      <div id="highScoreInGameTextHeader">HIGH SCORE</div>
-      <div id="currentHighScore">10292</div>
-    </div>
-    <div id="gameoverscreen">
-      <div id="container">
-        <div id="gameOverBox" class="GOTitle">GAME OVER</div>
-        <div id="cScore">1843</div>
-        <div id="highScoresTitle" class="GOTitle">HIGH SCORES</div>
-        <div class="score">
-          <span class="scoreNum">1.</span>
-          <div id="1place" style="display: inline">0</div>
-        </div>
-        <div class="score">
-          <span class="scoreNum">2.</span>
-          <div id="2place" style="display: inline">0</div>
-        </div>
-        <div class="score">
-          <span class="scoreNum">3.</span>
-          <div id="3place" style="display: inline">0</div>
-        </div>
-      </div>
-      <div id="bottomContainer">
-        <img id="restart" src="./images/btn_restart.svg" height="57px" />
-        <div id="buttonCont"></div>
-      </div>
-    </div>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <title>Hextris</title>
+  <meta name="description" content="Turn the tile medallion and match three glazed tiles of the same colour. 15 levels and an endless mode." />
+  <meta name="theme-color" content="#04161f" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="manifest" href="/KidsGames/manifest.json" />
+  <link rel="apple-touch-icon" href="/KidsGames/icons/icon-192x192.png" />
+  <link rel="icon" href="/KidsGames/icons/icon-32x32.png" />
+  <link rel="stylesheet" href="/KidsGames/js/kit/kit.css" />
+  <script src="/KidsGames/js/kahf-bridge.js" defer></script>
+  <style>
+    .kit-pill .hx-bar { display: inline-block; width: 38px; height: 7px; border-radius: 4px; background: rgba(255,255,255,.18); overflow: hidden; margin-left: 2px; }
+    .kit-pill .hx-bar i { display: block; height: 100%; border-radius: 4px; background: linear-gradient(90deg, #ffd36b, #f39a3a); transition: width .4s; }
+    .hx-endless { width: 100%; margin-top: 18px; gap: 10px; }
+    .hx-endless small { font-size: 15px; font-weight: 800; color: var(--kit-ink-dim); }
+    .hx-about p { margin: 10px 0 0; }
+    .hx-how { display: flex; justify-content: center; gap: 12px; margin-top: 14px; }
+    .hx-how span { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 18px; background: rgba(255,255,255,.08); font-size: 18px; }
+    .hx-how svg { width: 24px; height: 24px; }
+    .kit-sheet p.hx-credit { font-size: 13px; font-weight: 600; line-height: 1.35; margin-top: 14px; }
+    @media (max-width: 430px) { .kit-pill { padding: 0 10px; } .kit-pill .hx-bar { width: 22px; } .kit-hud { gap: 6px; } }
+    @media (max-width: 370px) { .kit-pill .hx-bar { display: none; } }
+  </style>
+</head>
+<body>
+  <canvas id="stage" class="kit-stage" aria-label="Hextris game"></canvas>
 
-    <!-- KidsGames PWA Service Worker -->
-    <script>
-      if ("serviceWorker" in navigator) {
-        window.addEventListener("load", () => {
-          navigator.serviceWorker
-            .register("/KidsGames/sw.js")
-            .then((registration) => {
-              console.log("[PWA] Service Worker registered for free game");
-            })
-            .catch((error) => {
-              console.log("[PWA] Service Worker registration failed:", error);
-            });
-        });
-      }
-    </script>
-  </body>
+  <script src="/KidsGames/js/kit/core.js"></script>
+  <script src="/KidsGames/js/kit/fx.js"></script>
+  <script src="/KidsGames/js/kit/audio.js"></script>
+  <script src="/KidsGames/js/kit/ui.js"></script>
+  <script src="js/sounds.js"></script>
+  <script src="js/art.js"></script>
+  <script src="js/levels.js"></script>
+  <script src="js/game.js"></script>
+
+  <script>
+    if ("serviceWorker" in navigator && location.pathname.indexOf("/KidsGames/") === 0 && !/[?&](debug|nosw)\b/.test(location.search)) {
+      addEventListener("load", function () { navigator.serviceWorker.register("/KidsGames/sw.js").catch(function () {}); });
+    }
+  </script>
+</body>
 </html>

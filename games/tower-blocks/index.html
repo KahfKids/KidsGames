@@ -1,57 +1,44 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Tower Blocks</title>
-    <link rel="stylesheet" href="./style.css" />
-    <script src="/KidsGames/js/kahf-bridge.js" defer></script>
-  </head>
-  <body>
-    <!-- partial:index.partial.html -->
-    <meta name="viewport" content="width=device-width,user-scalable=no" />
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <title>Tower Blocks</title>
+  <meta name="description" content="Tap to drop glazed tile and carved stone blocks and stack the tallest tower you can, from golden dusk to a starry night." />
+  <meta name="theme-color" content="#2f2a72" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="manifest" href="/KidsGames/manifest.json" />
+  <link rel="apple-touch-icon" href="/KidsGames/icons/icon-192x192.png" />
+  <link rel="stylesheet" href="/KidsGames/js/kit/kit.css" />
+  <script src="/KidsGames/js/kahf-bridge.js" defer></script>
+  <style>
+    .tb-free { margin-top: 18px; width: 100%; }
+    @media (max-width: 400px) {
+      .kit-hud { gap: 5px; }
+      .kit-pill { padding: 0 10px; gap: 4px; font-size: 15px; }
+      .kit-pill svg, .kit-hearts svg { width: 16px !important; height: 16px !important; }
+    }
+    .tb-free small { opacity: 0.75; font-weight: 800; margin-left: 4px; }
+  </style>
+</head>
+<body>
+  <canvas id="stage" class="kit-stage" aria-label="Tower Blocks game"></canvas>
 
-    <!-- KidsGames PWA Support -->
-    <link rel="manifest" href="/KidsGames/manifest.json" />
-    <meta name="theme-color" content="#4f391a" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <link rel="apple-touch-icon" href="/KidsGames/icons/icon-192x192.png" />
+  <script src="/KidsGames/js/kit/core.js"></script>
+  <script src="/KidsGames/js/kit/fx.js"></script>
+  <script src="/KidsGames/js/kit/audio.js"></script>
+  <script src="/KidsGames/js/kit/ui.js"></script>
+  <script src="js/sounds.js"></script>
+  <script src="js/art.js"></script>
+  <script src="js/levels.js"></script>
+  <script src="js/game.js"></script>
 
-    <div id="container">
-      <div id="game"></div>
-      <div id="score">0</div>
-      <div id="instructions">
-        Tap to place the block
-      </div>
-      <div class="game-over">
-        <h2>Game Over</h2>
-        <p>You did great, you're the best.</p>
-        <p>Tap to play again</p>
-      </div>
-      <div class="game-ready">
-        <div id="start-button">Start</div>
-        <div></div>
-      </div>
-    </div>
-    <!-- partial -->
-    <script src="vendor/three-r83.min.js"></script>
-    <script src="vendor/TweenMax-1.18.0.min.js"></script>
-    <script src="./script.js"></script>
-
-    <!-- KidsGames PWA Service Worker -->
-    <script>
-      if ("serviceWorker" in navigator) {
-        window.addEventListener("load", () => {
-          navigator.serviceWorker
-            .register("/KidsGames/sw.js")
-            .then((registration) => {
-              console.log("[PWA] Service Worker registered for free game");
-            })
-            .catch((error) => {
-              console.log("[PWA] Service Worker registration failed:", error);
-            });
-        });
-      }
-    </script>
-  </body>
+  <script>
+    if ("serviceWorker" in navigator && location.pathname.indexOf("/KidsGames/") === 0 && !/[?&](debug|nosw)\b/.test(location.search)) {
+      addEventListener("load", function () { navigator.serviceWorker.register("/KidsGames/sw.js").catch(function () {}); });
+    }
+  </script>
+</body>
 </html>
