@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Street test</title>
+  <style>
+    html,body{margin:0;height:100%;overflow:hidden;background:#f2efe7;font:12px/1.3 ui-monospace,Menlo,monospace;color:#231e16}
+    .st{position:fixed;inset:0;touch-action:none;overflow:hidden;contain:strict}
+    .st>svg{position:absolute;left:0;top:0;width:100%;height:100%;display:block;overflow:visible}
+    .st>svg.lay{pointer-events:none}.st>svg.mul{mix-blend-mode:multiply}.st>svg.scr{mix-blend-mode:screen}
+    #ro{position:fixed;left:8px;top:8px;z-index:3;background:#fbf6eacc;border:1.5px solid #231e16;border-radius:10px;padding:4px 8px;max-width:72vw}
+    #ro[hidden]{display:none}
+    .bt{position:fixed;bottom:16px;z-index:3;width:52px;height:52px;border-radius:50%;border:2.5px solid #231e16;background:#fbf6ea;box-shadow:0 3px 0 #231e16;font:800 20px ui-rounded,system-ui}
+    .lot{fill:#fbf6ea}
+  </style>
+</head>
+<body>
+  <!-- Drawing engine: Colorfigures by April Zhu (MIT), see iso/LICENSE-colorfigures. -->
+  <script src="/KidsGames/games/helping-home/iso/core.js"></script>
+  <script src="/KidsGames/games/helping-home/house/kit3d.js"></script>
+  <script src="/KidsGames/games/helping-home/house/draw.js"></script>
+  <script src="/KidsGames/games/helping-home/house/days.js" onerror="void 0"></script>
+  <script src="/KidsGames/games/helping-home/house/life.js"></script>
+  <script src="/KidsGames/games/helping-home/house/street.js"></script>
+  <div class="st" id="st">
+    <div id="sky" style="position:absolute;inset:0"></div>
+    <svg id="fig"><defs id="fdefs"></defs><g id="art" filter="url(#hand)"></g></svg>
+    <div id="wx" style="position:absolute;inset:0;pointer-events:none"></div>
+    <svg class="lay mul" id="mul"><g></g></svg>
+    <svg class="lay scr" id="scr"><g></g></svg>
+  </div>
+  <div id="ro"></div>
+  <button class="bt" style="left:16px" id="bl">&#9664;</button>
+  <button class="bt" style="right:16px" id="br">&#9654;</button>
+  <script>
+  /* Street test: the street around a placeholder lot. ?t=HH:MM (life.js), ?w=sun|cloud|rain|snow, ?season=,
+     ?yaw=, ?k=zoom-out factor (1 = the lot fills the width), ?lot=x0,y0,x1,y1, ?ro=0 hides the readout. Drag or ◀ ▶ turns. */
+  (function(){
+    const q = new URLSearchParams(location.search);
+    const LOT = q.get('lot') ? (([a, b, c, d]) => ({ x0: a, y0: b, x1: c, y1: d }))(q.get('lot').split(',').map(Number)) : { x0: -30, y0: -20, x1: 200, y1: 612 };
+    const HOUSE = { x0: -8, y0: -8, x1: 140, y1: 440, h: 564 };
+    const WX = q.get('w') || 'sun', SEASON = q.get('season') || 'summer', K = +(q.get('k') || 1.3);
+    const st = document.getElementById('st'), fig = document.getElementById('fig'), art = document.getElementById('art');
+    const mul = document.getElementById('mul'), scr = document.getElementById('scr');
+    const d = HL.now(), LIGHT = HL.light(d);
+    CAM_LIM = 30; setCam(+(q.get('yaw') || 45), 27);
+    let VB;
+    function frame(){
+      const y = YAW; setCam(45, 27); OX = OY = 0; RC = [0, 0]; RCZ = 0;
+      const pts = []; for (const x of [LOT.x0, LOT.x1]) for (const yy of [LOT.y0, LOT.y1]) for (const z of [0, HOUSE.h]) pts.push(P(x, yy, z));
+      setCam(y, 27);
+      const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]), x0 = Math.min(...xs), y0 = Math.min(...ys), bw = Math.max(...xs) - x0, bh = Math.max(...ys) - y0;
+      const cw = innerWidth, ch = innerHeight, s = cw/(bw*K);
+      INK_K = bw/433*.62;                              // the house's own ink weight at its old size
+      VB = [x0 + bw/2 - cw/s/2, y0 + bh*.5 - ch/s*.5, cw/s, ch/s];
+      document.getElementById('fdefs').innerHTML = filterFor(INK_K);
+      for (const sv of [fig, mul, scr]) sv.setAttribute('viewBox', VB.map(v => v.toFixed(1)).join(' '));
+    }
+    // the placeholder lot: yard, front path and the house as plain boxes
+    function lotSvg(){
+      const m = matOf('#f4ead6'), g = matOf('#a9d47b'), pv = matOf('#e2d3b5');
+      const B = (x0, y0, z0, x1, y1, z1, mm) => box(x0, y0, z0, x1, y1, z1, mm, toneI, .9);
+      return B(LOT.x0, HOUSE.y1, 0, LOT.x1, LOT.y1, 8, g) + B(HOUSE.x1, LOT.y0, 0, LOT.x1, HOUSE.y1, 4, pv) +
+        B(HOUSE.x0, HOUSE.y0, 0, HOUSE.x1, HOUSE.y1, HOUSE.h, m) + B(HOUSE.x0 - 6, HOUSE.y0 - 6, HOUSE.h, HOUSE.x1 + 6, HOUSE.y1 + 6, HOUSE.h + 10, matOf('#d1704d')) +
+        hullInk([[HOUSE.x0, HOUSE.y0, 0], [HOUSE.x1, HOUSE.y0, 0], [HOUSE.x0, HOUSE.y1, 0], [HOUSE.x1, HOUSE.y1, 0], [HOUSE.x0, HOUSE.y0, HOUSE.h], [HOUSE.x1, HOUSE.y1, HOUSE.h], [HOUSE.x0, HOUSE.y1, HOUSE.h], [HOUSE.x1, HOUSE.y0, HOUSE.h]], 2.8);
+    }
+    const nodes = s => (s.match(/<(path|circle|rect|ellipse|g|clipPath|radialGradient|linearGradient|stop|svg|div)\b/g) || []).length;
+    let info = {};
+    function render(){
+      const o = { lot: LOT, light: LIGHT, weather: WX, season: SEASON, t: d };
+      const t0 = performance.now();
+      const its = HStreet.items(o);
+      const t1 = performance.now();
+      const svg = q.get('street') === '0' ? lotSvg() : HStreet.draw(o, lotSvg());
+      const t2 = performance.now();
+      art.innerHTML = inkScale(svg);
+      const t3 = performance.now();
+      const big = `x="${VB[0] - VB[2]}" y="${VB[1] - VB[3]}" width="${VB[2]*3}" height="${VB[3]*3}"`;
+      mul.firstChild.innerHTML = `<rect ${big} fill="${mix('#ffffff', LIGHT.tint, LIGHT.a)}"/>`;
+      scr.firstChild.innerHTML = HStreet.glow(o);
+      info = { yaw: YAW, items: its.length, nodesStreet: nodes(HStreet.draw(o, '')), nodesAll: art.querySelectorAll('*').length, buildMs: +(t1 - t0).toFixed(1), drawMs: +(t2 - t1).toFixed(1), domMs: +(t3 - t2).toFixed(1), kb: +(svg.length/1024).toFixed(0) };
+      ro();
+    }
+    function sky(){
+      const o = { t: d, light: LIGHT, weather: WX, w: innerWidth, h: innerHeight };
+      document.getElementById('sky').innerHTML = HStreet.sky(o);
+      document.getElementById('wx').innerHTML = HStreet.weather(o);
+    }
+    // which items in front of the lot overlap it on screen, at every yaw in the house's range (should be none)
+    function overlaps(){
+      const hullOf = (b) => { const pts = []; for (const x of [b[0][0], b[1][0]]) for (const y of [b[0][1], b[1][1]]) for (const z of [b[0][2], b[1][2]]) pts.push(P(x, y, z)); return hull(pts); };
+      const sat = (A, B) => { for (const Pg of [A, B]) for (let i = 0; i < Pg.length; i++){ const a = Pg[i], b = Pg[(i + 1) % Pg.length], nx = b[1] - a[1], ny = a[0] - b[0];
+        const pa = A.map(p => p[0]*nx + p[1]*ny), pb = B.map(p => p[0]*nx + p[1]*ny);
+        if (Math.max(...pa) < Math.min(...pb) + 2 || Math.max(...pb) < Math.min(...pa) + 2) return false; } return true; };
+      const LB = [[[HOUSE.x0, HOUSE.y0, 0], [HOUSE.x1, HOUSE.y1, HOUSE.h]], [[LOT.x0, HOUSE.y1, 0], [LOT.x1, LOT.y1, 70]], [[HOUSE.x1, LOT.y0, 0], [LOT.x1, HOUSE.y1, 70]]];
+      const y0 = YAW, bad = {};
+      for (let y = 23; y <= 67; y += 4){ setCam(y, 27);
+        const its = HStreet.items({ lot: LOT, light: LIGHT, weather: WX, season: SEASON, t: d }).filter(i => i.side === 'front');
+        const lh = LB.map(hullOf);
+        for (const it of its){ const ih = hullOf(it.box); if (lh.some(h => sat(ih, h))) bad[(it.id || it.kind || 'item') + '@' + it.box[0].map(Math.round).join(',')] = (bad[(it.id || it.kind || 'item') + '@' + it.box[0].map(Math.round).join(',')] || []).concat(y); } }
+      setCam(y0, 27);
+      return bad;
+    }
+    function ro(){ const el = document.getElementById('ro'); if (q.get('ro') === '0'){ el.hidden = true; return; }
+      el.textContent = `${HL.now().toTimeString().slice(0, 5)} ${WX} ${SEASON} yaw ${YAW.toFixed(0)} | items ${info.items} street nodes ${info.nodesStreet} (all ${info.nodesAll}) | build ${info.buildMs}ms draw ${info.drawMs}ms dom ${info.domMs}ms ${info.kb}KB`; }
+    frame(); render(); sky();
+    window.__street = { info: () => info, overlaps, render, turn: y => { setCam(y, 27); render(); } };
+    let drag = null;
+    st.addEventListener('pointerdown', e => { drag = { x: e.clientX, y: YAW }; });
+    addEventListener('pointermove', e => { if (!drag) return; const y = Math.round(drag.y - (e.clientX - drag.x)*.15); if (y !== Math.round(YAW)){ setCam(y, 27); render(); } });
+    addEventListener('pointerup', () => drag = null);
+    document.getElementById('bl').onclick = () => { setCam(YAW - 11, 27); render(); };
+    document.getElementById('br').onclick = () => { setCam(YAW + 11, 27); render(); };
+    addEventListener('resize', () => { frame(); render(); sky(); });
+  })();
+  </script>
+</body>
+</html>

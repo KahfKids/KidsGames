@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#f2efe7" />
+  <title>Family test · Helping Home</title>
+  <link rel="stylesheet" href="/KidsGames/js/kit/kit.css" />
+  <script src="/KidsGames/js/kahf-bridge.js" defer></script>
+  <style>
+    :root{--paper:#f2efe7;--ink:#231e16;--muted:#857d6e}
+    *{box-sizing:border-box}
+    html,body{margin:0;overflow-x:hidden;background:var(--paper);color:var(--ink);font:14px/1.4 ui-rounded,"SF Pro Rounded",system-ui,sans-serif}
+    body{padding:calc(env(safe-area-inset-top) + 10px) 12px calc(env(safe-area-inset-bottom) + 30px)}
+    h2{font-size:16px;margin:18px 0 8px}
+    .bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:6px 0}
+    .bar label{font-weight:700;font-size:13px}
+    .bar input[type=range]{flex:1;min-width:140px;accent-color:#231e16}
+    button.b{all:unset;box-sizing:border-box;min-height:48px;min-width:48px;padding:0 14px;border-radius:999px;border:2.5px solid #231e16;background:#fbf6ea;box-shadow:0 3px 0 #231e16;
+      display:inline-flex;align-items:center;justify-content:center;font-weight:800;cursor:pointer}
+    button.b:active{transform:translateY(2px);box-shadow:0 1px 0 #231e16}
+    button.b[aria-pressed=true]{background:#f4b829}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:6px}
+    .cell{background:#fbf8f1;border:1.5px solid #ddd6c8;border-radius:12px;padding:2px 2px 4px;text-align:center}
+    .cell svg{display:block;width:100%;height:auto;overflow:visible}
+    .cell b{display:block;font-size:10.5px;color:var(--muted);font-weight:700}
+    .row{display:flex;gap:6px;align-items:flex-end;overflow-x:auto;padding-bottom:4px}
+    #big{max-width:560px;margin:0 auto;background:#fbf8f1;border:1.5px solid #ddd6c8;border-radius:14px}
+    #big svg{display:block;width:100%;height:auto}
+    #house{position:relative;background:#f2efe7;border:1.5px solid #ddd6c8;border-radius:14px;overflow:hidden}
+    #house svg{display:block;width:100%;height:auto}
+    #clock{font-weight:800;font-variant-numeric:tabular-nums;min-width:58px}
+    @media (min-width:700px){.row{flex-wrap:wrap}}
+    pre{font:11px/1.35 ui-monospace,Menlo,monospace;background:#fbf8f1;border:1.5px solid #ddd6c8;border-radius:10px;padding:8px;white-space:pre-wrap;max-height:240px;overflow:auto}
+    #play{position:fixed;inset:0;z-index:20;display:none}
+    #play.on{display:block}
+  </style>
+</head>
+<body>
+  <script src="/KidsGames/games/helping-home/iso/core.js"></script>
+  <script src="/KidsGames/js/kit/core.js"></script>
+  <script src="/KidsGames/js/kit/audio.js"></script>
+  <script src="/KidsGames/js/kit/praise-clips.js"></script>
+  <script src="/KidsGames/js/kit/fx.js"></script>
+  <script src="/KidsGames/js/kit/ui.js"></script>
+  <script src="/KidsGames/games/helping-home/iso/flow.js"></script>
+  <script src="/KidsGames/games/helping-home/iso/vendor/adhan.js" onerror="void 0"></script>
+  <script src="/KidsGames/games/helping-home/iso/cities.js" onerror="void 0"></script>
+  <script src="/KidsGames/games/helping-home/iso/prayer.js" onerror="void 0"></script>
+  <script>try { if (window.HHPrayer && !window.adhan) window.HHPrayer = undefined; } catch (e) {}</script>
+  <script src="/KidsGames/games/helping-home/house/kit3d.js" onerror="void 0"></script>
+  <script src="/KidsGames/games/helping-home/house/draw.js"></script>
+  <script src="/KidsGames/games/helping-home/house/life.js"></script>
+  <script src="/KidsGames/games/helping-home/house/days.js" onerror="void 0"></script>
+  <script src="/KidsGames/games/helping-home/house/street.js" onerror="void 0"></script>
+  <script src="/KidsGames/games/helping-home/house/family.js"></script>
+  <script src="/KidsGames/games/helping-home/house/pets.js"></script>
+  <script src="/KidsGames/games/helping-home/house/play-hide.js" onerror="void 0"></script>
+  <script src="/KidsGames/games/helping-home/house/play-blocks.js" onerror="void 0"></script>
+  <script src="/KidsGames/games/helping-home/house/play-catch.js" onerror="void 0"></script>
+
+  <svg width="0" height="0" style="position:absolute"><defs id="fdefs"></defs></svg>
+
+  <h2>The family</h2>
+  <div class="bar"><label>Turn</label><input id="yaw" type="range" min="-180" max="180" value="0"><span id="yawv">0°</span></div>
+  <div class="bar"><label>Look down</label><input id="pitch" type="range" min="10" max="70" value="27"></div>
+  <div class="bar"><button class="b" id="anim" aria-pressed="false">Animate</button><button class="b" id="cost">Cost</button><span id="costv"></span></div>
+  <div id="big"></div>
+  <div id="grid"></div>
+
+  <h2>The day</h2>
+  <div class="bar"><button class="b" id="run" aria-pressed="false">Run</button><button class="b" data-sp="1" aria-pressed="true">×1</button><button class="b" data-sp="10" aria-pressed="false">×10</button><button class="b" data-sp="60" aria-pressed="false">×60</button><span id="clock">--:--</span></div>
+  <div class="bar"><input id="t" type="range" min="0" max="1439" value="480"></div>
+  <div class="bar"><label>Day</label><button class="b" data-k="school" aria-pressed="true">School</button><button class="b" data-k="weekend" aria-pressed="false">Weekend</button>
+    <label>View</label><select id="frame"><option value="house">House</option><option value="street">Street</option><option value="kitchen">Kitchen</option><option value="living">Living</option><option value="nursery">Nursery</option><option value="yard">Yard</option><option value="prayer">Prayer</option><option value="feeder">Feeder</option><option value="dog">Dog</option></select>
+    <button class="b" id="fill">Fill bowl + feeder</button></div>
+  <div id="house"></div>
+  <pre id="log"></pre>
+
+  <h2>Play</h2>
+  <div class="bar"><button class="b" data-play="hide">Hide and seek</button><button class="b" data-play="blocks">Blocks</button><button class="b" data-play="catch">Catch</button><span id="playv"></span></div>
+  <div id="play"></div>
+
+  <script>
+  (function () {
+    'use strict';
+    const q = new URLSearchParams(location.search);
+    const $ = id => document.getElementById(id);
+    const NS = 'http://www.w3.org/2000/svg';
+    // ink weight: the same as the house page (INK_K from the house's framed width)
+    setCam(45, 27);
+    { const B = HD.BOUNDS, pts = []; for (const x of [B[0][0], B[1][0]]) for (const y of [B[0][1], B[1][1]]) for (const z of [B[0][2], B[1][2]]) pts.push(P(x, y, z));
+      const xs = pts.map(t => t[0]); INK_K = (Math.max(...xs) - Math.min(...xs))/433; }
+    $('fdefs').innerHTML = filterFor(INK_K);
+
+    let yawOff = +(q.get('yaw') || 0), pitch = +(q.get('pitch') || 27);
+    $('yaw').value = yawOff; $('pitch').value = pitch;
+    const vbOf = (box, pad = 6) => { const pts = []; for (const x of [box[0][0], box[1][0]]) for (const y of [box[0][1], box[1][1]]) for (const z of [box[0][2], box[1][2]]) pts.push(P(x, y, z));
+      const xs = pts.map(t => t[0]), ys = pts.map(t => t[1]); return [Math.min(...xs) - pad, Math.min(...ys) - pad, Math.max(...xs) - Math.min(...xs) + 2*pad, Math.max(...ys) - Math.min(...ys) + 2*pad]; };
+    const fig = (name, pose, fr, facing, opts) => FAMILY.draw(name, pose, [0, 0, 0], facing, fr, opts)[0];
+    const svgOf = (inner, vb) => `<svg viewBox="${vb.map(v => v.toFixed(1)).join(' ')}"><g filter="url(#hand)"><rect x="${vb[0]}" y="${vb[1]}" width="${vb[2]}" height="${vb[3]}" fill="none"/>${inner}</g></svg>`;
+    const OPTS = { carry: { prop: 'basket' } };
+    const onlyPose = q.get('pose'), onlyWho = q.get('who');
+    let frame = 0;
+
+    function gallery(){
+      setCam(45 + yawOff, pitch);
+      $('yawv').textContent = yawOff + '°';
+      // the line-up: everyone standing, side by side
+      if (!q.has('nobig')) { let s = '', box = [[1e9, 1e9, 0], [-1e9, -1e9, 0]];
+        const at = { abu: [0, 70, 0], ummi: [0, 30, 0], sister: [0, -6, 0], toddler: [0, -34, 0] };
+        for (const n of FAMILY.NAMES){ const it = FAMILY.draw(n, onlyPose || 'stand', at[n], 0, frame % (FAMILY.FRAMES[onlyPose] || 1), OPTS[onlyPose])[0]; s += it.svg;
+          for (let i = 0; i < 3; i++){ box[0][i] = Math.min(box[0][i], it.box[0][i]); box[1][i] = Math.max(box[1][i], it.box[1][i]); } }
+        $('big').innerHTML = svgOf(inkScale(s), vbOf(box, 10)); }
+      let html = '';
+      for (const n of FAMILY.NAMES){ if (onlyWho && onlyWho !== n) continue;
+        html += `<div class="row">`;
+        for (const p of FAMILY.POSE_NAMES){ if (onlyPose && onlyPose !== p) continue;
+          const nf = FAMILY.FRAMES[p] || 1, it = fig(n, p, frame % nf, 0, OPTS[p]);
+          const vb = vbOf([[-40, -40, 0], [40, 40, 118]], 2);
+          html += `<div class="cell" style="flex:0 0 ${+(q.get('cell') || 84)}px">${svgOf(inkScale(it.svg), vb)}<b>${p}</b></div>`; }
+        html += `</div>`; }
+      $('grid').innerHTML = html;
+    }
+    $('yaw').oninput = e => { yawOff = +e.target.value; gallery(); };
+    $('pitch').oninput = e => { pitch = +e.target.value; gallery(); };
+    let animT = 0;
+    $('anim').onclick = e => { const on = e.target.getAttribute('aria-pressed') !== 'true'; e.target.setAttribute('aria-pressed', on);
+      clearInterval(animT); if (on) animT = setInterval(() => { frame++; gallery(); }, 180); };
+    $('cost').onclick = () => {
+      FAMILY.clearCache(); const t0 = performance.now(); let n = 0, nodes = [], ms = [];
+      for (const who of FAMILY.NAMES) for (const p of FAMILY.POSE_NAMES){ FAMILY.draw(who, p, [0, 0, 0], 30, 0, OPTS[p]); const c = FAMILY.cost(); nodes.push(c.nodes); ms.push(c.ms); n++; }
+      const t = performance.now() - t0; ms.sort((a, b) => a - b); nodes.sort((a, b) => a - b);
+      $('costv').textContent = `${n} figures: ${(t/n).toFixed(2)} ms each (p90 ${ms[Math.floor(n*.9)].toFixed(2)}), nodes ${nodes[0]}–${nodes[n - 1]} (median ${nodes[n >> 1]})`;
+      window.__cost = { per: t/n, nodesMax: nodes[n - 1], nodesMed: nodes[n >> 1] };
+    };
+    gallery();
+    window.__gallery = gallery;
+    // the animals: ?pets=1 shows the cat, the dog and a bird in every pose, turned by the same slider
+    if (q.has('pets') && window.PETS){
+      const cell = (svg, box, label) => `<div class="cell" style="flex:0 0 ${+(q.get('cell') || 120)}px">${svgOf(inkScale(svg), vbOf(box, 4))}<b>${label}</b></div>`;
+      let h = '<div class="row">';
+      setCam(45 + yawOff, pitch);
+      for (const p of ['stand', 'walk', 'sit', 'groom', 'eat', 'pounce', 'nap', 'curl', 'purr']){ const it = PETS.draw('cat', p, [0, 0, 0], 0, 1)[0]; h += cell(it.svg, [[-30, -30, 0], [30, 30, 40]], 'cat ' + p); }
+      for (const p of ['stand', 'walk', 'run', 'sit', 'lie', 'sniff']){ const it = PETS.draw('dog', p, [0, 0, 0], 0, 1, p === 'run' ? { ball: 1 } : null)[0]; h += cell(it.svg, [[-40, -40, 0], [40, 40, 50]], 'dog ' + p); }
+      for (const p of ['peck', 'fly']){ const it = PETS.draw('bird', p, [0, 0, 0], 135, 1)[0]; h += cell(it.svg, [[-14, -14, 0], [14, 14, 24]], 'bird ' + p); }
+      $('grid').innerHTML = h + '</div>' + $('grid').innerHTML;
+    }
+
+    /* ---------------- the day: the house, the street, the family and the animals living on it ----------------
+       Static: the house (and street) drawing, rebuilt only when the day, the frame or who-is-asleep changes.
+       Live: FAMILY.live (people, the cat, the dog and its walker, birds) on its own SVG with the same viewBox.
+       Sky: PETS.sky flocks on an HTML overlay (compositor animations). Speed: a virtual clock at x1, x10, x60. */
+    const HOUSE = $('house');
+    let dayKind = q.get('kind') || 'school', speed = +(q.get('speed') || 1), running = q.has('run');
+    const base = new Date(); base.setHours(12, 0, 0, 0);
+    const pickDay = () => { base.setTime(Date.now()); base.setHours(12, 0, 0, 0); if (dayKind === 'weekend'){ while (base.getDay() !== 6) base.setDate(base.getDate() + 1); } else { while (base.getDay() < 1 || base.getDay() > 4) base.setDate(base.getDate() + 1); } };
+    pickDay();
+    let vStart = (q.has('t') ? (([h, m, sx]) => (h*60 + (m || 0))*60 + (sx || 0))(q.get('t').split(':').map(Number)) : 480*60)*1000, rStart = performance.now();
+    const vms = () => vStart + (running ? (performance.now() - rStart)*speed : 0);
+    const when = () => { const d = new Date(base); d.setHours(0, 0, 0, 0); return new Date(d.getTime() + vms()); };
+    const fills = { catFills: [], feederFills: [] };
+    if (q.has('fill')){ const d0 = new Date(base); d0.setHours(7, 0, 0, 0); fills.catFills.push(d0.getTime()); fills.feederFills.push(d0.getTime() + 2*3600000); }
+    const ctx = () => Object.assign({ dayKind }, fills);
+    $('t').value = Math.floor(vms()/60000);
+    HOUSE.style.position = 'relative';
+    // like the house page: the still picture and the live layer are separate SVGs (separate GPU layers), so a frame swap
+    // in the live layer never re-paints the house underneath
+    HOUSE.innerHTML = `<svg id="hsv" style="will-change:transform"><defs id="hdefs"></defs><g id="hst" filter="url(#hand)"></g></svg>` +
+      `<svg id="hlv" style="position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;will-change:transform"><g id="hlive"></g><g id="hov"></g></svg>` +
+      `<div id="hsky" style="position:absolute;inset:0;pointer-events:none;overflow:hidden"></div>`;
+    const hsv = $('hsv'); let VBv = [0, 0, 100, 100];
+    function frameIt(){
+      setCam(45, 27);
+      const f = q.get('frame') || $('frame').value, R = HD.ROOMS[f];
+      let B = HD.BOUNDS;
+      if (f === 'street' && window.HStreet) B = HStreet.bounds(HD.LOT); else if (R && HD.BOX) B = HD.BOX(f);
+      if (f === 'feeder' && HD.A.feeder){ const a = HD.A.feeder; B = [[a[0] - 50, a[1] - 50, a[2] - 70], [a[0] + 50, a[1] + 50, a[2] + 30]]; }
+      if (f === 'dog' && window.HStreet){ const G = HStreet.layout(HD.LOT); B = [[G.n2.x1 - 60, G.n2.y1 - 160, 0], [G.n2.x1 + 120, G.n2.y1 + 20, 80]]; }
+      const pts = []; for (const x of [B[0][0], B[1][0]]) for (const y of [B[0][1], B[1][1]]) for (const z of [B[0][2], B[1][2]]) pts.push(P(x, y, z));
+      const xs = pts.map(t => t[0]), ys = pts.map(t => t[1]); VBv = [Math.min(...xs) - 4, Math.min(...ys) - 4, Math.max(...xs) - Math.min(...xs) + 8, Math.max(...ys) - Math.min(...ys) + 8];
+      hsv.setAttribute('viewBox', VBv.map(v => v.toFixed(1)).join(' ')); $('hlv').setAttribute('viewBox', hsv.getAttribute('viewBox'));
+      // masks: what the floors above hide (the house page defines the same hm0/hm1 in its light layer)
+      $('hdefs').innerHTML = [0, 1].map(fl => `<mask id="hm${fl}" maskUnits="userSpaceOnUse" x="-9999" y="-9999" width="19999" height="19999"><rect x="-9999" y="-9999" width="19999" height="19999" fill="#fff"/><path d="${HD.abovePath(fl)}" fill="#000"/></mask>`).join('');
+      lastStatic = '';
+    }
+    const toPx = p3 => { const r = hsv.getBoundingClientRect(), k = r.width/VBv[2], q2 = P(...p3); return [(q2[0] - VBv[0])*k, (q2[1] - VBv[1])*k]; };
+    function vOf(fam){
+      let street = { back: '', front: '' };
+      if (window.HStreet && HStreet.items){ try { const L = HD.LOT, its = HStreet.items({ lot: { x0: L[0][0], y0: L[0][1], x1: L[1][0], y1: L[1][1] }, light: { night: false, lamps: 0 }, weather: 'sun', t: when(), times: HL.times(when()), season: 'autumn' }) || [];
+        street = { back: its.filter(i => i.ground).map(i => i.svg).join('') + byDepth(its.filter(i => !i.ground && i.side === 'back')), front: byDepth(its.filter(i => !i.ground && i.side !== 'back')) }; } catch (e) {} }
+      return { mess: [], counts: {}, decor: {}, tools: {}, sky: '#bfe0f2', lamps: false, night: false, basket: {}, washer: {}, table: [], plots: {}, line: [], bins: [], binsHidden: [],
+        bed: true, bedS: true, bag: 'peg', swing: '', castle: false, bird: false, fruit: true, fridgeArt: 0, folded: 0, wetBasket: false, prayNow: false, packed: false,
+        ballAt: (HD.A && HD.A.ball) || [166, 524, 14], ballHeld: false, pgarden: null, fam, street };
+    }
+    let lastStatic = '';
+    function staticIt(st){
+      // only the sleepers (in bed, with the bed) are part of the still picture; everyone else is live
+      const sleepers = FAMILY.NAMES.filter(n => st[n].live === false && st[n].visible !== false);
+      const sig = HL.dayKey(when()) + '|' + sleepers.join(',') + '|' + hsv.getAttribute('viewBox');
+      if (sig === lastStatic) return; lastStatic = sig; _clipN = 0;
+      const still = {}; for (const n of sleepers){ const s2 = st[n], it = FAMILY.draw(n, s2.pose, s2.at, s2.facing, 0, s2.opts)[0]; (still[it.fl] = still[it.fl] || []).push(it); }
+      let html = ''; try { const v = vOf(fl => still[fl] || []); html = HD.scene(v) + (v.street.front || ''); } catch (e) { document.documentElement.dataset.sceneErr = e.message; }
+      $('hst').innerHTML = inkScale(html);
+    }
+    const LIVE = FAMILY.live({ g: $('hlive'), now: when, ctx, mask: fl => `url(#hm${fl})`, view: () => VBv, sources: [FAMILY, window.PETS] });
+    const SKY = window.PETS && PETS.sky && !q.has('nosky') ? PETS.sky({ el: $('hsky'), toPx, now: when, ctx }) : null;
+    let lastUi = 0;
+    function ui(){
+      const d = when(), st = FAMILY.state(d, ctx()), ps = window.PETS ? PETS.state(d, ctx()) : {};
+      $('clock').textContent = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0') + ':' + String(d.getSeconds()).padStart(2, '0');
+      $('t').value = Math.floor(vms()/60000);
+      staticIt(st);
+      const rq = FAMILY.requests(d, ctx(), st).concat(window.PETS ? PETS.requests(d, ctx()) : []);
+      $('hov').innerHTML = rq.map(r => { const p = P(...r.bubbleAt); return `<g transform="translate(${p[0].toFixed(1)} ${p[1].toFixed(1)})"><circle r="13" fill="#fff6dc" stroke="#231e16" stroke-width="1.6"/><g transform="translate(-9 -9) scale(.75)">${r.iconSvg.replace(/^<svg[^>]*>|<\/svg>$/g, '')}</g></g>`; }).join('');
+      const S2 = LIVE.stats();
+      $('log').textContent = FAMILY.NAMES.map(n => { const s2 = st[n]; return `${n.padEnd(8)} ${s2.room || '-'} · ${s2.activity}${s2.social ? ' (' + s2.social + ' with ' + s2.partner + ')' : ''} · ${s2.pose}`; }).join('\n') +
+        (ps.cat ? `\ncat      ${ps.cat.room || '-'} · ${ps.cat.activity} · ${ps.cat.pose}` : '') + (ps.dog ? `\ndog      ${ps.dog.activity} · ${ps.dog.pose}` : '') +
+        (ps.bowl ? `\nbowl ${ps.bowl.level.toFixed(2)} · feeder ${ps.feeder.level.toFixed(2)} · birds ${ps.birds.length}` : '') +
+        '\nrequests: ' + (rq.map(r => r.who + ' ' + r.job).join(', ') || '-') + `\nlive: ${S2.actors} actors, ${S2.frames} frames kept, ${S2.builds} built, ${(S2.ms/Math.max(1, S2.ticks)).toFixed(2)} ms/tick`;
+    }
+    // ?quiet: only the still picture is kept up to date (no log, no clock): what the house page itself would cost
+    function loop(){ if (q.has('quiet')) staticIt(FAMILY.state(when(), ctx())); else ui(); setTimeout(loop, q.has('quiet') ? 5000 : 1000); }
+    frameIt(); LIVE.start(); loop();
+    $('frame').onchange = () => { frameIt(); LIVE.now(); ui(); };
+    if (q.get('frame')) $('frame').value = q.get('frame');
+    const setRun = on => { vStart = vms(); rStart = performance.now(); running = on; $('run').setAttribute('aria-pressed', on); };
+    setRun(running);
+    $('run').onclick = () => setRun(!running);
+    document.querySelectorAll('[data-sp]').forEach(b => b.onclick = () => { vStart = vms(); rStart = performance.now(); speed = +b.dataset.sp; document.querySelectorAll('[data-sp]').forEach(x => x.setAttribute('aria-pressed', x === b)); });
+    $('t').oninput = e => { vStart = +e.target.value*60000; rStart = performance.now(); LIVE.now(); ui(); };
+    document.querySelectorAll('[data-k]').forEach(b => b.onclick = () => { dayKind = b.dataset.k; document.querySelectorAll('[data-k]').forEach(x => x.setAttribute('aria-pressed', x === b)); pickDay(); lastStatic = ''; LIVE.now(); ui(); });
+    $('fill').onclick = () => { const t = when().getTime(); fills.catFills.push(t); fills.feederFills.push(t); LIVE.now(); ui(); };
+    // tap the cat: it purrs
+    hsv.addEventListener('pointerdown', e => { const r = hsv.getBoundingClientRect(), k = VBv[2]/r.width, id = LIVE.pick(VBv[0] + (e.clientX - r.left)*k, VBv[1] + (e.clientY - r.top)*k);
+      if (id && window.PETS) PETS.tap(id); });
+    window.__day = { set(m, sec){ vStart = (m*60 + (sec || 0))*1000; rStart = performance.now(); LIVE.now(); ui(); }, when, ctx, LIVE, setRun, speed: v => { vStart = vms(); rStart = performance.now(); speed = v; } };
+    /* ---------------- play scenes ---------------- */
+    function playIt(name){ const box = $('play'); box.classList.add('on'); box.innerHTML = '';
+      return HHPlay[name].start(box, { date: when() }).then(r => { box.classList.remove('on'); $('playv').textContent = JSON.stringify(r); return r; }); }
+    document.querySelectorAll('[data-play]').forEach(b => b.onclick = () => playIt(b.dataset.play));
+    window.__play = playIt;
+    if (q.get('play')) setTimeout(() => playIt(q.get('play')), 50);
+  })();
+  </script>
+</body>
+</html>

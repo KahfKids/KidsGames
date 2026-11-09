@@ -27,7 +27,27 @@
     // prayer.js needs adhan-js; if either is missing or throws, the house falls back to fixed times
     try { if (window.HHPrayer && !window.adhan) window.HHPrayer = undefined; } catch (e) {}
   </script>
+  <!-- the house; the family, the days and the street are optional modules (the house works without them) -->
+  <script src="/KidsGames/games/helping-home/house/kit3d.js"></script>
   <script src="/KidsGames/games/helping-home/house/draw.js"></script>
+  <script src="/KidsGames/games/helping-home/house/days.js" onerror="void 0"></script>
+  <script src="/KidsGames/games/helping-home/house/family.js" onerror="void 0"></script>
+  <script src="/KidsGames/games/helping-home/house/pets.js" onerror="void 0"></script>
+  <script src="/KidsGames/games/helping-home/house/street.js" onerror="void 0"></script>
+  <script src="/KidsGames/games/helping-home/pray/chart.js" onerror="void 0"></script>
+  <!-- play with the family and the place scenes (optional too) -->
+  <script src="/KidsGames/games/helping-home/house/play-blocks.js" onerror="void 0"></script>
+  <script src="/KidsGames/games/helping-home/house/play-catch.js" onerror="void 0"></script>
+  <script src="/KidsGames/games/helping-home/house/play-hide.js" onerror="void 0"></script>
+  <script src="/KidsGames/games/helping-home/house/scene-kit.js" onerror="void 0"></script>
+  <script src="/KidsGames/games/helping-home/house/scene-shop.js" onerror="void 0"></script>
+  <script src="/KidsGames/games/helping-home/house/scene-park.js" onerror="void 0"></script>
+  <script src="/KidsGames/games/helping-home/house/scene-mosque.js" onerror="void 0"></script>
+  <script src="/KidsGames/games/helping-home/house/scene-neighbour.js" onerror="void 0"></script>
+  <script src="/KidsGames/games/helping-home/house/scene-cook.js" onerror="void 0"></script>
+  <!-- the guide (today's strip, hints, rewards) and the sticker book build on window.HOUSE (optional) -->
+  <script src="/KidsGames/games/helping-home/house/guide.js" onerror="void 0"></script>
+  <script src="/KidsGames/games/helping-home/house/book.js" onerror="void 0"></script>
   <script src="/KidsGames/games/helping-home/house/life.js"></script>
   <script src="/KidsGames/games/helping-home/house/main.js"></script>
 </body>
