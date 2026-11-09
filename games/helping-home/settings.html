@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#f2efe7" />
+  <title>Grown-ups · Helping Home</title>
+  <link rel="manifest" href="/KidsGames/manifest.json" />
+  <link rel="apple-touch-icon" href="/KidsGames/icons/icon-192x192.png" />
+  <script src="/KidsGames/js/kahf-bridge.js" defer></script>
+  <style>
+    :root{--paper:#f2efe7;--ink:#231e16;--soft:#e4dfd2;--accent:#3a7ca5}
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{margin:0;background:var(--paper);color:var(--ink);font:600 16px/1.35 ui-rounded,"SF Pro Rounded",system-ui,sans-serif}
+    body{min-height:100vh;padding:calc(env(safe-area-inset-top) + 14px) 16px calc(env(safe-area-inset-bottom) + 28px);max-width:560px;margin:0 auto}
+    h1{font-size:24px;margin:6px 0 4px}h2{font-size:15px;margin:0 0 8px;text-transform:uppercase;letter-spacing:.06em}
+    p{margin:0 0 12px}
+    .card{border:2.5px solid var(--ink);border-radius:16px;box-shadow:0 4px 0 var(--ink);padding:14px;margin:0 0 18px;background:var(--paper)}
+    .btn{all:unset;box-sizing:border-box;display:flex;align-items:center;justify-content:center;min-height:52px;padding:0 20px;border-radius:999px;border:2.5px solid var(--ink);
+      box-shadow:0 4px 0 var(--ink);background:var(--paper);font-weight:800;cursor:pointer;text-align:center;position:relative;overflow:hidden;width:100%}
+    .btn:active{transform:translateY(2px);box-shadow:0 2px 0 var(--ink)}
+    .btn.go{background:var(--ink);color:var(--paper)}
+    #hold i{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--soft);z-index:0}#hold span{position:relative;z-index:1}
+    input,select{font:inherit;width:100%;min-height:48px;padding:0 12px;border:2.5px solid var(--ink);border-radius:12px;background:#fffdf8;color:var(--ink);-webkit-user-select:text;user-select:text}
+    label{display:block;margin:12px 0 4px;font-size:14px}
+    #list{max-height:210px;overflow:auto;margin-top:8px;border:2px solid var(--ink);border-radius:12px;background:#fffdf8}
+    #list button{all:unset;box-sizing:border-box;display:flex;justify-content:space-between;width:100%;min-height:48px;align-items:center;padding:0 12px;border-bottom:1.5px solid var(--soft);cursor:pointer}
+    #list button:active,#list button[aria-pressed=true]{background:var(--soft)}
+    #list small{opacity:.65}
+    table{width:100%;border-collapse:collapse}td{padding:7px 4px;border-bottom:1.5px dashed var(--soft)}td:last-child{text-align:right;font-variant-numeric:tabular-nums;font-weight:800}
+    td.ar{font-family:"Geeza Pro","Noto Naskh Arabic",serif;font-size:18px;text-align:right}
+    .note{font-size:13px;opacity:.75}#msg{min-height:22px;text-align:center;font-weight:800;margin-top:10px}
+    [hidden]{display:none!important}
+  </style>
+</head>
+<body>
+  <section id="gate" class="card">
+    <h1>For grown-ups</h1>
+    <p>Prayer times for the house. Hold the button for 2 seconds to open the settings.</p>
+    <button class="btn" id="hold" type="button"><i></i><span>Hold for 2 seconds</span></button>
+  </section>
+
+  <main id="main" hidden>
+    <h1>Prayer times</h1>
+    <p class="note">Worked out on this device. No internet needed. Please check them against your local mosque.</p>
+
+    <div class="card">
+      <h2>City</h2>
+      <p id="where" class="note"></p>
+      <input id="q" type="search" placeholder="Search a city" autocomplete="off" autocapitalize="off" />
+      <div id="list" role="listbox"></div>
+    </div>
+
+    <div class="card">
+      <h2>Calculation</h2>
+      <label for="method">Method</label><select id="method"></select>
+      <label for="madhab">Asr time</label>
+      <select id="madhab"><option value="shafi">Earlier (Shafi, Maliki, Hanbali)</option><option value="hanafi">Later (Hanafi)</option></select>
+    </div>
+
+    <div class="card">
+      <h2>Today</h2>
+      <table id="times"></table>
+      <p class="note" id="qibla" style="margin:10px 0 0"></p>
+    </div>
+
+    <button class="btn go" id="save" type="button">Save</button>
+    <div id="msg" role="status"></div>
+    <button class="btn" id="back" type="button" style="margin-top:6px">Back to the house</button>
+  </main>
+
+  <script src="/KidsGames/games/helping-home/iso/vendor/adhan.js"></script>
+  <script src="/KidsGames/games/helping-home/iso/prayer.js"></script>
+  <script src="/KidsGames/games/helping-home/iso/cities.js"></script>
+  <script>
+  (function () {
+    var $ = function (id) { return document.getElementById(id); };
+    var P = window.HHPrayer, C = window.HH_CITIES;
+    var regions = window.Intl && Intl.DisplayNames ? new Intl.DisplayNames(['en'], { type: 'region' }) : null;
+    function country(cc) { try { return regions ? regions.of(cc) : cc; } catch (e) { return cc; } }
+
+    // gate: hold 2 seconds
+    var hold = $('hold'), bar = hold.querySelector('i'), t0 = 0, raf = 0;
+    function tick() { var p = Math.min(1, (Date.now() - t0) / 2000); bar.style.width = p * 100 + '%'; if (p >= 1) { open(); } else raf = requestAnimationFrame(tick); }
+    function down(e) { e.preventDefault(); t0 = Date.now(); cancelAnimationFrame(raf); raf = requestAnimationFrame(tick); }
+    function up() { t0 = 0; cancelAnimationFrame(raf); bar.style.width = '0'; }
+    hold.addEventListener('pointerdown', down);
+    ['pointerup', 'pointercancel', 'pointerleave'].forEach(function (n) { hold.addEventListener(n, up); });
+    hold.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+    function open() { cancelAnimationFrame(raf); $('gate').hidden = true; $('main').hidden = false; init(); }
+
+    var st, inited = false;
+    function init() {
+      if (inited) return; inited = true;
+      st = Object.assign({ lat: null, lng: null, city: '', country: '', method: 'MWL', madhab: 'shafi' }, P.settings() || {});
+      var m = $('method');
+      Object.keys(P.METHODS).forEach(function (k) { var o = document.createElement('option'); o.value = k; o.textContent = P.METHODS[k][0]; m.appendChild(o); });
+      m.value = st.method; $('madhab').value = st.madhab;
+      m.onchange = function () { st.method = m.value; render(); };
+      $('madhab').onchange = function () { st.madhab = $('madhab').value; render(); };
+      $('q').oninput = list;
+      $('save').onclick = function () {
+        if (st.lat === null) { $('msg').textContent = 'Pick a city first.'; return; }
+        st.manual = true; P.save(st); $('msg').textContent = 'Saved.';
+      };
+      $('back').onclick = function () { location.href = (window.HHFlow ? HHFlow.url('house') : '/KidsGames/games/helping-home/index.html'); };
+      list(); render();
+    }
+    function list() {
+      var q = $('q').value.trim().toLowerCase(), box = $('list'), n = 0, out = [];
+      C.forEach(function (c, i) {
+        if (n >= 40) return;
+        if (!q || c[0].toLowerCase().indexOf(q) === 0 || country(c[1]).toLowerCase().indexOf(q) === 0 || c[0].toLowerCase().indexOf(' ' + q) > 0) { out.push(i); n++; }
+      });
+      box.textContent = '';
+      if (!out.length) { var e = document.createElement('div'); e.style.padding = '12px'; e.textContent = 'No city found. The app can also pass your location.'; box.appendChild(e); }
+      out.forEach(function (i) {
+        var c = C[i], b = document.createElement('button'); b.type = 'button';
+        b.setAttribute('aria-pressed', String(st.city === c[0] && st.country === c[1]));
+        b.innerHTML = '<span></span><small></small>'; b.firstChild.textContent = c[0]; b.lastChild.textContent = country(c[1]);
+        b.onclick = function () {
+          st.lat = c[2]; st.lng = c[3]; st.city = c[0]; st.country = c[1];
+          st.method = P.methodFor(c[1]); st.madhab = P.madhabFor(c[1]);
+          $('method').value = st.method; $('madhab').value = st.madhab; list(); render();
+        };
+        box.appendChild(b);
+      });
+    }
+    function render() {
+      $('where').textContent = st.lat === null ? 'No city chosen yet.' : (st.city ? st.city + ', ' + country(st.country) : 'Location from the Kahf app') + '  (' + st.lat.toFixed(2) + ', ' + st.lng.toFixed(2) + ')';
+      var tb = $('times'); tb.textContent = '';
+      if (st.lat === null) { $('qibla').textContent = ''; return; }
+      // preview with the chosen options without saving them
+      var t = P.times.call(null, new Date(), st);
+      if (t) ['fajr', 'sunrise', 'dhuhr', 'asr', 'maghrib', 'isha'].forEach(function (k) {
+        var r = tb.insertRow(); r.insertCell().textContent = P.NAMES[k].en; var a = r.insertCell(); a.className = 'ar'; a.textContent = P.NAMES[k].ar; r.insertCell().textContent = P.fmt(t[k]);
+      });
+      $('qibla').textContent = 'Qibla: ' + Math.round(P.qibla(st.lat, st.lng)) + '° from north';
+    }
+  })();
+  </script>
+</body>
+</html>
