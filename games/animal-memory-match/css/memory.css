@@ -1,0 +1,21 @@
+/* Memory Match: small additions to the kit's sheets (level grid of 6 per world, the "My Animals" album). */
+.kit-btn-icon.mm-new { animation: mm-new 0.9s ease-out; }
+@keyframes mm-new { 30% { transform: scale(1.3); background: rgba(246, 196, 83, 0.6); } }
+
+/* six levels per world: 3 columns on phones, 6 when the sheet is wide enough for 48px+ buttons */
+.mm-levels .kit-levels { grid-template-columns: repeat(3, 1fr); }
+@media (min-width: 460px) { .mm-levels .kit-levels { grid-template-columns: repeat(6, 1fr); } }
+
+.mm-album-sheet { width: min(560px, 100%); }
+.mm-album { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 10px; margin-top: 14px; }
+.mm-tile { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 4px 10px; border-radius: 18px;
+  background: rgba(255, 255, 255, 0.07); border: 1px solid rgba(255, 255, 255, 0.12); color: var(--kit-ink);
+  font: inherit; cursor: pointer; touch-action: manipulation; min-height: 48px; }
+.mm-tile canvas { width: 76px; height: 76px; }
+.mm-tile b { font-size: 15px; font-weight: 900; }
+.mm-tile small { font-size: 11px; line-height: 1.15; color: #ffd98a; font-weight: 700; }
+.mm-tile.locked { cursor: default; opacity: 0.8; }
+.mm-tile.locked b { color: var(--kit-ink-dim); }
+.mm-tile.hop canvas { animation: mm-hop 0.5s cubic-bezier(0.2, 1.6, 0.4, 1); }
+@keyframes mm-hop { 40% { transform: translateY(-10px) scale(1.08); } }
+@media (prefers-reduced-motion: reduce) { .mm-tile.hop canvas, .kit-btn-icon.mm-new { animation: none; } }

@@ -238,7 +238,8 @@
 
     window.addEventListener('online', updateOnlineStatus);
     window.addEventListener('offline', updateOnlineStatus);
-    updateOnlineStatus();
+    // This script runs in <head>, before <body> exists, so wait for it.
+    if (document.body) updateOnlineStatus(); else document.addEventListener('DOMContentLoaded', updateOnlineStatus);
   </script>
   <style>
     :root {
@@ -556,25 +557,25 @@
         </a>
         <a href="./games/islamic-checkers/index.html" class="game-link">
           <div class="game-card">
-            <img src="./checkers.jpeg" alt="Checkers" class="game-thumbnail" />
+            <img src="./checkers.jpg" alt="Checkers" class="game-thumbnail" />
             <div class="game-title">Checkers</div>
           </div>
         </a>
         <a href="./games/follow-the-light/index.html" class="game-link">
           <div class="game-card">
-            <img src="./follow-the-light.png" alt="Follow the Light" class="game-thumbnail" />
+            <img src="./follow-the-light.jpg" alt="Follow the Light" class="game-thumbnail" />
             <div class="game-title">Follow the Light</div>
           </div>
         </a>
         <a href="./games/30-seconds-challenge/index.html" class="game-link">
           <div class="game-card">
-            <img src="./30s-chellenge.jpeg" alt="30 Seconds Challenge" class="game-thumbnail" />
-            <div class="game-title">30 Seconds Challenge</div>
+            <img src="./sharp-eyes.jpg" alt="Sharp Eyes" class="game-thumbnail" />
+            <div class="game-title">Sharp Eyes</div>
           </div>
         </a>
         <a href="./games/ramadan-maze/index.html" class="game-link">
           <div class="game-card">
-            <img src="./ramadan-maze.png" alt="Ramadan Maze" class="game-thumbnail" />
+            <img src="./ramadan-maze.jpg" alt="Ramadan Maze" class="game-thumbnail" />
             <div class="game-title">Ramadan Maze</div>
           </div>
         </a>
@@ -586,14 +587,12 @@
           </div>
         </a>
         -->
-        <!-- Hidden until rebuilt (the old AI could never lose, so kids could never win). See docs/game-quality-plan.md.
         <a href="./games/tic-tac-toe/index.html" class="game-link">
           <div class="game-card">
-            <img src="./tic-tac-toe.jpeg" alt="Tic Tac Toe" class="game-thumbnail" />
+            <img src="./tic-tac-toe.jpg" alt="Tic Tac Toe" class="game-thumbnail" />
             <div class="game-title">Tic Tac Toe</div>
           </div>
         </a>
-        -->
         <a href="./games/2048/index.html" class="game-link">
           <div class="game-card">
             <img src="./2048.jpeg" alt="2048" class="game-thumbnail" />
@@ -616,8 +615,8 @@
         -->
         <a href="./games/space-shooter/index.html" class="game-link">
           <div class="game-card">
-            <img src="./space-shooter.jpeg" alt="Space Shooter" class="game-thumbnail" />
-            <div class="game-title">Space Shooter</div>
+            <img src="./star-rangers.jpg" alt="Star Rangers" class="game-thumbnail" />
+            <div class="game-title">Star Rangers</div>
           </div>
         </a>
         <!-- QUIZ: History Quiz
@@ -630,14 +629,8 @@
         -->
         <a href="./games/jannah-garden/index.html" class="game-link">
           <div class="game-card">
-            <img src="./jannah-garden.png" alt="Jannah Garden" class="game-thumbnail" />
+            <img src="./jannah-garden.jpg" alt="Jannah Garden" class="game-thumbnail" />
             <div class="game-title">Jannah Garden</div>
-          </div>
-        </a>
-        <a href="./games/space-bluster/index.html" class="game-link">
-          <div class="game-card">
-            <img src="./space-bluster.png" alt="Space Bluster" class="game-thumbnail" />
-            <div class="game-title">Space Bluster</div>
           </div>
         </a>
         <!-- QUIZ: Science Quiz
@@ -650,7 +643,7 @@
         -->
         <a href="./games/solar-system/index.html" class="game-link">
           <div class="game-card">
-            <img src="./solar-system.png" alt="Solar System" class="game-thumbnail" />
+            <img src="./solar-system.jpg" alt="Solar System" class="game-thumbnail" />
             <div class="game-title">Solar System</div>
           </div>
         </a>
@@ -658,26 +651,20 @@
         <!-- Premium Games -->
         <a href="./games/animal-memory-match/index.html" class="game-link">
           <div class="game-card">
-            <img src="./animal-memory-match.png" alt="Animal Memory Match" class="game-thumbnail" />
-            <div class="game-title">Animal Memory Match</div>
+            <img src="./memory-match.jpg" alt="Memory Match" class="game-thumbnail" />
+            <div class="game-title">Memory Match</div>
           </div>
         </a>
         <a href="./games/balloon-pop-adventure/index.html" class="game-link">
           <div class="game-card">
-            <img src="./balloon-pop-adventure.jpeg" alt="Baloon Pop" class="game-thumbnail" />
-            <div class="game-title">Baloon Pop</div>
-          </div>
-        </a>
-        <a href="./games/islamic-good-deeds-game/index.html" class="game-link">
-          <div class="game-card">
-            <img src="./islamic-good-deeds-game.png" alt="Islamic Good Deeds Game" class="game-thumbnail" />
-            <div class="game-title">Islamic Good Deeds</div>
+            <img src="./balloon-pop.jpg" alt="Balloon Pop" class="game-thumbnail" />
+            <div class="game-title">Balloon Pop</div>
           </div>
         </a>
         <a href="./games/islamic-shapes-drawing-game/index.html" class="game-link">
           <div class="game-card">
-            <img src="./islamic-shapes-drawing-game.jpeg" alt="Islamic Shapes Drawing Game" class="game-thumbnail" />
-            <div class="game-title">Islamic Shapes</div>
+            <img src="./colouring-book.jpg" alt="Colouring Book" class="game-thumbnail" />
+            <div class="game-title">Colouring Book</div>
           </div>
         </a>
         <!-- QUIZ: Math Challenge
@@ -690,14 +677,8 @@
         -->
         <a href="./games/shape-pattern-game-2/index.html" class="game-link">
           <div class="game-card">
-            <img src="./shape-pattern-game-2.png" alt="Shape Pattern" class="game-thumbnail" />
-            <div class="game-title">Shape Pattern</div>
-          </div>
-        </a>
-        <a href="./games/islamic-maze-adventure-4/index.html" class="game-link">
-          <div class="game-card">
-            <img src="./kids-maze-adventure.png" alt="Kids Maze Adventure" class="game-thumbnail" />
-            <div class="game-title">Kids Maze Adventure</div>
+            <img src="./shape-patterns.jpg" alt="Shape Patterns" class="game-thumbnail" />
+            <div class="game-title">Shape Patterns</div>
           </div>
         </a>
       </div>

@@ -1,0 +1,78 @@
+/* Colouring Book: floating tool pills, paint pots and the page picker. Pairs with /KidsGames/js/kit/kit.css. */
+.cb-group { position: fixed; z-index: 20; display: flex; gap: 6px; padding: 4px; border-radius: 30px;
+  background: rgba(14, 10, 34, 0.5); border: 1px solid rgba(255, 255, 255, 0.12); box-shadow: 0 6px 18px rgba(5, 2, 20, 0.3); }
+.cb-btn { width: 48px; height: 48px; border-radius: 24px; background: rgba(255, 255, 255, 0.06); border-color: rgba(255, 255, 255, 0.1);
+  transition: transform 0.15s, background 0.2s, opacity 0.2s; }
+.cb-btn svg { width: 26px; height: 26px; }
+.cb-btn.on { background: linear-gradient(180deg, #fff1c2, #f6c453); color: #2a1606; border-color: transparent;
+  box-shadow: 0 3px 0 #a8621f; transform: translateY(-2px); }
+.cb-btn[disabled] { opacity: 0.32; }
+.cb-btn.dim { opacity: 0.4; }
+.cb-ring .cb-btn { background: transparent; border: 0; }
+.cb-ring .cb-btn svg { width: 44px; height: 44px; }
+.cb-btn.wig { animation: cb-wig 0.45s ease-out; }
+@keyframes cb-wig { 25% { transform: rotate(-12deg) scale(1.12); } 60% { transform: rotate(8deg) scale(1.05); } }
+
+/* landscape: the left rail stacks book/save, the ring and a 2x2 tool grid */
+.cb-land .cb-tools { display: grid; grid-template-columns: repeat(2, 48px); border-radius: 26px; }
+
+.cb-pal { position: fixed; z-index: 20; display: grid; gap: 0; padding: 4px; border-radius: 28px; overflow: hidden;
+  background: rgba(14, 10, 34, 0.5); border: 1px solid rgba(255, 255, 255, 0.12); box-shadow: 0 6px 18px rgba(5, 2, 20, 0.3);
+  scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.cb-pal::-webkit-scrollbar { display: none; }
+.cb-pal.scroll { overflow: auto; touch-action: pan-x pan-y; }
+.cb-pot { width: 50px; height: 50px; padding: 1px; border: 0; background: none; cursor: pointer; border-radius: 25px;
+  transition: transform 0.22s cubic-bezier(0.2, 1.6, 0.4, 1); touch-action: manipulation; position: relative; }
+.cb-pal.scroll .cb-pot { touch-action: pan-x pan-y; }
+.cb-pot svg { width: 100%; height: 100%; display: block; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.35)); }
+.cb-pot.on { transform: scale(1.04); z-index: 1; }
+.cb-pot.on::after { content: ""; position: absolute; inset: 3px; border-radius: 50%; border: 3px solid #fff;
+  box-shadow: 0 0 0 2px rgba(246, 196, 83, 0.9), 0 0 8px rgba(255, 230, 150, 0.7); pointer-events: none; }
+.cb-pot.dip { animation: cb-dip 0.4s ease-out; }
+@keyframes cb-dip { 30% { transform: translateY(4px) scale(0.92); } 70% { transform: translateY(-5px) scale(1.16); } }
+
+.cb-next { position: fixed; z-index: 21; min-height: 52px; width: 140px; padding: 0 16px; animation: cb-pulse 1.4s ease-in-out infinite; }
+@keyframes cb-pulse { 50% { transform: scale(1.07); } }
+
+.cb-fly { position: fixed; z-index: 30; border-radius: 12px; transform-origin: 50% 50%; pointer-events: none;
+  transition: transform 0.65s cubic-bezier(0.5, 0, 0.3, 1), opacity 0.65s ease-in; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4); }
+
+/* clear confirm */
+.cb-clear { display: flex; justify-content: center; margin-top: 12px; }
+.cb-clear-pic { width: 150px; height: 150px; border-radius: 14px; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35); }
+
+/* page picker and gallery */
+.kit-sheet.cb-sheet { width: min(640px, 100%); }
+.cb-tabs { display: flex; gap: 8px; align-items: center; padding-right: 50px; }
+.cb-tab { flex: 1; min-height: 50px; border-radius: 25px; border: 1px solid rgba(255, 255, 255, 0.16); background: rgba(255, 255, 255, 0.07);
+  color: var(--kit-ink); font: 900 17px Nunito, system-ui, sans-serif; display: inline-flex; align-items: center; justify-content: center;
+  gap: 8px; cursor: pointer; touch-action: manipulation; padding: 0 10px; }
+.cb-tab svg { width: 22px; height: 22px; flex: none; }
+.cb-tab.on { background: linear-gradient(180deg, #fff1c2, #f6c453); color: #2a1606; border-color: transparent; }
+.cb-snd { flex: none; }
+.cb-pick-body { text-align: left; min-height: 200px; }
+.cb-book h3 { margin: 18px 2px 8px; font-size: 16px; font-weight: 900; letter-spacing: 0.05em; text-transform: uppercase;
+  color: var(--c, var(--kit-gold)); display: flex; justify-content: space-between; align-items: center; }
+.cb-book h3 .cnt { color: var(--kit-ink-dim); letter-spacing: 0; text-transform: none; display: inline-flex; align-items: center; gap: 4px; }
+.cb-book h3 svg { width: 16px; height: 16px; }
+.cb-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 10px; }
+.cb-gal { margin-top: 16px; }
+.cb-thumb { position: relative; aspect-ratio: 1; padding: 0; border: 3px solid rgba(255, 255, 255, 0.14); border-radius: 16px; overflow: visible;
+  background: #fffdf7; cursor: pointer; touch-action: manipulation; transition: transform 0.12s; }
+.cb-thumb:active { transform: scale(0.94); }
+.cb-thumb.cur { border-color: var(--c, #f6c453); box-shadow: 0 0 0 3px rgba(246, 196, 83, 0.35); }
+.cb-th { position: absolute; inset: 0; border-radius: 13px; overflow: hidden; }
+.cb-th canvas { width: 100%; height: 100%; display: block; }
+.cb-badge { position: absolute; right: -8px; top: -8px; width: 30px; height: 30px; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.4)); }
+.cb-badge svg { width: 100%; height: 100%; }
+.cb-del { position: absolute; right: -10px; top: -10px; width: 34px; height: 34px; border-radius: 17px; display: flex; align-items: center;
+  justify-content: center; background: #3a2a6a; color: #fff; border: 2px solid rgba(255, 255, 255, 0.5); }
+.cb-del svg { width: 18px; height: 18px; }
+.cb-confirm { position: absolute; inset: -3px; z-index: 2; border-radius: 16px; background: rgba(20, 12, 50, 0.92); display: flex;
+  flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 6px; }
+.cb-confirm p { margin: 0; font-size: 14px; color: #fff; text-align: center; }
+.cb-confirm .row { display: flex; flex-direction: column; gap: 4px; width: 100%; }
+.cb-confirm .kit-btn { min-height: 34px; font-size: 14px; padding: 0 8px; }
+.cb-empty { text-align: center; padding: 30px 10px 10px; color: var(--kit-ink-dim); }
+.cb-empty-art svg { width: 72px; height: 72px; color: var(--kit-gold); }
+.cb-zoom { position: fixed; z-index: 21; }

@@ -1,0 +1,84 @@
+/* Jannah Garden: the picture tray, goal chips and saved-garden cards (floating over the full-screen garden). */
+:root { --jg-btn: 58px; }
+html, body { background: #8fcf6e; }
+
+/* tray: picture buttons along the bottom, with the basket at the end */
+.jg-tray { position: fixed; z-index: 18; left: calc(8px + var(--kit-sl)); right: calc(8px + var(--kit-sr));
+  bottom: calc(8px + var(--kit-sb)); height: calc(var(--jg-btn) + 16px); display: flex; align-items: center; gap: 4px;
+  padding: 0 8px 0 0; border-radius: calc(var(--jg-btn) / 2 + 6px); background: rgba(255, 250, 232, 0.5);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); border: 1px solid rgba(255, 255, 255, 0.65);
+  box-shadow: 0 8px 22px rgba(30, 60, 30, 0.25); }
+.jg-scroll { flex: 1; min-width: 0; height: 100%; display: flex; align-items: center; gap: 6px; overflow-x: auto; overflow-y: hidden;
+  touch-action: pan-x; scrollbar-width: none; overscroll-behavior: contain; -webkit-overflow-scrolling: touch;
+  padding: 0 8px; border-radius: calc(var(--jg-btn) / 2 + 8px); }
+.jg-scroll::-webkit-scrollbar { display: none; }
+.jg-item { position: relative; flex: 0 0 var(--jg-btn); width: var(--jg-btn); height: var(--jg-btn); padding: 0; border: 0;
+  border-radius: 18px; cursor: pointer; touch-action: pan-x; transition: transform 0.15s, box-shadow 0.15s;
+  background: radial-gradient(circle at 50% 35%, #fffdf6, #efe4c8); box-shadow: 0 3px 0 rgba(120, 90, 40, 0.3), inset 0 0 0 2px rgba(255, 255, 255, 0.8); }
+.jg-item canvas { display: block; width: 100%; height: 100%; pointer-events: none; }
+.jg-item.sel { background: radial-gradient(circle at 50% 35%, #fff8d8, #ffd978); transform: translateY(-3px);
+  box-shadow: 0 0 0 3px #f6c453, 0 5px 0 #a8621f; }
+.jg-item.goal::after { content: ""; position: absolute; top: 2px; right: 2px; width: 16px; height: 16px; pointer-events: none;
+  background: no-repeat center/contain url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-50 -50 100 100'%3E%3Cpath d='M0-46 13-31 32-32 31-13 46 0 31 13 32 32 13 31 0 46-13 31-32 32-31 13-46 0-31-13-32-32-13-31Z' fill='%23f6c453' stroke='%237a4a12' stroke-width='7'/%3E%3C/svg%3E");
+  animation: jg-twinkle 1.8s ease-in-out infinite; }
+.jg-item.bounce { animation: jg-bounce 0.45s ease-out; }
+.jg-item.sel.bounce { animation: jg-bounce-sel 0.45s ease-out; }
+.jg-basket { position: relative; flex: 0 0 var(--jg-btn); width: var(--jg-btn); height: var(--jg-btn); padding: 0; border: 0; cursor: pointer;
+  border-radius: 50%; background: rgba(255, 255, 255, 0.55); transition: transform 0.2s, background 0.2s, box-shadow 0.2s; touch-action: manipulation; }
+.jg-basket canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.jg-basket canvas:last-child { opacity: 0; }
+.jg-basket.open canvas:first-child { opacity: 0; }
+.jg-basket.open canvas:last-child { opacity: 1; }
+.jg-basket.open { background: #fff2c6; box-shadow: 0 0 0 3px #f6c453; transform: scale(1.12); }
+.jg-basket.hot { transform: scale(1.3); background: #ffe08a; }
+.jg-basket.bump { animation: jg-bounce 0.45s ease-out; }
+.jg-tray.dragging .jg-scroll { opacity: 0.55; }
+
+/* goals: picture + dots + where, with a star that lights up */
+.jg-goals { position: fixed; z-index: 19; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 5px;
+  padding: 4px; border-radius: 28px; background: var(--kit-pill); border: 1px solid rgba(255, 255, 255, 0.16); }
+.jg-chip { position: relative; display: inline-flex; align-items: center; gap: 3px; height: 48px; padding: 0 8px 0 4px; border: 0;
+  border-radius: 24px; background: rgba(255, 255, 255, 0.14); cursor: pointer; touch-action: manipulation; color: #fff; transition: background 0.3s; }
+.jg-chip canvas.it { width: 36px; height: 36px; }
+.jg-chip canvas.zn { width: 24px; height: 24px; border-radius: 6px; }
+.jg-pips { display: inline-grid; grid-auto-flow: column; grid-template-rows: repeat(2, 8px); gap: 3px; }
+.jg-pips i { width: 8px; height: 8px; border-radius: 50%; background: rgba(255, 255, 255, 0.3); transition: background 0.2s, transform 0.2s; }
+.jg-pips i.on { background: #ffd978; box-shadow: 0 0 5px #ffd978; transform: scale(1.15); }
+.jg-star { position: absolute; top: -7px; right: -6px; width: 20px; height: 20px; pointer-events: none; }
+.jg-star svg { width: 100%; height: 100%; filter: grayscale(1) brightness(1.4); opacity: 0.45; transition: opacity 0.3s; }
+.jg-chip.done { background: rgba(246, 196, 83, 0.42); }
+.jg-chip.done .jg-star svg { filter: none; opacity: 1; }
+.jg-chip.pulse { animation: jg-bounce 0.55s ease-out; }
+.jg-finish { display: none; width: 44px; height: 44px; border-radius: 22px; border: 0; padding: 0; cursor: pointer; color: #2a1606;
+  align-items: center; justify-content: center; background: linear-gradient(180deg, #ffd978, #f6c453 55%, #e9973a);
+  box-shadow: 0 3px 0 #a8621f; touch-action: manipulation; }
+.jg-finish svg { width: 26px; height: 26px; }
+.jg-finish.show { display: inline-flex; animation: jg-pulse 1.6s ease-in-out infinite; }
+.jg-goals.narrow { gap: 3px; }
+.jg-goals.narrow .jg-chip { padding: 0 6px 0 2px; gap: 2px; }
+.jg-goals.narrow .jg-chip canvas.it { width: 32px; height: 32px; }
+.jg-goals.narrow .jg-chip canvas.zn { width: 20px; height: 20px; }
+.jg-goals.narrow .jg-pips { grid-template-rows: repeat(2, 7px); gap: 2px; }
+.jg-goals.narrow .jg-pips i { width: 7px; height: 7px; }
+.jg-goals.narrow .jg-finish { width: 40px; height: 40px; }
+
+/* saved gardens */
+.jg-slots { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+.jg-slot { position: relative; aspect-ratio: 5 / 3; border-radius: 16px; overflow: hidden; background: rgba(255, 255, 255, 0.08);
+  border: 2px solid rgba(255, 225, 160, 0.35); }
+.jg-slot .jg-open { display: block; width: 100%; height: 100%; padding: 0; border: 0; background: none; cursor: pointer; touch-action: manipulation; }
+.jg-slot .jg-open canvas { display: block; width: 100%; height: 100%; }
+.jg-slot .jg-del { position: absolute; right: 4px; bottom: 4px; width: 40px; height: 40px; border-radius: 20px; border: 0; padding: 0;
+  display: flex; align-items: center; justify-content: center; color: #fff; background: rgba(14, 10, 34, 0.55); cursor: pointer; }
+.jg-slot .jg-del svg { width: 22px; height: 22px; }
+.jg-slot.empty { display: flex; align-items: center; justify-content: space-evenly; padding: 4px; border-style: dashed; }
+.jg-new { width: 48px; height: 48px; padding: 0; border: 0; border-radius: 12px; background: none; cursor: pointer; touch-action: manipulation; }
+.jg-new canvas { width: 44px; height: 44px; display: block; margin: auto; border-radius: 10px; box-shadow: 0 3px 0 rgba(0, 0, 0, 0.25); }
+.jg-new:active, .jg-slot .jg-open:active { transform: scale(0.95); }
+.jg-thumb { display: block; width: min(240px, 100%); height: auto; margin: 14px auto 0; border-radius: 14px; border: 2px solid rgba(255, 225, 160, 0.35); }
+
+@keyframes jg-bounce { 30% { transform: scale(1.18); } 60% { transform: scale(0.94); } }
+@keyframes jg-bounce-sel { 0% { transform: translateY(-3px); } 30% { transform: translateY(-8px) scale(1.15); } 60% { transform: translateY(-2px) scale(0.95); } 100% { transform: translateY(-3px); } }
+@keyframes jg-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+@keyframes jg-twinkle { 0%, 100% { transform: scale(1) rotate(0); } 50% { transform: scale(1.2) rotate(20deg); } }
+@media (prefers-reduced-motion: reduce) { .jg-item.goal::after, .jg-finish.show { animation: none; } }

@@ -1,0 +1,22 @@
+/* Kahf KidsGames board kit: opponent ladder sheet. Pairs with js/kit/kit.css. */
+.bk-ladder { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; text-align: left; }
+.bk-opp { display: flex; align-items: center; gap: 12px; min-height: 66px; padding: 6px 12px 6px 6px; border-radius: 20px;
+  border: 2px solid rgba(255, 225, 160, 0.28); background: rgba(255, 255, 255, 0.06); color: var(--kit-ink);
+  font: 800 16px Nunito, system-ui, sans-serif; cursor: pointer; touch-action: manipulation; transition: transform 0.12s; }
+.bk-opp:active { transform: scale(0.97); }
+.bk-opp.cur { border-color: var(--kit-gold); background: rgba(246, 196, 83, 0.14); }
+.bk-opp.locked { opacity: 0.45; cursor: default; }
+.bk-opp canvas { flex: none; }
+.bk-info { flex: 1; text-align: left; align-items: flex-start; display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.bk-info b { font-size: 18px; font-weight: 900; }
+.bk-lvl { display: flex; align-items: center; gap: 3px; font-size: 13px; color: var(--kit-ink-dim); white-space: nowrap; }
+.bk-lvl i { width: 8px; height: 8px; border-radius: 4px; background: rgba(255, 255, 255, 0.2); }
+.bk-lvl i:last-of-type { margin-right: 5px; }
+.bk-lvl.lv-easy i.on { background: #6fd98a; }
+.bk-lvl.lv-medium i.on { background: #ffc94d; }
+.bk-lvl.lv-hard i.on { background: #ff7a6b; }
+.bk-st { flex: none; display: flex; gap: 1px; align-items: center; }
+.bk-st svg { width: 18px; height: 18px; }
+.bk-st svg.lock { width: 22px; height: 22px; }
+.bk-next { display: flex; justify-content: center; margin-top: 10px; }
+.bk-ladder-sheet h2 { padding: 0 42px; font-size: 26px; }

@@ -98,7 +98,7 @@
       if (o.buttons && o.buttons.length) {
         var acts = el('div', 'kit-actions'), row = null;
         o.buttons.forEach(function (b) {
-          var btn = el('button', 'kit-btn' + (b.primary ? ' primary' : ''), (b.icon ? ICON[b.icon] : '') + '<span>' + b.label + '</span>');
+          var btn = el('button', 'kit-btn' + (b.primary ? ' primary' : ''), (b.icon ? (ICON[b.icon] || b.icon) : '') + '<span>' + b.label + '</span>');
           btn.onclick = function () { Kit.sfx && Kit.sfx.play('tap'); close(); b.onClick && b.onClick(); };
           if (b.row) { if (!row) { row = el('div', 'row'); acts.appendChild(row); } row.appendChild(btn); }
           else { row = null; acts.appendChild(btn); }

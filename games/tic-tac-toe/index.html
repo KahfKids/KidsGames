@@ -1,187 +1,37 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>CodePen - Pure CSS Tic Tac Toe AI</title>
-    <link rel="stylesheet" href="./style.css" />
-    <meta
-      name="viewport"
-      content="width=device-width, target-densitydpi=160dpi, initial-scale=1.0, maximum-scale=1, user-scalable=no, minimal-ui"
-    />
-    <meta name="viewport" content="width=device-width,user-scalable=no" />
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <title>Tic Tac Toe</title>
+  <meta name="description" content="Stars and flowers: three in a row wins! Play five toy robots, from little Beep to Professor Cog, or with a friend on the same device." />
+  <meta name="theme-color" content="#2f2466" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="manifest" href="/KidsGames/manifest.json" />
+  <link rel="apple-touch-icon" href="/KidsGames/icons/icon-192x192.png" />
+  <link rel="stylesheet" href="/KidsGames/js/kit/kit.css" />
+  <link rel="stylesheet" href="/KidsGames/js/board/board.css" />
+  <script src="/KidsGames/js/kahf-bridge.js" defer></script>
+</head>
+<body>
+  <canvas id="stage" class="kit-stage" aria-label="Tic Tac Toe game"></canvas>
 
-    <!-- KidsGames PWA Support -->
-    <link rel="manifest" href="/KidsGames/manifest.json" />
-    <meta name="theme-color" content="#4f391a" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <link rel="apple-touch-icon" href="/KidsGames/icons/icon-192x192.png" />
-    <script src="/KidsGames/js/kahf-bridge.js" defer></script>
-  </head>
-  <body>
-    <!-- partial:index.partial.html -->
-    <form>
-      <input id="x0-1" name="x0" type="radio" value="1" />
-      <input id="x0-2" name="x0" type="radio" value="2" />
-      <input id="x0-3" name="x0" type="radio" value="3" />
-      <input id="x0-4" name="x0" type="radio" value="4" />
-      <input id="x0-5" name="x0" type="radio" value="5" />
-      <input id="x0-6" name="x0" type="radio" value="6" />
-      <input id="x0-7" name="x0" type="radio" value="7" />
-      <input id="x0-8" name="x0" type="radio" value="8" />
-      <input id="x0-9" name="x0" type="radio" value="9" />
+  <script src="/KidsGames/js/kit/core.js"></script>
+  <script src="/KidsGames/js/kit/fx.js"></script>
+  <script src="/KidsGames/js/kit/audio.js"></script>
+  <script src="/KidsGames/js/kit/ui.js"></script>
+  <script src="/KidsGames/js/board/art.js"></script>
+  <script src="/KidsGames/js/board/board.js"></script>
+  <script src="/KidsGames/js/board/robot-sounds.js"></script>
+  <script src="js/sounds.js"></script>
+  <script src="js/tictactoe.js"></script>
 
-      <input id="x1-1" name="x1" type="radio" value="1" />
-      <input id="x1-2" name="x1" type="radio" value="2" />
-      <input id="x1-3" name="x1" type="radio" value="3" />
-      <input id="x1-4" name="x1" type="radio" value="4" />
-      <input id="x1-5" name="x1" type="radio" value="5" />
-      <input id="x1-6" name="x1" type="radio" value="6" />
-      <input id="x1-7" name="x1" type="radio" value="7" />
-      <input id="x1-8" name="x1" type="radio" value="8" />
-      <input id="x1-9" name="x1" type="radio" value="9" />
-
-      <input id="x2-1" name="x2" type="radio" value="1" />
-      <input id="x2-2" name="x2" type="radio" value="2" />
-      <input id="x2-3" name="x2" type="radio" value="3" />
-      <input id="x2-4" name="x2" type="radio" value="4" />
-      <input id="x2-5" name="x2" type="radio" value="5" />
-      <input id="x2-6" name="x2" type="radio" value="6" />
-      <input id="x2-7" name="x2" type="radio" value="7" />
-      <input id="x2-8" name="x2" type="radio" value="8" />
-      <input id="x2-9" name="x2" type="radio" value="9" />
-
-      <input id="x3-1" name="x3" type="radio" value="1" />
-      <input id="x3-2" name="x3" type="radio" value="2" />
-      <input id="x3-3" name="x3" type="radio" value="3" />
-      <input id="x3-4" name="x3" type="radio" value="4" />
-      <input id="x3-5" name="x3" type="radio" value="5" />
-      <input id="x3-6" name="x3" type="radio" value="6" />
-      <input id="x3-7" name="x3" type="radio" value="7" />
-      <input id="x3-8" name="x3" type="radio" value="8" />
-      <input id="x3-9" name="x3" type="radio" value="9" />
-
-      <input id="x4-1" name="x4" type="radio" value="1" />
-      <input id="x4-2" name="x4" type="radio" value="2" />
-      <input id="x4-3" name="x4" type="radio" value="3" />
-      <input id="x4-4" name="x4" type="radio" value="4" />
-      <input id="x4-5" name="x4" type="radio" value="5" />
-      <input id="x4-6" name="x4" type="radio" value="6" />
-      <input id="x4-7" name="x4" type="radio" value="7" />
-      <input id="x4-8" name="x4" type="radio" value="8" />
-      <input id="x4-9" name="x4" type="radio" value="9" />
-
-      <div class="board">
-        <div class="cell cell--1">
-          <div class="mark mark--x"></div>
-          <div class="mark mark--o"></div>
-          <label class="label label--0" for="x0-1"></label>
-          <label class="label label--1" for="x1-1"></label>
-          <label class="label label--2" for="x2-1"></label>
-          <label class="label label--3" for="x3-1"></label>
-          <label class="label label--4" for="x4-1"></label>
-        </div>
-        <div class="cell cell--2">
-          <div class="mark mark--x"></div>
-          <div class="mark mark--o"></div>
-          <label class="label label--0" for="x0-2"></label>
-          <label class="label label--1" for="x1-2"></label>
-          <label class="label label--2" for="x2-2"></label>
-          <label class="label label--3" for="x3-2"></label>
-          <label class="label label--4" for="x4-2"></label>
-        </div>
-        <div class="cell cell--3">
-          <div class="mark mark--x"></div>
-          <div class="mark mark--o"></div>
-          <label class="label label--0" for="x0-3"></label>
-          <label class="label label--1" for="x1-3"></label>
-          <label class="label label--2" for="x2-3"></label>
-          <label class="label label--3" for="x3-3"></label>
-          <label class="label label--4" for="x4-3"></label>
-        </div>
-        <div class="cell cell--4">
-          <div class="mark mark--x"></div>
-          <div class="mark mark--o"></div>
-          <label class="label label--0" for="x0-4"></label>
-          <label class="label label--1" for="x1-4"></label>
-          <label class="label label--2" for="x2-4"></label>
-          <label class="label label--3" for="x3-4"></label>
-          <label class="label label--4" for="x4-4"></label>
-        </div>
-        <div class="cell cell--5">
-          <div class="mark mark--x"></div>
-          <div class="mark mark--o"></div>
-          <label class="label label--0" for="x0-5"></label>
-          <label class="label label--1" for="x1-5"></label>
-          <label class="label label--2" for="x2-5"></label>
-          <label class="label label--3" for="x3-5"></label>
-          <label class="label label--4" for="x4-5"></label>
-        </div>
-        <div class="cell cell--6">
-          <div class="mark mark--x"></div>
-          <div class="mark mark--o"></div>
-          <label class="label label--0" for="x0-6"></label>
-          <label class="label label--1" for="x1-6"></label>
-          <label class="label label--2" for="x2-6"></label>
-          <label class="label label--3" for="x3-6"></label>
-          <label class="label label--4" for="x4-6"></label>
-        </div>
-        <div class="cell cell--7">
-          <div class="mark mark--x"></div>
-          <div class="mark mark--o"></div>
-          <label class="label label--0" for="x0-7"></label>
-          <label class="label label--1" for="x1-7"></label>
-          <label class="label label--2" for="x2-7"></label>
-          <label class="label label--3" for="x3-7"></label>
-          <label class="label label--4" for="x4-7"></label>
-        </div>
-        <div class="cell cell--8">
-          <div class="mark mark--x"></div>
-          <div class="mark mark--o"></div>
-          <label class="label label--0" for="x0-8"></label>
-          <label class="label label--1" for="x1-8"></label>
-          <label class="label label--2" for="x2-8"></label>
-          <label class="label label--3" for="x3-8"></label>
-          <label class="label label--4" for="x4-8"></label>
-        </div>
-        <div class="cell cell--9">
-          <div class="mark mark--x"></div>
-          <div class="mark mark--o"></div>
-          <label class="label label--0" for="x0-9"></label>
-          <label class="label label--1" for="x1-9"></label>
-          <label class="label label--2" for="x2-9"></label>
-          <label class="label label--3" for="x3-9"></label>
-          <label class="label label--4" for="x4-9"></label>
-        </div>
-      </div>
-
-      <div class="endgame">
-        <span class="msg msg--o-win">You lost!</span>
-        <span class="msg msg--draw">Draw!</span>
-        <button class="endgame-newgame" type="reset">Try again</button>
-      </div>
-
-      <div class="bar">
-        <button class="newgame" type="reset">New game</button>
-      </div>
-    </form>
-    <!-- partial -->
-    <script src="./script.js"></script>
-
-    <!-- KidsGames PWA Service Worker -->
-    <script>
-      if ("serviceWorker" in navigator) {
-        window.addEventListener("load", () => {
-          navigator.serviceWorker
-            .register("/KidsGames/sw.js")
-            .then((registration) => {
-              console.log("[PWA] Service Worker registered for free game");
-            })
-            .catch((error) => {
-              console.log("[PWA] Service Worker registration failed:", error);
-            });
-        });
-      }
-    </script>
-  </body>
+  <script>
+    if ("serviceWorker" in navigator && location.pathname.indexOf("/KidsGames/") === 0 && !/[?&](debug|nosw)\b/.test(location.search)) {
+      addEventListener("load", function () { navigator.serviceWorker.register("/KidsGames/sw.js").catch(function () {}); });
+    }
+  </script>
+</body>
 </html>

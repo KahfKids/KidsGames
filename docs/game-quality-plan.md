@@ -126,7 +126,7 @@ Its art belongs to its original author (credited "A game by WAFEE8"), so we **ma
 
 ## 6. Order of work
 
-**Status (2026-11-08):** Phase 0 committed. Phase 1 built and awaiting review: the shared kit (`js/kit/core.js`, `fx.js`, `audio.js`, `ui.js`, `kit.css`) and Breakout rebuilt as **Mosaic Breaker** (`games/breakout-game/`).
+**Status (2026-11-09):** Phase 0 and Phase 1 committed (shared kit in `js/kit/`, Breakout rebuilt as **Mosaic Breaker**). Phase 2 and the rework wave built and awaiting review: **Star Rangers**, **Balloon Pop** (with good deeds), **Checkers** and **Tic Tac Toe** (board kit `js/board/`, toy-robot opponents), **Sharp Eyes**, **Ramadan Maze** (Kids Maze redirects there), **Follow the Light**, **Jannah Garden**, **Solar System**, **Colouring Book** and **Shape Patterns**. Owner rule: no faces in any art. Still to do: Memory Match, Tower Blocks, then the polish wave.
 
 1. **Phase 0 urgent fixes** (section 2).
 2. **Kit + one reference game:** build `js/kit/` and rebuild **Breakout** with it as the proof (it touches loop, input, levels, fx and audio). Review it against Spider IK before going wider.

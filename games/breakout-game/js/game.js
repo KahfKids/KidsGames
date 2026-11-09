@@ -20,7 +20,7 @@
   // ---------- state ----------
   var level = 1, world = 0, tune = null, bricks = [], balls = [], drops = [], ambient = [];
   var carpet = null, lives = 3, livesLost = 0, score = 0, combo = 0, speed = 500, slowT = 0;
-  var state = 'play', bannerT = 0, sinceHit = 0, time = 0, launchedOnce = !!store.get('launched', false), hint = null;
+  var state = 'idle', bannerT = 0, sinceHit = 0, time = 0, launchedOnce = !!store.get('launched', false), hint = null;
   var keyVel = 0;
 
   // ---------- layout (game units: the field is 1000-1500 wide, height follows the screen) ----------
