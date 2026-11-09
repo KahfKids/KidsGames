@@ -59,6 +59,22 @@
     }
     return best && Math.sqrt(bd) * 111 < 150 ? best : null;
   }
+  // No place chosen and none passed by the app: guess the city from the device's time zone ("Asia/Dhaka" → Dhaka),
+  // so a child's first day already has real times. Not saved, and marked `guessed` so settings can ask a grown-up.
+  var ZONE_ALIAS = { calcutta: 'kolkata', kolkata: 'kolkata', saigon: 'ho chi minh city', rangoon: 'yangon', katmandu: 'kathmandu' };
+  function fromZone() {
+    var C = window.HH_CITIES, tz = '';
+    try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) {}
+    if (!C || tz.indexOf('/') < 0) return null;
+    var name = tz.split('/').pop().replace(/_/g, ' ').toLowerCase(); name = ZONE_ALIAS[name] || name;
+    for (var i = 0; i < C.length; i++) {
+      if (String(C[i][0]).toLowerCase() === name) {
+        var cc = C[i][1];
+        return { lat: C[i][2], lng: C[i][3], city: C[i][0], country: cc, method: methodFor(cc), madhab: madhabFor(cc), guessed: true };
+      }
+    }
+    return null;
+  }
   function settings() {
     if (cache) return cache;
     var s = stored(), u = fromUrl();
@@ -71,7 +87,8 @@
       } else { s.lat = u.lat; s.lng = u.lng; }
       try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) {}
     }
-    if (!s || num(s.lat) === null || num(s.lng) === null) return null;
+    if (!s || num(s.lat) === null || num(s.lng) === null) s = fromZone();
+    if (!s) return null;
     s.method = METHODS[s.method] ? s.method : methodFor(s.country);
     s.madhab = s.madhab === 'hanafi' ? 'hanafi' : 'shafi';
     return (cache = s);
