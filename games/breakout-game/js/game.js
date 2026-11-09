@@ -333,9 +333,9 @@
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     // background layers with parallax depth
     var m = bg.margin;
-    ctx.drawImage(bg.sky, -m - px * 4 * d, 0);
-    ctx.drawImage(bg.far, -m - px * 9 * d, 0);
-    ctx.drawImage(bg.mid, -m - px * 16 * d, 0);
+    ctx.drawImage(bg.sky, Math.round(-m - px * 4 * d), Math.round(0));
+    ctx.drawImage(bg.far, Math.round(-m - px * 9 * d), Math.round(0));
+    ctx.drawImage(bg.mid, Math.round(-m - px * 16 * d), Math.round(0));
     // ambient: gold motes at night, petals at dawn, rising lanterns at sea
     ctx.setTransform(d, 0, 0, d, 0, 0);
     ambient.forEach(function (a, i) {
@@ -346,7 +346,7 @@
     });
     ctx.globalAlpha = 1;
     ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.drawImage(bg.near, -m - px * 26 * d, 0);
+    ctx.drawImage(bg.near, Math.round(-m - px * 26 * d), Math.round(0));
 
     // field (game units)
     var sh = K.fx.offset(), s = G.s * d;

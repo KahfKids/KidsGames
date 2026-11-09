@@ -135,6 +135,7 @@
     return (cache[key] = c);
   }
   // Draw-in: a pen traces the outline, then the colour washes in.
+  var sparkle = {};
   function drawPlacing(ctx, side, cell, p) {
     var R = cell * 0.36, pts = SHAPES[side], k = Math.min(1, p / 0.62), n = pts.length - 1, upto = k * n, last = Math.floor(upto);
     if (p > 0.5) { var sp = pieceSprite(side, false, cell, Math.min(2, window.devicePixelRatio || 1)); ctx.globalAlpha = Math.min(1, (p - 0.5) / 0.4); ctx.drawImage(sp, -sp.w / 2, -sp.h / 2, sp.w, sp.h); ctx.globalAlpha = 1; }
@@ -144,10 +145,11 @@
     var f = upto - last, tip = pts[last];
     if (last < n) { var nx = pts[last + 1]; tip = [tip[0] + (nx[0] - tip[0]) * f, tip[1] + (nx[1] - tip[1]) * f]; ctx.lineTo(tip[0] * R, tip[1] * R); }
     ctx.stroke();
-    if (k < 1) {   // sparkle at the pen tip
-      var gl = ctx.createRadialGradient(tip[0] * R, tip[1] * R, 0, tip[0] * R, tip[1] * R, cell * 0.12);
-      gl.addColorStop(0, 'rgba(255,255,255,1)'); gl.addColorStop(1, 'rgba(255,240,180,0)');
-      ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(tip[0] * R, tip[1] * R, cell * 0.12, 0, TAU); ctx.fill();
+    if (k < 1) {   // sparkle at the pen tip (its gradient is made once, around (0, 0), and drawn shifted to the tip)
+      var gl = sparkle[cell];
+      if (!gl) { gl = sparkle[cell] = ctx.createRadialGradient(0, 0, 0, 0, 0, cell * 0.12); gl.addColorStop(0, 'rgba(255,255,255,1)'); gl.addColorStop(1, 'rgba(255,240,180,0)'); }
+      ctx.save(); ctx.translate(tip[0] * R, tip[1] * R);
+      ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(0, 0, cell * 0.12, 0, TAU); ctx.fill(); ctx.restore();
     }
   }
 

@@ -75,9 +75,25 @@ function drawFace(g){
   
   
 }
+// On-screen sprites are drawn from small bitmaps of the SVG, rendered once at 2x their on-screen size (sizes bucketed in 2%
+// steps), instead of re-rasterising the SVG on every draw, which was the other big cost on phones. The hidden collision
+// canvases still draw the SVG itself, so gameplay is unchanged. VIS = the on-screen context, VS = its device px per level px.
+let VIS=null,VS=0,SPR_RASTER=true;
+function sprRaster(a,d){
+  const q=Math.round(Math.log(d)/Math.log(1.02)),m=a.rc||(a.rc=new Map());
+  let r=m.get(q);if(r)return r;
+  if(m.size>32)m.clear();
+  const dq=Math.pow(1.02,q)*2,pad=2,c=document.createElement('canvas');
+  c.width=Math.ceil(a.img.width*dq)+pad*2;c.height=Math.ceil(a.img.height*dq)+pad*2;
+  c.getContext('2d').drawImage(a.img,pad,pad,a.img.width*dq,a.img.height*dq);
+  r={c,dq,pad};m.set(q,r);return r;
+}
 function spr(g,a,x,y,dir,size,alpha){
   g.save();g.translate(wx(x),wy(y));g.rotate((dir-90)*Math.PI/180);
-  const s=K*size/100/a.r;g.scale(s,s);g.globalAlpha=Math.max(0,Math.min(1,alpha));g.drawImage(a.img,-a.x,-a.y);g.restore();
+  const s=K*size/100/a.r;g.globalAlpha=Math.max(0,Math.min(1,alpha));
+  if(g===VIS&&VS&&SPR_RASTER&&a.img.width){const r=sprRaster(a,s*VS);g.scale(s/r.dq,s/r.dq);g.drawImage(r.c,-a.x*r.dq-r.pad,-a.y*r.dq-r.pad);}
+  else{g.scale(s,s);g.drawImage(a.img,-a.x,-a.y);}
+  g.restore();
 }
 const SP={1:[1,'r',235,175,-1],2:[2,'r',-22,-4,-1.5],3:[3,'y',150,38,0,0],4:[4,'y',150,38,180,0],5:[5,'y',300,38,0,0],6:[6,'y',100,105,0,20],7:[7,'r',20,0,-1.5],8:[8,'x',150,40,0,0],9:[6,'y',70,100,0,-60],10:[9,'x',150,40,0,0],11:[10,'y',150,43,0,0],12:[11,'r',185,15,-2],13:[12,'x',90,145,0,0,1],14:[13,'x',130,40,0,0,1],15:[14,'o',70],16:[14,'o',-70],17:[15,'r',180,0,-1.2],18:[16,'y',150,38,0,0],19:[17,'y',200,52,0,0],20:[18,'y',200,52,180,0],21:[19,'r',30,50,1],22:[20,'y',225,52,180,0],23:[21,'y',225,52,0,0],24:[22,'r',0,0,1.8],25:[23,'r',15,-10,2.5]};
 const rad=a=>a*Math.PI/180;
@@ -170,9 +186,9 @@ function makeObjs(S,b,legs,setLevel,keys,settle){
     hud(S.n,col,L.req);
   };
   const below=g=>{
-    g.drawImage(S.under,0,0,W,H);g.drawImage(S.edge,0,0);
+    if(LC.on)blitLayer(g,LC.base);else{g.drawImage(S.under,0,0,W,H);g.drawImage(S.edge,0,0);}
     for(const o of orbs)spr(g,A.orb[Math.floor(T*15+o.x)%14&13],o.x,o.y,90,o.sz,1-o.gh/100);
-    g.drawImage(S.main,0,0,W,H);
+    if(LC.on)blitLayer(g,LC.main);else g.drawImage(S.main,0,0,W,H);
     const open=col>=L.req,al=open?1:.3,pb=1+.1*Math.sin(T*1.6);
     spr(g,A.portal[0],L.en[0],L.en[1],90+T*90,55*pb,al);spr(g,A.portal[1],L.en[0],L.en[1],90-T*130,55*pb,al);
     for(const p of L.port)spr(g,A.tele[0],p[0],p[1],90+T*60,60*pb,1);
@@ -182,12 +198,34 @@ function makeObjs(S,b,legs,setLevel,keys,settle){
     for(const o of blobs){if(!o.vis||o.dead||o.t==1)continue;const a=A.blob[(o.t==2||o.t==4)?'costume4':'costume5'];spr(g,a,o.x,o.y,90+o.rot,o.sz,1-o.gh/100);}
     for(const e of elec){if(e.gh>=100)continue;spr(g,A.elec[Math.floor(T*15)%5],e.x,e.y,e.r-90,e.sz,1-e.gh/100);}}
   const above=g=>{drawSolids(g);drawHaz(g);
-    for(const f of fxs){const x=wx(f.x),y=wy(f.y),r=(10+f.t*f.s*.8)*K;g.globalAlpha=1-f.t;g.fillStyle=themeFx(S.n)[0];g.beginPath();g.arc(x,y,r*.7,0,TAU);g.fill();g.strokeStyle=themeFx(S.n)[1];g.lineWidth=5;g.beginPath();g.arc(x,y,r,0,TAU);g.stroke();for(let i=0;i<10;i++){const a=i*.628+f.t;g.beginPath();g.moveTo(x+Math.cos(a)*r*.6,y+Math.sin(a)*r*.6);g.lineTo(x+Math.cos(a)*r*1.5,y+Math.sin(a)*r*1.5);g.stroke();}g.globalAlpha=1;}g.drawImage(S.fore,0,0,W,H);};
+    for(const f of fxs){const x=wx(f.x),y=wy(f.y),r=(10+f.t*f.s*.8)*K;g.globalAlpha=1-f.t;g.fillStyle=themeFx(S.n)[0];g.beginPath();g.arc(x,y,r*.7,0,TAU);g.fill();g.strokeStyle=themeFx(S.n)[1];g.lineWidth=5;g.beginPath();g.arc(x,y,r,0,TAU);g.stroke();for(let i=0;i<10;i++){const a=i*.628+f.t;g.beginPath();g.moveTo(x+Math.cos(a)*r*.6,y+Math.sin(a)*r*.6);g.lineTo(x+Math.cos(a)*r*1.5,y+Math.sin(a)*r*1.5);g.stroke();}g.globalAlpha=1;}if(LC.on)blitLayer(g,LC.fore);else g.drawImage(S.fore,0,0,W,H);};
   return{update,below,above,spinAt};
 }
 
 const CTL={ax:0,ay:0,jump:0};
 const DYN={d:null,x0:0,y0:0,w:0,h:0};
+// Level art pre-scaled to the screen once per level/size: resampling four full-level layers every frame was what made
+// phones lag. base = under + edge, then main, then fore; each frame copies only the visible part, 1:1, at whole device pixels.
+// Very large screens (where three screen-size copies would cost too much memory) keep the old per-frame path.
+const LC={on:false,S:null,s:0,base:null,main:null,fore:null,ox:0,oy:0,vw:0,vh:0};
+function freeLayers(){for(const k of['base','main','fore'])if(LC[k]){LC[k].width=LC[k].height=0;LC[k]=null;}LC.on=false;LC.S=null;LC.s=0;}
+function buildLayers(S,s){
+  if(LC.S===S&&LC.s===s)return;
+  freeLayers();
+  const cw=Math.ceil(W*s),ch=Math.ceil(H*s);
+  LC.S=S;LC.s=s;if(cw*ch>8e6)return;
+  const mk=(draw,opaque)=>{const c=document.createElement('canvas');c.width=cw;c.height=ch;const g=c.getContext('2d',opaque?{alpha:false}:undefined);g.setTransform(s,0,0,s,0,0);draw(g);return c;};
+  LC.base=mk(g=>{g.drawImage(S.under,0,0,W,H);g.drawImage(S.edge,0,0);},true); // under-*.webp is fully opaque
+  LC.main=mk(g=>g.drawImage(S.main,0,0,W,H));
+  LC.fore=mk(g=>g.drawImage(S.fore,0,0,W,H));
+  LC.on=true;
+}
+function blitLayer(g,c){
+  const x0=Math.max(0,LC.ox),y0=Math.max(0,LC.oy),x1=Math.min(c.width,LC.ox+LC.vw),y1=Math.min(c.height,LC.oy+LC.vh);
+  if(x1<=x0||y1<=y0)return;
+  g.save();g.setTransform(1,0,0,1,0,0);g.globalAlpha=1;
+  g.drawImage(c,x0,y0,x1-x0,y1-y0,x0-LC.ox,y0-LC.oy,x1-x0,y1-y0);g.restore();
+}
 const solid=(m,x,y)=>{if(x<0||y<0||x>=W||y>=H)return 1;if(m[(y|0)*W+(x|0)])return 1;
   if(DYN.d){const dx=(x|0)-DYN.x0,dy=(y|0)-DYN.y0;if(dx>=0&&dy>=0&&dx<DYN.w&&dy<DYN.h&&DYN.d[(dy*DYN.w+dx)*4+3]>110)return 1;}return 0;};
 function ray(m,x,y,a,R){
@@ -363,11 +401,16 @@ function game(level){
       if(!PAUSE&&!MENU){step(dt);O.update(dt);}
       cam.x+=(Math.max(0,Math.min(W-vw,b.x-vw/2))-cam.x)*Math.min(1,dt*6);
       cam.y+=(Math.max(0,Math.min(H-vh,b.y-vh/2))-cam.y)*Math.min(1,dt*6);
-      const cx=cam.x|0,cy=cam.y|0;
-      ctx.setTransform(dpr*Z,0,0,dpr*Z,0,0);
-      ctx.fillStyle=CUR.c;
-      ctx.fillRect(0,0,vw,vh);
-      ctx.translate(-cx,-cy);
+      const s=dpr*Z;buildLayers(S,s);VIS=ctx;VS=s;
+      if(LC.on){LC.ox=Math.round(cam.x*s);LC.oy=Math.round(cam.y*s);LC.vw=cv.width;LC.vh=cv.height;
+        ctx.setTransform(1,0,0,1,0,0);
+        if(LC.ox<0||LC.oy<0||LC.ox+LC.vw>LC.base.width||LC.oy+LC.vh>LC.base.height){ctx.fillStyle=CUR.c;ctx.fillRect(0,0,cv.width,cv.height);} // else the opaque base covers it
+        ctx.setTransform(s,0,0,s,-LC.ox,-LC.oy);}
+      else{const cx=cam.x|0,cy=cam.y|0;
+        ctx.setTransform(s,0,0,s,0,0);
+        ctx.fillStyle=CUR.c;
+        ctx.fillRect(0,0,vw,vh);
+        ctx.translate(-cx,-cy);}
       O.below(ctx);
       if(!INTRO)legs.forEach(drawLeg);
       if(!INTRO){ctx.save();ctx.translate(b.x,b.y);ctx.rotate(b.a);ctx.scale(.92,.92);drawFace(ctx);ctx.restore();}
@@ -375,7 +418,7 @@ function game(level){
       raf=requestAnimationFrame(frame);
     };
     raf=requestAnimationFrame(frame);
-    return()=>{cancelAnimationFrame(raf);removeEventListener('resize',resize);RETRY=null;};
+    return()=>{cancelAnimationFrame(raf);removeEventListener('resize',resize);RETRY=null;freeLayers();};
 }
 
 /* ---------- Shell: level switching, input, HUD, progress ---------- */

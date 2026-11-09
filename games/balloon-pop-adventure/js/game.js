@@ -579,17 +579,17 @@
     ensureArt();
     var d = G.dpr, m = bg.margin, par = (parX - 0.5) * 2 + Math.sin(clock * 0.15) * 0.25;
     ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.drawImage(bg.sky, -m - par * 5 * d, 0);
+    ctx.drawImage(bg.sky, Math.round(-m - par * 5 * d), Math.round(0));
     ctx.setTransform(d, 0, 0, d, 0, 0); drawAmbient('sky');
-    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(bg.far, -m - par * 11 * d, 0);
+    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(bg.far, Math.round(-m - par * 11 * d), Math.round(0));
     ctx.setTransform(d, 0, 0, d, 0, 0); drawAmbient('mid');
-    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(bg.mid, -m - par * 18 * d, 0);
+    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(bg.mid, Math.round(-m - par * 18 * d), Math.round(0));
     ctx.setTransform(d, 0, 0, d, 0, 0); drawAmbient('front');
     var sh = K.fx.offset(), s = G.s * d;
     ctx.setTransform(s, 0, 0, s, sh.x * s, sh.y * s);
     var order = balloons.slice().sort(function (a, b) { return a.z - b.z || a.id - b.id; });
     for (var i = 0; i < order.length; i++) drawBalloon(order[i]);
-    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(bg.near, -m - par * 28 * d, 0);
+    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(bg.near, Math.round(-m - par * 28 * d), Math.round(0));
     ctx.setTransform(s, 0, 0, s, sh.x * s, sh.y * s);
     rings.forEach(function (r) {
       var u = r.t / 0.35; ctx.globalAlpha = 1 - u; ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 5 * (1 - u) + 1;

@@ -108,6 +108,17 @@
     return { n: n, pix: pix, nx: nx, ny: ny, nz: nz, tu: tu, tv: tv, aa: aa };
   }
 
+  // Per-pixel shading terms that depend only on where the pixel sits on the disc (not on the light or the spin):
+  // the square roots, worked out once per sprite with exactly the same arithmetic the per-frame loop used to repeat.
+  function shadeTable(tab, K) {
+    var n = tab.n, NZ = tab.nz, k, z, a = new Float64Array(n);
+    if (K.sun) { for (k = 0; k < n; k++) a[k] = 0.5 + 0.5 * Math.sqrt(NZ[k]); tab.sl = a; return; }
+    var limb = K.limb;
+    if (!limb) return;
+    for (k = 0; k < n; k++) { z = NZ[k]; a[k] = 1 - limb + limb * Math.sqrt(z); }
+    tab.ld = a;
+  }
+
   // Shading styles per kind of world.
   var KIND = {
     rock:  { amb: 0.08, atm: null, limb: 0, rim: 0.5 },
@@ -121,10 +132,14 @@
   // body: { tex, basis, kind, spinT (texels offset), cloudT }. L: light direction in screen space [x right, y down, z to viewer].
   A.renderSphere = function (spr, body, L, spinOff, cloudOff, time) {
     var T = body.texture, D = spr.D;
-    if (!spr.tab || spr.tabFor !== T.w + 'x' + T.h) { spr.tab = buildTable(body.basis, D, T.w, T.h); spr.tabFor = T.w + 'x' + T.h; }
+    var K = KIND[body.kind] || KIND.rock, out = spr.u32;
+    if (!spr.tab || spr.tabFor !== T.w + 'x' + T.h) {
+      spr.tab = buildTable(body.basis, D, T.w, T.h); spr.tabFor = T.w + 'x' + T.h;
+      shadeTable(spr.tab, K);
+      out.fill(0); // only the disc's pixels are written below, and always the same ones, so the rest stays clear
+    }
     var tab = spr.tab, n = tab.n, pix = tab.pix, NX = tab.nx, NY = tab.ny, NZ = tab.nz, TU = tab.tu, TV = tab.tv, AA = tab.aa;
-    var out = spr.u32, K = KIND[body.kind] || KIND.rock, TW = T.w, TH = T.h, rgb = T.rgb, ready = T.ready;
-    out.fill(0);
+    var TW = T.w, TH = T.h, rgb = T.rgb, ready = T.ready;
     var br = T.base[0], bg = T.base[1], bb = T.base[2];
     var bil = D > 100 && ready;
     var off = ((spinOff % TW) + TW) % TW, coff = ((cloudOff % TW) + TW) % TW;
@@ -132,10 +147,11 @@
     var i, k, u, v, u0, u1, v0, v1, fu, fv, i00, i10, i01, i11, r, g, b;
 
     if (K.sun) {
+      var SL = tab.sl;
       for (k = 0; k < n; k++) {
         u = TU[k] + off; if (u >= TW) u -= TW;
         if (ready) { i = ((TV[k] | 0) * TW + (u | 0)) * 3; r = rgb[i]; g = rgb[i + 1]; b = rgb[i + 2]; } else { r = br; g = bg; b = bb; }
-        var zc = NZ[k], limbS = 0.5 + 0.5 * Math.sqrt(zc), hot = zc * zc * zc * 70;
+        var zc = NZ[k], limbS = SL[k], hot = zc * zc * zc * 70;
         r = r * limbS + hot + 25 * (1 - zc); g = g * limbS * (0.85 + 0.15 * zc) + hot; b = b * limbS * (0.7 + 0.3 * zc) + hot * 0.6;
         var al = AA[k];
         out[pix[k]] = ((al * 255) << 24) | ((b > 255 ? 255 : b) << 16) | ((g > 255 ? 255 : g) << 8) | (r > 255 ? 255 : r);
@@ -147,6 +163,7 @@
     var Lx = L[0], Ly = L[1], Lz = L[2];
     var hx = Lx, hy = Ly, hz = Lz + 1, hl = Math.sqrt(hx * hx + hy * hy + hz * hz) || 1; hx /= hl; hy /= hl; hz /= hl;
     var amb = K.amb, atm = K.atm, atmK = K.atmK || 0, limb = K.limb, rimK = K.rim, spec = K.spec;
+    var LD = tab.ld;
     for (k = 0; k < n; k++) {
       u = TU[k] + off; if (u >= TW) u -= TW;
       v = TV[k];
@@ -177,7 +194,7 @@
         } else cA = cloud[(v | 0) * TW + (cu | 0)] / 255;
         oce = ocean[ti] / 255;
       }
-      if (limb) { var ld = 1 - limb + limb * Math.sqrt(z); r *= ld; g *= ld; b *= ld; }
+      if (limb) { var ld = LD[k]; r *= ld; g *= ld; b *= ld; }
       if (cA > 0) { r += (248 - r) * cA; g += (250 - g) * cA; b += (255 - b) * cA; }
       var sh = amb + lam;
       r = r * sh; g = g * sh; b = b * (sh + amb * 0.6);

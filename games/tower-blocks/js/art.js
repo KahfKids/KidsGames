@@ -224,24 +224,52 @@
 
   // ---------- a standing courtyard lantern (drawn live; it flickers) ----------
   // (x, y) = foot of the post in CSS px; u = px per world unit; glow 0..1
+  // The glow and the pool of light are pre-rendered sprites (device px, at full strength) copied at whole
+  // device pixels with globalAlpha for their strength: the same pixels as filling the radial gradients live.
+  var lanSpr = null, postGrad = null;
+  function lanternSprites(u, D) {
+    var R = Math.ceil(60 * u * D) + 1, n = 2 * R, glowC = canvas(n, n), g = glowC.getContext('2d');
+    var rg = g.createRadialGradient(R, R, 0, R, R, 60 * u * D);
+    rg.addColorStop(0, 'rgba(255,200,110,1)'); rg.addColorStop(1, 'rgba(255,170,80,0)');
+    g.fillStyle = rg; g.beginPath(); g.arc(R, R, 60 * u * D, 0, 6.283); g.fill();
+    var PX = Math.ceil(34 * u * D) + 1, PY = Math.ceil(17 * u * D) + 1, poolC = canvas(2 * PX, 2 * PY), p = poolC.getContext('2d');
+    p.setTransform(D, 0, 0, D * 0.5, PX, PY);
+    var pg = p.createRadialGradient(0, 0, 0, 0, 0, 34 * u);
+    pg.addColorStop(0, 'rgba(255,190,100,1)'); pg.addColorStop(1, 'rgba(255,190,100,0)');
+    p.fillStyle = pg; p.beginPath(); p.arc(0, 0, 34 * u, 0, 6.283); p.fill();
+    return { u: u, D: D, glow: glowC, R: R, pool: poolC, PX: PX, PY: PY };
+  }
   A.lantern = function (ctx, x, y, u, glow, t, seed) {
     var fl = 0.85 + 0.15 * Math.sin(t * 9 + seed) * Math.sin(t * 5.3 + seed * 2);
     var cy = y - 40 * u;
     if (glow > 0.02) {
-      var rg = ctx.createRadialGradient(x, cy, 0, x, cy, 60 * u);
-      rg.addColorStop(0, 'rgba(255,200,110,' + (0.55 * glow * fl) + ')'); rg.addColorStop(1, 'rgba(255,170,80,0)');
-      ctx.fillStyle = rg; ctx.beginPath(); ctx.arc(x, cy, 60 * u, 0, 6.283); ctx.fill();
-      // a pool of light on the floor
-      var pg = ctx.createRadialGradient(x, y, 0, x, y, 34 * u);
-      pg.addColorStop(0, 'rgba(255,190,100,' + (0.35 * glow) + ')'); pg.addColorStop(1, 'rgba(255,190,100,0)');
-      ctx.save(); ctx.translate(x, y); ctx.scale(1, 0.5); ctx.translate(-x, -y);
-      ctx.fillStyle = pg; ctx.beginPath(); ctx.arc(x, y, 34 * u, 0, 6.283); ctx.fill(); ctx.restore();
+      var m = ctx.getTransform(), D = m.a;
+      if (m.b || m.c || m.d !== D) {
+        var rg = ctx.createRadialGradient(x, cy, 0, x, cy, 60 * u);
+        rg.addColorStop(0, 'rgba(255,200,110,' + (0.55 * glow * fl) + ')'); rg.addColorStop(1, 'rgba(255,170,80,0)');
+        ctx.fillStyle = rg; ctx.beginPath(); ctx.arc(x, cy, 60 * u, 0, 6.283); ctx.fill();
+        // a pool of light on the floor
+        var pg = ctx.createRadialGradient(x, y, 0, x, y, 34 * u);
+        pg.addColorStop(0, 'rgba(255,190,100,' + (0.35 * glow) + ')'); pg.addColorStop(1, 'rgba(255,190,100,0)');
+        ctx.save(); ctx.translate(x, y); ctx.scale(1, 0.5); ctx.translate(-x, -y);
+        ctx.fillStyle = pg; ctx.beginPath(); ctx.arc(x, y, 34 * u, 0, 6.283); ctx.fill(); ctx.restore();
+      } else {
+        if (!lanSpr || lanSpr.u !== u || lanSpr.D !== D) lanSpr = lanternSprites(u, D);
+        var ga = ctx.globalAlpha, X = x * D + m.e, Y = y * D + m.f, CY = cy * D + m.f;
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.globalAlpha = ga * 0.55 * glow * fl; ctx.drawImage(lanSpr.glow, Math.round(X - lanSpr.R), Math.round(CY - lanSpr.R));
+        ctx.globalAlpha = ga * 0.35 * glow; ctx.drawImage(lanSpr.pool, Math.round(X - lanSpr.PX), Math.round(Y - lanSpr.PY));
+        ctx.globalAlpha = ga; ctx.setTransform(m);
+      }
     }
     // post and base
     ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.beginPath(); ctx.ellipse(x, y, 9 * u, 4 * u, 0, 0, 6.283); ctx.fill();
     ctx.fillStyle = '#3a2a22'; ctx.fillRect(x - 6 * u, y - 4 * u, 12 * u, 4 * u);
-    var pg2 = ctx.createLinearGradient(x - 2 * u, 0, x + 2 * u, 0); pg2.addColorStop(0, '#6a4c36'); pg2.addColorStop(1, '#2c1e17');
-    ctx.fillStyle = pg2; ctx.fillRect(x - 1.8 * u, y - 30 * u, 3.6 * u, 27 * u);
+    if (!postGrad || postGrad.u !== u) {   // made once around the post's own axis, drawn shifted to it
+      postGrad = ctx.createLinearGradient(-2 * u, 0, 2 * u, 0); postGrad.addColorStop(0, '#6a4c36'); postGrad.addColorStop(1, '#2c1e17'); postGrad.u = u;
+    }
+    ctx.save(); ctx.translate(x, 0);
+    ctx.fillStyle = postGrad; ctx.fillRect(-1.8 * u, y - 30 * u, 3.6 * u, 27 * u); ctx.restore();
     // lantern body: a six-sided brass lantern with star-cut glowing panes
     var bw = 9 * u, bh = 15 * u, top = cy - bh / 2;
     ctx.fillStyle = '#4a3322';
@@ -365,8 +393,10 @@
     }
     g.restore();
   }
-  function tint(mask, color) {
-    var c = canvas(mask.width, mask.height), g = c.getContext('2d');
+  function tint(mask, color, c) {   // c: a canvas from last time to reuse
+    c = c || canvas(mask.width, mask.height);
+    var g = c.getContext('2d');
+    g.globalCompositeOperation = 'source-over'; g.clearRect(0, 0, c.width, c.height);
     g.drawImage(mask, 0, 0); g.globalCompositeOperation = 'source-in'; g.fillStyle = color; g.fillRect(0, 0, c.width, c.height);
     return c;
   }
@@ -387,8 +417,10 @@
     }
     return { c: c, w: cw, h: ch };
   }
-  function cloudTint(m, top, bottom) {
-    var c = canvas(m.c.width, m.c.height), g = c.getContext('2d');
+  function cloudTint(m, top, bottom, c) {
+    c = c || canvas(m.c.width, m.c.height);
+    var g = c.getContext('2d');
+    g.globalCompositeOperation = 'source-over'; g.clearRect(0, 0, c.width, c.height);
     g.drawImage(m.c, 0, 0); g.globalCompositeOperation = 'source-in';
     var gr = g.createLinearGradient(0, 0, 0, c.height); gr.addColorStop(0.15, top); gr.addColorStop(1, bottom);
     g.fillStyle = gr; g.fillRect(0, 0, c.width, c.height);
@@ -396,11 +428,24 @@
   }
   function starfield(w, h, D) {
     var c = canvas(w * D, h * D), g = c.getContext('2d'), r = rng(99), n = Math.round(w * h / 1700);
+    var C = 12, cols = Math.ceil(c.width / C), rows = Math.ceil(c.height / C), used = new Uint8Array(cols * rows);
     g.scale(D, D);
     for (var i = 0; i < n; i++) {
       var x = r() * w, y = r() * h, s = r() < 0.92 ? 0.5 + r() * 0.7 : 1.2 + r() * 0.8;
       g.globalAlpha = 0.35 + r() * 0.65; g.fillStyle = r() < 0.15 ? '#ffe7b0' : '#ffffff';
       g.beginPath(); g.arc(x, y, s, 0, 6.283); g.fill();
+      // note which 12-device-px cells this star touches
+      for (var cy = Math.max(0, Math.floor(((y - s) * D - 2) / C)); cy <= Math.min(rows - 1, Math.floor(((y + s) * D + 2) / C)); cy++)
+        for (var cx = Math.max(0, Math.floor(((x - s) * D - 2) / C)); cx <= Math.min(cols - 1, Math.floor(((x + s) * D + 2) / C)); cx++) used[cy * cols + cx] = 1;
+    }
+    // The canvas is almost all empty, so it is drawn as these non-overlapping runs of cells that hold stars.
+    c.runs = [];
+    for (var ry = 0; ry < rows; ry++) {
+      for (var rx = 0, st = -1; rx <= cols; rx++) {
+        if (rx < cols && used[ry * cols + rx]) { if (st < 0) st = rx; }
+        else if (st >= 0 && rx < cols && (used[ry * cols + rx + 1] || used[ry * cols + rx + 2] || used[ry * cols + rx + 3])) continue;   // bridge short gaps
+        else if (st >= 0) { c.runs.push([st * C, ry * C, Math.min(rx * C, c.width) - st * C, Math.min(C, c.height - ry * C)]); st = -1; }
+      }
     }
     return c;
   }
@@ -415,29 +460,94 @@
     var twinkles = [];
     for (var j = 0; j < 16; j++) twinkles.push({ x: r() * w, y: r() * h * 0.7, ph: r() * 6.28, s: 1.5 + r() * 2 });
     var key = -1, farC, nearC, cl = [];
+    // Speed (same pixels): in software raster a gradient fill costs ~10x a plain copy, and a blit at a
+    // fractional position resamples every pixel. So vertical gradient bands come from a 1-px-wide column
+    // stretched across, the big layers land on whole device pixels, and glows are pre-rendered sprites.
+    var col = canvas(1, h * D), cg = col.getContext('2d');
+    var exact = Math.round(w * D) === w * D && Math.round(h * D) === h * D;
+    // Fill the band y0..y1 (CSS px, full width) with a vertical gradient, like ctx.fillRect(0, y0, w, y1 - y0).
+    // Rows from `lim` (device px) down are hidden under the opaque ground and are skipped.
+    function vband(ctx, grad, y0, y1, lim) {
+      var Y0 = y0 * D, Y1 = Math.min(y1 * D, col.height), r0 = Math.max(0, Math.ceil(Y0)), r1 = Math.min(Math.floor(Y1), lim);
+      ctx.fillStyle = grad;
+      if (!exact || ctx.canvas.width !== w * D || r1 - r0 < 2) { if (Y0 < lim) ctx.fillRect(0, y0, w, Math.min(y1, lim / D) - y0); return; }
+      if (Y0 > 0 && r0 > Y0) ctx.fillRect(0, y0, w, (r0 - Y0) / D);           // partly covered top row
+      if (Y1 > r1 && r1 < lim) ctx.fillRect(0, r1 / D, w, (Y1 - r1) / D);     // partly covered bottom row
+      cg.setTransform(1, 0, 0, D, 0, 0); cg.clearRect(0, 0, 1, col.height / D);
+      cg.fillStyle = grad; cg.fillRect(0, (r0 - 1) / D, 1, (r1 - r0 + 2) / D);
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.drawImage(col, 0, r0, 1, r1 - r0, 0, r0, w * D, r1 - r0);
+      ctx.setTransform(D, 0, 0, D, 0, 0);
+    }
+    // radial glow sprites (device px), drawn with globalAlpha for their strength
+    function glowSprite(R, stops) {
+      var n = Math.ceil(R * D) * 2 + 2, c = canvas(n, n), g = c.getContext('2d'), m = n / 2;
+      var gr = g.createRadialGradient(m, m, 0, m, m, R * D);
+      stops.forEach(function (s) { gr.addColorStop(s[0], s[1]); });
+      g.fillStyle = gr; g.fillRect(0, 0, n, n);
+      return c;
+    }
+    var mr0 = Math.max(16, 20 * u), moonGlow = null, sunGlow = null;
+    // gradients are rebuilt only when what they depend on (colours, horizon) changes
+    var gm = {};
+    function grad(slot, key, make) { var e = gm[slot]; if (!e || e.k !== key) e = gm[slot] = { k: key, g: make() }; return e.g; }
+    // Blit a glow sprite centred on (x, y) CSS px at whole device pixels, only rows above `lim`.
+    function blitGlow(ctx, spr, x, y, lim) {
+      var n = spr.width, X = Math.round(x * D - n / 2), Y = Math.round(y * D - n / 2), hh = Math.min(n, lim - Y);
+      if (hh <= 0) return;
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      if (hh === n) ctx.drawImage(spr, X, Y); else ctx.drawImage(spr, 0, 0, n, hh, X, Y, n, hh);
+      ctx.setTransform(D, 0, 0, D, 0, 0);
+    }
     function retint(p) {
       var k = Math.round(p * 60); if (k === key) return; key = k;
       var c = skyAt(k / 60);
-      farC = tint(sk.far, shade(mix(c.hor, c.top, 0.55), -0.22));
-      nearC = tint(sk.near, shade(mix('#24152f', c.top, 0.3), -0.25));
+      farC = tint(sk.far, shade(mix(c.hor, c.top, 0.55), -0.22), farC);
+      nearC = tint(sk.near, shade(mix('#24152f', c.top, 0.3), -0.25), nearC);
       var ctop = mix(c.hor, '#ffffff', 0.4), cbot = mix(c.mid, c.top, 0.35);
-      cl = masks.map(function (m) { return cloudTint(m, ctop, cbot); });
+      cl = masks.map(function (m, i) { return cloudTint(m, ctop, cbot, cl[i]); });
+      // each cloud at its own size, resampled once here instead of every frame
+      clouds.forEach(function (k) {
+        var m = masks[k.m], W = m.w * k.s * D, Hh = m.h * k.s * D;
+        if (!k.spr) k.spr = canvas(W, Hh);
+        var g = k.spr.getContext('2d'); g.clearRect(0, 0, k.spr.width, k.spr.height);
+        g.drawImage(cl[k.m], 0, 0, W, Hh);
+      });
     }
     return {
       draw: function (ctx, o) {
         var p = o.p, c = skyAt(p), hy = o.horizonY, t = o.t;
         retint(p);
         ctx.setTransform(D, 0, 0, D, 0, 0);
+        var top = hy - sk.H, fullH = sk.H + sk.G, Hd = ctx.canvas.height;
+        // the ground (opaque) covers every device row from here down
+        var lim = top < h ? Math.max(0, Math.min(Hd, Math.ceil((hy - 0.5) * D))) : Hd;
         // sky gradient
-        var g = ctx.createLinearGradient(0, 0, 0, Math.max(hy, 10));
-        g.addColorStop(0, c.top); g.addColorStop(0.6, c.mid); g.addColorStop(1, c.hor);
-        ctx.fillStyle = g; ctx.fillRect(0, 0, w, Math.min(h, hy + 2));
+        var g = grad('sky', c.top + c.mid + c.hor + hy, function () {
+          var q = ctx.createLinearGradient(0, 0, 0, Math.max(hy, 10));
+          q.addColorStop(0, c.top); q.addColorStop(0.6, c.mid); q.addColorStop(1, c.hor);
+          return q;
+        });
+        vband(ctx, g, 0, Math.min(h, hy + 2), lim);
         // stars
         var sa = smooth(0.42, 0.8, p);
         if (sa > 0.01) {
           var off = ((o.camH * o.S * 0.05) % h + h) % h;
           ctx.globalAlpha = sa;
-          ctx.drawImage(stars, 0, off - h, w, h); ctx.drawImage(stars, 0, off, w, h);
+          if (exact && stars.width === ctx.canvas.width) {
+            // two copies stacked, scrolled by a whole number of device px; only the runs that hold stars, only
+            // the rows the ground leaves
+            var O = Math.round(off * D), Hs = stars.height, runs = stars.runs;
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            for (var ri = 0; ri < runs.length; ri++) {
+              var rn = runs[ri];
+              for (var cp = O - Hs; cp <= O; cp += Hs) {
+                var dy = rn[1] + cp, hh = Math.min(rn[3], lim - dy);
+                if (hh > 0 && dy + hh > 0) ctx.drawImage(stars, rn[0], rn[1], rn[2], hh, rn[0], dy, rn[2], hh);
+              }
+            }
+            ctx.setTransform(D, 0, 0, D, 0, 0);
+          } else { ctx.drawImage(stars, 0, off - h, w, h); ctx.drawImage(stars, 0, off, w, h); }
           ctx.fillStyle = '#fffbe8';
           twinkles.forEach(function (s) {
             var a = 0.5 + 0.5 * Math.sin(t * 2.2 + s.ph), y = (s.y + off) % h, rr = s.s * (0.6 + 0.4 * a);
@@ -451,54 +561,68 @@
         // moon (a plain glowing disc)
         var ma = smooth(0.38, 0.62, p);
         if (ma > 0.01) {
-          var mx = w * 0.8, my = Math.max(90, h * 0.15) + 30, mr = Math.max(16, 20 * u);
-          var mg = ctx.createRadialGradient(mx, my, mr * 0.8, mx, my, mr * 4.5);
-          mg.addColorStop(0, 'rgba(255,246,214,' + 0.35 * ma + ')'); mg.addColorStop(1, 'rgba(255,246,214,0)');
-          ctx.fillStyle = mg; ctx.beginPath(); ctx.arc(mx, my, mr * 4.5, 0, 6.283); ctx.fill();
-          var md = ctx.createRadialGradient(mx - mr * 0.3, my - mr * 0.3, mr * 0.1, mx, my, mr);
-          md.addColorStop(0, mix(c.top, '#fffdf2', ma)); md.addColorStop(1, mix(c.top, '#f1dfae', ma));
+          var mx = w * 0.8, my = Math.max(90, h * 0.15) + 30, mr = mr0;
+          if (!moonGlow) moonGlow = glowSprite(mr * 4.5, [[0.8 / 4.5, 'rgba(255,246,214,.35)'], [1, 'rgba(255,246,214,0)']]);
+          ctx.globalAlpha = ma; blitGlow(ctx, moonGlow, mx, my, lim); ctx.globalAlpha = 1;
+          var m0 = mix(c.top, '#fffdf2', ma), m1 = mix(c.top, '#f1dfae', ma);
+          var md = grad('moon', m0 + m1, function () {
+            var q = ctx.createRadialGradient(mx - mr * 0.3, my - mr * 0.3, mr * 0.1, mx, my, mr);
+            q.addColorStop(0, m0); q.addColorStop(1, m1);
+            return q;
+          });
           ctx.fillStyle = md; ctx.beginPath(); ctx.arc(mx, my, mr, 0, 6.283); ctx.fill();
         }
         // setting sun behind the city
         var sa2 = 1 - smooth(0.05, 0.42, p);
         if (sa2 > 0.01 && hy > -40) {
           var sx = w * 0.3, sy = hy - 22 * u;
-          var sg = ctx.createRadialGradient(sx, sy, 0, sx, sy, 170 * u);
-          sg.addColorStop(0, 'rgba(255,214,140,' + 0.7 * sa2 + ')'); sg.addColorStop(0.35, 'rgba(255,160,110,' + 0.25 * sa2 + ')'); sg.addColorStop(1, 'rgba(255,140,110,0)');
-          ctx.fillStyle = sg; ctx.fillRect(sx - 170 * u, sy - 170 * u, 340 * u, 340 * u);
-          ctx.globalAlpha = sa2;
-          var sd = ctx.createRadialGradient(sx, sy - 8 * u, 0, sx, sy, 26 * u);
-          sd.addColorStop(0, '#fff2c4'); sd.addColorStop(1, '#ffb45a');
-          ctx.fillStyle = sd; ctx.beginPath(); ctx.arc(sx, sy, 26 * u, 0, 6.283); ctx.fill();
+          if (!sunGlow) sunGlow = glowSprite(170 * u, [[0, 'rgba(255,214,140,.7)'], [0.35, 'rgba(255,160,110,.25)'], [1, 'rgba(255,140,110,0)']]);
+          ctx.globalAlpha = sa2; blitGlow(ctx, sunGlow, sx, sy, lim);
+          var sd = grad('sun', 1, function () {   // made around the sun's own centre
+            var q = ctx.createRadialGradient(0, -8 * u, 0, 0, 0, 26 * u);
+            q.addColorStop(0, '#fff2c4'); q.addColorStop(1, '#ffb45a');
+            return q;
+          });
+          ctx.setTransform(D, 0, 0, D, sx * D, sy * D);
+          ctx.fillStyle = sd; ctx.beginPath(); ctx.arc(0, 0, 26 * u, 0, 6.283); ctx.fill();
+          ctx.setTransform(D, 0, 0, D, 0, 0);
           ctx.globalAlpha = 1;
         }
         // drifting clouds: thick at twilight, thin and dark at night; you climb up past them
         var ca = 0.2 + 0.7 * smooth(0.1, 0.3, p) * (1 - smooth(0.62, 0.9, p) * 0.7);
         clouds.forEach(function (k) {
-          var m = masks[k.m], img = cl[k.m], cw = m.w * k.s, chh = m.h * k.s;
+          var m = masks[k.m], cw = m.w * k.s, chh = m.h * k.s;
           var rel = (((k.ca - o.camH * 0.55) % 1100) + 1100) % 1100 - 180;
           var y = o.ay - rel * o.S - chh;
           if (y > h || y + chh < 0) return;
           var x = ((k.x * (w + cw) + t * k.sp) % (w + cw)) - cw;
           ctx.globalAlpha = ca;
-          ctx.drawImage(img, x, y, cw, chh);
+          ctx.setTransform(1, 0, 0, 1, 0, 0);
+          ctx.drawImage(k.spr, Math.round(x * D), Math.round(y * D));   // whole device px
+          ctx.setTransform(D, 0, 0, D, 0, 0);
         });
         ctx.globalAlpha = 1;
         // city skyline sits on the horizon
-        var top = hy - sk.H, fullH = sk.H + sk.G;
         if (top < h) {
-          ctx.drawImage(farC, 0, top, w, fullH);
-          var hz = ctx.createLinearGradient(0, hy - 60 * u, 0, hy);
-          hz.addColorStop(0, rgba(c.hor, 0)); hz.addColorStop(1, rgba(c.hor, 0.45));
-          ctx.fillStyle = hz; ctx.fillRect(0, hy - 60 * u, w, 60 * u);
+          var topR = Math.round(top * D) / D;   // whole device px: a plain copy instead of a resample
+          ctx.drawImage(farC, 0, topR, w, fullH);
+          var hz = grad('haze', c.hor + hy, function () {
+            var q = ctx.createLinearGradient(0, hy - 60 * u, 0, hy);
+            q.addColorStop(0, rgba(c.hor, 0)); q.addColorStop(1, rgba(c.hor, 0.45));
+            return q;
+          });
+          vband(ctx, hz, hy - 60 * u, hy, Hd);
           // the ground below the horizon
-          var gg = ctx.createLinearGradient(0, hy, 0, Math.max(hy + 10, h));
-          gg.addColorStop(0, shade(mix(c.hor, '#2a1630', 0.62), -0.1)); gg.addColorStop(0.35, shade(mix(c.mid, '#1c0f26', 0.7), -0.2));
-          gg.addColorStop(1, shade(mix(c.top, '#140a1c', 0.6), -0.3));
-          ctx.fillStyle = gg; ctx.fillRect(0, hy - 0.5, w, h - hy + 1);
-          ctx.drawImage(nearC, 0, top, w, fullH);
+          var gg = grad('ground', c.top + c.mid + c.hor + hy, function () {
+            var q = ctx.createLinearGradient(0, hy, 0, Math.max(hy + 10, h));
+            q.addColorStop(0, shade(mix(c.hor, '#2a1630', 0.62), -0.1)); q.addColorStop(0.35, shade(mix(c.mid, '#1c0f26', 0.7), -0.2));
+            q.addColorStop(1, shade(mix(c.top, '#140a1c', 0.6), -0.3));
+            return q;
+          });
+          vband(ctx, gg, hy - 0.5, hy + 0.5 + h - hy, Hd);
+          ctx.drawImage(nearC, 0, topR, w, fullH);
           ctx.globalAlpha = 0.3 + 0.7 * smooth(0.12, 0.6, p);
-          ctx.drawImage(sk.lit, 0, top, w, fullH);
+          ctx.drawImage(sk.lit, 0, topR, w, fullH);
           ctx.globalAlpha = 1;
         }
       }

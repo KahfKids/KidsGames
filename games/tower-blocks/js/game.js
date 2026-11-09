@@ -21,6 +21,16 @@
   var V = { S: 1, Z: 1, cx: 0, ay: 0, ayBase: 0, camH: BASE_Y, follow: true };
   var G = { w: 0, h: 0, D: 1 };
   var scene = null, plaza = null, pats = {};
+  // Speed (same pixels): the courtyard and the tower's contact shadow are pre-rendered at their on-screen size
+  // and copied at whole device pixels, instead of resampled / gradient-filled every frame. They are rebuilt
+  // when the zoom settles; while it is still changing (level-end zoom out) they are drawn the old way.
+  var plazaFit = null, shadowSpr = null, lastZ = -1;
+  // The same goes for the block faces: a pattern fill under the isometric skew is the most expensive thing on
+  // screen, so each face's unchanging layers (pattern, shading, contact shadow) are kept as a sprite drawn by
+  // the very same calls, and copied; night tint, flash and rim lines are still drawn live on top, in order.
+  // Each box is drawn at a whole-device-pixel anchor so its sprites stay valid while the camera moves. A face
+  // that changes every frame (squash, zoom) is filled live; one that holds still for two frames gets a sprite.
+  var faceSpr = new Map(), facePend = new Map(), frameNo = 0, builds = 0, AO = null;
   var PLINTHS = [
     { x0: -72, x1: 72, z0: -72, z1: 72, y0: 0, h: 14, tx: 0, tz: 0, pal: A.PLINTH },
     { x0: -61, x1: 61, z0: -61, z1: 61, y0: 14, h: 12, tx: 0, tz: 0, pal: A.PLINTH }
@@ -34,7 +44,7 @@
     V.S = Math.min(1.15 * (st.w / 2 - 6) / 235, st.h * 0.4 / 200);
     V.cx = st.w / 2;
     V.ayBase = st.h * (st.w > st.h ? 0.6 : 0.56);
-    pats = {}; scene = null; plaza = null;
+    pats = {}; scene = null; plaza = null; plazaFit = null; shadowSpr = null; faceSpr.clear(); facePend.clear();
     if (V.follow) V.ay = V.ayBase; else { V.ay = V.ayBase; fitView(true); }
   });
   var ctx = stage.ctx;
@@ -408,15 +418,54 @@
     var key = pal.id + kind + (H || 0), p = pats[key];
     if (!p) {
       var t = kind === 'top' ? A.topTile(pal, V.S * G.D) : A.sideTile(pal, H, V.S * G.D);
-      p = pats[key] = { p: ctx.createPattern(t.img, 'repeat'), kx: t.kx, ky: t.ky };
+      p = pats[key] = { p: ctx.createPattern(t.img, 'repeat'), kx: t.kx, ky: t.ky, key: key };
     }
     return p;
   }
   // Fill a face rectangle with a pattern whose origin is (tu, tv), so patterns stay glued to their block.
-  function fillPat(pt, u0, v0, u1, v1, tu, tv) {
-    ctx.save(); ctx.translate(tu, tv); ctx.scale(1 / pt.kx, 1 / pt.ky);
-    ctx.fillStyle = pt.p; ctx.fillRect((u0 - tu) * pt.kx, (v0 - tv) * pt.ky, (u1 - u0) * pt.kx, (v1 - v0) * pt.ky);
-    ctx.restore();
+  function fillPat(g, pt, u0, v0, u1, v1, tu, tv) {
+    g.save(); g.translate(tu, tv); g.scale(1 / pt.kx, 1 / pt.ky);
+    g.fillStyle = pt.p; g.fillRect((u0 - tu) * pt.kx, (v0 - tv) * pt.ky, (u1 - u0) * pt.kx, (v1 - v0) * pt.ky);
+    g.restore();
+  }
+  function q6(v) { return Math.round(v * 1e5); }
+  // Draw the unchanging part of one face: paint(g) draws it in face coordinates relative to (u0, v0), over a
+  // w x h rectangle, onto g. With useSpr it is copied from a sprite drawn by exactly the same calls (same
+  // transform up to a whole-pixel shift), else drawn live (the face is changing this frame).
+  function face(useSpr, id, u0, v0, w, h, paint) {
+    var P = ctx.getTransform(), ex0 = P.e + P.a * u0 + P.c * v0, ey0 = P.f + P.b * u0 + P.d * v0, key = null;
+    if (useSpr) {
+      var ie = Math.floor(ex0), jf = Math.floor(ey0), fe = Math.round((ex0 - ie) * 256), ff = Math.round((ey0 - jf) * 256);
+      if (fe === 256) { fe = 0; ie++; }
+      if (ff === 256) { ff = 0; jf++; }
+      key = id + '|' + q6(P.a) + ',' + q6(P.b) + ',' + q6(P.c) + ',' + q6(P.d) + ',' + fe + ',' + ff + '|' + q6(w) + ',' + q6(h);
+      var sp = faceSpr.get(key);
+      if (!sp && facePend.get(key) === frameNo - 1 && builds < 8) {   // held still since last frame; a few per frame
+        facePend.delete(key); builds++;
+        var ex = fe / 256, ey = ff / 256, xs = [], ys = [];
+        [[0, 0], [w, 0], [0, h], [w, h]].forEach(function (p) { xs.push(P.a * p[0] + P.c * p[1] + ex); ys.push(P.b * p[0] + P.d * p[1] + ey); });
+        var bx = Math.floor(Math.min.apply(null, xs)) - 1, by = Math.floor(Math.min.apply(null, ys)) - 1;
+        var c = document.createElement('canvas');
+        c.width = Math.ceil(Math.max.apply(null, xs)) - bx + 1; c.height = Math.ceil(Math.max.apply(null, ys)) - by + 1;
+        var g = c.getContext('2d');
+        g.setTransform(P.a, P.b, P.c, P.d, ex - bx, ey - by);
+        paint(g);
+        sp = { c: c, bx: bx, by: by, f: 0 };
+        faceSpr.set(key, sp);
+      }
+      if (sp) {
+        sp.f = frameNo;
+        ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(sp.c, ie + sp.bx, jf + sp.by); ctx.setTransform(P);
+        return;
+      }
+      facePend.set(key, frameNo);
+    }
+    ctx.save(); ctx.translate(u0, v0); paint(ctx); ctx.restore();
+  }
+  function sweepSprites() {
+    if (frameNo % 60) return;
+    faceSpr.forEach(function (sp, k) { if (sp.f < frameNo - 30) faceSpr.delete(k); });
+    facePend.forEach(function (f, k) { if (f < frameNo - 2) facePend.delete(k); });
   }
   var NO = {};
   function drawBox(b, o) {
@@ -425,34 +474,44 @@
     var x0 = b.x0, x1 = b.x1, z0 = b.z0, z1 = b.z1, tx = b.tx, tz = b.tz;
     if (b.off) { if (b.offAx === 'x') { x0 += b.off; x1 += b.off; tx += b.off; } else { z0 += b.off; z1 += b.off; tz += b.off; } }
     if (x1 - x0 < 0.2 || z1 - z0 < 0.2) return;
+    var alpha = o.alpha == null ? 1 : o.alpha, useSpr = !m && alpha >= 1;
+    if (!m) {
+      // anchor the box on a whole device pixel (moves it by under half a pixel) so its face sprites line up
+      var s0 = vs(), D0 = G.D, QX = (V.cx + (x0 - z0) * s0) * D0, QY = (V.ay + ((x0 + z0) / 2 - yT + V.camH) * s0) * D0;
+      m = [1, 0, 0, 1, Math.round(QX) - QX, Math.round(QY) - QY];
+    }
     var side = getPat(pal, 'side', H), topP = getPat(pal, 'top'), lw = 1.25 / vs(), night = o.night || 0, fl = b.flash || 0;
-    var Hv = H + 0.5, ao = null;
-    ctx.globalAlpha = o.alpha == null ? 1 : o.alpha;
+    var Hv = H + 0.5, cov = !!o.covered, wx = x1 - x0, wz = z1 - z0;
+    var shadeA = Math.round((0.3 + 0.1 * night) * 255) / 255;   // in 1/255 steps: the right face's sprite changes only with it
+    if (cov && !AO) { AO = ctx.createLinearGradient(0, 0, 0, 9); AO.addColorStop(0, 'rgba(20,8,30,.42)'); AO.addColorStop(1, 'rgba(20,8,30,0)'); }
+    ctx.globalAlpha = alpha;
     // left face (z = z1): warm, lit by the low sun
     plane(m, 1, 0.5, 0, vsq, -z1, z1 / 2 - yT);
-    fillPat(side, x0, 0, x1, Hv, tx, 0);
-    if (o.covered) {
-      ao = ctx.createLinearGradient(0, 0, 0, 9);
-      ao.addColorStop(0, 'rgba(20,8,30,.42)'); ao.addColorStop(1, 'rgba(20,8,30,0)');
-      ctx.fillStyle = ao; ctx.fillRect(x0, 0, x1 - x0, 9);
-    }
-    if (night) { ctx.fillStyle = 'rgba(14,20,66,' + (0.3 * night) + ')'; ctx.fillRect(x0, 0, x1 - x0, Hv); }
-    if (fl) { ctx.fillStyle = 'rgba(255,250,225,' + fl * 0.55 + ')'; ctx.fillRect(x0, 0, x1 - x0, Hv); }
+    face(useSpr, 'L' + side.key + cov + '|' + q6(tx - x0), x0, 0, wx, Hv, function (g) {
+      fillPat(g, side, 0, 0, wx, Hv, tx - x0, 0);
+      if (cov) { g.fillStyle = AO; g.fillRect(0, 0, wx, 9); }
+    });
+    if (night) { ctx.fillStyle = 'rgba(14,20,66,' + (0.3 * night) + ')'; ctx.fillRect(x0, 0, wx, Hv); }
+    if (fl) { ctx.fillStyle = 'rgba(255,250,225,' + fl * 0.55 + ')'; ctx.fillRect(x0, 0, wx, Hv); }
     ctx.lineWidth = lw; ctx.strokeStyle = A.rgba(pal.light, 0.75);
     ctx.beginPath(); ctx.moveTo(x1, 0.5); ctx.lineTo(x1, H); ctx.stroke();
     // right face (x = x1): in shade
     plane(m, -1, 0.5, 0, vsq, x1, x1 / 2 - yT);
-    fillPat(side, z0, 0, z1, Hv, tz, 0);
-    ctx.fillStyle = 'rgba(32,12,52,' + (0.3 + 0.1 * night) + ')'; ctx.fillRect(z0, 0, z1 - z0, Hv);
-    if (ao) { ctx.fillStyle = ao; ctx.fillRect(z0, 0, z1 - z0, 9); }
-    if (night) { ctx.fillStyle = 'rgba(14,20,66,' + (0.25 * night) + ')'; ctx.fillRect(z0, 0, z1 - z0, Hv); }
-    if (fl) { ctx.fillStyle = 'rgba(255,250,225,' + fl * 0.45 + ')'; ctx.fillRect(z0, 0, z1 - z0, Hv); }
+    face(useSpr, 'R' + side.key + cov + shadeA + '|' + q6(tz - z0), z0, 0, wz, Hv, function (g) {
+      fillPat(g, side, 0, 0, wz, Hv, tz - z0, 0);
+      g.fillStyle = 'rgba(32,12,52,' + shadeA + ')'; g.fillRect(0, 0, wz, Hv);
+      if (cov) { g.fillStyle = AO; g.fillRect(0, 0, wz, 9); }
+    });
+    if (night) { ctx.fillStyle = 'rgba(14,20,66,' + (0.25 * night) + ')'; ctx.fillRect(z0, 0, wz, Hv); }
+    if (fl) { ctx.fillStyle = 'rgba(255,250,225,' + fl * 0.45 + ')'; ctx.fillRect(z0, 0, wz, Hv); }
     // top face
     plane(m, 1, 0.5, -1, 0.5, 0, -yT);
-    fillPat(topP, x0, z0, x1, z1, tx, tz);
-    ctx.fillStyle = 'rgba(255,246,228,.1)'; ctx.fillRect(x0, z0, x1 - x0, z1 - z0);
-    if (night) { ctx.fillStyle = 'rgba(14,20,66,' + (0.22 * night) + ')'; ctx.fillRect(x0, z0, x1 - x0, z1 - z0); }
-    if (fl) { ctx.fillStyle = 'rgba(255,250,225,' + fl * 0.6 + ')'; ctx.fillRect(x0, z0, x1 - x0, z1 - z0); }
+    face(useSpr, 'T' + topP.key + '|' + q6(tx - x0) + ',' + q6(tz - z0), x0, z0, wx, wz, function (g) {
+      fillPat(g, topP, 0, 0, wx, wz, tx - x0, tz - z0);
+      g.fillStyle = 'rgba(255,246,228,.1)'; g.fillRect(0, 0, wx, wz);
+    });
+    if (night) { ctx.fillStyle = 'rgba(14,20,66,' + (0.22 * night) + ')'; ctx.fillRect(x0, z0, wx, wz); }
+    if (fl) { ctx.fillStyle = 'rgba(255,250,225,' + fl * 0.6 + ')'; ctx.fillRect(x0, z0, wx, wz); }
     // rim light on the near edges, a softer line on the far ones
     ctx.lineJoin = 'round';
     ctx.lineWidth = lw * 1.3; ctx.strokeStyle = A.rgba(A.shade(pal.light, 0.35), 0.95);
@@ -489,8 +548,28 @@
     ctx.restore(); ctx.globalAlpha = 1;
   }
 
+  function fitCopy(img, pw, ph) {
+    var c = document.createElement('canvas'); c.width = Math.ceil(pw); c.height = Math.ceil(ph);
+    c.getContext('2d').drawImage(img, 0, 0, pw, ph);
+    return c;
+  }
+  function contactShadowPath(g, x, y, s) {
+    g.save(); g.translate(x, y); g.scale(1, 0.5);
+    var cg = g.createRadialGradient(0, 0, 40 * s, 0, 0, 185 * s);
+    cg.addColorStop(0, 'rgba(25,10,30,.5)'); cg.addColorStop(1, 'rgba(25,10,30,0)');
+    g.fillStyle = cg; g.beginPath(); g.arc(0, 0, 185 * s, 0, 6.283); g.fill(); g.restore();
+  }
+  function contactShadow(s, D) {
+    var cx = Math.ceil(185 * s * D) + 2, cy = Math.ceil(92.5 * s * D) + 2, c = document.createElement('canvas');
+    c.width = cx * 2; c.height = cy * 2;
+    var g = c.getContext('2d'); g.setTransform(D, 0, 0, D, 0, 0);
+    contactShadowPath(g, cx / D, cy / D, s);
+    return { s: s, c: c, cx: cx, cy: cy };
+  }
+
   function draw() {
-    var D = G.D;
+    var D = G.D, zStill = V.Z === lastZ;
+    lastZ = V.Z; frameNo++; builds = 0; sweepSprites();
     if (!layers.length) { ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = '#2f2a72'; ctx.fillRect(0, 0, canvas.width, canvas.height); return; }
     var s = vs(), p = skyP(), night = A.smooth(0.45, 0.95, p);
     if (!scene) scene = A.scene(G.w, G.h, D, V.S);
@@ -515,13 +594,18 @@
     if (o.y - plaza.oy * V.Z < G.h) {
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       var pw = plaza.w * V.Z * D, ph = plaza.h * V.Z * D, px = (o.x - plaza.ox * V.Z) * D, py = (o.y - plaza.oy * V.Z) * D;
-      ctx.drawImage(plaza.day, px, py, pw, ph);
-      if (night > 0.01) { ctx.globalAlpha = night; ctx.drawImage(plaza.night, px, py, pw, ph); ctx.globalAlpha = 1; }
+      if (zStill && (!plazaFit || plazaFit.Z !== V.Z)) plazaFit = { Z: V.Z, day: fitCopy(plaza.day, pw, ph), night: fitCopy(plaza.night, pw, ph) };
+      var fit = plazaFit && plazaFit.Z === V.Z;
+      if (fit) ctx.drawImage(plazaFit.day, Math.round(px), Math.round(py)); else ctx.drawImage(plaza.day, px, py, pw, ph);
+      if (night > 0.01) {
+        ctx.globalAlpha = night;
+        if (fit) ctx.drawImage(plazaFit.night, Math.round(px), Math.round(py)); else ctx.drawImage(plaza.night, px, py, pw, ph);
+        ctx.globalAlpha = 1;
+      }
+      if (zStill && (!shadowSpr || shadowSpr.s !== s)) shadowSpr = contactShadow(s, D);
+      if (shadowSpr && shadowSpr.s === s) ctx.drawImage(shadowSpr.c, Math.round(o.x * D - shadowSpr.cx), Math.round((o.y + 6 * s) * D - shadowSpr.cy));
+      else { ctx.setTransform(D, 0, 0, D, 0, 0); contactShadowPath(ctx, o.x, o.y + 6 * s, s); }
       ctx.setTransform(D, 0, 0, D, 0, 0);
-      ctx.save(); ctx.translate(o.x, o.y + 6 * s); ctx.scale(1, 0.5);
-      var cg = ctx.createRadialGradient(0, 0, 40 * s, 0, 0, 185 * s);
-      cg.addColorStop(0, 'rgba(25,10,30,.5)'); cg.addColorStop(1, 'rgba(25,10,30,0)');
-      ctx.fillStyle = cg; ctx.beginPath(); ctx.arc(0, 0, 185 * s, 0, 6.283); ctx.fill(); ctx.restore();
     }
 
     pieces.forEach(function (pc) { if (!pc.front) drawPiece(pc, night); });

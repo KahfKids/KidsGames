@@ -17,10 +17,11 @@
   var epoch = 0, hint = null, hinted = !!store.get('hinted', false), down = null;
   var G = { w: 0, h: 0, dpr: 1, safe: { top: 0, right: 0, bottom: 0, left: 0 }, pitch: 80, cols: 2, rows: 2, n: 4, gx: 0, gy: 0, slotsY: 40, slotsInHud: false };
   var bg = null, bgKey = '', spr = { base: null, odd: null, key: '' }, plates = {};
+  var back = { cv: null, key: '' }, front = { cv: null, key: '' };
 
   var stage = K.stage(canvas, function (st) {
     G.w = st.w; G.h = st.h; G.dpr = st.dpr; G.safe = st.safe;
-    bg = null; plates = {}; spr.key = '';
+    bg = null; plates = {}; spr.key = ''; back.key = front.key = '';
     if (def) layout();
   });
   var ctx = stage.ctx;
@@ -286,14 +287,36 @@
     return plates[k] || (plates[k] = A.plate(world, px, state));
   }
   var E = K.ease;
+  // A screen-sized offscreen canvas that is repainted only when its key changes: returns its context
+  // (cleared) when it needs repainting, else null.
+  function layerCanvas(L, key) {
+    var W = canvas.width, H = canvas.height;
+    if (!L.cv) L.cv = document.createElement('canvas');
+    key += '|' + W + 'x' + H;
+    if (L.key === key) return null;
+    if (L.cv.width !== W || L.cv.height !== H) { L.cv.width = W; L.cv.height = H; }
+    var g = L.cv.getContext('2d');
+    g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';
+    g.clearRect(0, 0, W, H);
+    L.key = key;
+    return g;
+  }
+  function focusGlow(g, W) {
+    var gcx = G.gx + G.cols * G.pitch / 2, gcy = G.gy + G.rows * G.pitch / 2, gr = Math.hypot(G.cols, G.rows) * G.pitch * 0.62;
+    var fg = g.createRadialGradient(gcx, gcy, gr * 0.2, gcx, gcy, gr); fg.addColorStop(0, W.focus); fg.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = fg; g.fillRect(gcx - gr, gcy - gr, gr * 2, gr * 2);
+  }
   function draw() {
     if (!def) return;
     ensureArt();
     var d = G.dpr, W = A.WORLDS[world], m = bg.margin, drift = K.reducedMotion ? 0 : Math.sin(time * 0.12);
     ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.drawImage(bg.sky, -m, 0);
-    ctx.drawImage(bg.far, -m + drift * m * 0.3, 0);
-    ctx.drawImage(bg.mid, -m + drift * m * 0.6, 0);
+    // sky, far and mid: composited once into a screen-sized canvas, redone only when a layer's whole-pixel
+    // offset changes (the same blits in the same order onto an opaque sky, so the same pixels)
+    var xs = Math.round(-m), xf = Math.round(-m + drift * m * 0.3), xm = Math.round(-m + drift * m * 0.6);
+    var bk = layerCanvas(back, bgKey + '|' + xs + ',' + xf + ',' + xm);
+    if (bk) { bk.drawImage(bg.sky, xs, 0); bk.drawImage(bg.far, xf, 0); bk.drawImage(bg.mid, xm, 0); }
+    ctx.drawImage(back.cv, 0, 0);
     ctx.setTransform(d, 0, 0, d, 0, 0);
     // ambient life: pollen by day, fireflies in the garden, sparkles over the sea
     ambient.forEach(function (a, i) {
@@ -302,18 +325,27 @@
       else { ctx.globalAlpha = 0.3 + 0.5 * tw; ctx.fillStyle = world === 0 ? '#fffbe6' : '#ffe2b0'; ctx.beginPath(); ctx.arc(x, y, 1.8 * a.s, 0, 6.283); ctx.fill(); ctx.globalAlpha = 1; }
     });
     ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.drawImage(bg.near, -m + drift * m, 0);
+    var sh = K.fx.offset(), xn = Math.round(-m + drift * m);
+    // near layer + the soft focus glow behind the grid (no box: it fades into the scene). Nothing is drawn
+    // between them, so they are composited once into one screen-sized canvas (the same calls on a clear
+    // canvas, then drawn over the scene: source-over is associative) and redone only when the near
+    // layer's whole-pixel offset or the grid changes. The glow keeps its device-pixel placement.
+    if (!sh.x && !sh.y) {
+      var fr = layerCanvas(front, bgKey + '|' + xn + '|' + G.gx + ',' + G.gy + ',' + G.cols + 'x' + G.rows + '@' + G.pitch);
+      if (fr) { fr.drawImage(bg.near, xn, 0); fr.setTransform(d, 0, 0, d, 0, 0); focusGlow(fr, W); fr.setTransform(1, 0, 0, 1, 0, 0); }
+      ctx.drawImage(front.cv, 0, 0);
+      ctx.setTransform(d, 0, 0, d, 0, 0);
+    } else {
+      ctx.drawImage(bg.near, xn, 0);
+      ctx.setTransform(d, 0, 0, d, 0, 0);
+      ctx.translate(sh.x, sh.y);
+      focusGlow(ctx, W);
+    }
     ctx.setTransform(d, 0, 0, d, 0, 0);
-
-    var sh = K.fx.offset();
     ctx.translate(sh.x, sh.y);
-    // soft focus glow behind the grid (no box: it fades into the scene)
-    var gcx = G.gx + G.cols * G.pitch / 2, gcy = G.gy + G.rows * G.pitch / 2, gr = Math.hypot(G.cols, G.rows) * G.pitch * 0.62;
-    var fg = ctx.createRadialGradient(gcx, gcy, gr * 0.2, gcx, gcy, gr); fg.addColorStop(0, W.focus); fg.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = fg; ctx.fillRect(gcx - gr, gcy - gr, gr * 2, gr * 2);
 
     drawSlots();
-    drawCells();
+    drawCells(sh);
     flyers.forEach(function (fl) {
       var u = E.inOutSine(Math.min(1, fl.t / fl.dur)), cx = (fl.x0 + fl.x1) / 2, cy = Math.min(fl.y0, fl.y1) - 80;
       var x = (1 - u) * (1 - u) * fl.x0 + 2 * (1 - u) * u * cx + u * u * fl.x1, y = (1 - u) * (1 - u) * fl.y0 + 2 * (1 - u) * u * cy + u * u * fl.y1;
@@ -356,9 +388,43 @@
       ctx.fillStyle = low ? '#ffcf9a' : '#e8fff0'; ctx.beginPath(); ctx.arc(rx, ry, 4, 0, 6.283); ctx.fill(); // a sun-dot in the middle
     }
   }
-  function drawCells() {
+  // Breathing-size copies of the two pictures. The scale step keeps neighbouring sizes within half a device
+  // pixel; used while they fit a small memory budget (big pictures on a few cells draw scaled as before).
+  var BR = 0.025, breathe = { key: '', lv: {} };
+  function breathStep(ipd) {
+    var st = 0.5 / ipd, n = 2 * Math.ceil(BR / st) + 1;
+    return n * 2 * (ipd + 3) * (ipd + 3) * 4 <= 8e6 ? st : 0;
+  }
+  function breathSprite(isOdd, q, st, ipd) {
+    var key = spr.key + '|' + ipd;
+    if (breathe.key !== key) { breathe.key = key; breathe.lv = {}; }
+    var k = (isOdd ? 'o' : 'b') + q, c = breathe.lv[k];
+    if (c) return c;
+    var b = q * st, w = ipd * (1 + b), h = ipd * (1 - b * 0.6);
+    c = document.createElement('canvas'); c.width = Math.ceil(w) + 2; c.height = Math.ceil(h) + 2;
+    c.getContext('2d').drawImage(isOdd ? spr.odd : spr.base, (c.width - w) / 2, (c.height - h) / 2, w, h);
+    return (breathe.lv[k] = c);
+  }
+  // A square sprite drawn scaled (x, y, size in the current transform) through its crop box: its
+  // non-transparent area plus a clear margin, with the same source-to-screen mapping. The pixels left out
+  // were transparent and drew nothing; the scaled blit just touches fewer of them.
+  function cropBox(cv) {
+    if (cv.box) return cv.box;
+    var W = cv.width, H = cv.height, t = document.createElement('canvas'); t.width = W; t.height = H; // read a copy, not the sprite
+    var g = t.getContext('2d'); g.drawImage(cv, 0, 0);
+    var a = g.getImageData(0, 0, W, H).data, x0 = W, x1 = -1, y0 = H, y1 = -1;
+    for (var y = 0; y < H; y++) for (var x = 0; x < W; x++) if (a[(y * W + x) * 4 + 3]) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+    var M = 3, b = { x: 0, y: 0, w: W, h: H };
+    if (x1 >= 0) { b.x = Math.max(0, x0 - M); b.y = Math.max(0, y0 - M); b.w = Math.min(W, x1 + M + 1) - b.x; b.h = Math.min(H, y1 + M + 1) - b.y; }
+    return (cv.box = b);
+  }
+  function drawCropped(cv, x, y, size) {
+    var b = cropBox(cv), k = size / cv.width;
+    ctx.drawImage(cv, b.x, b.y, b.w, b.h, x + b.x * k, y + b.y * k, b.w * k, b.h * k);
+  }
+  function drawCells(sh) {
     if (!spr.base || phase === 'banner') return;
-    var P = G.pitch, ip = P * 0.74 * 1.2, cols = G.cols;
+    var d = G.dpr, P = G.pitch, ip = P * 0.74 * 1.2, cols = G.cols;
     for (var i = 0; i < cells.length; i++) {
       var c = cells[i];
       var e = c.enter <= 0 ? 0 : E.outBack(Math.min(1, c.enter / 0.42)), sc = e, a = Math.min(1, Math.max(0, c.enter / 0.2));
@@ -372,17 +438,38 @@
       var pstate = (c.flash > 0 && c.pop >= 0) || (phase === 'fail' && isOdd) ? 'right' : (c.flash > 0 && c.wob > 0 ? 'wrong' : null);
       ctx.save(); ctx.globalAlpha = a; ctx.translate(c.x, c.y); ctx.rotate(rot);
       ctx.scale(sc * press, sc * (press === 1 ? 1 : 0.94));
-      var pl = plate(null), ps = P * 0.9, pad = ps * pl.pad / (pl.width - pl.pad * 2);
-      ctx.drawImage(pl, -ps / 2 - pad, -ps / 2 - pad, ps + pad * 2, ps + pad * 2);
-      if (pstate) { var pl2 = plate(pstate); ctx.globalAlpha = a * Math.min(1, c.flash * 1.5 + (phase === 'fail' ? 1 : 0)); ctx.drawImage(pl2, -ps / 2 - pad, -ps / 2 - pad, ps + pad * 2, ps + pad * 2); ctx.globalAlpha = a; }
+      var pl = plate(null), ps = P * 0.9, pad = ps * pl.pad / (pl.width - pl.pad * 2), pl2 = pstate ? plate(pstate) : null;
+      var a2 = a * Math.min(1, c.flash * 1.5 + (phase === 'fail' ? 1 : 0));
+      var rest = rot === 0 && sc * press === 1 && press === 1;
+      if (rest) {
+        // at rest the plate sprite is the cell's size in device px: draw it 1:1 at a whole device pixel
+        // (no resampling; at most half a pixel from where the scaled draw put it)
+        var px0 = Math.round((c.x + sh.x) * d - pl.width / 2), py0 = Math.round((c.y + sh.y) * d - pl.height / 2);
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.drawImage(pl, px0, py0);
+        if (pl2) { ctx.globalAlpha = a2; ctx.drawImage(pl2, px0, py0); ctx.globalAlpha = a; }
+        ctx.setTransform(d, 0, 0, d, (c.x + sh.x) * d, (c.y + sh.y) * d);
+      } else {
+        drawCropped(pl, -ps / 2 - pad, -ps / 2 - pad, ps + pad * 2);
+        if (pl2) { ctx.globalAlpha = a2; drawCropped(pl2, -ps / 2 - pad, -ps / 2 - pad, ps + pad * 2); ctx.globalAlpha = a; }
+      }
       if (reveal) {
         var pulse = 0.5 + 0.5 * Math.sin(time * 6);
         ctx.lineWidth = 4 + pulse * 3; ctx.strokeStyle = 'rgba(255,214,107,' + (0.6 + pulse * 0.4) + ')';
         A.rr(ctx, -ps / 2 - 3, -ps / 2 - 3, ps + 6, ps + 6, ps * 0.26); ctx.stroke();
       }
-      ctx.scale(1 + br, 1 - br * 0.6);
-      ctx.translate(0, -br * P * 0.4);
-      ctx.drawImage(isOdd ? spr.odd : spr.base, -ip / 2, -ip / 2, ip, ip);
+      var bs = rest ? breathStep(ip * d) : 0;
+      if (bs) {
+        // at rest: the picture pre-scaled to this breathing size (sizes 1/2 device px apart), drawn 1:1 at
+        // a whole device pixel
+        var q = Math.round(br / bs), img = breathSprite(isOdd, q, bs, ip * d), sy = 1 - br * 0.6;
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.drawImage(img, Math.round((c.x + sh.x) * d - img.width / 2), Math.round((c.y + sh.y) * d - sy * br * P * 0.4 * d - img.height / 2));
+      } else {
+        ctx.scale(1 + br, 1 - br * 0.6);
+        ctx.translate(0, -br * P * 0.4);
+        drawCropped(isOdd ? spr.odd : spr.base, -ip / 2, -ip / 2, ip);
+      }
       ctx.restore();
     }
   }

@@ -445,12 +445,21 @@
     for (var i = 0; i < teeth * 2; i++) { var a = i * Math.PI / teeth, q = i % 2 ? r * 0.72 : r; g.lineTo(Math.cos(a - 0.12) * q, Math.sin(a - 0.12) * q); g.lineTo(Math.cos(a + 0.12) * q, Math.sin(a + 0.12) * q); }
     g.closePath(); g.fill(); g.fillStyle = 'rgba(0,0,0,.25)'; g.beginPath(); g.arc(0, 0, r * 0.3, 0, TAU); g.fill(); g.restore();
   }
+  // The robot's gradients never change (they live in the robot's own unit space), so each is made once per
+  // robot and canvas, not every frame. Glows that pulse use one gradient at full strength plus globalAlpha.
+  var robotGrads = typeof WeakMap === 'function' ? new WeakMap() : null;
+  function grads(g, B) {
+    if (!robotGrads) return {};
+    var m = robotGrads.get(g); if (!m) robotGrads.set(g, m = {});
+    return m[B.color + B.ring] || (m[B.color + B.ring] = {});
+  }
   function robotBody(g, B, t, st) {
-    var col = B.color, sc = B.big ? 1.08 : 0.94;
+    var col = B.color, sc = B.big ? 1.08 : 0.94, G = grads(g, B);
     g.scale(sc, sc);
     // base: wheels, one big wheel, or a hover glow
     if (B.base === 'hover') {
-      var hg = g.createRadialGradient(0, 0.78, 0, 0, 0.78, 0.4); hg.addColorStop(0, 'rgba(120,230,255,.9)'); hg.addColorStop(1, 'rgba(120,230,255,0)');
+      var hg = G.hover;
+      if (!hg) { hg = G.hover = g.createRadialGradient(0, 0.78, 0, 0, 0.78, 0.4); hg.addColorStop(0, 'rgba(120,230,255,.9)'); hg.addColorStop(1, 'rgba(120,230,255,0)'); }
       g.fillStyle = hg; g.beginPath(); g.ellipse(0, 0.78, 0.42, 0.14 + Math.sin(t * 6) * 0.02, 0, 0, TAU); g.fill();
       g.fillStyle = shade(col, -0.35); rr(g, -0.24, 0.6, 0.48, 0.1, 0.05); g.fill();
     } else {
@@ -479,7 +488,8 @@
       g.restore();
     });
     // body
-    var bg2 = g.createLinearGradient(-0.4, 0, 0.4, 0); bg2.addColorStop(0, shade(col, 0.3)); bg2.addColorStop(0.55, col); bg2.addColorStop(1, shade(col, -0.25));
+    var bg2 = G.body;
+    if (!bg2) { bg2 = G.body = g.createLinearGradient(-0.4, 0, 0.4, 0); bg2.addColorStop(0, shade(col, 0.3)); bg2.addColorStop(0.55, col); bg2.addColorStop(1, shade(col, -0.25)); }
     g.fillStyle = bg2; g.beginPath();
     if (B.body === 'round') g.ellipse(0, 0.3, 0.4, 0.33, 0, 0, TAU);
     else if (B.body === 'capsule') rr(g, -0.33, -0.02, 0.66, 0.64, 0.3);
@@ -495,7 +505,8 @@
     }
     // neck and head
     g.fillStyle = '#9aa3c0'; g.fillRect(-0.08, -0.08, 0.16, 0.1);
-    var hg2 = g.createLinearGradient(-0.36, 0, 0.36, 0); hg2.addColorStop(0, shade(col, 0.35)); hg2.addColorStop(0.55, col); hg2.addColorStop(1, shade(col, -0.25));
+    var hg2 = G.head;
+    if (!hg2) { hg2 = G.head = g.createLinearGradient(-0.36, 0, 0.36, 0); hg2.addColorStop(0, shade(col, 0.35)); hg2.addColorStop(0.55, col); hg2.addColorStop(1, shade(col, -0.25)); }
     g.fillStyle = hg2; g.beginPath();
     if (B.body === 'round') { g.moveTo(-0.34, -0.08); g.lineTo(-0.34, -0.3); g.arc(0, -0.3, 0.34, Math.PI, 0); g.lineTo(0.34, -0.08); g.closePath(); }
     else rr(g, -0.34, -0.56, 0.68, 0.48, B.body === 'capsule' ? 0.22 : 0.12);
@@ -505,8 +516,9 @@
     // antenna
     var blink = Math.sin(t * 5) > 0 ? 1 : 0.35;
     function ballTip(x, y) {
-      var bg3 = g.createRadialGradient(x, y, 0, x, y, 0.14); bg3.addColorStop(0, 'rgba(255,255,255,' + blink + ')'); bg3.addColorStop(0.4, B.accent); bg3.addColorStop(1, 'rgba(255,255,255,0)');
-      g.fillStyle = bg3; g.beginPath(); g.arc(x, y, 0.14, 0, TAU); g.fill();
+      var k = 'tip' + blink, bg3 = G[k];   // made around (0, 0) and drawn shifted to the tip
+      if (!bg3) { bg3 = G[k] = g.createRadialGradient(0, 0, 0, 0, 0, 0.14); bg3.addColorStop(0, 'rgba(255,255,255,' + blink + ')'); bg3.addColorStop(0.4, B.accent); bg3.addColorStop(1, 'rgba(255,255,255,0)'); }
+      g.save(); g.translate(x, y); g.fillStyle = bg3; g.beginPath(); g.arc(0, 0, 0.14, 0, TAU); g.fill(); g.restore();
       g.fillStyle = B.accent; g.globalAlpha = 0.6 + 0.4 * blink; g.beginPath(); g.arc(x, y, 0.055, 0, TAU); g.fill(); g.globalAlpha = 1;
     }
     g.strokeStyle = '#6b7290'; g.lineWidth = 0.035; g.lineCap = 'round';
@@ -524,7 +536,8 @@
     }
     // the visor: one smooth glowing band (never eyes)
     var vx = -0.27, vy = -0.4, vw = 0.54, vh = 0.17;
-    var vg = g.createLinearGradient(0, vy, 0, vy + vh); vg.addColorStop(0, '#16203a'); vg.addColorStop(1, '#0b1226');
+    var vg = G.visor;
+    if (!vg) { vg = G.visor = g.createLinearGradient(0, vy, 0, vy + vh); vg.addColorStop(0, '#16203a'); vg.addColorStop(1, '#0b1226'); }
     g.fillStyle = vg; rr(g, vx, vy, vw, vh, vh / 2); g.fill();
     g.save(); rr(g, vx, vy, vw, vh, vh / 2); g.clip();
     var glowA = st === 'lose' ? 0.12 : 0.32 + 0.12 * Math.sin(t * 2.5);
@@ -548,14 +561,17 @@
   A.robot = function (ctx, kind, R, o) {
     o = o || {}; var t = o.t || 0, st = o.state || 'idle', B = A.ROBOTS[kind] || A.ROBOTS.beep;
     ctx.save();
+    var G = grads(ctx, B);
     if (st === 'think') {
-      var p = 0.5 + 0.5 * Math.sin(t * 5), gl = ctx.createRadialGradient(0, 0, R * 0.8, 0, 0, R * 1.55);
-      gl.addColorStop(0, 'rgba(160,220,255,' + (0.3 + p * 0.3) + ')'); gl.addColorStop(1, 'rgba(160,220,255,0)');
+      var p = 0.5 + 0.5 * Math.sin(t * 5), gl = G['think' + R];
+      if (!gl) { gl = G['think' + R] = ctx.createRadialGradient(0, 0, R * 0.8, 0, 0, R * 1.55); gl.addColorStop(0, 'rgba(160,220,255,1)'); gl.addColorStop(1, 'rgba(160,220,255,0)'); }
+      var ga = ctx.globalAlpha; ctx.globalAlpha = ga * (0.3 + p * 0.3);
       ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(0, 0, R * 1.55, 0, TAU); ctx.fill();
+      ctx.globalAlpha = ga;
     }
     ctx.translate(0, Math.sin(t * 2) * R * 0.025);   // idle bob
-    var bg = ctx.createRadialGradient(-R * 0.3, -R * 0.4, R * 0.1, 0, 0, R);
-    bg.addColorStop(0, B.bg[0]); bg.addColorStop(1, B.bg[1]);
+    var bg = G['bg' + R];
+    if (!bg) { bg = G['bg' + R] = ctx.createRadialGradient(-R * 0.3, -R * 0.4, R * 0.1, 0, 0, R); bg.addColorStop(0, B.bg[0]); bg.addColorStop(1, B.bg[1]); }
     ctx.fillStyle = bg; ctx.beginPath(); ctx.arc(0, 0, R, 0, TAU); ctx.fill();
     ctx.lineWidth = R * 0.09; ctx.strokeStyle = B.ring; ctx.stroke();
     ctx.save(); ctx.beginPath(); ctx.arc(0, 0, R * 0.955, 0, TAU); ctx.clip(); ctx.scale(R, R); ctx.translate(0, 0.04);

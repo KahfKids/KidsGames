@@ -17,10 +17,10 @@
 
   // ---------- layout (CSS px) ----------
   var G = { w: 0, h: 0, dpr: 1, safe: { top: 0, right: 0, bottom: 0, left: 0 }, u: 100, cols: 2, rows: 2, ropes: [], beadY: 0 };
-  var bg = null, bgKey = '', sprites = {}, blooms = {};
+  var bg = null, bgKey = '', sprites = {}, blooms = {}, backCv = null, backKey = '', sh = { x: 0, y: 0 };
   var stage = K.stage(canvas, function (st) {
     G.w = st.w; G.h = st.h; G.dpr = st.dpr; G.safe = st.safe;
-    bg = null; sprites = {};
+    bg = null; sprites = {}; backKey = '';
     if (lan.length) layout(lan.length);
   });
   var ctx = stage.ctx;
@@ -63,7 +63,7 @@
 
   function makeLanterns(n) {
     lan = [];
-    for (var i = 0; i < n; i++) lan.push({ ci: i, x: 0, py: 0, chain: 0, ang: 0, vel: 0, idleA: 0, ph: Math.random() * 6.28,
+    for (var i = 0; i < n; i++) lan.push({ k: i, ci: i, x: 0, py: 0, chain: 0, ang: 0, vel: 0, idleA: 0, ph: Math.random() * 6.28,
       light: 0, want: 0, flash: 0, squash: 0, dim: 0, row: 0, cell: null });
     layout(n);
   }
@@ -335,10 +335,80 @@
     if (!sprites[key]) sprites[key] = A.lanternSprite(ci, G.u, G.dpr, lit);
     return sprites[key];
   }
-  function bloomSprite(ci) {
-    var key = ci + '|' + Math.round(G.u) + '|' + G.dpr;
-    if (!blooms[key]) blooms[key] = A.bloom(A.LANTERNS[ci].c, G.u * 2, G.dpr);
+  // Crop box (sprite px) for the rotated lantern blit: the sprites' non-transparent area plus a clear
+  // margin, with the same source-to-screen mapping, so the skipped pixels were transparent and drew
+  // nothing. Measured once per sprite pair (from a copy, so the sprites themselves are never read back).
+  function spriteBoxes(off, on) {
+    if (on.box) return;
+    var W = off.width, H = off.height, t = document.createElement('canvas'); t.width = W; t.height = H;
+    var g = t.getContext('2d'); g.drawImage(off, 0, 0); g.drawImage(on, 0, 0);
+    var a = g.getImageData(0, 0, W, H).data, x0 = W, x1 = -1, y0 = H, y1 = -1;
+    for (var y = 0; y < H; y++) for (var x = 0; x < W; x++) {
+      if (a[(y * W + x) * 4 + 3]) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+    }
+    var M = 4, bx = { x: 0, y: 0, w: W, h: H };
+    if (x1 >= 0) { bx.x = Math.max(0, x0 - M); bx.y = Math.max(0, y0 - M); bx.w = Math.min(W, x1 + M + 1) - bx.x; bx.h = Math.min(H, y1 + M + 1) - bx.y; }
+    off.box = on.box = bx;
+  }
+  function bloomSprite(ci, half) {
+    var key = ci + '|' + Math.round(G.u) + '|' + G.dpr + (half ? 'h' : '');
+    if (!blooms[key]) blooms[key] = A.bloom(A.LANTERNS[ci].c, G.u * 2, half ? G.dpr / 2 : G.dpr);
     return blooms[key];
+  }
+
+  // Scene tint: the lit lanterns' radial colour ramps (added with 'lighter'). Their sum is worked out
+  // once per 8x8 block of device px (each ramp changes by about 0.02 colour levels per px, so a block
+  // is one value to well under a level) and added in one screen pass, however many lanterns are lit.
+  var TQ = 8, tintCv = null, tintImg = null, tintRGB = [];
+  function drawTint() {
+    var d = G.dpr, R = Math.max(G.w, G.h) * 0.6 * d, W = Math.ceil(canvas.width / TQ), H = Math.ceil(canvas.height / TQ), lits = [];
+    for (var k = 0; k < lan.length; k++) {
+      var L = lan[k], lit = L.light * (1 - L.dim); if (lit < 0.3) continue;
+      var b = bodyCenter(L), c = tintRGB[L.ci] || (tintRGB[L.ci] = [1, 3, 5].map(function (i) { return parseInt(A.LANTERNS[L.ci].c.substr(i, 2), 16); }));
+      lits.push({ x: (b.x + sh.x) * d, y: (b.y + sh.y) * d, a: 0.12 * (lit - 0.3), c: c });
+    }
+    if (!lits.length) return;
+    if (!tintCv) tintCv = document.createElement('canvas');
+    if (tintCv.width !== W || tintCv.height !== H || !tintImg) { tintCv.width = W; tintCv.height = H; tintImg = tintCv.getContext('2d').createImageData(W, H); }
+    var px = tintImg.data, n = lits.length, i = 0;
+    for (var y = 0; y < H; y++) {
+      var sy = (y + 0.5) * TQ;
+      for (var x = 0; x < W; x++, i += 4) {
+        var sx = (x + 0.5) * TQ, pr = 0, pg = 0, pb = 0, pa = 0;
+        for (var q = 0; q < n; q++) {
+          var t = lits[q], dx = sx - t.x, dy = sy - t.y, r2 = dx * dx + dy * dy;
+          if (r2 >= R * R) continue;
+          var f = t.a * (1 - Math.sqrt(r2) / R);
+          pr += t.c[0] * f; pg += t.c[1] * f; pb += t.c[2] * f; pa += f;
+        }
+        // premultiplied sum -> ImageData's straight alpha (exact round trip for these values)
+        var al = Math.min(255, Math.round(pa * 255));
+        if (al === 0) { px[i] = px[i + 1] = px[i + 2] = px[i + 3] = 0; continue; }
+        px[i] = Math.round(pr * 255 / al); px[i + 1] = Math.round(pg * 255 / al); px[i + 2] = Math.round(pb * 255 / al); px[i + 3] = al;
+      }
+    }
+    tintCv.getContext('2d').putImageData(tintImg, 0, 0);
+    ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.imageSmoothingEnabled = false; ctx.globalCompositeOperation = 'lighter';
+    // the fills covered the (shaken) screen rect only
+    if (sh.x || sh.y) { ctx.beginPath(); ctx.rect(sh.x * d, sh.y * d, G.w * d, G.h * d); ctx.clip(); }
+    ctx.drawImage(tintCv, 0, 0, W * TQ, H * TQ);
+    ctx.restore();
+  }
+  // Sky, far and mid layers composited once into a screen-sized canvas; rebuilt only when one of their
+  // whole-pixel parallax offsets changes. Same blits in the same order, so the pixels are the same.
+  function drawBack(dr) {
+    var d = G.dpr, m = bg.margin, W = canvas.width, H = canvas.height;
+    var x0 = Math.round(-m + dr * 3 * d), x1 = Math.round(-m + dr * 7 * d), x2 = Math.round(-m + dr * 12 * d);
+    var key = bgKey + '|' + W + 'x' + H + '|' + x0 + ',' + x1 + ',' + x2;
+    if (!backCv) backCv = document.createElement('canvas');
+    if (key !== backKey) {
+      if (backCv.width !== W || backCv.height !== H) { backCv.width = W; backCv.height = H; }
+      var g = backCv.getContext('2d');
+      g.clearRect(0, 0, W, H);
+      g.drawImage(bg.sky, x0, 0); g.drawImage(bg.far, x1, 0); g.drawImage(bg.mid, x2, 0);
+      backKey = key;
+    }
+    ctx.drawImage(backCv, 0, 0);
   }
 
   function drawRope(rope, row) {
@@ -363,6 +433,23 @@
     ctx.globalAlpha = 1;
   }
 
+  // The lit sprite blended over the unlit one at 'lit', done unrotated at 1:1 (cheap) into a canvas per
+  // lantern, so the swinging lantern costs one rotated (resampled) blit instead of two. Same colours; the
+  // only difference is the anti-aliased rim of a lit lantern: two stacked rotated draws covered those edge
+  // pixels slightly more than one does (within one device pixel). Redone only when 'lit' changes.
+  var mixes = [];
+  function litSprite(L, off, on, lit) {
+    var m = mixes[L.k] || (mixes[L.k] = { cv: document.createElement('canvas'), off: null, lit: -1 });
+    if (m.off !== off || m.lit !== lit) {
+      var c = m.cv, b = off.box;
+      if (c.width !== off.width || c.height !== off.height) { c.width = off.width; c.height = off.height; }
+      var g = c.getContext('2d');
+      g.globalAlpha = 1; g.clearRect(b.x, b.y, b.w, b.h); g.drawImage(off, b.x, b.y, b.w, b.h, b.x, b.y, b.w, b.h);
+      g.globalAlpha = lit; g.drawImage(on, b.x, b.y, b.w, b.h, b.x, b.y, b.w, b.h); g.globalAlpha = 1;
+      m.off = off; m.lit = lit;
+    }
+    return m.cv;
+  }
   function drawLantern(L) {
     var u = G.u, a = L.ang + L.idleA, sq = L.squash, e = Math.sin(sq * Math.PI) * 0.6 + sq * 0.4;
     var sx = 1 + 0.05 * e, sy = 1 - 0.06 * e, pop = 1 + 0.05 * L.light * (L.want || L.flash > 0 ? 1 : 0);
@@ -382,10 +469,12 @@
     ctx.translate(0, L.chain + A.BODY_Y * u);
     ctx.scale(sx * pop, sy * pop);
     ctx.translate(0, -A.BODY_Y * u);
-    var off = sprite(L.ci, false), on = sprite(L.ci, true), pad = off.pad, w = u + pad * 2, h = A.LANTERN_H * u + pad * 2;
-    ctx.drawImage(off, -w / 2, -pad, w, h);
+    var off = sprite(L.ci, false), on = sprite(L.ci, true); spriteBoxes(off, on);
+    var pad = off.pad, w = u + pad * 2, h = A.LANTERN_H * u + pad * 2;
     var lit = Math.min(1, L.light * (1 - L.dim));
-    if (lit > 0.01) { ctx.globalAlpha = lit; ctx.drawImage(on, -w / 2, -pad, w, h); ctx.globalAlpha = 1; }
+    // Drawn through the crop box (same source-to-screen mapping, see spriteBoxes()).
+    var kx = w / off.width, ky = h / off.height, bx = off.box, img = lit > 0.01 ? litSprite(L, off, on, lit) : off;
+    ctx.drawImage(img, bx.x, bx.y, bx.w, bx.h, -w / 2 + bx.x * kx, -pad + bx.y * ky, bx.w * kx, bx.h * ky);
     if (L.dim > 0) { // a quick grey "not this one" flash
       ctx.globalAlpha = L.dim * 0.45; ctx.fillStyle = '#1a1030';
       ctx.beginPath(); ctx.ellipse(0, A.BODY_Y * u, u * 0.45, u * 0.5, 0, 0, 6.283); ctx.fill(); ctx.globalAlpha = 1;
@@ -393,13 +482,27 @@
     ctx.restore();
   }
 
-  function drawBloom(L) {
-    var lit = L.light * (1 - L.dim); if (lit < 0.02) return;
-    var b = bodyCenter(L), img = bloomSprite(L.ci), R = G.u * 2;
-    ctx.globalAlpha = Math.min(1, lit);
-    ctx.drawImage(img, b.x - R, b.y - R, R * 2, R * 2);
-    if (lit > 0.5) { ctx.globalAlpha = (lit - 0.5) * 0.5; ctx.drawImage(img, b.x - R * 2, b.y - R * 2, R * 4, R * 4); }
-    ctx.globalAlpha = 1;
+  // Every lantern's glow goes into one half-resolution layer that is added to the screen ('lighter') in a
+  // single pass, instead of one full-size pass per lantern. The wide halo is the bloom sprite at 2x, so in
+  // the half-size layer it is that sprite 1:1; the close glow uses a half-size bloom. Both ramps are smooth
+  // (under one colour level per device px at their brightest), so the 2x2 blocks match the full-size draws.
+  var bloomCv = null;
+  function drawBlooms() {
+    if (!lan.some(function (L) { return L.light * (1 - L.dim) >= 0.02; })) return;
+    var d = G.dpr, W = Math.ceil(canvas.width / 2), H = Math.ceil(canvas.height / 2);
+    if (!bloomCv) bloomCv = document.createElement('canvas');
+    if (bloomCv.width !== W || bloomCv.height !== H) { bloomCv.width = W; bloomCv.height = H; }
+    var g = bloomCv.getContext('2d');
+    g.globalAlpha = 1; g.globalCompositeOperation = 'source-over'; g.clearRect(0, 0, W, H); g.globalCompositeOperation = 'lighter';
+    lan.forEach(function (L) {
+      var lit = L.light * (1 - L.dim); if (lit < 0.02) return;
+      var b = bodyCenter(L), cx = (b.x + sh.x) * d / 2, cy = (b.y + sh.y) * d / 2, hs = bloomSprite(L.ci, true), img;
+      g.globalAlpha = Math.min(1, lit); g.drawImage(hs, Math.round(cx - hs.width / 2), Math.round(cy - hs.height / 2));
+      if (lit > 0.5) { img = bloomSprite(L.ci); g.globalAlpha = (lit - 0.5) * 0.5; g.drawImage(img, Math.round(cx - img.width / 2), Math.round(cy - img.height / 2)); }
+    });
+    ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.imageSmoothingEnabled = false; ctx.globalCompositeOperation = 'lighter';
+    ctx.drawImage(bloomCv, 0, 0, W * 2, H * 2);
+    ctx.restore();
   }
 
   function drawBeads() {
@@ -424,10 +527,8 @@
     ensureArt();
     var d = G.dpr, m = bg.margin, dr = Math.sin(time * 0.13);
     ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.drawImage(bg.sky, -m + dr * 3 * d, 0);
-    ctx.drawImage(bg.far, -m + dr * 7 * d, 0);
-    ctx.drawImage(bg.mid, -m + dr * 12 * d, 0);
-    var sh = K.fx.offset();
+    drawBack(dr);
+    var fo = K.fx.offset(); sh.x = fo.x; sh.y = fo.y;
     ctx.setTransform(d, 0, 0, d, sh.x * d, sh.y * d);
     // drifting golden motes
     motes.forEach(function (o, i) {
@@ -437,23 +538,14 @@
     });
     ctx.globalAlpha = 1;
     // scene tint from the lit lanterns (the courtyard takes on their colour)
-    ctx.globalCompositeOperation = 'lighter';
-    lan.forEach(function (L) {
-      var lit = L.light * (1 - L.dim); if (lit < 0.3) return;
-      var b = bodyCenter(L), R = Math.max(G.w, G.h) * 0.6, gr = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, R);
-      gr.addColorStop(0, A.rgba(A.LANTERNS[L.ci].c, 0.12 * (lit - 0.3))); gr.addColorStop(1, A.rgba(A.LANTERNS[L.ci].c, 0));
-      ctx.fillStyle = gr; ctx.fillRect(0, 0, G.w, G.h);
-    });
-    ctx.globalCompositeOperation = 'source-over';
+    drawTint();
     ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.drawImage(bg.near, -m + dr * 18 * d, 0);
+    ctx.drawImage(bg.near, Math.round(-m + dr * 18 * d), Math.round(0));
     ctx.setTransform(d, 0, 0, d, sh.x * d, sh.y * d);
 
     G.ropes.forEach(drawRope);
     lan.forEach(drawLantern);
-    ctx.globalCompositeOperation = 'lighter';
-    lan.forEach(drawBloom);
-    ctx.globalCompositeOperation = 'source-over';
+    drawBlooms();
     K.fx.draw(ctx);
     drawBeads();
 

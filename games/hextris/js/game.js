@@ -459,8 +459,8 @@
     ensureArt();
     var d = G.dpr, W = A.WORLDS[world], m = bg.margin, drift = Math.sin(time * 0.15) * 0.4 + K.clamp(lean, -3, 3) * 0.25;
     ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.drawImage(bg.sky, -m - drift * 3 * d, 0);
-    ctx.drawImage(bg.far, -m - drift * 9 * d, 0);
+    ctx.drawImage(bg.sky, Math.round(-m - drift * 3 * d), Math.round(0));
+    ctx.drawImage(bg.far, Math.round(-m - drift * 9 * d), Math.round(0));
     // drifting light motes (glaze dust in the air)
     ctx.setTransform(d, 0, 0, d, 0, 0);
     for (var i = 0; i < motes.length; i++) {
@@ -477,7 +477,7 @@
       });
     }
     ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.drawImage(bg.near, -m - drift * 18 * d, 0);
+    ctx.drawImage(bg.near, Math.round(-m - drift * 18 * d), Math.round(0));
 
     // field (game units around the medallion)
     var sh = K.fx.offset(), s = G.s * d;

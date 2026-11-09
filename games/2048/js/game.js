@@ -433,9 +433,9 @@
     ensureArt();
     var d = G.dpr, m = scene.margin;
     ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.drawImage(scene.sky, -m - tilt.x * 3 * d, -tilt.y * 2 * d);
-    ctx.drawImage(scene.far, -m - tilt.x * 7 * d, -tilt.y * 3 * d);
-    ctx.drawImage(scene.mid, -m - tilt.x * 12 * d, -tilt.y * 4 * d);
+    ctx.drawImage(scene.sky, Math.round(-m - tilt.x * 3 * d), Math.round(-tilt.y * 2 * d));
+    ctx.drawImage(scene.far, Math.round(-m - tilt.x * 7 * d), Math.round(-tilt.y * 3 * d));
+    ctx.drawImage(scene.mid, Math.round(-m - tilt.x * 12 * d), Math.round(-tilt.y * 4 * d));
     ctx.setTransform(d, 0, 0, d, 0, 0);
     // petals drifting through the garden, and two butterflies
     var pc = A.WORLDS[world].flowers;
@@ -446,7 +446,7 @@
     });
     flies.forEach(function (f) { A.butterfly(ctx, f.x * G.w, f.y * G.h, 9, f.ph * 6, f.col[0], Math.cos(f.ph * 0.7) * 0.5); });
     ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.drawImage(scene.near, -m - tilt.x * 18 * d, -tilt.y * 6 * d);
+    ctx.drawImage(scene.near, Math.round(-m - tilt.x * 18 * d), Math.round(-tilt.y * 6 * d));
     ctx.setTransform(d, 0, 0, d, 0, 0);
 
     drawGoal();

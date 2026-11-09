@@ -84,7 +84,7 @@
     var key = world + '|' + G.cw + 'x' + G.ch + '@' + G.dpr;
     if (art.key !== key) {
       var w = Math.round(G.cw * G.dpr), h = Math.round(G.ch * G.dpr);
-      art = { key: key, back: A.cardBack(world, w, h), faces: {}, spr: {}, shadow: A.shadow(w, h), glow: A.glow(Math.round(Math.max(w, h) * 1.9)) };
+      art = { key: key, back: A.cardBack(world, w, h), faces: {}, spr: {}, rest: {}, shadow: A.shadow(w, h), glow: A.glow(Math.round(Math.max(w, h) * 1.9)) };
       live = {};
     }
   }
@@ -94,10 +94,13 @@
     var b = A.animalBox(G.cw, G.ch), cv = document.createElement('canvas'); cv.width = cv.height = Math.round(b.s * G.dpr);
     return (art.spr[c.id] = M.render(cv, c.a, null));
   }
-  function liveSprite(c, m) { // a per-card canvas re-drawn every frame while the animal is moving
-    var b = A.animalBox(G.cw, G.ch), s = Math.round(b.s * G.dpr), cv = live[c.i];
-    if (!cv || cv.width !== s) { cv = live[c.i] = document.createElement('canvas'); cv.width = cv.height = s; }
-    return M.render(cv, c.a, m);
+  function liveSprite(c, m) { // a canvas re-drawn every frame while the animal is moving
+    // Both cards of a matched pair animate in lockstep (same animal, same clock), so they share one canvas per animal and
+    // the second card reuses the frame the first one just drew instead of painting the same paper animal again.
+    var b = A.animalBox(G.cw, G.ch), s = Math.round(b.s * G.dpr), cv = live[c.id];
+    if (!cv || cv.width !== s) { cv = live[c.id] = document.createElement('canvas'); cv.width = cv.height = s; cv.t = null; }
+    if (cv.t === m.t && cv.k === m.k) return cv;
+    cv.t = m.t; cv.k = m.k; return M.render(cv, c.a, m);
   }
 
   // ---------- levels ----------
@@ -325,16 +328,57 @@
   }
 
   // ---------- drawing ----------
+  // A firefly's glow (radius r, CSS px), rendered once at device resolution with the full-strength gradient; its twinkle
+  // is applied as globalAlpha, which gives the same pixels as building the gradient with the twinkle baked in each frame.
+  function fireflyGlow(r) {
+    var k = 'ff' + r; if (art[k]) return art[k];
+    var d = G.dpr, S = Math.ceil(r * 2 * d) + 2, c = document.createElement('canvas'); c.width = c.height = S;
+    var g = c.getContext('2d'), q = g.createRadialGradient(S / 2, S / 2, 0, S / 2, S / 2, r * d);
+    q.addColorStop(0, 'rgba(255,236,150,0.9)'); q.addColorStop(1, 'rgba(255,236,150,0)');
+    g.fillStyle = q; g.beginPath(); g.arc(S / 2, S / 2, r * d, 0, 6.283); g.fill();
+    c.r = S / d / 2; return (art[k] = c);
+  }
+  // The soft spotlight behind the grid, rendered once per layout at device resolution (it was a big radial-gradient fill
+  // every frame). Covers the screen plus a margin for screen shake; drawn 1:1 at whole device pixels.
+  function focusGlow() {
+    var key = world + '|' + G.w + 'x' + G.h + '@' + G.dpr + '|' + G.gx + ',' + G.gy + ',' + G.cols + 'x' + G.rows;
+    if (art.focus && art.focus.key === key) return art.focus;
+    var d = G.dpr, M = 24, c = document.createElement('canvas'); c.width = Math.ceil((G.w + M * 2) * d); c.height = Math.ceil((G.h + M * 2) * d);
+    var g = c.getContext('2d'); g.setTransform(d, 0, 0, d, M * d, M * d);
+    var gcx = G.gx + G.cols * G.px / 2, gcy = G.gy + G.rows * G.py / 2, gr = Math.hypot(G.cols * G.px, G.rows * G.py) * 0.62;
+    var fg = g.createRadialGradient(gcx, gcy, gr * 0.2, gcx, gcy, gr); fg.addColorStop(0, A.WORLDS[world].focus); fg.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = fg; g.fillRect(gcx - gr, gcy - gr, gr * 2, gr * 2);
+    c.key = key; c.m = M * d; return (art.focus = c);
+  }
+  // A card at rest (fully dealt, not lifted, turning, pressed, landing, wobbling or animating) is drawn from one bitmap
+  // composed once: its shadow, then its face and animal (or its back), painted exactly as drawCard paints them at rest.
+  // Only the gentle "breathe" scale is applied live, so a resting card costs one blit instead of three plus a clip.
+  function restArt(c, showFace) {
+    var k = showFace ? 'f' + c.id + (c.matched ? '*' : '') : 'b', r = art.rest[k];
+    if (r) return r;
+    var d = G.dpr, w = G.cw, h = G.ch, sp = art.shadow, pad = sp.pad / d, cx = pad + w / 2, cy = pad + h / 2;
+    var cv = document.createElement('canvas'); cv.width = Math.ceil((w + pad * 2) * d); cv.height = Math.ceil((h + pad * 2 + 4) * d);
+    var g = cv.getContext('2d'); g.setTransform(d, 0, 0, d, cx * d, cy * d);
+    g.globalAlpha = 0.5; g.drawImage(sp, -w / 2 - pad, 4 - h / 2 - pad, w + pad * 2, h + pad * 2); g.globalAlpha = 1;
+    if (showFace) {
+      g.drawImage(face(c), -w / 2, -h / 2, w, h);
+      var b = A.animalBox(w, h);
+      g.save(); A.rr(g, -w / 2, -h / 2, w, h, Math.min(w, h) * 0.12); g.clip();
+      g.translate(0, b.y + b.s / 2 - h / 2); g.drawImage(sprite(c), -b.s / 2, -b.s / 2, b.s, b.s);
+      g.restore();
+    } else g.drawImage(art.back, -w / 2, -h / 2, w, h);
+    r = { c: cv, x: cx, y: cy, w: cv.width / d, h: cv.height / d }; art.rest[k] = r; return r;
+  }
   function drawBackground() {
     var d = G.dpr, m = bg.margin, drift = K.reducedMotion ? 0 : Math.sin(time * 0.1);
     ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.drawImage(bg.sky, -m, 0);
-    ctx.drawImage(bg.far, -m + drift * m * 0.25, 0);
-    ctx.drawImage(bg.mid, -m + drift * m * 0.55, 0);
+    // sky + far + mid, composed at their whole-pixel drift offsets; rebuilt only when one of those offsets changes
+    var o1 = Math.round(-m), o2 = Math.round(-m + drift * m * 0.25), o3 = Math.round(-m + drift * m * 0.55);
+    ctx.drawImage(layerCache('bgBack', o1 + ',' + o2 + ',' + o3, function (g) { g.drawImage(bg.sky, o1, 0); g.drawImage(bg.far, o2, 0); g.drawImage(bg.mid, o3, 0); }), 0, 0);
     ctx.setTransform(d, 0, 0, d, 0, 0);
     ambient.forEach(function (a, i) {
       var x = a.x * G.w, y = a.y * G.h, tw = 0.5 + 0.5 * Math.sin(a.ph * 2.2 + i);
-      if (world === 3) { var r = 10 * a.s, gl = ctx.createRadialGradient(x, y, 0, x, y, r); gl.addColorStop(0, 'rgba(255,236,150,' + 0.9 * tw + ')'); gl.addColorStop(1, 'rgba(255,236,150,0)'); ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(x, y, r, 0, 6.283); ctx.fill(); }
+      if (world === 3) { var gs = fireflyGlow(10 * a.s); ctx.globalAlpha = tw; ctx.drawImage(gs, x - gs.r, y - gs.r, gs.r * 2, gs.r * 2); ctx.globalAlpha = 1; }
       else if (world === 2) { ctx.strokeStyle = 'rgba(230,255,255,' + (0.35 + 0.3 * tw) + ')'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(x, y, 3 + 4 * a.s, 0, 6.283); ctx.stroke();
         ctx.fillStyle = 'rgba(255,255,255,.5)'; ctx.beginPath(); ctx.arc(x - 1.2 * a.s, y - 1.4 * a.s, 1.1 * a.s, 0, 6.283); ctx.fill(); }
       else if (world === 1) { ctx.save(); ctx.translate(x, y); ctx.rotate(a.ph * 1.5); ctx.globalAlpha = 0.75; ctx.fillStyle = i % 3 ? '#ffd0dc' : '#ffffff'; ctx.beginPath(); ctx.ellipse(0, 0, 4.2 * a.s, 2.2 * a.s, 0, 0, 6.283); ctx.fill(); ctx.restore(); }
@@ -342,8 +386,18 @@
     });
     ctx.globalAlpha = 1;
     ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.drawImage(bg.near, -m + drift * m, 0);
+    // near layer + the spotlight behind the grid, in one cached bitmap while the screen isn't shaking
+    var o4 = Math.round(-m + drift * m), sh = K.fx.offset(), fgc = focusGlow();
+    if (sh.x === 0 && sh.y === 0) ctx.drawImage(layerCache('bgFront', o4 + '|' + fgc.key, function (g) { g.drawImage(bg.near, o4, 0); g.drawImage(fgc, -fgc.m, -fgc.m); }), 0, 0);
+    else { ctx.drawImage(bg.near, o4, 0); ctx.drawImage(fgc, Math.round(sh.x * d) - fgc.m, Math.round(sh.y * d) - fgc.m); }
     ctx.setTransform(d, 0, 0, d, 0, 0);
+  }
+  // A screen-sized cache of background layers, repainted only when its key (the layers' whole-pixel offsets) changes.
+  function layerCache(name, key, paint) {
+    var c = art[name], W = canvas.width, H = canvas.height;
+    if (!c || c.width !== W || c.height !== H) { c = art[name] = document.createElement('canvas'); c.width = W; c.height = H; c.key = null; c.g = c.getContext('2d'); }
+    if (c.key !== key + '|' + bgKey) { var g = c.g; g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, W, H); paint(g); c.key = key + '|' + bgKey; }
+    return c;
   }
   function cardPos(c) {
     if (c.enter >= 1) return { x: c.x, y: c.y, r: 0 };
@@ -362,6 +416,12 @@
     var sqx = 1 + c.land * 0.05, sqy = 1 - c.land * 0.07;
     var rot = p.r + Math.sin(c.wob * 20) * 0.12 * c.wob;
     var y = p.y - lift * h * 0.09 - hop;
+    if (c.enter >= 1 && mid < 1e-6 && !(lift > 1e-3) && hop === 0 && !(c.pressV > 1e-3) && !(c.land > 1e-3) && !(c.wob > 1e-3) &&
+        !(showFace && c.anim >= 0 && c.anim < 2.5 && !K.reducedMotion)) {
+      var ra = restArt(c, showFace);
+      ctx.save(); ctx.translate(p.x, p.y); ctx.scale(S, S); ctx.drawImage(ra.c, -ra.x, -ra.y, ra.w, ra.h); ctx.restore();
+      return;
+    }
     // shadow on the table: further and softer as the card lifts
     var sp = art.shadow, sw = w * S * Math.max(0.08, sx) * sqx, shh = h * S, pad = sp.pad / G.dpr * (sw / w);
     ctx.globalAlpha = 0.5 - lift * 0.18;
@@ -445,9 +505,6 @@
     drawBackground();
     var sh = K.fx.offset();
     ctx.translate(sh.x, sh.y);
-    var gcx = G.gx + G.cols * G.px / 2, gcy = G.gy + G.rows * G.py / 2, gr = Math.hypot(G.cols * G.px, G.rows * G.py) * 0.62;
-    var fg = ctx.createRadialGradient(gcx, gcy, gr * 0.2, gcx, gcy, gr); fg.addColorStop(0, A.WORLDS[world].focus); fg.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = fg; ctx.fillRect(gcx - gr, gcy - gr, gr * 2, gr * 2);
     if (phase !== 'banner') {
       var later = [];
       cards.forEach(function (c) { if (c.lift > 0.03 || (c.f > 0 && c.f < 1) || c.enter < 1) later.push(c); else drawCard(c); });

@@ -604,29 +604,123 @@
     }
   })();
 
+  // ---------- the far sky ----------
+  // The background gradient and the Milky Way don't change from frame to frame apart from the sky's slow scroll, so
+  // they are no longer re-rendered every frame: each is kept in a canvas on the stage's pixel grid and copied in 1:1
+  // (a plain copy on whole device pixels, no resampling).
+  var bgC = null;
+  function bgLayer(d, w, h) { // the gradient, painted once per screen size with the same calls as before
+    var cw = canvas.width, ch = canvas.height, key = cw + 'x' + ch + ':' + w + 'x' + h + ':' + d;
+    if (!bgC || bgC.key !== key) {
+      var c = bgC && bgC.c.width === cw && bgC.c.height === ch ? bgC.c : A.canvas(cw, ch), g = c.getContext('2d');
+      g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, cw, ch);
+      g.setTransform(d, 0, 0, d, 0, 0);
+      var bg = g.createLinearGradient(0, 0, w * 0.3, h);
+      bg.addColorStop(0, '#060718'); bg.addColorStop(0.55, '#0a0a26'); bg.addColorStop(1, '#120c2c');
+      g.fillStyle = bg; g.fillRect(0, 0, w, h);
+      bgC = { c: c, key: key };
+    }
+    return bgC.c;
+  }
+  function drawFarSky(d, w, h, sx, sy) {
+    var cw = canvas.width, ch = canvas.height;
+    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+    ctx.drawImage(bgLayer(d, w, h), 0, 0);
+    ctx.drawImage(skyPano, -sx - panoT.ax, -sy - panoT.ay, cw, ch, 0, 0, cw, ch);
+    ctx.setTransform(d, 0, 0, d, 0, 0);
+  }
+
+  // The Milky Way panorama is a small image blown up ~12x (and turned a quarter on portrait phones): resampling it
+  // was most of the frame. It is rendered in 256 px tiles fixed to the panorama (same transform, same 0.95 alpha,
+  // same pixels), the tiles are copied into a buffer that covers the screen plus a margin, and each frame copies the
+  // screen's part of the buffer, offset by the sky's scroll rounded to whole device pixels. Past the margin the
+  // buffer's pixels are moved over (a plain copy) and the strip that comes into view is filled from the tiles; only
+  // a ring of tiles around the buffer is kept, made ahead of time, two a frame.
+  var skyPano = A.canvas(1, 1);
+  var TILE = 256, MARGIN = 128, panoT = { key: '', tiles: new Map(), spare: [], ax: 0, ay: 0 };
+  function panoTile(ti, tj, d, w, h, vw, vh, S) {
+    var id = ti + ',' + tj, t = panoT.tiles.get(id);
+    if (t) { panoT.tiles.delete(id); panoT.tiles.set(id, t); return t; } // most recently used goes last
+    // which copies of the (horizontally repeating) panorama touch this tile? (tile corners back to sky space)
+    var c = Math.cos(G.roll), s = Math.sin(G.roll), umin = Infinity, umax = -Infinity, vmin = Infinity, vmax = -Infinity;
+    for (var q = 0; q < 4; q++) {
+      var X = ((q & 1) ? ti + 1 : ti) * TILE / d - w / 2, Y = ((q & 2) ? tj + 1 : tj) * TILE / d - h / 2;
+      var u = c * X + s * Y + vw / 2, v = -s * X + c * Y + vh / 2;
+      if (u < umin) umin = u; if (u > umax) umax = u; if (v < vmin) vmin = v; if (v > vmax) vmax = v;
+    }
+    t = { c: null };
+    if (vmax >= -2 && vmin <= S.SH + 2) {
+      var cv = panoT.spare.pop() || A.canvas(TILE, TILE), g = cv.getContext('2d');
+      g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1; g.clearRect(0, 0, TILE, TILE);
+      g.setTransform(d, 0, 0, d, -ti * TILE, -tj * TILE);
+      g.translate(w / 2, h / 2); g.rotate(G.roll); g.translate(-vw / 2, -vh / 2);
+      g.globalAlpha = 0.95;
+      for (var k = Math.floor((umin - 2) / S.SW); k <= Math.floor((umax + 2) / S.SW); k++) g.drawImage(S.pano, 0, 0, S.pw, S.ph, k * S.SW, 0, S.SW, S.SH);
+      g.globalAlpha = 1;
+      t.c = cv;
+    }
+    panoT.tiles.set(id, t);
+    if (panoT.tiles.size > panoT.max) {
+      var old = panoT.tiles.keys().next().value, ot = panoT.tiles.get(old);
+      panoT.tiles.delete(old); if (ot.c) panoT.spare.push(ot.c);
+    }
+    return t;
+  }
+  function drawPano(d, w, h, vw, vh, S, oxU, oy) {
+    var cw = canvas.width, ch = canvas.height, LW = cw + 2 * MARGIN, LH = ch + 2 * MARGIN;
+    var key = cw + 'x' + ch + ':' + w + 'x' + h + ':' + d + ':' + G.roll + ':' + S.SW + 'x' + S.SH;
+    if (panoT.key !== key || panoT.sky !== S) {
+      panoT.tiles.forEach(function (t) { if (t.c) panoT.spare.push(t.c); });
+      panoT.tiles.clear(); panoT.key = key; panoT.sky = S; panoT.ax = null;
+      skyPano.width = LW; skyPano.height = LH;
+      panoT.max = 2 * (Math.ceil(LW / TILE) + Math.ceil(LH / TILE)) + 24; // a ring around the buffer, and some
+    }
+    // device-pixel offset of the panorama for this scroll: -(dpr * rotate(roll)) * (ox, oy), rounded. Device pixel
+    // p shows the panorama's pixel p - (sx, sy) (in the tiles' fixed grid).
+    var c = Math.cos(G.roll), s = Math.sin(G.roll);
+    var sx = Math.round(-d * (c * oxU - s * oy)), sy = Math.round(-d * (s * oxU + c * oy));
+    var ax = panoT.ax, ay = panoT.ay; // the sky canvas holds grid pixels [ax, ax + LW) x [ay, ay + LH)
+    if (ax === null || -sx < ax || -sx + cw > ax + LW || -sy < ay || -sy + ch > ay + LH) {
+      var oax = ax, oay = ay, g = skyPano.getContext('2d');
+      ax = panoT.ax = -sx - MARGIN; ay = panoT.ay = -sy - MARGIN;
+      g.setTransform(1, 0, 0, 1, 0, 0);
+      var keep = oax !== null && Math.abs(ax - oax) < LW && Math.abs(ay - oay) < LH;
+      if (keep) { g.globalCompositeOperation = 'copy'; g.drawImage(skyPano, oax - ax, oay - ay); g.globalCompositeOperation = 'source-over'; }
+      for (var i = Math.floor(ax / TILE); i <= Math.floor((ax + LW - 1) / TILE); i++)
+        for (var j = Math.floor(ay / TILE); j <= Math.floor((ay + LH - 1) / TILE); j++) {
+          var X0 = i * TILE - ax, Y0 = j * TILE - ay;
+          // tiles wholly inside what was already there are in place; the rest are (re)drawn
+          if (keep && i * TILE >= oax && (i + 1) * TILE <= oax + LW && j * TILE >= oay && (j + 1) * TILE <= oay + LH) continue;
+          g.clearRect(X0, Y0, TILE, TILE);
+          var t = panoTile(i, j, d, w, h, vw, vh, S);
+          if (t.c) g.drawImage(t.c, X0, Y0);
+        }
+    }
+    panoT.sx = sx; panoT.sy = sy;
+    // make the ring of tiles just outside the sky canvas ahead of time, a couple a frame
+    var made = 0, i0 = Math.floor(ax / TILE), i1 = Math.floor((ax + LW - 1) / TILE), j0 = Math.floor(ay / TILE), j1 = Math.floor((ay + LH - 1) / TILE);
+    for (i = i0 - 1; i <= i1 + 1 && made < 2; i++) for (j = j0 - 1; j <= j1 + 1 && made < 2; j++) {
+      if (i >= i0 && i <= i1 && j >= j0 && j <= j1) continue;
+      if (!panoT.tiles.has(i + ',' + j)) { panoTile(i, j, d, w, h, vw, vh, S); made++; }
+    }
+  }
+
+  var STAR_COLS = ['#ffffff', '#bcd2ff', '#ffd9b0'];
   function drawSky(d) {
     var w = G.w, h = G.h;
     ctx.setTransform(d, 0, 0, d, 0, 0);
-    var bg = ctx.createLinearGradient(0, 0, w * 0.3, h);
-    bg.addColorStop(0, '#060718'); bg.addColorStop(0.55, '#0a0a26'); bg.addColorStop(1, '#120c2c');
-    ctx.fillStyle = bg; ctx.fillRect(0, 0, w, h);
     var rolled = G.roll !== 0, vw = rolled ? h : w, vh = rolled ? w : h, S = sky;
     // parallax: the far sky slides a little as the camera flies away from the Sun
     var sun = project(0, 0, 0, P3), px = (sun[0] - G.cx0) * 0.035, py = (sun[1] - G.cy0) * 0.035;
     var c = Math.cos(-G.roll), s = Math.sin(-G.roll), qx = px * c - py * s, qy = px * s + py * c;
     var K1 = G.K1, ox = ((-cam.yaw * K1 - qx) % S.SW + S.SW) % S.SW;
     var oy = K.clamp((S.SH - vh) / 2 - (cam.elev - G.eDef) * K1 * 0.9 - qy, 0, S.SH - vh);
+    drawPano(d, w, h, vw, vh, S, -cam.yaw * K1 - qx, oy);
+    drawFarSky(d, w, h, panoT.sx, panoT.sy);
     ctx.save();
     ctx.translate(w / 2, h / 2); ctx.rotate(G.roll); ctx.translate(-vw / 2, -vh / 2);
-    ctx.globalAlpha = 0.95;
-    for (var k = -1; k <= 1; k++) {
-      var x0 = -ox + k * S.SW;
-      if (x0 > vw || x0 + S.SW < 0) continue;
-      ctx.drawImage(S.pano, 0, 0, S.pw, S.ph, x0, -oy, S.SW, S.SH);
-    }
-    ctx.globalAlpha = 1;
     // faint stars, grouped by colour
-    var cols = ['#ffffff', '#bcd2ff', '#ffd9b0'];
+    var cols = STAR_COLS;
     for (var ci = 0; ci < 3; ci++) {
       ctx.fillStyle = cols[ci];
       for (var i = 0; i < S.stars.length; i++) {
@@ -658,14 +752,32 @@
     }
   }
 
+  // Each orbit is a 120-sided polygon fixed in the world. Its points are projected once a frame (shared by the back
+  // and front halves), and runs of sides lying wholly off screen (with a margin wider than any join) are skipped:
+  // they could never touch a visible pixel.
+  var orbPts = {}, orbFrame = 0, ORB_M = 64;
   function orbitPath(R, sunD, front) {
-    var N = 120, first = true;
+    var N = 120, P = orbPts[R];
+    if (!P || P.f !== orbFrame) {
+      if (!P) P = orbPts[R] = { f: -1, a: new Float64Array((N + 1) * 3) };
+      for (var i = 0; i <= N; i++) {
+        var a = i / N * TAU, p = project(Math.cos(a) * R, 0, -Math.sin(a) * R, P3);
+        P.a[i * 3] = p[0]; P.a[i * 3 + 1] = p[1]; P.a[i * 3 + 2] = p[2];
+      }
+      P.f = orbFrame;
+    }
+    var A3 = P.a, x0 = -ORB_M, y0 = -ORB_M, x1 = G.w + ORB_M, y1 = G.h + ORB_M, prevIn = false, down = false;
     ctx.beginPath();
-    for (var i = 0; i <= N; i++) {
-      var a = i / N * TAU, p = project(Math.cos(a) * R, 0, -Math.sin(a) * R, P3);
-      var inFront = p[2] >= sunD;
-      if (inFront === front) { if (first) { ctx.moveTo(p[0], p[1]); first = false; } else ctx.lineTo(p[0], p[1]); }
-      else first = true;
+    for (i = 0; i <= N; i++) {
+      var x = A3[i * 3], y = A3[i * 3 + 1], inFront = A3[i * 3 + 2] >= sunD;
+      if (inFront === front) {
+        if (prevIn) {
+          var px = A3[i * 3 - 3], py = A3[i * 3 - 2];
+          if ((x < x0 && px < x0) || (x > x1 && px > x1) || (y < y0 && py < y0) || (y > y1 && py > y1)) down = false;
+          else { if (!down) ctx.moveTo(px, py); ctx.lineTo(x, y); down = true; }
+        }
+        prevIn = true;
+      } else { prevIn = false; down = false; }
     }
   }
   function drawOrbits(sunD, front) {
@@ -687,6 +799,75 @@
     return b.sprs[D];
   }
 
+  // The Sun's glow, bloom and two turning ray layers: big 'lighter' sprites, resampled every frame before. Each is
+  // now pre-drawn at its on-screen size (same sprite, same scale and turn) and copied 1:1, centred on the nearest
+  // device pixel, with the same alpha and blend. The rays turn slowly: their copy is re-drawn each time the turn has
+  // moved the outer tips by one device px (so they are never more than half a pixel off), and the next step is
+  // prepared ahead a band at a time so no single frame pays for a whole re-draw. While zooming (size changing every
+  // frame) the rays are drawn directly, exactly as before, and the round glows use fxMirror.
+  var sunFx = { glow: {}, ray1: {}, ray2: {}, bloom: {} }, FX_MAX = 1600, FX_BANDS = 3;
+  function fxPaint(c, img, D, turn, y0, y1) { // draw rows [y0, y1) of a copy
+    var N = c.width, g = c.getContext('2d'), part = y0 > 0 || y1 < N;
+    g.setTransform(1, 0, 0, 1, 0, 0);
+    if (part) { g.save(); g.beginPath(); g.rect(0, y0, N, y1 - y0); g.clip(); }
+    g.clearRect(0, y0, N, y1 - y0);
+    g.translate(N / 2, N / 2); if (turn) g.rotate(turn);
+    g.drawImage(img, -D / 2, -D / 2, D, D);
+    if (part) g.restore();
+  }
+  // While zooming, a round glow (the same in all four quarters) is drawn into one quarter at this frame's size and
+  // copied out four times, flipped (whole pixels, so a plain copy): a quarter of the resampling.
+  function fxMirror(slot, img, m, x, y, D) {
+    var Q = Math.ceil(D / 2) + 2;
+    if (2 * Q > FX_MAX) return false;
+    if (!slot.qc || slot.qc.width !== Q) slot.qc = A.canvas(Q, Q);
+    var g = slot.qc.getContext('2d');
+    g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, Q, Q);
+    g.drawImage(img, Q - D / 2, Q - D / 2, D, D);
+    var cx = Math.round(m.a * x + m.e), cy = Math.round(m.d * y + m.f);
+    ctx.save(); ctx.imageSmoothingEnabled = false;
+    for (var k = 0; k < 4; k++) { ctx.setTransform(k & 1 ? -1 : 1, 0, 0, k & 2 ? -1 : 1, cx, cy); ctx.drawImage(slot.qc, -Q, -Q); }
+    ctx.restore();
+    return true;
+  }
+  // The copy is drawn with the current alpha and blend. dir: +1/-1, which way the turn is going (to prepare the
+  // next step).
+  function fxBlit(slot, img, x, y, size, ang, dir) {
+    var m = ctx.getTransform();
+    if (m.b || m.c) return false;
+    var D = size * m.a, prev = slot.prev; slot.prev = D;
+    var same = slot.c && Math.abs(D - slot.D) <= 1;   // within 1 px across (half a pixel at the edge)
+    var Dr = same ? slot.D : D, n = ang == null ? 0 : Math.round(ang / (2 / Dr)); // turn steps of 1 px at the tips
+    if (!same || n !== slot.n) {
+      if (prev == null || Math.abs(D - prev) > 1) return ang == null ? fxMirror(slot, img, m, x, y, D) : false; // zooming
+      var N = 2 * Math.ceil(Dr / 2) + 4, nx = slot.nx;
+      if (N > FX_MAX) return false;
+      if (same && nx && nx.n === n && nx.D === slot.D && nx.c.width === slot.c.width) { // prepared ahead: finish and swap
+        if (nx.row < N) fxPaint(nx.c, img, slot.D, n * 2 / slot.D, nx.row, N);
+        var t = slot.c; slot.c = nx.c; nx.c = t; nx.n = null;
+      } else {
+        if (!slot.c || slot.c.width !== N) slot.c = A.canvas(N, N);
+        fxPaint(slot.c, img, Dr, n * 2 / Dr, 0, N);
+        slot.D = Dr; if (nx) nx.n = null;
+      }
+      slot.n = n;
+    }
+    if (dir) { // prepare the next turn step, a band of rows per frame
+      var NN = slot.c.width, tn = slot.n + dir;
+      nx = slot.nx || (slot.nx = { c: null, n: null, D: 0, row: 0 });
+      if (nx.n !== tn || nx.D !== slot.D || !nx.c || nx.c.width !== NN) {
+        if (!nx.c || nx.c.width !== NN) nx.c = A.canvas(NN, NN);
+        nx.n = tn; nx.D = slot.D; nx.row = 0;
+      }
+      if (nx.row < NN) { var y1 = Math.min(NN, nx.row + Math.ceil(NN / FX_BANDS)); fxPaint(nx.c, img, slot.D, tn * 2 / slot.D, nx.row, y1); nx.row = y1; }
+    }
+    var cx = m.a * x + m.e, cy = m.d * y + m.f, h = slot.c.width / 2;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.drawImage(slot.c, Math.round(cx) - h, Math.round(cy) - h);
+    ctx.setTransform(m);
+    return true;
+  }
+
   function drawBody(b) {
     var x = b.sx, y = b.sy, R = b.rpx, spr = b.spr;
     if (!spr) return;
@@ -698,11 +879,16 @@
     if (b === SUN) {
       ctx.globalCompositeOperation = 'lighter';
       var gs = R * 7.5; ctx.globalAlpha = 0.9;
-      ctx.drawImage(A.sunGlow(), x - gs / 2, y - gs / 2, gs, gs);
-      ctx.save(); ctx.translate(x, y); ctx.rotate(time * 0.04); ctx.globalAlpha = 0.5 + 0.08 * Math.sin(time * 1.3);
-      var rs = R * 5.2; ctx.drawImage(A.sunRays(), -rs / 2, -rs / 2, rs, rs);
-      ctx.rotate(-time * 0.09); ctx.globalAlpha = 0.3; rs = R * 4.2; ctx.drawImage(A.sunRays(), -rs / 2, -rs / 2, rs, rs);
-      ctx.restore();
+      if (!fxBlit(sunFx.glow, A.sunGlow(), x, y, gs, null)) ctx.drawImage(A.sunGlow(), x - gs / 2, y - gs / 2, gs, gs);
+      var ra = 0.5 + 0.08 * Math.sin(time * 1.3), rs = R * 5.2, rs2 = R * 4.2;
+      ctx.globalAlpha = ra; var ok1 = fxBlit(sunFx.ray1, A.sunRays(), x, y, rs, time * 0.04, 1);
+      ctx.globalAlpha = 0.3; var ok2 = fxBlit(sunFx.ray2, A.sunRays(), x, y, rs2, time * 0.04 - time * 0.09, -1);
+      if (!ok1 || !ok2) { // zooming: draw them as before
+        ctx.save(); ctx.translate(x, y); ctx.rotate(time * 0.04); ctx.globalAlpha = ra;
+        if (!ok1) ctx.drawImage(A.sunRays(), -rs / 2, -rs / 2, rs, rs);
+        ctx.rotate(-time * 0.09); ctx.globalAlpha = 0.3; if (!ok2) ctx.drawImage(A.sunRays(), -rs2 / 2, -rs2 / 2, rs2, rs2);
+        ctx.restore();
+      }
       ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
     } else if (b.halo && R > 3) {
       var L = b.L, hx = x + L[0] * R * 0.08, hy = y + L[1] * R * 0.08;
@@ -717,16 +903,17 @@
     if (b.ring) A.drawRing(ctx, x, y, R * sq, b.basis, b.L, 'front');
     if (b === SUN) { // bloom over the disc edge
       ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.45;
-      var bs = R * 2.9; ctx.drawImage(A.sunGlow(), x - bs / 2, y - bs / 2, bs, bs);
+      var bs = R * 2.9; if (!fxBlit(sunFx.bloom, A.sunGlow(), x, y, bs, null)) ctx.drawImage(A.sunGlow(), x - bs / 2, y - bs / 2, bs, bs);
       ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
     }
   }
 
   function drawRocks(list) {
     var rk = A.rocks();
+    ctx.fillStyle = '#b8a894'; // (drawImage below doesn't touch it, so set it once)
     for (var i = 0; i < list.length; i++) {
       var q = list[i], sz = q.sz;
-      if (sz < 2.4) { ctx.globalAlpha = q.t * 0.85; ctx.fillStyle = '#b8a894'; ctx.fillRect(q.x - sz / 2, q.y - sz / 2, sz, sz); continue; }
+      if (sz < 2.4) { ctx.globalAlpha = q.t * 0.85; ctx.fillRect(q.x - sz / 2, q.y - sz / 2, sz, sz); continue; }
       ctx.globalAlpha = 1;
       ctx.save(); ctx.translate(q.x, q.y); ctx.rotate(q.ang);
       ctx.drawImage(rk[q.v], -sz / 2, -sz / 2, sz, sz); ctx.restore();
@@ -736,6 +923,7 @@
 
   function draw(alpha, frameDt) {
     var d = G.dpr, w = G.w, h = G.h, t0 = performance.now();
+    orbFrame++;
     computeView();
     drawSky(d);
     ctx.setTransform(d, 0, 0, d, 0, 0);

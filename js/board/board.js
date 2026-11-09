@@ -51,6 +51,11 @@
     var ambient = [];
     var L = { w: 0, h: 0, dpr: 1, safe: { top: 0, right: 0, bottom: 0, left: 0 } };
     var scene = null, boardArt = null, sprites = {};
+    // Speed, same pixels: radial glows are pre-rendered once at device resolution and copied at whole device
+    // pixels (strength via globalAlpha) instead of building and filling a gradient every frame. Badges and
+    // trays sit on whole device pixels, so their unchanging parts (and resampled piece images) are copied from
+    // `stamps` drawn by exactly the same calls.
+    var glows = {}, stamps = {}, backC = null;
 
     function isHuman(side) { return mode === '2p' || side === 0; }
     function after(sec, fn) { timers.push({ t: sec, fn: fn }); }
@@ -96,7 +101,7 @@
       L.frame = Math.round(L.S * (cfg.boardStyle === 'grid' ? 0.07 : 0.058));
       L.n = curN(); L.cell = (L.S - L.frame * 2) / L.n;
       L.fx0 = L.bx + L.frame; L.fy0 = L.by + L.frame;
-      scene = null; boardArt = null; sprites = {};
+      scene = null; boardArt = null; sprites = {}; glows = {}; stamps = {};
       makeAmbient();
     }
     function cellXY(c, r) { return { x: L.fx0 + (c + 0.5) * L.cell, y: L.fy0 + (r + 0.5) * L.cell }; }
@@ -115,6 +120,42 @@
       var k = side + '|' + (king ? 1 : 0);
       if (!sprites[k]) sprites[k] = cfg.pieceSprite(side, !!king, L.cell, L.dpr);
       return sprites[k];
+    }
+    function glowSprite(key, r0, r1, stops) {
+      var k = key + '|' + r0 + '|' + r1, c = glows[k];
+      if (!c) {
+        var d = L.dpr, h = Math.ceil(r1 * d) + 1, g;
+        c = glows[k] = A.canvas(2 * h, 2 * h); g = c.getContext('2d');
+        var gr = g.createRadialGradient(h, h, r0 * d, h, h, r1 * d);
+        stops.forEach(function (s) { gr.addColorStop(s[0], s[1]); });
+        g.fillStyle = gr; g.fillRect(0, 0, 2 * h, 2 * h);
+      }
+      return c;
+    }
+    // Copy a glow centred on (x, y) in the current user space (any rotation, scale = dpr), alpha = strength.
+    function drawGlow(c, x, y, alpha) {
+      var m = ctx.getTransform(), ga = ctx.globalAlpha;
+      ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = ga * alpha;
+      ctx.drawImage(c, Math.round(m.a * x + m.c * y + m.e - c.width / 2), Math.round(m.b * x + m.d * y + m.f - c.height / 2));
+      ctx.globalAlpha = ga; ctx.setTransform(m);
+    }
+    // Translate to (x, y) rounded to whole device pixels (moves it by under half a pixel).
+    function snapTranslate(x, y) {
+      var m = ctx.getTransform(), X = m.a * x + m.c * y + m.e, Y = m.b * x + m.d * y + m.f;
+      ctx.setTransform(m.a, m.b, m.c, m.d, Math.round(X), Math.round(Y));
+    }
+    // Draw paint(g) (local CSS px, inside the box x0, y0, w, h) from a cached copy. The current transform must
+    // be scale dpr with a whole-pixel origin (snapTranslate), so the copy holds exactly what paint would draw.
+    function stamp(key, x0, y0, w, h, paint) {
+      var d = L.dpr, c = stamps[key];
+      if (!c) {
+        var bx = Math.floor(x0 * d) - 2, by = Math.floor(y0 * d) - 2;
+        c = stamps[key] = A.canvas(Math.ceil((x0 + w) * d) + 2 - bx, Math.ceil((y0 + h) * d) + 2 - by);
+        c.bx = bx; c.by = by;
+        var g = c.getContext('2d'); g.setTransform(d, 0, 0, d, -bx, -by); paint(g);
+      }
+      var m = ctx.getTransform();
+      ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(c, m.e + c.bx, m.f + c.by); ctx.setTransform(m);
     }
     function makeAmbient() {
       ambient = [];
@@ -553,9 +594,18 @@
     function drawBackground() {
       var d = L.dpr, m = scene.margin;
       ctx.setTransform(1, 0, 0, 1, 0, 0);
-      ctx.drawImage(scene.sky, -m - par.x * 4 * d, -par.y * 2 * d);
-      ctx.drawImage(scene.far, -m - par.x * 9 * d, -par.y * 3 * d);
-      ctx.drawImage(scene.mid, -m - par.x * 16 * d, 0);
+      // sky, far and mid layers, composited off screen by the very same copies; redone only when one of them
+      // moves by a whole device pixel (the parallax drifts slowly), so a frame usually costs one copy, not three
+      var sx = Math.round(-m - par.x * 4 * d), sy = Math.round(-par.y * 2 * d), fx = Math.round(-m - par.x * 9 * d), fy = Math.round(-par.y * 3 * d), mx = Math.round(-m - par.x * 16 * d);
+      var key = sx + ',' + sy + ',' + fx + ',' + fy + ',' + mx, cw = ctx.canvas.width, ch = ctx.canvas.height;
+      if (!backC || backC.width !== cw || backC.height !== ch) backC = A.canvas(cw, ch);
+      if (backC.key !== key || backC.scene !== scene) {
+        var bg = backC.getContext('2d');
+        bg.clearRect(0, 0, cw, ch);
+        bg.drawImage(scene.sky, sx, sy); bg.drawImage(scene.far, fx, fy); bg.drawImage(scene.mid, mx, 0);
+        backC.key = key; backC.scene = scene;
+      }
+      ctx.drawImage(backC, 0, 0);
       ctx.setTransform(d, 0, 0, d, 0, 0);
       var ox = -par.x * 16, night = A.THEMES[cfg.theme].night;
       scene.lanterns.forEach(function (ln, i) {
@@ -564,22 +614,22 @@
         ctx.save(); ctx.translate(x, ln.top); ctx.rotate(sw);
         ctx.strokeStyle = 'rgba(40,20,10,.7)'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, ln.y - ln.top); ctx.stroke();
         var gy = ln.y - ln.top + ls.h * 0.5, fl = 0.75 + Math.sin(time * 7 + i * 2) * 0.08 + Math.sin(time * 13 + i) * 0.05;
-        var gr = ctx.createRadialGradient(0, gy, 0, 0, gy, ls.w * 2.6);
-        gr.addColorStop(0, 'rgba(255,200,110,' + (night ? 0.55 : 0.35) * fl + ')'); gr.addColorStop(1, 'rgba(255,200,110,0)');
-        ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(0, gy, ls.w * 2.6, 0, TAU); ctx.fill();
+        drawGlow(glowSprite('lantern' + night, 0, ls.w * 2.6, [[0, 'rgba(255,200,110,' + (night ? 0.55 : 0.35) + ')'], [1, 'rgba(255,200,110,0)']]), 0, gy, fl);
         ctx.drawImage(ls, -ls.w / 2, ln.y - ln.top, ls.w, ls.h);
         ctx.restore();
       });
       ctx.setTransform(1, 0, 0, 1, 0, 0);
-      ctx.drawImage(scene.near, -m - par.x * 26 * d, 0);
+      ctx.drawImage(scene.near, Math.round(-m - par.x * 26 * d), Math.round(0));
       ctx.setTransform(d, 0, 0, d, 0, 0);
       var T = A.THEMES[cfg.theme];
       ambient.forEach(function (a, i) {
         var al = night ? 0.25 + 0.55 * Math.max(0, Math.sin(a.ph * 1.7 + i)) : 0.35;
         ctx.globalAlpha = al;
         if (night) {
-          var g = ctx.createRadialGradient(a.x, a.y, 0, a.x, a.y, 6 * a.s); g.addColorStop(0, 'rgba(230,255,160,.9)'); g.addColorStop(1, 'rgba(230,255,160,0)');
-          ctx.fillStyle = g; ctx.beginPath(); ctx.arc(a.x, a.y, 6 * a.s, 0, TAU); ctx.fill();
+          if (!a.g) { a.g = ctx.createRadialGradient(0, 0, 0, 0, 0, 6 * a.s); a.g.addColorStop(0, 'rgba(230,255,160,.9)'); a.g.addColorStop(1, 'rgba(230,255,160,0)'); }
+          ctx.setTransform(d, 0, 0, d, a.x * d, a.y * d);   // the mote's gradient is made once, around its own origin
+          ctx.fillStyle = a.g; ctx.beginPath(); ctx.arc(0, 0, 6 * a.s, 0, TAU); ctx.fill();
+          ctx.setTransform(d, 0, 0, d, 0, 0);
         } else { ctx.fillStyle = T.mote; ctx.beginPath(); ctx.arc(a.x, a.y, 1.5 * a.s, 0, TAU); ctx.fill(); }
       });
       ctx.globalAlpha = 1;
@@ -588,7 +638,8 @@
     function drawBoard() {
       var ba = boardArt, sh = K.fx.offset();
       ctx.save(); ctx.translate(sh.x, sh.y);
-      ctx.drawImage(ba.canvas, L.bx - ba.pad, L.by - ba.pad, L.S + ba.pad * 2, L.S + ba.depth + ba.pad * 2);
+      ctx.save(); snapTranslate(L.bx - ba.pad, L.by - ba.pad);   // the board art lands on whole device px: a copy, not a resample
+      ctx.drawImage(ba.canvas, 0, 0, L.S + ba.pad * 2, L.S + ba.depth + ba.pad * 2); ctx.restore();
       var turn = S ? R.turn(S) : 0, human = S && isHuman(turn) && phase === 'play';
       // last move trail
       if (lastMove && lastMove.to) {
@@ -607,16 +658,12 @@
         if (sel) {
           if (sel !== 'tray' && disp[sel]) {
             var sp = cellXY(disp[sel].x, disp[sel].y);
-            var gg = ctx.createRadialGradient(sp.x, sp.y, L.cell * 0.2, sp.x, sp.y, L.cell * 0.62);
-            gg.addColorStop(0, 'rgba(255,230,140,.55)'); gg.addColorStop(1, 'rgba(255,230,140,0)');
-            ctx.fillStyle = gg; ctx.fillRect(sp.x - L.cell * 0.62, sp.y - L.cell * 0.62, L.cell * 1.24, L.cell * 1.24);
+            drawGlow(glowSprite('sel', L.cell * 0.2, L.cell * 0.62, [[0, 'rgba(255,230,140,.55)'], [1, 'rgba(255,230,140,0)']]), sp.x, sp.y, 1);
           }
           targetsOf(sel).forEach(function (t, i) {
             var p = cellXY(t.c, t.r), on = hover && hover.r === t.r && hover.c === t.c;
             var col = t.cap ? '255,150,70' : '255,226,120';
-            var gr = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, L.cell * 0.5);
-            gr.addColorStop(0, 'rgba(' + col + ',' + (on ? 0.75 : 0.35 + pulse * 0.15) + ')'); gr.addColorStop(1, 'rgba(' + col + ',0)');
-            ctx.fillStyle = gr; ctx.fillRect(p.x - L.cell / 2, p.y - L.cell / 2, L.cell, L.cell);
+            drawGlow(glowSprite('t' + col, 0, L.cell * 0.5, [[0, 'rgba(' + col + ',1)'], [1, 'rgba(' + col + ',0)']]), p.x, p.y, on ? 0.75 : 0.35 + pulse * 0.15);
             if (!cfg.tray || on) {
               var br = 0.3 + 0.03 * Math.sin(time * 5 + i);
               ctx.fillStyle = 'rgba(255,248,225,' + (on ? 0.5 : 0.28) + ')';
@@ -632,9 +679,8 @@
       if (aiSel && aiSel !== 'tray' && disp[aiSel]) { var ap = cellXY(disp[aiSel].x, disp[aiSel].y); ring(ap.x, ap.y, L.cell * 0.46, '#ffffff', L.cell * 0.05, 0.85); }
       // winner's pieces glow
       if (winGlow) for (var gid in disp) if (disp[gid].side === winGlow.side) {
-        var wp = cellXY(disp[gid].x, disp[gid].y), wg = ctx.createRadialGradient(wp.x, wp.y, L.cell * 0.2, wp.x, wp.y, L.cell * 0.7);
-        wg.addColorStop(0, 'rgba(255,220,120,' + (0.5 + 0.3 * Math.sin(winGlow.t * 6)) + ')'); wg.addColorStop(1, 'rgba(255,220,120,0)');
-        ctx.fillStyle = wg; ctx.fillRect(wp.x - L.cell * 0.7, wp.y - L.cell * 0.7, L.cell * 1.4, L.cell * 1.4);
+        var wp = cellXY(disp[gid].x, disp[gid].y);
+        drawGlow(glowSprite('win', L.cell * 0.2, L.cell * 0.7, [[0, 'rgba(255,220,120,1)'], [1, 'rgba(255,220,120,0)']]), wp.x, wp.y, 0.5 + 0.3 * Math.sin(winGlow.t * 6));
       }
       // pieces: resting first, moving/lifted on top
       var list = Object.keys(disp).map(function (k) { return disp[k]; });
@@ -677,21 +723,23 @@
       for (var s = 1; s >= 0; s--) {
         var b = L.badge[s], r = L.r, on = active && turn === s;
         var bob = (on ? Math.sin(time * 4) * 2 : 0) - bump[s] * Math.abs(Math.sin(bump[s] * 9)) * 8;
-        ctx.save(); ctx.translate(b.x, b.y + bob);
+        ctx.save(); snapTranslate(b.x, b.y + bob);
         if (on) {
-          var gl = ctx.createRadialGradient(0, 0, r * 0.8, 0, 0, r * 1.6);
-          gl.addColorStop(0, 'rgba(255,214,107,.55)'); gl.addColorStop(1, 'rgba(255,214,107,0)');
-          ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(0, 0, r * 1.6, 0, TAU); ctx.fill();
+          drawGlow(glowSprite('badge', r * 0.8, r * 1.6, [[0, 'rgba(255,214,107,.55)'], [1, 'rgba(255,214,107,0)']]), 0, 0, 1);
           ctx.save(); ctx.rotate(time * 0.8); ctx.setLineDash([r * 0.22, r * 0.16]); ring(0, 0, r * 1.18, '#ffd36b', Math.max(2, r * 0.08), 0.95); ctx.restore();
         }
         if (mode === 'ai' && s === 1) A.robot(ctx, opp.robot, r, { state: robotState[1].m, t: time });
         else {
-          var bgc = ctx.createRadialGradient(-r * 0.3, -r * 0.4, r * 0.1, 0, 0, r);
-          bgc.addColorStop(0, 'rgba(255,255,255,.3)'); bgc.addColorStop(1, 'rgba(20,12,40,.6)');
-          ctx.fillStyle = bgc; ctx.beginPath(); ctx.arc(0, 0, r, 0, TAU); ctx.fill();
+          stamp('bbg|' + r, -r, -r, 2 * r, 2 * r, function (g) {
+            var bgc = g.createRadialGradient(-r * 0.3, -r * 0.4, r * 0.1, 0, 0, r);
+            bgc.addColorStop(0, 'rgba(255,255,255,.3)'); bgc.addColorStop(1, 'rgba(20,12,40,.6)');
+            g.fillStyle = bgc; g.beginPath(); g.arc(0, 0, r, 0, TAU); g.fill();
+          });
           ring(0, 0, r, cfg.colors[s][0], r * 0.09, 1);
           var sp = sprite(s, false), k = (r * 1.45) / Math.max(sp.w, L.cell * 0.9);
-          ctx.drawImage(sp, -sp.w * k / 2, -sp.h * k / 2, sp.w * k, sp.h * k);
+          stamp('bpc|' + s + '|' + r + '|' + L.cell, -sp.w * k / 2, -sp.h * k / 2, sp.w * k, sp.h * k, function (g) {
+            g.drawImage(sp, -sp.w * k / 2, -sp.h * k / 2, sp.w * k, sp.h * k);
+          });
         }
         // thinking bubble
         if (mode === 'ai' && s === 1 && phase === 'ai' && robotState[1].m === 'think') {
@@ -723,18 +771,24 @@
       var turn = R.turn(S);
       for (var s = 0; s < 2; s++) {
         var t = L.tray[s], r = L.trayR, on = phase === 'play' && turn === s && isHuman(s);
-        ctx.save(); ctx.translate(t.x, t.y);
+        ctx.save(); snapTranslate(t.x, t.y);
         // glazed dish
-        ctx.fillStyle = 'rgba(10,5,20,.35)'; ctx.beginPath(); ctx.ellipse(r * 0.06, r * 0.18, r * 1.02, r * 0.96, 0, 0, TAU); ctx.fill();
-        var dg = ctx.createRadialGradient(-r * 0.3, -r * 0.4, r * 0.1, 0, 0, r);
-        dg.addColorStop(0, '#fffaf0'); dg.addColorStop(0.75, '#e9dcc0'); dg.addColorStop(1, '#b89a6a');
-        ctx.fillStyle = dg; ctx.beginPath(); ctx.arc(0, 0, r, 0, TAU); ctx.fill();
-        ring(0, 0, r * 0.8, cfg.colors[s][0], r * 0.06, 0.6);
+        stamp('dish|' + s + '|' + r, -r * 1.1, -r * 1.1, r * 2.3, r * 2.4, function (g) {
+          g.fillStyle = 'rgba(10,5,20,.35)'; g.beginPath(); g.ellipse(r * 0.06, r * 0.18, r * 1.02, r * 0.96, 0, 0, TAU); g.fill();
+          var dg = g.createRadialGradient(-r * 0.3, -r * 0.4, r * 0.1, 0, 0, r);
+          dg.addColorStop(0, '#fffaf0'); dg.addColorStop(0.75, '#e9dcc0'); dg.addColorStop(1, '#b89a6a');
+          g.fillStyle = dg; g.beginPath(); g.arc(0, 0, r, 0, TAU); g.fill();
+          g.globalAlpha = 0.6; g.strokeStyle = cfg.colors[s][0]; g.lineWidth = r * 0.06;
+          g.beginPath(); g.arc(0, 0, r * 0.8, 0, TAU); g.stroke(); g.globalAlpha = 1;
+        });
         if (on) ring(0, 0, r * (1.08 + 0.05 * Math.sin(time * 5)), '#ffd36b', r * 0.1, 0.9);
         var dragging = drag && drag.moved && drag.key === 'tray' && turn === s;
         var sp = sprite(s, false), k = r * 1.55 / sp.w, by = on ? Math.sin(time * 4) * r * 0.06 : 0;
         ctx.globalAlpha = dragging ? 0.45 : (phase === 'play' && turn !== s) || !S ? 0.75 : 1;
-        ctx.drawImage(sp, -sp.w * k / 2, -sp.h * k / 2 + by, sp.w * k, sp.h * k);
+        snapTranslate(0, by);
+        stamp('tpc|' + s + '|' + r + '|' + L.cell, -sp.w * k / 2, -sp.h * k / 2, sp.w * k, sp.h * k, function (g) {
+          g.drawImage(sp, -sp.w * k / 2, -sp.h * k / 2, sp.w * k, sp.h * k);
+        });
         ctx.globalAlpha = 1;
         ctx.restore();
       }
