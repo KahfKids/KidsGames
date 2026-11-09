@@ -273,69 +273,92 @@
       toes: [[37.5, 66, 35.5, 36, 8.4], [50.5, 61, 51.5, 38, 5.5], [60.5, 63, 62.5, 44, 5.1], [69, 67, 72, 51, 4.7], [76, 74, 80, 62, 4.2]],
       wrist: [38, 150, 67, 206], cuff: [30, 172, 46, 34], trouser: true },
   };
-  function limbSVG(pose, side, wet){
-    const G = POSES[pose], mir = side === 'L', X = x => mir ? 100 - x : x, id = 'hc' + (++UID);
+  // more poses for the close-ups: fingers together (face, head), a grip round the forearm, the little finger out
+  // (between the toes), and the ear pose (pointing finger up into the ear, thumb up behind it)
+  Object.assign(POSES, {
+    flat: { h: 182, palm: POSES.back.palm,
+      fingers: [[37, 84, 35.5, 30, 6.5], [49, 80, 48.5, 23, 6.8], [60.5, 81, 61.5, 28, 6.5], [71.5, 86, 74, 44, 5.8]], thumb: [31, 124, 17, 97, 7.4],
+      wrist: [37, 140, 67, 186], cuff: [28, 160, 48, 26] },
+    grip: { h: 182, palm: POSES.back.palm,
+      fingers: [[37, 84, 36, 52, 6.5], [49, 80, 49, 46, 6.8], [60.5, 81, 61.5, 50, 6.5], [71.5, 86, 73, 60, 5.8]], thumb: [31, 124, 22, 100, 7.4], nails: [],
+      wrist: [37, 140, 67, 186], cuff: [28, 160, 48, 26] },
+    pinky: { h: 182, palm: POSES.back.palm,
+      fingers: [[36, 84, 35, 70, 6.5], [49, 80, 49, 67, 6.8], [61.5, 81, 62, 69, 6.4], [74, 88, 84, 40, 4.6]], thumb: [31, 124, 14, 106, 7.2], nails: [3],
+      wrist: [37, 140, 67, 186], cuff: [28, 160, 48, 26] },
+    pinch: { h: 182, palm: POSES.back.palm,
+      fingers: [[37, 84, 40, 30, 6.4], [49, 80, 50, 64, 6.8], [61.5, 81, 62, 67, 6.4], [72, 86, 72.5, 73, 5.8]], thumb: [30, 116, 15, 46, 7], nails: [0],
+      wrist: [37, 140, 67, 186], cuff: [28, 160, 48, 26] },
+    ear: { h: 182, palm: POSES.back.palm,
+      fingers: [[38, 84, 38, 22, 6.6], [50, 80, 51, 64, 6.8], [61.5, 81, 62, 67, 6.4], [72, 86, 72.5, 73, 5.8]], thumb: [27, 98, 3, 38, 7.4], nails: [0],
+      wrist: [37, 140, 67, 186], cuff: [28, 160, 48, 26] },
+  });
+  POSES.foot.ankle = [[33, 151, 5.5, 7.5], [72, 154, 5, 7]];
+  /* limbArt(pose, side, o) -> { s: SVG markup in the pose's 100-wide box, h }
+     o.part: 'all' | 'thumb' | 'nothumb' (the ear: the thumb goes behind the ear, the rest in front of it)
+     o.cuff: false (no sleeve; the arm is drawn by the scene) . o.cuffY: move the cuff (a rolled-up trouser)
+     o.sleeve: how far the sleeve runs on below the box . o.wrist: false (no wrist) . o.drops: beads of water on the back */
+  function limbArt(pose, side, o = {}){
+    const G = POSES[pose], mir = side === 'L', X = x => mir ? 100 - x : x, id = 'hc' + (++UID), part = o.part || 'all';
     const skin = G.palmUp ? PALM : SKIN, parts = [], shade = [], lines = [];
     const tr = (d) => mir ? d.replace(/([ML])(-?[\d.]+) /g, (m0, c, x) => c + (100 - +x).toFixed(2) + ' ').replace(/Q(-?[\d.]+) (-?[\d.]+) (-?[\d.]+) /g, (m0, a, b, c) => 'Q' + (100 - +a).toFixed(2) + ' ' + b + ' ' + (100 - +c).toFixed(2) + ' ') : d;
     const capX = (c, k = 1) => capP(X(c[0]), c[1], X(c[2]), c[3], c[4]*k);
-    const body = G.palm || G.foot;
-    if (G.wrist){ const [a, b, c, d] = G.wrist; parts.push(`M${X(a)} ${b}L${X(c)} ${b}L${X(c)} ${d}L${X(a)} ${d}Z`); }
-    if (G.fore) parts.push(tr(G.fore));
-    parts.push(tr(body));
-    const digits = (G.fingers || G.toes).concat(G.thumb ? [G.thumb] : []);
+    const body = G.palm || G.foot, hand = part !== 'thumb';
+    if (hand && G.wrist && o.wrist !== false){ const [a, b, c, d] = G.wrist; parts.push(`M${X(a)} ${b}L${X(c)} ${b}L${X(c)} ${d}L${X(a)} ${d}Z`); }
+    if (hand && G.fore) parts.push(tr(G.fore));
+    if (hand) parts.push(tr(body));
+    const fin = G.fingers || G.toes, digits = (hand ? fin : []).concat(G.thumb && part !== 'nothumb' ? [G.thumb] : []);
     digits.forEach(c => parts.push(capX(c)));
     // shade: each part again in the dark tone, then shifted right in the base tone (light from the right)
     digits.forEach(c => { const r = c[4]; shade.push(`<path d="${capX(c)}" fill="${skin.d}"/><path d="${capP(X(c[0]) + r*.55, c[1], X(c[2]) + r*.55, c[3], r)}" fill="${skin.m}"/>`); });
-    shade.unshift(`<path d="${tr(body)}" fill="${skin.d}"/><path d="${tr(body)}" fill="${skin.m}" transform="translate(6.5 0)"/>`);
-    if (G.fore) shade.unshift(`<path d="${tr(G.fore)}" fill="${skin.d}"/><path d="${tr(G.fore)}" fill="${skin.m}" transform="translate(7 0)"/>`);
+    if (hand) shade.unshift(`<path d="${tr(body)}" fill="${skin.d}"/><path d="${tr(body)}" fill="${skin.m}" transform="translate(6.5 0)"/>`);
+    if (hand && G.fore) shade.unshift(`<path d="${tr(G.fore)}" fill="${skin.d}"/><path d="${tr(G.fore)}" fill="${skin.m}" transform="translate(7 0)"/>`);
     // knuckle and joint marks, nails
-    const fin = G.fingers || G.toes;
-    fin.forEach((c, i) => {
+    if (hand) fin.forEach((c, i) => {
       const [ax, ay, bx, by, r] = [X(c[0]), c[1], X(c[2]), c[3], c[4]], dx = bx - ax, dy = by - ay, l = Math.hypot(dx, dy), ux = dx/l, uy = dy/l;
       const showNail = G.nails ? G.nails.indexOf(i) >= 0 : !G.palmUp;
       if (showNail){ const cx = bx - ux*r*.75, cy = by - uy*r*.75, ang = Math.atan2(uy, ux)*180/Math.PI + 90;
         lines.push(`<ellipse cx="${cx.toFixed(2)}" cy="${cy.toFixed(2)}" rx="${(r*.62).toFixed(2)}" ry="${(r*.8).toFixed(2)}" transform="rotate(${ang.toFixed(1)} ${cx.toFixed(2)} ${cy.toFixed(2)})" fill="${NAIL}" stroke="${INK}" stroke-width=".9" opacity=".95"/>`); }
       if (l > 20){ for (const t of G.palmUp ? [.18, .5] : [.42]){ const px = ax + dx*t, py = ay + dy*t, nx = -uy*r*.55, ny = ux*r*.55;
         lines.push(`<path d="M${(px + nx).toFixed(2)} ${(py + ny).toFixed(2)}Q${(px + ux*1.6).toFixed(2)} ${(py + uy*1.6).toFixed(2)} ${(px - nx).toFixed(2)} ${(py - ny).toFixed(2)}" fill="none" stroke="${INK}" stroke-width=".9" opacity=".5" stroke-linecap="round"/>`); } }
+      else if (G.palm && !G.palmUp){ const px = bx - ux*r*.2, py = by - uy*r*.2;   // a curled finger: the fold of the knuckle
+        lines.push(`<path d="M${(px - r*.6).toFixed(2)} ${py.toFixed(2)}Q${px.toFixed(2)} ${(py + 2.2).toFixed(2)} ${(px + r*.6).toFixed(2)} ${py.toFixed(2)}" fill="none" stroke="${INK}" stroke-width=".9" opacity=".55" stroke-linecap="round"/>`); }
       if (!G.palmUp && G.palm) lines.push(`<ellipse cx="${(ax + 1).toFixed(2)}" cy="${(ay + 1).toFixed(2)}" rx="${(r*.55).toFixed(2)}" ry="${(r*.35).toFixed(2)}" fill="${skin.l}" opacity=".9"/>`);
     });
-    if (G.palmUp) lines.push(`<path d="M${X(33)} 112Q${X(50)} 102 ${X(68)} 108M${X(35)} 126Q${X(46)} 120 ${X(58)} 130" fill="none" stroke="${INK}" stroke-width="1" opacity=".45" stroke-linecap="round"/>`);
+    if (hand && G.palmUp) lines.push(`<path d="M${X(33)} 112Q${X(50)} 102 ${X(68)} 108M${X(35)} 126Q${X(46)} 120 ${X(58)} 130" fill="none" stroke="${INK}" stroke-width="1" opacity=".45" stroke-linecap="round"/>`);
+    if (hand && G.palm && !G.palmUp) lines.push(`<path d="M${X(40)} 100Q${X(44)} 118 ${X(42)} 134M${X(53)} 98Q${X(55)} 116 ${X(54)} 132M${X(65)} 100Q${X(65)} 116 ${X(64)} 130" fill="none" stroke="${skin.d}" stroke-width="1.1" opacity=".55" stroke-linecap="round"/>`);
+    if (hand && G.ankle) G.ankle.forEach(([x, y, rx, ry]) => { lines.push(`<ellipse cx="${X(x)}" cy="${y}" rx="${rx}" ry="${ry}" fill="${skin.l}" stroke="${INK}" stroke-width="1" opacity=".9"/>`); });
+    if (hand && o.drops) [[44, 96, 2.6], [60, 112, 2.2], [50, 128, 2], [66, 94, 1.8]].forEach(([x, y, r]) => {
+      lines.push(`<ellipse cx="${X(x)}" cy="${y}" rx="${r}" ry="${r*1.2}" fill="#bfe6f7" stroke="${mix(WATER, INK, .45)}" stroke-width=".7"/><circle cx="${X(x) - r*.35}" cy="${y - r*.45}" r="${r*.3}" fill="#fff"/>`); });
     const all = parts.map(d => `<path d="${d}"/>`).join('');
     let s = `<defs><clipPath id="${id}">${all}</clipPath></defs>`;
     s += `<g fill="${INK}" stroke="${INK}" stroke-width="4.2" stroke-linejoin="round">${all}</g>`;
     s += `<g fill="${skin.m}">${all}</g>`;
     s += `<g clip-path="url(#${id})">${shade.join('')}</g>` + lines.join('');
     // sleeve or trouser cuff over the wrist/ankle
-    if (G.cuff){ const [x, y, w, h] = G.cuff, M = G.trouser ? TROUSER : SLEEVE, x0 = mir ? 100 - x - w : x;
-      s += `<rect x="${x0}" y="${y}" width="${w}" height="${h + 40}" rx="7" fill="${M.m}" stroke="${INK}" stroke-width="2.2"/>`;
-      s += `<rect x="${x0 + 2}" y="${y + 3}" width="${w*.28}" height="${h + 34}" rx="5" fill="${M.d}" opacity=".55"/>`;
-      s += `<path d="M${x0 + 3} ${y + (G.roll ? 11 : 7)}Q${x0 + w/2} ${y + (G.roll ? 15 : 10)} ${x0 + w - 3} ${y + (G.roll ? 11 : 7)}" fill="none" stroke="${INK}" stroke-width="1.2" opacity=".7"/>`;
-      if (G.roll) s += `<path d="M${x0 + 3} ${y + 21}Q${x0 + w/2} ${y + 25} ${x0 + w - 3} ${y + 21}" fill="none" stroke="${INK}" stroke-width="1.2" opacity=".6"/>`; }
-    let html = `<svg class="hd-art" viewBox="0 0 100 ${G.h}" aria-hidden="true"><g filter="url(#hfx)">${s}</g></svg>`;
-    if (wet){ const cx = X(52), cy = 104;   // water held in the cupped palm (fades in and out with the motion)
+    if (hand && G.cuff && o.cuff !== false){ const [x, y0, w, h] = G.cuff, y = o.cuffY || y0, M = G.trouser ? TROUSER : SLEEVE, x0 = mir ? 100 - x - w : x, L = o.sleeve || 40;
+      s += `<rect x="${x0}" y="${y}" width="${w}" height="${h + L}" rx="7" fill="${M.m}" stroke="${INK}" stroke-width="2.2"/>`;
+      s += `<rect x="${x0 + 2}" y="${y + 3}" width="${w*.28}" height="${h + L - 6}" rx="5" fill="${M.d}" opacity=".55"/>`;
+      s += `<path d="M${x0 + 3} ${y + (G.roll || o.cuffY ? 11 : 7)}Q${x0 + w/2} ${y + (G.roll || o.cuffY ? 15 : 10)} ${x0 + w - 3} ${y + (G.roll || o.cuffY ? 11 : 7)}" fill="none" stroke="${INK}" stroke-width="1.2" opacity=".7"/>`;
+      if (G.roll || o.cuffY) s += `<path d="M${x0 + 3} ${y + 21}Q${x0 + w/2} ${y + 25} ${x0 + w - 3} ${y + 21}" fill="none" stroke="${INK}" stroke-width="1.2" opacity=".6"/>`; }
+    return { s, h: G.h };
+  }
+  function limbSVG(pose, side, wet){
+    const G = POSES[pose], A = limbArt(pose, side);
+    let html = `<svg class="hd-art" viewBox="0 0 100 ${G.h}" aria-hidden="true"><g filter="url(#hfx)">${A.s}</g></svg>`;
+    if (wet){ const cx = side === 'L' ? 48 : 52, cy = 104;   // water held in the cupped palm (fades in and out with the motion)
       html += `<svg class="hd-wet" viewBox="0 0 100 ${G.h}" aria-hidden="true"><ellipse cx="${cx}" cy="${cy}" rx="19" ry="14" fill="${WATER}" opacity=".78" stroke="${mix(WATER, INK, .4)}" stroke-width=".8"/>`
         + `<path d="M${cx - 10} ${cy - 5}Q${cx - 2} ${cy - 10} ${cx + 8} ${cy - 7}" fill="none" stroke="#fff" stroke-width="2" opacity=".7" stroke-linecap="round"/></svg>`; }
     return html;
   }
 
-  // what the hands do for each step: pose, side, centre x (% of the figure), bottom (%), width (%), base rotation,
-  // CSS animation, wet (water in the palm), z order
+  // the steps shown at the basin (the hands seen from your own eyes): pose, side, centre x (% of the figure),
+  // bottom (%), width (%), base rotation, CSS animation, z order
   const CHOREO = {
     intention: [{ p: 'back', s: 'L', x: 30, b: -42, w: 36, a: 'rest' }, { p: 'back', s: 'R', x: 70, b: -42, w: 36, a: 'rest' }],
-    hands: [{ p: 'back', s: 'L', x: 41.5, b: -12, w: 36, a: 'rubL', z: 2 }, { p: 'back', s: 'R', x: 58.5, b: -12, w: 36, a: 'rubR', z: 3 }],
-    mouth: [{ p: 'back', s: 'L', x: 18, b: -40, w: 34, a: 'rest' }, { p: 'cup', s: 'R', x: 52, b: -12, w: 36, a: 'cup', wet: true }],
-    nose: [{ p: 'back', s: 'L', x: 18, b: -40, w: 34, a: 'noseL' }, { p: 'cup', s: 'R', x: 52, b: -12, w: 36, a: 'cup', wet: true }],
-    face: [{ p: 'cup', s: 'L', x: 37, b: -12, w: 34, a: 'cup', wet: true }, { p: 'cup', s: 'R', x: 62, b: -12, w: 34, a: 'cup', wet: true }],
-    armR: [{ p: 'arm', s: 'R', x: 80, b: -20, w: 28, r: -24, a: 'rest' }, { p: 'back', s: 'L', x: 44, b: 22, w: 25, r: 60, a: 'alongR', z: 3 }],
-    armL: [{ p: 'arm', s: 'L', x: 20, b: -20, w: 28, r: 24, a: 'rest' }, { p: 'back', s: 'R', x: 56, b: 22, w: 25, r: -60, a: 'alongL', z: 3 }],
-    head: [{ p: 'back', s: 'L', x: 40, b: -12, w: 34, a: 'head' }, { p: 'back', s: 'R', x: 60, b: -12, w: 34, a: 'head' }],
-    ears: [{ p: 'point', s: 'L', x: 18, b: -28, w: 34, r: 10, a: 'earL' }, { p: 'point', s: 'R', x: 82, b: -28, w: 34, r: -10, a: 'earR' }],
-    footR: [{ p: 'foot', s: 'R', x: 52, b: -22, w: 36, a: 'rest' }, { p: 'back', s: 'L', x: 14, b: 34, w: 24, r: 84, a: 'toes', z: 3 }],
-    footL: [{ p: 'foot', s: 'L', x: 48, b: -22, w: 36, a: 'rest' }, { p: 'back', s: 'R', x: 86, b: 34, w: 24, r: -84, a: 'toes', z: 3 }],
     dua: [{ p: 'back', s: 'L', x: 30, b: -46, w: 36, a: 'rest' }, { p: 'back', s: 'R', x: 70, b: -46, w: 36, a: 'rest' }],
   };
   // where the stream lands on the hands (% from the top of the figure); none = it falls all the way to the drain
-  const IMPACT = { hands: 53, mouth: 55, nose: 55, face: 55, armR: 52, armL: 52, head: 55, footR: 57, footL: 57 };
+  const IMPACT = { hands: 62 };
   function showHands(id){
     const host = UI.hands; host.innerHTML = '';
     const imp = IMPACT[id]; UI.fig.style.setProperty('--imp', imp ? imp + '%' : '100%'); UI.fig.classList.toggle('has-imp', !!imp);
@@ -346,6 +369,396 @@
       if (c.r) r.style.transform = `rotate(${c.r}deg)`;
       d.appendChild(r); host.appendChild(d);
     });
+  }
+
+  /* =====================================================================================================
+     2b. THE CLOSE-UPS: one demonstration per step, drawn flat and hand-inked in a 300 x 300 box.
+     Each scene is a static background (drawn once, with the hand-drawn filter), "actors" (a hand, a drop, an arrow)
+     that are small SVGs moved only by CSS transform/opacity keyframes (GPU layers, nothing is redrawn while they
+     move), streams of water that show while the tap runs, and a foreground (the basin's rim) over the hands.
+     Cameras: the face steps look at you as in a mirror (your right hand on the right); the arm and the foot are
+     seen from your own eyes; the head is seen from behind and above; the ear from the side. No faces, ever:
+     the head is a plain oval, and the ear is the only feature drawn.
+     The left arm and the left foot are the right ones mirrored.
+     ===================================================================================================== */
+  const HAIR = { l: '#8b6b55', m: '#6b5444', d: '#4b3a2f' };
+  const ORANGE = '#f39a1e';
+  const n1 = v => Math.round(v*10)/10;
+  let CID = 0, KF = [];
+  // a flat shape lit from the right: the dark tone, the mid tone shifted right (clipped to the shape), the ink line
+  function solid(d, M, dx = 7, w = 2.4, lite){ const id = 'sc' + (++CID);
+    return `<clipPath id="${id}"><path d="${d}"/></clipPath><g clip-path="url(#${id})"><path d="${d}" fill="${M.d}"/><path d="${d}" fill="${M.m}" transform="translate(${dx} 0)"/>` +
+      (lite ? `<path d="${d}" fill="${M.l}" transform="translate(${dx*2.4} ${-dx*.8})" opacity=".6"/>` : '') + `</g><path d="${d}" fill="none" stroke="${INK}" stroke-width="${w}" stroke-linejoin="round"/>`; }
+  const stroke = (d, w = 1.5, op = .6, col = INK) => `<path d="${d}" fill="none" stroke="${col}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" opacity="${op}"/>`;
+  function tiles(y0, y1, step = 30, stars){
+    let s = `<path d="M-2 ${y0}H302V${y1}H-2Z" fill="${TILE.l}"/>`, g = '';
+    for (let x = step; x < 300; x += step) g += `M${x} ${y0}V${y1}`;
+    for (let y = y0 + step; y < y1; y += step) g += `M0 ${y}H300`;
+    s += `<path d="${g}" stroke="${TILE.d}" stroke-width="1.1" opacity=".5" fill="none"/>`;
+    if (stars != null){ let st = ''; for (let x = step/2; x < 300; x += step){ const pts = [];
+      for (let i = 0; i < 16; i++){ const a = i*Math.PI/8 + Math.PI/8, r = i % 2 ? 4.4 : 7.2; pts.push(n1(x + r*Math.cos(a)) + ' ' + n1(stars + r*Math.sin(a))); }
+      st += 'M' + pts.join('L') + 'Z'; }
+      s += `<path d="${st}" fill="#f7eedb" stroke="${INK}" stroke-width="1" stroke-linejoin="round"/>`; }
+    return s;
+  }
+  // a chrome pipe along a path (the spouts)
+  const pipe = (d, w = 11) => `<path d="${d}" fill="none" stroke="${INK}" stroke-width="${w + 4}" stroke-linecap="round" stroke-linejoin="round"/><path d="${d}" fill="none" stroke="${CHROME.d}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"/><path d="${d}" fill="none" stroke="${CHROME.m}" stroke-width="${w*.62}" stroke-linecap="round" stroke-linejoin="round" transform="translate(${w*.14} ${-w*.14})"/><path d="${d}" fill="none" stroke="#ffffff" stroke-width="${w*.16}" stroke-linecap="round" opacity=".85" transform="translate(${w*.22} ${-w*.24})"/>`;
+  const aerator = (x, y) => `<rect x="${x - 7}" y="${y - 3}" width="14" height="8" rx="2.5" fill="${CHROME.m}" stroke="${INK}" stroke-width="2"/><path d="M${x - 4.5} ${y + 5}H${x + 4.5}" stroke="${CHROME.d}" stroke-width="1.4"/>`;
+  // place a limb drawing in the scene: art point o.anchor (default the middle of the palm) goes to (x, y), turned rot, scaled k
+  function place(pose, side, x, y, k, rot = 0, o = {}){
+    const A = limbArt(pose, side, o), [ax, ay] = o.anchor || [52, 112], c = Math.cos(rot*Math.PI/180), sn = Math.sin(rot*Math.PI/180), sy = o.sy || 1;
+    const H = A.h + (o.cuff === false ? 0 : (o.sleeve || 40));
+    const pts = [[0, 0], [100, 0], [100, H], [0, H]].map(([px, py]) => { const u = (px - ax)*k, v = (py - ay)*k*sy; return [x + u*c - v*sn, y + u*sn + v*c]; });
+    return { svg: `<g transform="translate(${n1(x)} ${n1(y)}) rotate(${rot}) scale(${k} ${n1(k*sy*100)/100}) translate(${-ax} ${-ay})">${A.s}</g>`, box: bbox(pts) };
+  }
+  const bbox = pts => [Math.min(...pts.map(p => p[0])), Math.min(...pts.map(p => p[1])), Math.max(...pts.map(p => p[0])), Math.max(...pts.map(p => p[1]))];
+  /* an actor: svg markup in scene units, its box [x0, y0, x1, y1], keyframes [[%, dx, dy, deg, opacity]] (offsets in
+     scene units from where it is drawn), o.dur, o.delay, o.origin [x, y] (the turning point), o.raw (no filter) */
+  function actor(svg, box, frames, o = {}){
+    const id = 'k' + (++CID), pad = o.pad == null ? 8 : o.pad, x0 = box[0] - pad, y0 = box[1] - pad, w = box[2] - box[0] + 2*pad, h = box[3] - box[1] + 2*pad;
+    let anim = '';
+    if (frames){
+      KF.push(`@keyframes ${id}{${frames.map(([p, x = 0, y = 0, r = 0, op = 1]) => `${p}%{transform:translate(${(x/w*100).toFixed(2)}%,${(y/h*100).toFixed(2)}%) rotate(${r}deg);opacity:${op}}`).join('')}}`);
+      anim = `animation:${id} ${o.dur || 3}s ${o.ease || 'ease-in-out'} ${-(o.delay || 0)}s infinite;`;
+    }
+    const org = o.origin ? `transform-origin:${((o.origin[0] - x0)/w*100).toFixed(1)}% ${((o.origin[1] - y0)/h*100).toFixed(1)}%;` : '';
+    return `<div class="ac${o.cls ? ' ' + o.cls : ''}" style="left:${(x0/3).toFixed(2)}%;top:${(y0/3).toFixed(2)}%;width:${(w/3).toFixed(2)}%;height:${(h/3).toFixed(2)}%;${org}${anim}">` +
+      `<svg viewBox="${n1(x0)} ${n1(y0)} ${n1(w)} ${n1(h)}" preserveAspectRatio="none" aria-hidden="true">${o.raw ? svg : `<g filter="url(#hfx)">${svg}</g>`}</svg></div>`;
+  }
+  const hand = (pose, side, x, y, k, rot, frames, o = {}) => { const P = place(pose, side, x, y, k, rot, o); return actor(P.svg, P.box, frames, Object.assign({ origin: [x, y] }, o)); };
+  // an arrow: a path (absolute M/L/Q/C only) and its heads [x, y, angle in degrees]; it pulses with its motion
+  function arrow(d, heads, frames, o = {}){
+    const nums = (d.match(/-?[\d.]+/g) || []).map(Number), pts = [];
+    for (let i = 0; i + 1 < nums.length; i += 2) pts.push([nums[i], nums[i + 1]]);
+    let s = `<path d="${d}" fill="none" stroke="${INK}" stroke-width="10.5" stroke-linecap="round" stroke-linejoin="round"${o.dash ? ' stroke-dasharray="' + o.dash + '"' : ''}/>` +
+      `<path d="${d}" fill="none" stroke="${o.col || ORANGE}" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"${o.dash ? ' stroke-dasharray="' + o.dash + '"' : ''}/>`;
+    heads.forEach(([x, y, a]) => { const r = a*Math.PI/180, ux = Math.cos(r), uy = Math.sin(r), L = 17, W = 11.5;
+      const p = [[x + ux*4, y + uy*4], [x - ux*L - uy*W, y - uy*L + ux*W], [x - ux*L*.62, y - uy*L*.62], [x - ux*L + uy*W, y - uy*L - ux*W]];
+      s += `<path d="M${p.map(q => n1(q[0]) + ' ' + n1(q[1])).join('L')}Z" fill="${o.col || ORANGE}" stroke="${INK}" stroke-width="2.6" stroke-linejoin="round"/>`;
+      pts.push([x + ux*6, y + uy*6], [x - ux*L - uy*W, y - uy*L + ux*W], [x - ux*L + uy*W, y - uy*L - ux*W]); });
+    return actor(s, bbox(pts), frames, Object.assign({ pad: 9, cls: 'arw' }, o));
+  }
+  // an arrow's opacity over the loop: bright from a% to b%, dim the rest of the time
+  function pulse(a, b){ const lo = .35, f = [];
+    if (a <= 0) f.push([0, 1], [b, 1], [Math.min(b + 6, 96), lo], [96, lo], [100, 1]);
+    else f.push([0, lo], [Math.max(0, a - 4), lo], [a, 1], [b, 1], [Math.min(b + 6, 100), lo], [100, lo]);
+    const m = new Map(); f.forEach(([p, o]) => m.set(p, o));
+    return [...m].sort((x, y) => x[0] - y[0]).map(([p, o]) => [p, 0, 0, 0, o]); }
+  // a falling drop (from x, y, down by dist), and a stream of water from a spout (shown while the tap runs)
+  const dropPath = (x, y, r = 4) => `<path d="M${n1(x)} ${n1(y - r*1.9)}C${n1(x + r*.55)} ${n1(y - r*.7)} ${n1(x + r)} ${n1(y - r*.25)} ${n1(x + r)} ${n1(y + r*.3)}A${r} ${r} 0 0 1 ${n1(x - r)} ${n1(y + r*.3)}C${n1(x - r)} ${n1(y - r*.25)} ${n1(x - r*.55)} ${n1(y - r*.7)} ${n1(x)} ${n1(y - r*1.9)}Z" fill="${WATER}" stroke="${mix(WATER, INK, .5)}" stroke-width="1.1"/><path d="M${n1(x - r*.4)} ${n1(y + r*.1)}q0 ${n1(-r*.6)} ${n1(r*.4)} ${n1(-r*.95)}" stroke="#fff" stroke-width="1.1" fill="none" stroke-linecap="round"/>`;
+  function drip(x, y, dist, dur, delay, o = {}){
+    const r = o.r || 4;
+    const t0 = o.t0 || 6;
+    return actor(dropPath(x, y, r), [x - r, y - r*2, x + r, y + r*1.4], [[0, 0, 0, 0, 0], [Math.max(0, t0 - 3), 0, 0, 0, 0], [t0, 0, 0, 0, 1], [o.t1 || 70, 0, dist, 0, 1], [(o.t1 || 70) + 6, 0, dist, 0, 0], [100, 0, dist, 0, 0]],
+      { dur, delay, ease: 'ease-in', raw: true, pad: 3, cls: o.cls });
+  }
+  const stream = (x, y0, y1, w = 9) => `<div class="wst" style="left:${((x - w/2)/3).toFixed(2)}%;top:${(y0/3).toFixed(2)}%;width:${(w/3).toFixed(2)}%;height:${((y1 - y0)/3).toFixed(2)}%"><i></i></div>`;
+  // beads of water running along a limb, from (x0, y0) to (x1, y1): shown while the tap runs
+  function runners(x0, y0, x1, y1, n, dur){
+    const bead = `<ellipse cx="${x0}" cy="${y0}" rx="5" ry="3.6" fill="#bfe6f7" stroke="${mix(WATER, INK, .5)}" stroke-width="1"/><ellipse cx="${x0 + 1.4}" cy="${y0 - 1.2}" rx="1.6" ry="1" fill="#fff"/>`;
+    return Array.from({ length: n }, (_, i) => actor(bead, [x0 - 6, y0 - 5, x0 + 6, y0 + 5],
+      [[0, 0, 0, 0, 0], [10, (x1 - x0)*.1, (y1 - y0)*.1, 0, 1], [86, (x1 - x0)*.86, (y1 - y0)*.86, 0, 1], [100, x1 - x0, y1 - y0, 0, 0]],
+      { dur, delay: dur*i/n, ease: 'linear', raw: true, pad: 2, cls: 'wet' }));
+  }
+  const svgLayer = (inner, cls) => `<svg class="sc-lay${cls ? ' ' + cls : ''}" viewBox="0 0 300 300" preserveAspectRatio="none" aria-hidden="true"><g filter="url(#hfx)">${inner}</g></svg>`;
+
+  /* ---------- the person seen as in a mirror (mouth, nose, face): shoulders, neck, ears, a plain oval head, hair ---------- */
+  const FACE = { cx: 150, cy: 118, rx: 59, ry: 72 };
+  function mirrorBG(){
+    let s = tiles(0, 300, 30, 22);
+    const tun = 'M22 300C24 256 50 230 96 220L124 212Q150 226 176 212L204 220C250 230 276 256 278 300Z';
+    s += solid(tun, SLEEVE, 9) + stroke('M116 214Q150 240 184 214', 2, .75) + stroke('M70 262Q78 282 76 300M230 262Q222 282 224 300', 1.6, .45);
+    s += solid('M127 166L127 216Q150 230 173 216L173 166Z', SKIN, 6);
+    for (const [x, sx] of [[FACE.cx - FACE.rx + 1, -1], [FACE.cx + FACE.rx - 1, 1]]){
+      s += solid(ellP(x, 124, 11, 18), SKIN, 4, 2.2) + stroke(`M${x + sx*4} 114Q${x + sx*8} 124 ${x + sx*3} 134`, 1.5, .55);
+    }
+    s += solid(ellP(FACE.cx, FACE.cy, FACE.rx, FACE.ry), SKIN, 10, 2.6);
+    // hair as a fringe on top only (the face below it is plain skin), a soft shadow under the chin: a head facing you
+    s += `<path d="M128 194Q150 214 172 194L172 206Q150 222 128 206Z" fill="${SKIN.d}" opacity=".55"/>`;
+    const hair = 'M93 100C90 62 115 37 150 37C185 37 210 62 207 100C203 88 197 79 190 74L182 83L173 72L163 83L153 72L143 83L133 72L123 83L113 74C104 80 97 89 93 100Z';
+    s += solid(hair, HAIR, 6, 2.4) + stroke('M112 50Q130 44 150 46M160 44Q182 46 196 58', 1.5, .5, HAIR.l);
+    // the tap: a spout from the right, over the basin
+    s += pipe('M306 192H252Q238 192 238 205V210') + aerator(238, 212);
+    return s;
+  }
+  const rimFG = () => solid('M-6 306L-6 282Q150 254 306 282L306 306Z', CERAMIC, 0, 2.6) + stroke('M10 282Q150 258 290 282', 2.2, .9, '#ffffff') + stroke('M30 292Q150 272 270 292', 1.4, .35, CERAMIC.d);
+  // the cupped right hand with water in it (the water is a separate actor so it can fill and empty)
+  function cupWater(x, y, k, rot, frames, dur, sy = 1){
+    const cx = 48, cy = 104, c = `<g transform="translate(${n1(x)} ${n1(y)}) rotate(${rot}) scale(${k} ${n1(k*sy*100)/100}) translate(-52 -112)"><ellipse cx="${cx}" cy="${cy}" rx="19" ry="15" fill="${WATER}" opacity=".9" stroke="${mix(WATER, INK, .4)}" stroke-width="1.2"/><path d="M${cx - 10} ${cy - 4}Q${cx - 2} ${cy - 9} ${cx + 8} ${cy - 6}" fill="none" stroke="#fff" stroke-width="2.4" opacity=".8" stroke-linecap="round"/></g>`;
+    return actor(c, [x - 22*k, y - 26*k, x + 22*k, y + 4*k], frames, { dur, raw: true, origin: [x, y] });
+  }
+  /* ---------- right and left, without reading: a green R or a purple L badge (the same colours as the words
+     RIGHT and LEFT in the line), riding with the hand or the limb it names ---------- */
+  const LR = { R: '#2e9a63', L: '#7a55d3' };
+  function badge(x, y, side, flip, r = 13){
+    const t = `<text x="${x}" y="${n1(y + 6)}" text-anchor="middle" font-size="18" font-weight="900" font-family="ui-rounded,'SF Pro Rounded',Nunito,system-ui,sans-serif" fill="#fff"${flip ? ` transform="translate(${2*x} 0) scale(-1 1)"` : ''}>${side}</text>`;
+    return `<circle cx="${x}" cy="${y}" r="${r + 3}" fill="#fffaf0"/><circle cx="${x}" cy="${y}" r="${r}" fill="${LR[side]}" stroke="${INK}" stroke-width="2.6"/>` + t;
+  }
+  // a badge that moves with a hand (the same keyframes, without the turn); it is drawn over everything
+  const tag = (x, y, side, frames, o = {}) => actor(badge(x, y, side, o.flip), [x - 16, y - 16, x + 16, y + 16],
+    frames ? frames.map(f => [f[0], f[1] || 0, f[2] || 0, 0, f[4] == null ? 1 : f[4]]) : null, Object.assign({ raw: true, pad: 3, cls: 'arw tag' }, o));
+  // a round magnifier: the detail at (cx, cy), zoom times larger, in a circle at (px, py), with a line to the spot
+  function lens(src, cx, cy, zoom, px, py, r){
+    const id = 'ln' + (++CID), dx = cx - px, dy = cy - py, d = Math.hypot(dx, dy), ux = dx/d, uy = dy/d;
+    let s = `<clipPath id="${id}"><circle cx="${px}" cy="${py}" r="${r}"/></clipPath>`;
+    s += `<path d="M${n1(px + ux*r)} ${n1(py + uy*r)}L${n1(cx - ux*11)} ${n1(cy - uy*11)}" stroke="#fffaf0" stroke-width="6" stroke-linecap="round"/>` + stroke(`M${n1(px + ux*r)} ${n1(py + uy*r)}L${n1(cx - ux*11)} ${n1(cy - uy*11)}`, 2.6, 1);
+    s += `<circle cx="${cx}" cy="${cy}" r="11" fill="none" stroke="#fffaf0" stroke-width="5.5"/><circle cx="${cx}" cy="${cy}" r="11" fill="none" stroke="${INK}" stroke-width="2.4"/>`;
+    s += `<circle cx="${px}" cy="${py}" r="${r}" fill="#fffaf0"/><g clip-path="url(#${id})"><g transform="translate(${px} ${py}) scale(${zoom}) translate(${-cx} ${-cy})">${src}</g></g>`;
+    s += `<circle cx="${px}" cy="${py}" r="${r - 3}" fill="none" stroke="#ffffff" stroke-width="2.4" opacity=".85"/><circle cx="${px}" cy="${py}" r="${r}" fill="none" stroke="${INK}" stroke-width="4.6"/>`;
+    return actor(s, bbox([[px - r, py - r], [px + r, py + r], [cx - 12, cy - 12], [cx + 12, cy + 12]]), null, { cls: 'lens' });
+  }
+  const SCENES = {};
+  /* ---------- mouth and nose: the head in profile, facing the tap (an outline only: the bump of the nose and the
+     chin, no eyes, no lips, no expression). We see the right side, so the right hand is the near one. ---------- */
+  const NOSE = [227, 146], LIPS = [214, 168];
+  function profileBG(){
+    let s = tiles(0, 300, 30, 22);
+    s += solid('M52 302C56 262 84 236 116 230L178 230C204 236 226 256 238 302Z', SLEEVE, 9) + stroke('M150 232Q166 248 184 236', 1.8, .6);
+    return s;
+  }
+  function profileHead(){
+    const head = 'M118 238C116 222 112 212 108 204C92 186 82 152 86 118C90 78 118 52 154 52C184 52 204 70 209 94C211 104 210 112 208 120C214 128 222 138 227 146C228 150 224 153 214 153C216 157 216 161 213 164C216 168 216 173 213 177C214 184 210 192 202 196C192 200 182 200 174 202C172 212 172 226 174 238Z';
+    let s = solid(head, SKIN, 9, 2.6);
+    // hair on the top and the back only; the forehead, nose and chin stay plain skin
+    const hair = 'M86 124C86 78 116 50 154 50C182 50 202 66 208 88C196 80 182 76 168 78C150 81 140 90 133 104C127 116 125 130 123 142C111 148 102 162 100 178C91 162 86 144 86 124Z';
+    s += solid(hair, HAIR, 7, 2.4) + stroke('M104 80Q124 62 150 58M98 112Q104 92 120 80M96 150Q100 132 110 120', 1.5, .5, HAIR.l);
+    // the ear, on the side of the head
+    s += solid(ellP(142, 140, 11, 17), SKIN, 4, 2.2) + stroke('M146 130Q150 140 144 150', 1.6, .55);
+    s += pipe('M306 198H272Q260 198 260 210V216') + aerator(260, 218);
+    return s;
+  }
+  // the cupped right hand from the side: the little-finger edge toward us, the fingertips toward the face,
+  // water in the bowl of the palm, the forearm going down to the elbow
+  function cupSide(x, y, rot){
+    const d = 'M-38 -6C-41 6 -31 16 -14 18C4 22 20 22 31 13L64 66L86 52L37 -3C24 3 8 6 -8 4C-22 2 -32 -2 -38 -6Z';
+    let s = solid(d, SKIN, 5, 2.2) + stroke('M-28 -2Q-27 8 -24 14M-18 1Q-17 10 -14 17M-7 3Q-6 12 -4 19', 1.3, .6);
+    // the thumb along the far rim of the cup, and the fingertips' nails at the near end
+    s += solid('M0 2C6 -9 22 -12 34 -3L36 3C26 -3 14 -2 4 6Z', SKIN, 3, 2) + `<ellipse cx="-35" cy="2" rx="3" ry="4.5" fill="${NAIL}" stroke="${INK}" stroke-width=".9"/>`;
+    s += solid('M58 72L82 56L130 126L104 142Z', SLEEVE, 6, 2.4) + stroke('M64 82L88 66', 1.4, .6);
+    return `<g transform="translate(${x} ${y}) rotate(${rot}) scale(1.3)">${s}</g>`;
+  }
+  // a cupped hand moving through poses [x, y, rot] at times (%), and the water in it showing from w0% to w1%
+  function cupActors(P, times, w0, w1, D){
+    const base = P[0], frames = P.map((p, i) => [times[i], p[0] - base[0], p[1] - base[1], p[2] - base[2]]);
+    const wet = frames.map(f => f.concat([f[0] >= w0 && f[0] <= w1 ? 1 : 0]));
+    return [actor(cupSide(base[0], base[1], base[2]), [base[0] - 58, base[1] - 22, base[0] + 172, base[1] + 190], frames, { dur: D, origin: [base[0], base[1]] }),
+      actor(`<g transform="translate(${base[0]} ${base[1]}) rotate(${base[2]}) scale(1.3)"><ellipse cx="-6" cy="-1" rx="27" ry="5.5" fill="${WATER}" stroke="${mix(WATER, INK, .45)}" stroke-width="1.1"/><path d="M-20 -2Q-8 -5 6 -3" stroke="#fff" stroke-width="1.6" fill="none" stroke-linecap="round"/></g>`,
+        [base[0] - 46, base[1] - 14, base[0] + 32, base[1] + 12], wet, { dur: D, raw: true, origin: [base[0], base[1]] })];
+  }
+  SCENES.mouth = () => {
+    const D = 4.4, P0 = [268, 244, 0], P1 = [LIPS[0] + 50, LIPS[1] + 8, -14];
+    const P = [P0, P0, P1, P1, P0, P0], T = [0, 18, 40, 60, 82, 100];
+    const mv = P.map((p, i) => [T[i], p[0] - P0[0], p[1] - P0[1], 0]);
+    return { bg: profileBG(), mid: profileHead(), fg: rimFG(), water: [[260, 222, 284]],
+      actors: [
+        ...cupActors(P, T, 8, 50, D),
+        // swish (a wave on the cheek), then the water is spat out into the basin
+        arrow('M178 160Q188 168 178 176Q168 184 178 192', [[180, 196, 70]], [[0, 0, 0, 0, 0], [58, 0, 0, 0, 0], [64, 0, 0, 0, 1], [80, 0, 0, 0, 1], [86, 0, 0, 0, 0], [100, 0, 0, 0, 0]], { dur: D, col: '#9fd3ee' }),
+        drip(LIPS[0] + 2, LIPS[1] + 6, 96, D, 0, { t0: 84, t1: 97, r: 4.4 }), drip(LIPS[0] + 8, LIPS[1] + 10, 90, D, .1, { t0: 84, t1: 97, r: 3.6 }),
+        arrow('M268 228Q270 196 246 180', [[238, 176, 206]], pulse(16, 42, D), { dur: D }),
+        tag(P0[0] + 30, P0[1] + 30, 'R', mv, { dur: D }),
+      ] };
+  };
+  SCENES.nose = () => {
+    const D = 5.2, P0 = [268, 244, 0], P1 = [NOSE[0] + 46, NOSE[1] + 14, -20];
+    const P = [P0, P0, P1, P1, P0, P0], T = [0, 14, 32, 44, 58, 100];
+    const mv = P.map((p, i) => [T[i], p[0] - P0[0], p[1] - P0[1], 0]);
+    // the left hand: thumb and pointing finger at the nose, then blow out
+    const L0 = [262, 330], L1 = [NOSE[0] + 4, NOSE[1] + 2];
+    const lv = [[0, 0, 0, 0], [46, 0, 0, 0], [60, L1[0] - L0[0], L1[1] - L0[1], 0], [84, L1[0] - L0[0], L1[1] - L0[1], 0], [96, 0, 0, 0], [100, 0, 0, 0]];
+    return { bg: profileBG(), mid: profileHead(), fg: rimFG(), water: [[260, 222, 284]],
+      actors: [
+        ...cupActors(P, T, 6, 40, D),
+        hand('pinch', 'L', L0[0], L0[1], .7, -28, lv, { dur: D, sleeve: 240, anchor: [72, 40] }),
+        arrow('M224 160Q230 178 242 186', [[248, 190, 34]], [[0, 0, 0, 0, 0], [64, 0, 0, 0, 0], [70, 0, 0, 0, 1], [86, 0, 0, 0, 1], [92, 0, 0, 0, 0], [100, 0, 0, 0, 0]], { dur: D, col: '#9fd3ee' }),
+        drip(NOSE[0] - 4, NOSE[1] + 10, 110, D, 0, { t0: 70, t1: 92, r: 3.6 }), drip(NOSE[0] - 10, NOSE[1] + 12, 104, D, .12, { t0: 72, t1: 94, r: 3 }),
+        arrow('M270 226Q272 184 250 166', [[242, 160, 220]], pulse(12, 34, D), { dur: D }),
+        tag(P0[0] + 30, P0[1] + 30, 'R', mv, { dur: D }),
+        tag(L0[0] + 6, L0[1] + 58, 'L', lv, { dur: D }),
+      ] };
+  };
+  SCENES.face = () => {
+    const D = 3.8, R0 = [178, 140], L0 = [122, 140], dy = 60;
+    const mv = sx => [[0, 0, 0, 0, 0], [8, 0, 0, 0, 1], [48, sx*12, dy, 0, 1], [62, sx*12, dy, 0, 1], [72, sx*14, dy + 10, 0, 0], [100, 0, 0, 0, 0]];
+    return { bg: mirrorBG(), fg: rimFG(), water: [[238, 216, 284]],
+      actors: [
+        // the face that is washed: from the hairline to the chin, from ear to ear (dashed edge)
+        actor(`<path d="${ellP(FACE.cx, FACE.cy + 6, FACE.rx + 4, FACE.ry - 4)}" fill="#bfe6f7" opacity=".35" stroke="#ffffff" stroke-width="3" stroke-dasharray="7 6"/>`,
+          [FACE.cx - FACE.rx - 4, FACE.cy - FACE.ry + 2, FACE.cx + FACE.rx + 4, FACE.cy + FACE.ry + 10], [[0, 0, 0, 0, .3], [10, 0, 0, 0, 1], [62, 0, 0, 0, 1], [80, 0, 0, 0, .3], [100, 0, 0, 0, .3]], { dur: D, raw: true }),
+        hand('flat', 'R', L0[0], L0[1], .7, 6, mv(-1), { dur: D, drops: true, sleeve: 220 }),
+        hand('flat', 'L', R0[0], R0[1], .7, -6, mv(1), { dur: D, drops: true, sleeve: 220 }),
+        drip(144, 196, 74, D, 0, { t0: 56, t1: 80 }), drip(158, 196, 70, D, .12, { t0: 58, t1: 82, r: 3.4 }),
+        arrow('M150 62L150 176', [[150, 186, 90]], pulse(8, 50, D), { dur: D }),
+        arrow('M96 128L204 128', [[86, 128, 180], [214, 128, 0]], pulse(8, 50, D), { dur: D }),
+      ] };
+  };
+
+  /* ---------- the right arm, seen from your own eyes: the forearm across the basin, the hand under the tap,
+     the elbow on the right; the left hand rubs from the wrist to the elbow ---------- */
+  function counterBG(){
+    let s = tiles(0, 46, 30, 22) + `<path d="M-2 46H302V302H-2Z" fill="${WOOD.m}"/>` + stroke('M-2 46H302', 2.4, 1);
+    s += stroke('M10 70Q60 66 90 72M200 64Q250 60 296 66M8 286Q40 280 70 288M236 290Q270 284 298 290', 1.2, .4, WOOD.d);
+    s += solid(ellP(150, 182, 140, 100), CERAMIC, 0, 2.6) + solid(ellP(150, 190, 120, 82), { l: CERAMIC.l, m: CERAMIC.m, d: CERAMIC.d }, 10, 1.6);
+    s += `<path d="${ellP(150, 206, 70, 44)}" fill="${CERAMIC.d}" opacity=".35"/>` + `<circle cx="150" cy="214" r="9" fill="#d3d9db" stroke="${INK}" stroke-width="1.6"/><circle cx="150" cy="214" r="5" fill="#4f575b"/>`;
+    s += stroke('M40 150Q60 110 110 96', 2.6, .8, '#ffffff');
+    return s;
+  }
+  function armScene(side){
+    const D = 2.8, flip = side === 'L';
+    let bg = counterBG();
+    // the tap at the back left: a column and a spout over the hand
+    bg += `<ellipse cx="92" cy="66" rx="13" ry="6" fill="${CHROME.d}" stroke="${INK}" stroke-width="2"/>` + pipe('M92 64V34', 16) + pipe('M92 36Q94 26 106 30Q120 36 122 58', 10) + aerator(122, 60);
+    // the washed forearm (palm down), the elbow, the upper arm going back to you, the sleeve pushed up ABOVE the elbow
+    const arm = 'M132 114C156 110 180 110 204 115C224 119 240 126 250 138C258 148 259 162 254 174C258 200 264 240 272 306L226 306C226 260 226 214 222 186C214 174 202 168 188 164C168 158 150 150 132 146Z';
+    let limb = solid(arm, SKIN, 8, 2.6, true);
+    limb += stroke('M230 162Q240 170 250 164', 1.6, .6) + stroke('M243 146Q251 152 253 160', 1.4, .5) + stroke('M160 118Q184 120 204 128', 1.2, .35);
+    const sl = 'M217 236C233 230 263 228 279 236L287 306L211 306Z';
+    limb += solid(sl, SLEEVE, 7, 2.4) + stroke('M217 248C235 242 261 242 281 250', 1.6, .7) + stroke('M215 262C235 256 261 256 283 264', 1.4, .55);
+    // the hand of the washed arm, fingers pointing to the middle, thumb toward you
+    limb += place('back', 'R', 140, 130, .74, -90, { anchor: [52, 140], wrist: false, cuff: false }).svg;
+    bg += limb;
+    const g0 = [162, 140], g1 = [216, 154];
+    const rub = [[0, 0, 0, 0], [46, g1[0] - g0[0], g1[1] - g0[1], 6], [54, g1[0] - g0[0], g1[1] - g0[1], 6], [100, 0, 0, 0]];
+    // the magnifier: the elbow itself is washed (water on the point of the elbow)
+    const beads = [[246, 150], [254, 160], [238, 160], [250, 170]].map(([x, y]) => `<ellipse cx="${x}" cy="${y}" rx="4.6" ry="3.4" fill="#bfe6f7" stroke="${mix(WATER, INK, .5)}" stroke-width="1"/><ellipse cx="${x + 1.3}" cy="${y - 1.1}" rx="1.5" ry="1" fill="#fff"/>`).join('');
+    const elbow = counterBG() + limb + beads + dropPath(252, 182, 4.4) + `<circle cx="245" cy="155" r="20" fill="none" stroke="${ORANGE}" stroke-width="3" stroke-dasharray="6 5"/>`;
+    return { bg, water: [[122, 64, 120, 8]], mirror: flip,
+      actors: [
+        ...runners(146, 124, 236, 140, 3, 1.5), ...runners(144, 138, 234, 156, 2, 1.7),
+        hand('grip', 'L', g0[0], g0[1], .72, -6, rub, { dur: D, sleeve: 140 }),
+        drip(252, 176, 58, 1.1, 0, { cls: 'wet' }), drip(244, 178, 50, 1.1, .5, { cls: 'wet', r: 3.4 }),
+        actor(`<circle cx="245" cy="152" r="21" fill="none" stroke="#ffffff" stroke-width="5"/><circle cx="245" cy="152" r="21" fill="none" stroke="${ORANGE}" stroke-width="3" stroke-dasharray="6 5"/>`,
+          [224, 131, 266, 173], [[0, 0, 0, 0, .4], [40, 0, 0, 0, 1], [60, 0, 0, 0, 1], [100, 0, 0, 0, .4]], { dur: D, raw: true }),
+        lens(elbow, 246, 162, 1.5, 62, 238, 46),
+        arrow('M58 100Q150 74 230 106', [[238, 110, 26]], pulse(4, 50, D), { dur: D }),
+        tag(244, 212, side, null, { flip }),
+      ] };
+  }
+  SCENES.armR = () => armScene('R');
+  SCENES.armL = () => armScene('L');
+
+  /* ---------- the head, seen from behind and above: wet hands from the front of the head to the back, and back ---------- */
+  SCENES.head = () => {
+    const D = 3.6;
+    let bg = tiles(0, 300, 30);
+    bg += solid('M12 300C16 262 56 236 104 228L196 228C244 236 284 262 288 300Z', SLEEVE, 9) + stroke('M120 230Q150 246 180 230', 2, .7);
+    bg += solid('M124 196L124 236Q150 246 176 236L176 196Z', SKIN, 6);
+    for (const x of [77, 223]) bg += solid(ellP(x, 142, 12, 21), SKIN, 4, 2.2);
+    bg += solid(ellP(150, 128, 74, 86), HAIR, 10, 2.6);
+    bg += stroke('M96 196Q150 222 204 196', 1.6, .5, HAIR.d) + stroke('M150 118m-9 0a9 9 0 1 1 9 9a14 14 0 0 1-15-12M150 104Q132 84 108 82M150 104Q170 84 194 84M138 126Q112 140 98 170M162 128Q188 142 202 170M150 134Q150 168 148 204', 1.6, .55, HAIR.l);
+    const mv = [[0, 0, 0, 0], [40, 0, 86, 0], [50, 0, 86, 0], [90, 0, 0, 0], [100, 0, 0, 0]];
+    return { bg,
+      actors: [
+        hand('flat', 'L', 119, 112, .7, 16, mv, { dur: D, drops: true, sleeve: 160 }),
+        hand('flat', 'R', 181, 112, .7, -16, mv, { dur: D, drops: true, sleeve: 160 }),
+        arrow('M40 60L40 216', [[40, 226, 90]], pulse(2, 42, D), { dur: D }),
+        arrow('M260 222L260 68', [[260, 58, -90]], pulse(50, 92, D), { dur: D }),
+      ] };
+  };
+
+  /* ---------- the ear, from the side: the pointing finger inside the ear, the thumb behind it ---------- */
+  SCENES.ears = () => {
+    const D = 1.8;
+    let bg = `<path d="M-2 -2H302V302H-2Z" fill="${SKIN.m}"/>`;
+    bg += `<path d="M302 212C262 236 222 248 194 246C186 262 180 284 178 302H302Z" fill="${SKIN.d}" opacity=".45"/>` + stroke('M302 212C262 236 222 248 194 246', 2.4, .85);
+    const hair = 'M-2 -2H302V30C248 30 206 42 186 62C178 70 172 76 160 74C126 68 96 78 80 104C62 136 58 214 46 302H-2Z';
+    bg += solid(hair, HAIR, 8, 2.4) + stroke('M30 40Q60 80 52 160M70 20Q100 50 96 84M200 20Q170 36 160 60M240 14Q210 26 196 46M20 190Q30 240 24 290', 1.6, .5, HAIR.l);
+    // the ear (the right ear, the face is off to the right): rim, the curve inside it, the bowl and the opening
+    const ear = 'M170 84C160 66 128 60 112 74C98 86 94 108 96 132C98 158 104 178 112 194C118 208 120 222 132 228C144 234 156 228 156 216C156 206 150 200 152 192C156 186 166 186 170 178C176 170 180 160 176 150C172 140 176 128 178 116C180 104 178 92 170 84Z';
+    let fg = solid(ear, SKIN, 6, 3.2, true);
+    // the groove inside the rim (shaded), the ridge, the bowl and the opening
+    fg += `<path d="M164 94C150 80 128 80 116 92C106 104 106 126 108 146C110 166 116 182 124 196C134 202 146 198 150 188C156 180 164 176 166 166C170 150 166 136 168 122C170 108 170 100 164 94Z" fill="${SKIN.d}" opacity=".55"/>`;
+    fg += `<path d="M126 192C116 172 114 140 122 116C128 102 140 96 154 98" fill="none" stroke="${SKIN.l}" stroke-width="9" stroke-linecap="round" opacity=".9"/>` + stroke('M126 192C116 172 114 140 122 116C128 102 140 96 154 98', 1.8, .55);
+    fg += `<path d="M160 120C146 116 136 126 136 142C136 160 146 172 160 172C168 170 170 158 166 148C164 138 168 128 160 120Z" fill="${mix(SKIN.d, INK, .15)}" stroke="${INK}" stroke-width="2"/>`;
+    fg += `<path d="${ellP(162, 152, 5, 7)}" fill="${mix(SKIN.d, INK, .5)}"/>` + stroke('M166 92C152 78 126 76 114 90', 2.2, .6) + stroke('M130 214Q140 222 150 216', 1.6, .5);
+    fg = `<g transform="translate(140 150) scale(.84) translate(-140 -150)">${fg}</g>`;
+    const mv = [[0, 0, 0, 0], [25, -3, -8, -3], [50, 2, -12, 0], [75, 4, -5, 3], [100, 0, 0, 0]], at = [155, 148], k = 1.5;
+    const T = place('ear', 'R', at[0], at[1], k, 0, { anchor: [38, 22], part: 'thumb', cuff: false }), H = place('ear', 'R', at[0], at[1], k, 0, { anchor: [38, 22], part: 'nothumb', cuff: false, drops: true });
+    return { bg, mid: fg,
+      under: [actor(T.svg, T.box, mv, { dur: D, origin: at })],
+      actors: [
+        actor(H.svg, H.box, mv, { dur: D, origin: at }),
+        // the magnifier: the thumb goes BEHIND the ear
+        lens(bg + T.svg + fg + H.svg, 106, 166, 2, 56, 248, 46),
+        arrow('M141 196C128 178 128 140 146 118', [[152, 113, -45]], pulse(0, 96), { dur: D*2 }),
+        arrow('M84 196C78 164 82 132 100 104', [[105, 97, -60]], pulse(0, 96), { dur: D*2 }),
+      ] };
+  };
+
+  /* ---------- a foot, seen from your own eyes under a low tap: up to and over the ankles; the LEFT little finger
+     goes between the toes, from the little toe of the right foot to its big toe, then from the big toe of the left
+     foot to its little toe. The right foot comes first. ---------- */
+  function footScene(side){
+    const D = 3.6, X = side === 'R' ? x => x : x => 300 - x;
+    let bg = tiles(0, 44, 30, 22) + `<path d="M-2 44H302V302H-2Z" fill="#e6dfd0"/>`;
+    let g = ''; for (let x = 0; x < 300; x += 60) g += `M${x} 44V300`; for (let y = 104; y < 300; y += 60) g += `M0 ${y}H300`;
+    bg += `<path d="${g}" stroke="#bfb39b" stroke-width="1.4" fill="none" opacity=".8"/>` + stroke('M-2 44H302', 2.4, 1);
+    bg += `<circle cx="${X(64)}" cy="250" r="12" fill="#cfc7b6" stroke="${INK}" stroke-width="1.8"/>` + stroke(`M${X(56)} 250H${X(72)}M${X(64)} 242V258`, 1.6, .6);
+    bg += `<ellipse cx="${X(196)}" cy="22" rx="14" ry="10" fill="${CHROME.m}" stroke="${INK}" stroke-width="2"/>` + pipe(`M${X(196)} 24Q${X(196)} 46 ${X(180)} 52L${X(176)} 54`, 11) + aerator(X(174), 60);
+    bg += place('foot', side, 150, 228, 1.38, 0, { anchor: [side === 'R' ? 52 : 48, 150], cuffY: 188, sleeve: 30 }).svg;
+    // the gaps between the toes, in the order the little finger goes through them
+    let gaps = [[180, 112], [168, 106], [156, 104], [140, 106]];
+    if (side === 'L') gaps = gaps.map(([x, y]) => [X(x), y]).reverse();
+    const k = .86, rot = 62, mv = [[0, 0, 0, 0]];
+    gaps.forEach((p, i) => { const t = 6 + i*22; mv.push([t, p[0] - gaps[0][0], p[1] - gaps[0][1], 0], [t + 12, p[0] - gaps[0][0], p[1] - gaps[0][1] + 3, 0]); });
+    mv.push([100, 0, 0, 0]);
+    const H = place('pinky', 'L', gaps[0][0], gaps[0][1], k, rot, { anchor: [17, 38], sleeve: 120 });
+    // the magnifier: the little finger between two toes
+    const mid = gaps[1], M = place('pinky', 'L', mid[0], mid[1], k, rot, { anchor: [17, 38], sleeve: 120 });
+    const ank = side === 'R' ? [[124, 229, 14], [178, 233, 13]] : [[176, 229, 14], [122, 233, 13]];
+    return { bg, water: [[X(174), 64, 132, 8]],
+      actors: [
+        ...runners(X(170), 136, X(160), 212, 3, 1.4), ...runners(X(156), 128, X(146), 206, 2, 1.6),
+        actor(H.svg, H.box, mv, { dur: D, origin: gaps[0] }),
+        drip(X(112), 196, 54, 1.2, 0, { cls: 'wet' }), drip(X(192), 200, 50, 1.2, .6, { cls: 'wet', r: 3.4 }),
+        actor(`<g fill="none" stroke-width="3" stroke-dasharray="5 4">${ank.map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}" stroke="${ORANGE}"/>`).join('')}</g>`,
+          [104, 212, 196, 248], [[0, 0, 0, 0, .35], [60, 0, 0, 0, 1], [85, 0, 0, 0, 1], [100, 0, 0, 0, .35]], { dur: D, raw: true }),
+        lens(bg + M.svg, mid[0] + 2, mid[1] + 2, 2.2, X(250), 246, 46),
+        arrow(`M${X(214)} 84C${X(222)} 136 ${X(214)} 188 ${X(194)} 222`, [[X(188), 228, side === 'R' ? 140 : 40]], pulse(50, 92, D), { dur: D }),
+        tag(150, 266, side),
+        tag(gaps[0][0] - 46, gaps[0][1] + 62, 'L', mv, { dur: D }),
+      ] };
+  }
+  SCENES.footR = () => footScene('R');
+  SCENES.footL = () => footScene('L');
+
+  /* ---------- the basin steps get small overlays: a heart for the intention, arrows for rubbing the hands ---------- */
+  SCENES.intention = () => ({ basin: true, actors: [
+    actor(`<path d="M150 118C128 104 116 92 116 78C116 66 125 58 136 58C143 58 147 62 150 67C153 62 157 58 164 58C175 58 184 66 184 78C184 92 172 104 150 118Z" fill="#f6c453" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/><path d="M128 74Q130 66 138 66" stroke="#fff6d8" stroke-width="3.4" fill="none" stroke-linecap="round"/>`,
+      [114, 56, 186, 120], [[0, 0, -36, 0, .85], [50, 0, -42, 0, 1], [100, 0, -36, 0, .85]], { dur: 2.6, cls: 'heart' }),
+  ] });
+  SCENES.hands = () => {
+    // the two hands cross, the right one on top, its fingers pushed in between the fingers of the left one; it rubs along them
+    const D = 1.6, a = 24*Math.PI/180, ux = -Math.sin(a), uy = -Math.cos(a);
+    const rub = [[0, 0, 0, 0], [50, ux*16, uy*16, 0], [100, 0, 0, 0]], back = [[0, 0, 0, 0], [50, ux*4, -uy*4, 0], [100, 0, 0, 0]];
+    return { basin: true, actors: [
+      hand('back', 'L', 118, 272, 1, 24, back, { dur: D, sleeve: 90 }),
+      hand('back', 'R', 184, 266, 1, -24, rub, { dur: D, sleeve: 90, drops: true }),
+      arrow('M216 178L236 222', [[240, 230, 66], [212, 170, -114]], pulse(10, 90), { dur: D }),
+      arrow('M58 196Q48 222 62 246', [[64, 252, 76], [58, 190, -104]], pulse(10, 90), { dur: D }),
+    ] };
+  };
+  SCENES.dua = () => ({ basin: true, actors: [] });
+
+  // mount the scene for a step into the figure
+  function showScene(id){
+    const make = SCENES[id]; KF = [];
+    const S = make ? make() : { basin: true, actors: [] };
+    const has2d = !S.basin;
+    UI.fig.classList.toggle('sc-2d', has2d); UI.fig.classList.toggle('sc-basin', !has2d);
+    let h = '';
+    if (S.bg) h += svgLayer(S.bg, 'sc-bg');
+    (S.under || []).forEach(a => { h += a; });
+    if (S.mid) h += svgLayer(S.mid, 'sc-mid');
+    (S.water || []).forEach(([x, y0, y1, w]) => { h += stream(x, y0, y1, w); });
+    const arrows = S.actors.filter(a => a.indexOf('class="ac arw') >= 0), rest = S.actors.filter(a => a.indexOf('class="ac arw') < 0);
+    rest.forEach(a => { h += a; });
+    if (S.fg) h += svgLayer(S.fg, 'sc-fg');
+    arrows.forEach(a => { h += a; });
+    UI.scene.className = 'wd-scene' + (S.mirror ? ' mir' : '');
+    UI.scene.innerHTML = h;
+    UI.kf.textContent = KF.join('\n');
+    UI.stats = { nodes: UI.scene.querySelectorAll('*').length };
   }
 
   /* =====================================================================================================
@@ -439,6 +852,8 @@
     dua: `<path d="${STAR8}" fill="#f6c453"/><circle cx="12" cy="12" r="2.6"/>`,
     check: '<path d="M4.5 12.8l5 5L19.5 6.5" stroke-width="3"/>',
     back: '<path d="M14.5 5.5 8 12l6.5 6.5" stroke-width="2.6"/>',
+    next: '<path d="M4.5 12h14M13 5.5l6.5 6.5-6.5 6.5" stroke-width="2.6"/>',
+    speak: '<path d="M4.5 4.5h15a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-8l-5 4v-4h-2a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2z" fill="#fff4c9"/><path d="M8 10.5h.01M12 10.5h.01M16 10.5h.01" stroke-width="3.2"/>',
     home: '<path d="M3.5 11.5 12 4.5l8.5 7"/><path d="M6 10v10h12V10"/><path d="M10 20v-5h4v5"/>',
     sound: '<path d="M4 9.5h4l5-4v13l-5-4H4z"/><path d="M16.5 9a4 4 0 0 1 0 6"/><path d="M19 6.5a7.5 7.5 0 0 1 0 11"/>',
     mute: '<path d="M4 9.5h4l5-4v13l-5-4H4z"/><path d="M17 9.5l4 5M21 9.5l-4 5"/>',
@@ -523,6 +938,7 @@
   function build(){
     document.body.innerHTML = '';
     const defs = svgEl('wd-defs'); defs.innerHTML = filterFor(.62).replace('id="hand"', 'id="hfx"').replace('id="wob"', 'id="wobh"'); document.body.appendChild(defs);
+    UI.kf = document.createElement('style'); document.head.appendChild(UI.kf);
     const root = $('div', 'wd'); UI.root = root;
     // top: home (from the house), the two modes, sound
     const top = $('div', 'wd-top');
@@ -542,39 +958,46 @@
     const prog = $('div', 'wd-prog'); UI.prog = [];
     for (let n = 1; n <= 10; n++){ const s = STEPS.find(x => x.n === n), d = $('span', 'wd-dot', icon(s.icon)); d.title = s.short; prog.appendChild(d); UI.prog.push(d); }
     root.appendChild(prog);
-    // main: the basin (with hands, water meter and tap) and the step card (body map, words, count, buttons)
+    // main: the stage (the demonstration for this step) and the card (body map, one line, the "Say" card)
     const main = $('div', 'wd-main');
     const stage = $('div', 'wd-stage'), fig = $('div', 'wd-fig');
     UI.basin = mountBasin(fig);
     UI.hands = $('div', 'wd-hands'); fig.appendChild(UI.hands);
     fig.appendChild(UI.basin.fxs);                 // the stream falls onto the hands, so it is drawn over them
     UI.splash = $('div', 'wd-splash2', '<svg viewBox="0 0 40 16" aria-hidden="true"><path d="M6 12Q20 4 34 12" fill="none" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round" opacity=".9"/><path d="M9 9l-4-5M31 9l4-5M15 7l-1-6M25 7l1-6" stroke="#bfe6f7" stroke-width="2.2" stroke-linecap="round"/></svg>'); fig.appendChild(UI.splash);
+    UI.scene = $('div', 'wd-scene'); fig.appendChild(UI.scene);      // the close-ups and the overlays (arrows, the heart)
     UI.tapBtn = $('button', 'wd-tapbtn'); UI.tapBtn.setAttribute('aria-label', 'Tap'); UI.tapBtn.onpointerdown = e => { e.preventDefault(); toggleTap(); }; fig.appendChild(UI.tapBtn);
     UI.bubble = $('div', 'wd-bubble'); fig.appendChild(UI.bubble);
     // water meter: fills while the tap runs; the leaves earned sit under it
     const meter = $('div', 'wd-meter', `<div class="wd-mdrop">${icon('drop')}</div><div class="wd-mtube"><i class="wd-mfill"></i><b></b></div><div class="wd-mleaf">${icon('leaf')}<span>0</span></div>`);
     UI.mfill = meter.querySelector('.wd-mfill'); UI.mleaf = meter.querySelector('.wd-mleaf span'); UI.mleafBox = meter.querySelector('.wd-mleaf');
     fig.appendChild(meter);
+    // the tap, always in the same corner of the stage (the lever on the basin works too)
+    UI.tapB = $('button', 'wd-tapfab', icon('tap')); UI.tapB.setAttribute('aria-label', 'Turn the tap'); UI.tapB.onclick = () => toggleTap();
+    fig.appendChild(UI.tapB);
     stage.appendChild(fig); main.appendChild(stage);
     UI.stage = stage; UI.fig = fig;
-    // card
+    // card: the body map with the count under it, then the line and the "Say" card
     const card = $('div', 'wd-card');
-    const bodyWrap = $('div', 'wd-body'); UI.bodyWrap = bodyWrap; UI.body = mountBody(bodyWrap);
+    const bodyWrap = $('div', 'wd-body'); UI.bodyWrap = bodyWrap;
+    const bodyMap = $('div', 'wd-bmap'); UI.bodyMap = bodyMap; UI.body = mountBody(bodyMap); bodyWrap.appendChild(bodyMap);
+    UI.lr = $('span', 'wd-lr'); bodyMap.appendChild(UI.lr);
+    UI.drops = $('div', 'wd-drops'); bodyWrap.appendChild(UI.drops);
     bodyWrap.addEventListener('pointerdown', onBodyTap);
     const info = $('div', 'wd-info');
-    info.innerHTML = `<div class="wd-head"><button class="wd-sicon" aria-label="Say it again"></button><div><div class="wd-num"></div><h1 class="wd-title"></h1></div></div>
-      <p class="wd-detail"></p><div class="wd-ar" hidden></div><div class="wd-drops"></div><p class="wd-note" hidden></p>`;
+    info.innerHTML = `<div class="wd-head"><button class="wd-sicon" aria-label="Say it again"></button><div class="wd-hd"><div class="wd-num"></div><h1 class="wd-title"></h1></div></div>
+      <p class="wd-detail"></p><div class="wd-say" hidden></div><p class="wd-note" hidden></p>`;
     UI.sicon = info.querySelector('.wd-sicon'); UI.num = info.querySelector('.wd-num'); UI.title = info.querySelector('.wd-title'); UI.detail = info.querySelector('.wd-detail');
-    UI.ar = info.querySelector('.wd-ar'); UI.drops = info.querySelector('.wd-drops'); UI.note = info.querySelector('.wd-note');
+    UI.ar = info.querySelector('.wd-say'); UI.note = info.querySelector('.wd-note');
     UI.sicon.onclick = () => { play('tap'); if (st.mode === 'practice') practicePrompt(true); else speak(STEPS[st.i]); };
     const acts = $('div', 'wd-acts');
     UI.back = $('button', 'wd-btn wd-back', icon('back')); UI.back.setAttribute('aria-label', 'Back'); UI.back.onclick = () => { play('tap'); goBack(); };
-    UI.tapB = $('button', 'wd-btn wd-tapb', icon('tap')); UI.tapB.setAttribute('aria-label', 'Turn the tap'); UI.tapB.onclick = () => toggleTap();
-    UI.hint = $('button', 'wd-btn wd-hintb', icon('hint')); UI.hint.setAttribute('aria-label', 'Show me'); UI.hint.onclick = () => { play('tap'); practiceHint(true); };
-    UI.done = $('button', 'wd-btn wd-done', icon('check') + '<span>Done</span>'); UI.done.setAttribute('aria-label', 'Done'); UI.done.onclick = () => { play('tap'); done(); };
-    acts.appendChild(UI.back); acts.appendChild(UI.tapB); acts.appendChild(UI.hint); acts.appendChild(UI.done);
-    card.appendChild(bodyWrap); card.appendChild(info); card.appendChild(acts);
-    main.appendChild(card); UI.card = card; UI.info = info;
+    UI.hint = $('button', 'wd-btn wd-hintb', icon('hint') + '<span>Show me</span>'); UI.hint.setAttribute('aria-label', 'Show me'); UI.hint.onclick = () => { play('tap'); practiceHint(true); };
+    UI.done = $('button', 'wd-btn wd-done', icon('check') + '<span>Done</span>'); UI.done.setAttribute('aria-label', 'Done, one more time'); UI.done.onclick = () => countOne();
+    UI.next = $('button', 'wd-btn wd-next', '<span>Next</span>' + icon('next')); UI.next.setAttribute('aria-label', 'Next'); UI.next.onclick = () => { play('tap'); done(); };
+    acts.appendChild(UI.back); acts.appendChild(UI.hint); acts.appendChild(UI.done); acts.appendChild(UI.next);
+    card.appendChild(bodyWrap); card.appendChild(info);
+    main.appendChild(card); main.appendChild(acts); UI.card = card; UI.info = info; UI.acts = acts;
     root.appendChild(main);
     document.body.appendChild(root);
     UI.seg = seg;
@@ -632,30 +1055,53 @@
     UI.root.classList.toggle('has-ar', !!s.arabic);
     UI.sicon.innerHTML = icon(s.icon);
     UI.num.textContent = s.n + ' / 10';
-    UI.title.textContent = s.title; UI.detail.textContent = s.detail;
-    // Arabic only for the spoken parts
+    UI.title.innerHTML = lineHTML(s.line || s.title); UI.detail.textContent = '';
+    UI.lr.className = 'wd-lr' + (LRAT[s.id] ? ' on' : ''); if (LRAT[s.id]){ const [x, y, k] = LRAT[s.id]; UI.lr.textContent = k; UI.lr.dataset.k = k; UI.lr.style.left = (x/120*100) + '%'; UI.lr.style.top = (y/232*100) + '%'; }
+    // the "Say" card, only where something is said aloud
     const ar = s.arabic && T[s.arabic];
     UI.ar.hidden = !ar;
     if (ar){
       const extra = s.arabic === 'shahada' && T.shahadaExtra && T.shahadaExtra.show ? T.shahadaExtra : null;
-      UI.ar.innerHTML = [ar, extra].filter(Boolean).map(a => `<p class="ar" lang="ar" dir="rtl">${a.ar}</p><p class="tr">${a.tr}</p><p class="en">${a.en}</p>`).join('');
+      UI.ar.innerHTML = `<div class="wd-saytag">${icon('speak')}<span>${T.say}:</span></div>` +
+        [ar, extra].filter(Boolean).map(a => `<p class="ar" lang="ar" dir="rtl">${a.ar}</p><p class="tr">${a.tr}</p><p class="en">${a.en}</p>`).join('');
     }
-    // the count: drops the child can tap, one per time
-    UI.drops.innerHTML = ''; UI.drops.classList.remove('go');
-    const n = s.count || 0, have = st.counts[st.i] || 0;
-    for (let k = 0; k < n; k++){ const b = $('button', 'wd-drop' + (k < have ? ' full' : ''), icon('drop') + '<b>' + (k + 1) + '</b>'); b.setAttribute('aria-label', String(k + 1));
-      b.onclick = () => { if (k < (st.counts[st.i] || 0)) return; st.counts[st.i] = k + 1; b.classList.add('full'); play('drop'); const nx = b.nextElementSibling; if (nx) nx.classList.add('next'); b.classList.remove('next');
-        if (k + 1 === n) UI.done.classList.add('ready'); }; UI.drops.appendChild(b); }
-    const firstEmpty = UI.drops.children[have]; if (firstEmpty) firstEmpty.classList.add('next');
-    UI.done.classList.toggle('ready', !n || have >= n);
-    UI.done.querySelector('span').textContent = s.id === 'dua' ? 'Finish' : 'Done';
+    renderCount(); UI.drops.classList.remove('go');
+    UI.next.querySelector('span').textContent = s.id === 'dua' ? 'Finish' : 'Next';
+    UI.next.lastElementChild.outerHTML = icon(s.id === 'dua' ? 'check' : 'next');
     UI.back.disabled = st.i === 0;
     UI.note.hidden = true;
     progress();
     showHands(s.id);
+    showScene(s.id);
     drawBody();
     suggest();
     if (!quiet) speak(s);
+  }
+  // {R:RIGHT} / {L:LEFT} in a line become words in the badge colours
+  const lineHTML = t => t.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]).replace(/\{([RL]):([^}]+)\}/g, (m, k, w) => `<b class="lr lr-${k}">${w}</b>`);
+  // the same badge on the body map, beside the glowing arm or foot (body-map units)
+  const LRAT = { armR: [110, 100, 'R'], armL: [10, 100, 'L'], footR: [92, 212, 'R'], footL: [28, 212, 'L'] };
+  // the count: one drop per time the part is washed (tap the drop, the body map, or Done); never required
+  const need = s => s.count || (s.once ? 1 : 0);
+  function renderCount(){
+    const s = STEPS[st.i], n = st.mode === 'practice' ? 0 : need(s), have = Math.min(n, st.counts[st.i] || 0);
+    UI.drops.innerHTML = '';
+    for (let k = 0; k < n; k++){ const b = $('button', 'wd-drop' + (k < have ? ' full' : '') + (k === have ? ' next' : ''), icon('drop') + '<b>' + (k + 1) + '</b>');
+      b.setAttribute('aria-label', String(k + 1)); b.onclick = () => countOne(); UI.drops.appendChild(b); }
+    UI.root.classList.toggle('has-count', n > 0);
+    UI.done.hidden = !n;
+    UI.done.classList.toggle('full', n > 0 && have >= n);
+    UI.next.classList.toggle('ready', !n || have >= n);
+  }
+  function countOne(){
+    const s = STEPS[st.i], n = need(s);
+    if (!n || st.finished || st.mode === 'practice') return;
+    const have = st.counts[st.i] || 0;
+    if (have >= n){ play('tap'); return; }
+    st.counts[st.i] = have + 1; play('drop');
+    renderCount();
+    const d = UI.drops.children[have]; if (d){ d.classList.add('pop'); }
+    UI.bodyWrap.classList.remove('bump'); void UI.bodyWrap.offsetWidth; UI.bodyWrap.classList.add('bump');
   }
   function progress(){
     const s = STEPS[st.i];
@@ -697,12 +1143,12 @@
   function setPractice(){
     st.p = Math.max(0, Math.min(PRACT.length, st.p));
     UI.root.classList.remove('is-dua', 'has-ar');
-    UI.root.dataset.step = 'practice';
-    UI.ar.hidden = true; UI.drops.innerHTML = ''; UI.note.hidden = true;
+    UI.root.dataset.step = 'practice'; UI.lr.className = 'wd-lr';
+    UI.ar.hidden = true; UI.note.hidden = true; renderCount();
     if (st.p >= PRACT.length){ st.i = LAST; setStep(LAST); return; }
     st.i = st.p; st.flash = [];
     practicePrompt(false);
-    UI.hands.innerHTML = '';
+    UI.hands.innerHTML = ''; UI.scene.innerHTML = '';
     progress(); drawBody(); suggest();
   }
   function bodyPoint(e){
@@ -713,7 +1159,8 @@
   let flashT = 0;
   function flashArea(list, ms){ st.flash = list; drawBody(); clearTimeout(flashT); flashT = setTimeout(() => { st.flash = []; drawBody(); }, ms); }
   function onBodyTap(e){
-    if (st.mode !== 'practice' || st.finished || st.p >= PRACT.length) return;
+    if (st.mode !== 'practice'){ if (!e.target.closest('.wd-drop')) countOne(); return; }   // doing it: a tap on the body counts one wash
+    if (st.finished || st.p >= PRACT.length) return;
     const pt = bodyPoint(e); if (!pt) return;
     e.preventDefault();
     const s = PRACT[st.p], want = s.area, tol = 20*pt.k;

@@ -1,13 +1,11 @@
-/* Helping Home: the posture picture for the salah station (window.SALAHPOSE).
-   A faceless ink silhouette (no eyes, mouth or any feature: the head is a plain round shape), drawn as thick inked
-   strokes for the limbs. Seen from the side, facing left (toward the qibla end of the mat), for standing, takbir,
-   ruku', standing up, sujood and sitting. For the salam it is seen from behind, so "right" on the screen is the
-   child's own right, and the head turns right, then left.
-   Moving between positions tweens the joints (a small SVG, about 30 elements; nothing else is redrawn).
-   SALAHPOSE.mount(el) -> { set(name) }   names: stand takbir rise ruku sujud sit tash salamR salamL */
+/* Helping Home: the small posture sign beside each instruction on the salah station (window.SALAHPOSE).
+   A faceless ink silhouette (no eyes, mouth or any feature: the head is a plain round shape), like a sign: seen from
+   the side, facing left, for standing, takbir, ruku', standing up, sujood and sitting; for the salam it is seen from
+   behind with an arrow, so "right" on the screen is the child's own right. The big moving figure is pray/salah-kid.js.
+   SALAHPOSE.icon(name) -> SVG string   names: stand takbir rise ruku sujud sit tash qunut salamR salamL */
 (function () {
   'use strict';
-  var INKC = '#231e16', BODY = '#4d6a83', FAR = '#3a5168', MATC = '#2f6f5e', MATB = '#f2e3c2', ARROW = '#c8644a';
+  var INKC = '#231e16', BODY = '#231e16', FAR = '#6f6656', MATC = '#2f6f5e', MATB = '#f2e3c2', ARROW = '#c8644a';
   // joints in a 100 x 100 box, ground at y = 90. Far limbs end in 2. f = the pointing finger (tashahhud)
   var SIDE = {
     stand:  { h: [50, 17], n: [50, 27], s: [50, 31], p: [51, 56], k: [50, 72], a: [51, 86.5], t: [42, 89], e: [53, 45], w: [45, 43],
@@ -23,6 +21,8 @@
     sit:    { h: [55, 34], n: [56.5, 44], s: [57, 48], p: [61, 73], k: [35, 84.5], a: [63, 87.5], t: [73, 89], e: [53, 62], w: [42, 76],
               k2: [36.5, 84.5], a2: [69, 79], t2: [63.5, 89], e2: [52, 62.5], w2: [43, 77] },
   };
+  // the qunut (Shafi'i, after the bow): standing, forearms raised in front with open palms, as in du'a
+  SIDE.qunut = Object.assign({}, SIDE.stand, { e: [49, 46.5], w: [37, 38], e2: [50.5, 47], w2: [38.5, 39] });
   SIDE.tash = Object.assign({}, SIDE.sit, { e2: [51, 63], w2: [41, 74.5], f: [33.5, 72] });
   var BACK = { salamR: 1, salamL: -1 };
 
@@ -57,37 +57,13 @@
     var x0 = 50 - turn * 9, x1 = 50 + turn * 14;
     s += '<path d="M' + x0 + ' 22Q50 13 ' + x1 + ' 23" fill="none" stroke="' + ARROW + '" stroke-width="2.6" stroke-linecap="round"/>' +
          '<path d="M' + (x1 - turn * 5.5) + ' 18.5L' + x1 + ' 23L' + (x1 - turn * 6) + ' 26" fill="none" stroke="' + ARROW + '" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>';
-    s += '<text x="' + (50 + turn * 30) + '" y="40" text-anchor="middle" font-family="ui-rounded,system-ui,sans-serif" font-weight="800" font-size="9" fill="' + INKC + '">' + (turn > 0 ? 'right' : 'left') + '</text>';
     return s;
   }
-  var ease = function (t) { return t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2; };
-  function lerpJ(A, B, t) { var o = {}; Object.keys(B).forEach(function (k) { var a = A[k] || B[k]; o[k] = [a[0] + (B[k][0] - a[0]) * t, a[1] + (B[k][1] - a[1]) * t]; });
-    if (A.f && !B.f) o.f = null; return o; }
-
   window.SALAHPOSE = {
-    mount: function (el) {
-      el.innerHTML = '<svg viewBox="0 0 100 100" aria-hidden="true"><g class="sp-g"></g></svg>';
-      var g = el.querySelector('.sp-g'), cur = null, J = null, anim = 0;
-      function draw(html) { g.innerHTML = ground() + html; }
-      return {
-        set: function (name, instant) {
-          if (name === cur) return; var prev = cur; cur = name; var id = ++anim;
-          var reduce = window.Kit && Kit.reducedMotion;
-          if (BACK[name]) {
-            var turn = BACK[name], from = BACK[prev] ? -turn * 3 : 0, t0 = performance.now();
-            if (!BACK[prev]) { el.classList.remove('sp-fade'); void el.offsetWidth; el.classList.add('sp-fade'); }
-            (function step() { if (id !== anim) return; var u = instant || reduce ? 1 : Math.min(1, (performance.now() - t0) / 650);
-              draw(back(turn, from + (turn * 3 - from) * ease(u))); if (u < 1) requestAnimationFrame(step); })();
-            return;
-          }
-          var target = SIDE[name] || SIDE.stand;
-          if (!J || BACK[prev] || instant || reduce) { if (BACK[prev]) { el.classList.remove('sp-fade'); void el.offsetWidth; el.classList.add('sp-fade'); }
-            J = target; draw(side(J)); return; }
-          var A = J, t1 = performance.now();
-          (function step() { if (id !== anim) return; var u = Math.min(1, (performance.now() - t1) / 520);
-            J = lerpJ(A, target, ease(u)); if (u >= 1) J = target; draw(side(J)); if (u < 1) requestAnimationFrame(step); })();
-        },
-      };
+    icon: function (name) {
+      // the side views face right, like the big figure; the salam is seen from behind (the child's own right is on the right)
+      var body = BACK[name] ? back(BACK[name], BACK[name] * 3) : '<g transform="matrix(-1 0 0 1 100 0)">' + side(SIDE[name] || SIDE.stand) + '</g>';
+      return '<svg viewBox="2 6 96 92" aria-hidden="true">' + ground() + body + '</svg>';
     },
   };
 })();

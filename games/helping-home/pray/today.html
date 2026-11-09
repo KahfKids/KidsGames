@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#f2efe7" />
+  <title>Today’s prayers · Helping Home</title>
+  <link rel="manifest" href="/KidsGames/manifest.json" />
+  <link rel="apple-touch-icon" href="/KidsGames/icons/icon-192x192.png" />
+  <script src="/KidsGames/js/kahf-bridge.js" defer></script>
+  <style>
+    :root{--paper:#f2efe7;--ink:#231e16;--card:#fffaf0;--ink2:#5d5446}
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{margin:0;background:var(--paper);color:var(--ink);font:600 16px/1.35 ui-rounded,"SF Pro Rounded","Nunito",system-ui,sans-serif;-webkit-user-select:none;user-select:none}
+    body{min-height:100vh;padding:calc(env(safe-area-inset-top) + 10px) calc(env(safe-area-inset-right) + 14px) calc(env(safe-area-inset-bottom) + 24px) calc(env(safe-area-inset-left) + 14px);max-width:600px;margin:0 auto}
+    .top{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+    .round{all:unset;box-sizing:border-box;width:48px;height:48px;flex:none;border-radius:50%;border:2.5px solid var(--ink);background:var(--paper);box-shadow:0 3px 0 var(--ink);display:grid;place-items:center;cursor:pointer}
+    .round:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ink)}.round svg{width:26px;height:26px}
+    .pill{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:2px;padding:7px 14px 8px;border-radius:999px;border:2.5px solid var(--ink);background:var(--card);box-shadow:0 3px 0 var(--ink)}
+    .pill b{font-size:17px;line-height:1.1}.pill small{font-size:12.5px;color:var(--ink2);font-weight:700}
+    .card{background:var(--card);border:2.5px solid var(--ink);border-radius:22px;box-shadow:0 4px 0 var(--ink);padding:8px 6px 10px}
+    .how{display:flex;align-items:center;gap:8px;margin:12px 6px 0;font-size:14px;color:var(--ink2)}
+    .how svg{width:22px;height:22px;flex:none}
+    .foot{margin:14px 8px 0;font-size:12.5px;color:var(--ink2);text-align:center}
+    .foot a{color:inherit;font-weight:800}
+  </style>
+</head>
+<body>
+  <div class="top">
+    <button class="round" id="home" aria-label="Home"><svg viewBox="0 0 24 24" fill="none" stroke="#231e16" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 11.5 12 4l8.5 7.5"/><path d="M6 10v9.5h4.5V15h3v4.5H18V10"/></svg></button>
+    <div class="pill"><b>Today’s prayers</b><small id="date"></small></div>
+    <span style="width:48px;flex:none"></span>
+  </div>
+  <div class="card" id="chart"></div>
+  <div class="how"><svg viewBox="0 0 24 24" fill="none" stroke="#231e16" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 20v-6.5L6 8.5a1.3 1.3 0 0 1 2.3-1.2l2.2 4V4.8a1.3 1.3 0 0 1 2.6 0V11"/><path d="M13.1 11V6.2a1.3 1.3 0 0 1 2.6 0V12l1-2a1.3 1.3 0 0 1 2.3 1.2l-2.5 5V20"/></svg>
+    <span>Tap a row of beads to pray it with me. Each bead is one rak’ah.</span></div>
+  <p class="foot" id="foot"></p>
+
+  <script src="/KidsGames/games/helping-home/iso/flow.js"></script>
+  <script src="/KidsGames/games/helping-home/iso/vendor/adhan.js"></script>
+  <script src="/KidsGames/games/helping-home/iso/prayer.js"></script>
+  <!-- what to pray at each time (TEACHER REVIEW), then the chart -->
+  <script src="/KidsGames/games/helping-home/pray/prayer-text.js"></script>
+  <script src="/KidsGames/games/helping-home/pray/chart.js"></script>
+  <script>
+  (function () {
+    'use strict';
+    var q = new URLSearchParams(location.search), box = document.getElementById('chart');
+    // ?madhab= and ?friday=1 are for checks; the real madhab comes from the grown-ups' settings
+    var M = q.get('madhab') || HHChart.madhab();
+    function draw() {
+      var now = new Date();
+      document.getElementById('date').textContent = now.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+      HHChart.render(box, { madhab: M, now: now, from: 'today', friday: q.has('friday') ? q.get('friday') === '1' : undefined,
+                            current: q.get('now') || undefined });
+    }
+    draw();
+    setInterval(draw, 60000);
+    addEventListener('pageshow', draw);   // back from the salah page: show the new beads
+    document.addEventListener('visibilitychange', function () { if (!document.hidden) draw(); });
+    document.getElementById('foot').innerHTML = (M === 'hanafi' ? 'Shown the Hanafi way.' : 'Shown the Shafi’i, Maliki and Hanbali way.') +
+      ' Grown-ups can change this in <a href="' + HHFlow.url('settings') + '">settings</a>.';
+    document.getElementById('home').onclick = function () { location.href = HHFlow.url('house'); };
+  })();
+  </script>
+</body>
+</html>

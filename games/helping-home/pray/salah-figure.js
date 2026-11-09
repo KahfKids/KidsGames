@@ -11,13 +11,13 @@
                  qibla bearing from north (HHPrayer.qibla()); otherwise the direction is decorative.
      3 PRAY      the parts of the body that touch the mat glow on it for each position: two feet standing; seven
                  parts in sujood (forehead with nose, two palms, two knees, the toes of both feet); sitting: the
-                 knees, the left foot laid under the body and the toes of the upright right foot.
-                 A string of rak'ah beads on the mat's border fills as each rak'ah is finished.
+                 knees, the left foot laid under the body and the toes of the upright right foot. The points come
+                 from the praying child's skeleton (pray/salah-kid.js), who is drawn in a layer above the mat.
 
    Parts: FLOOR board . MAT slab (pile top, woven back, cream border, terracotta line, green field, mihrab arch with an
    eight-point star, eight khatam stars, fringe at both ends) . ROLL (cylinder of the wound mat with a spiral end) .
    COMPASS (brass case, bezel, cream dial with ticks, optional north tick, turning pointer with a Kaaba mark, centre
-   pin, glass) . BEADS (thread and N beads) . CONTACTS (foot, hand, knee, forehead and toe imprints).
+   pin, glass) . CONTACTS (foot, hand, knee, forehead and toe imprints).
    Coordinates: x = depth (front at x = 140), y = width, z = up; 1 unit = 1 cm. The child faces -x (the head end).
    Seen from behind, the child's right is -y. */
 (function () {
@@ -99,46 +99,32 @@
     return { at: [cx, YC, zc], box: [[cx - R, MY0, FT], [cx + R, MY1, FT + 2 * R]], svg: act('mat', s) };
   }
 
-  /* ---------- rak'ah beads on the left border near the foot ---------- */
-  function beads(st) {
-    var n = st.rakN, s = '', xs = [], by = MY1 - 3.6, kk = k1();
-    if (st.rollE < .995) return '';
-    for (var i = 0; i < n; i++) xs.push(MX1 - 14 - i * 8);
-    s += line(xs.map(function (x) { return [x, by, TOP + .9]; }).concat([[xs[xs.length - 1] - 5, by - .5, TOP + .2]]), .9);
-    // nearest bead last, so it overlaps the one behind it correctly from the front views
-    var order = xs.map(function (x, i) { return i; }).sort(function (a, b) { return depthOf([xs[a], by, TOP]) - depthOf([xs[b], by, TOP]); });
-    order.forEach(function (i) {
-      var c = P(xs[i], by, TOP + 1.5), done = i < st.rakDone, cur = i === st.rakDone && st.phase === 'pray';
-      var col = done ? STAR : cur ? '#fff1b8' : '#fbf6ea';
-      s += '<circle cx="' + f(c[0]) + '" cy="' + f(c[1]) + '" r="' + f(2.6 * kk) + '" fill="' + col + '" stroke="' + INK + '" stroke-width="' + (cur ? 1.6 : 1) + '"/>' +
-           '<circle cx="' + f(c[0] - .8 * kk) + '" cy="' + f(c[1] - .9 * kk) + '" r="' + f(.75 * kk) + '" fill="#fff" opacity=".7"/>';
-    });
-    return s;
-  }
-
-  /* ---------- where the body touches the mat ---------- */
+  /* ---------- where the body touches the mat: taken from the child's own skeleton (pray/salah-kid.js), so the glow
+     sits exactly under the feet, knees, palms, toes and forehead of the figure ---------- */
+  // a shape in a local frame on the mat: u along the direction `a` (radians, world), v to its left; centred (cx, cy)
+  var locA = function (cx, cy, a, pts) { var c = Math.cos(a), s = Math.sin(a); return pts.map(function (p) { return [cx + p[0] * c - p[1] * s, cy + p[0] * s + p[1] * c]; }); };
   var FOOT = (function () { var o = []; for (var i = 0; i < 16; i++) { var a = i / 16 * 2 * Math.PI, u = 5.4 * Math.cos(a), w = 1.75 + .95 * (u + 5.4) / 10.8; o.push([u, w * Math.sin(a)]); } return o; })();
-  function foot(cx, cy, toes) {
-    var s = flat(loc(cx, cy, FOOT), GLOWC, .8, .06);
-    if (toes) [[5.9, -1.6, .75], [6.4, -.4, .85], [6.3, .8, .7], [5.9, 1.8, .6]].forEach(function (t) { s += flat(loc(cx, cy, ell(t[2], t[2] * .9, 8, t[0], t[1])), GLOWC, .5, .06); });
+  function foot(c) {
+    var s = flat(locA(c.x, c.y, c.a, FOOT), GLOWC, .8, .06);
+    if (c.toes) [[5.9, -1.6, .75], [6.4, -.4, .85], [6.3, .8, .7], [5.9, 1.8, .6]].forEach(function (t) { s += flat(locA(c.x, c.y, c.a, ell(t[2], t[2] * .9, 8, t[0], t[1])), GLOWC, .5, .06); });
     return s;
   }
-  function hand(cx, cy, side) {
-    var s = flat(loc(cx, cy, ell(2.9, 2.4, 14)), GLOWC, .8, .06);
-    [-1.75, -.6, .55, 1.65].forEach(function (v, i) { var L = [3.6, 4.3, 4.1, 3.3][i]; s += flat(loc(cx, cy, ell(L / 2, .55, 10, 2.3 + L / 2, v)), GLOWC, .5, .06); });
-    s += flat(loc(cx, cy, [[.6, side * 2.0], [2.9, side * 3.9], [3.5, side * 3.3], [1.6, side * 1.3]]), GLOWC, .5, .06);
+  function toes(c) { var s = ''; [[0, -1.9, .85], [.5, -.6, .95], [.4, .7, .85], [0, 1.9, .75]].forEach(function (t) { s += flat(locA(c.x, c.y, c.a, ell(t[2] * 1.3, t[2], 8, t[0], t[1])), GLOWC, .5, .06); }); return s; }
+  function hand(c) {
+    var sd = c.side || 1, s = flat(locA(c.x, c.y, c.a, ell(2.9, 2.4, 14, -1.2, 0)), GLOWC, .8, .06);
+    [-1.75, -.6, .55, 1.65].forEach(function (v, i) { var L = [3.6, 4.3, 4.1, 3.3][i]; s += flat(locA(c.x, c.y, c.a, ell(L / 2, .55, 10, 1.1 + L / 2, v)), GLOWC, .5, .06); });
+    s += flat(locA(c.x, c.y, c.a, [[-.6, -sd * 2.0], [-2.9 + 2.3, -sd * 3.9], [-.6 + 1.2, -sd * 3.3], [.4, -sd * 1.3]]), GLOWC, .5, .06);
     return s;
   }
-  var dot = function (cx, cy, ru, rv) { return flat(loc(cx, cy, ell(ru, rv, 14)), GLOWC, .8, .06); };
-  // contact sets: each point also gets a soft halo in the FX layer (centre x, y, size)
-  var CONTACTS = {
-    stand: { pts: [[99, YC - 6.5, 6], [99, YC + 6.5, 6]], svg: function () { return foot(99, YC - 6.5, true) + foot(99, YC + 6.5, true); } },
-    sujud: { pts: [[46, YC, 5], [51, YC - 11, 5], [51, YC + 11, 5], [73, YC - 6.5, 4.5], [73, YC + 6.5, 4.5], [98, YC - 6.5, 3.6], [98, YC + 6.5, 3.6]],
-      svg: function () { return dot(46, YC, 3.8, 3.1) + dot(49.6, YC, 1.2, .95) + hand(51, YC - 11, 1) + hand(51, YC + 11, -1) + dot(73, YC - 6.5, 3.2, 3.2) + dot(73, YC + 6.5, 3.2, 3.2) +
-        dot(98, YC - 6.5, 1.9, 2.6) + dot(98, YC + 6.5, 1.9, 2.6); } },
-    sit: { pts: [[74, YC - 6.5, 4.5], [74, YC + 6.5, 4.5], [90, YC + 4.5, 6.5], [98, YC - 6.5, 3.6]],
-      svg: function () { return dot(74, YC - 6.5, 3.2, 3.2) + dot(74, YC + 6.5, 3.2, 3.2) + flat(loc(90, YC + 4.5, FOOT.map(function (p) { return [-p[0], p[1] * .9]; })), GLOWC, .8, .06) + dot(98, YC - 6.5, 1.9, 2.6); } },
-  };
+  var dotG = function (c, ru, rv) { return flat(locA(c.x, c.y, c.a || 0, ell(ru, rv, 14)), GLOWC, .8, .06); };
+  var SIZE = { foot: 6, toes: 3.8, knee: 4.5, hand: 5, head: 5 };
+  var cCache = {};
+  function contactsOf(name) { if (!name || !window.SALAHKID) return []; var k = name + SALAHKID.styleKey; return cCache[k] || (cCache[k] = SALAHKID.contacts(name)); }
+  function contactSVG(name) {
+    return contactsOf(name).map(function (c) {
+      return c.kind === 'foot' ? foot(c) : c.kind === 'toes' ? toes(c) : c.kind === 'hand' ? hand(c) : c.kind === 'knee' ? dotG(c, 3.2, 3.2) : dotG(c, 3.9, 3.1) + dotG({ x: c.x + 3.2 * Math.cos(c.a || 0), y: c.y + 3.2 * Math.sin(c.a || 0) }, 1.2, 1);
+    }).join('');
+  }
 
   /* ---------- the compass ---------- */
   function compass(st) {
@@ -181,7 +167,7 @@
     if (st.phase === 'qibla' && !st.qibla) s += halo(QX, QY, FT + .1, QR + 7) +
       '<path class="ps-pulse" d="' + pd(on(PZ(QZ + .2), ellUV(QX, QY, QR + 2.2, QR + 2.2, 36))) + '" fill="none" stroke="#e0a21c" stroke-width="2.4" stroke-dasharray="5 4" stroke-linecap="round"/>';
     if (st.qibla && (st.phase === 'qibla' || st.phase === 'ready')) s += halo(MX0 + 22, YC, TOP + .1, 17);
-    if ((st.phase === 'pray' || st.phase === 'ready') && CONTACTS[st.contacts]) CONTACTS[st.contacts].pts.forEach(function (p) { s += halo(p[0], p[1], TOP + .1, p[2] + 2.5); });
+    if (st.phase === 'pray' || st.phase === 'ready') contactsOf(st.contacts).forEach(function (c) { s += halo(c.x, c.y, TOP + .1, SIZE[c.kind] + 2.5); });
     return s;
   }
 
@@ -191,18 +177,34 @@
     var d = ''; for (var j = 1; j < 6; j++) { var a = P(0.6, j * FD / 6, FT + .02), b = P(FW - .6, j * FD / 6, FT + .02); d += 'M' + f(a[0]) + ' ' + f(a[1]) + 'L' + f(b[0]) + ' ' + f(b[1]); }
     s += '<path d="' + d + '" stroke="' + FLOOR.d + '" stroke-width=".7" fill="none"/>';
     var clipF = boardTop(0, 0, FW, FD, FT, 8);
-    var sh = castShadow(on(PZ(FT), ellUV(QX, QY, QR, QR, 16)).concat(on(PZ(QZ), ellUV(QX, QY, QR, QR, 16))), FT);
+    var sh = st.phase === 'pray' || st.phase === 'ready' || st.phase === 'done' ? '' : castShadow(on(PZ(FT), ellUV(QX, QY, QR, QR, 16)).concat(on(PZ(QZ), ellUV(QX, QY, QR, QR, 16))), FT);
     if (st.rollE < .995) { var R = radius(st.rollE), cx = MX0 + st.rollE * ML + R * (1 - st.rollE) * .9;
       sh += castShadow([[cx - R, MY0, FT], [cx + R, MY0, FT], [cx - R, MY1, FT], [cx + R, MY1, FT], [cx, MY0, FT + 2 * R], [cx, MY1, FT + 2 * R]], FT); }
     s += clipTo(clipF, sh);
     s += '<!--DYN-->';
-    var m = mat(st) + (st.rollE > .995 ? (CONTACTS[st.contacts] && (st.phase === 'pray' || st.phase === 'ready') ? CONTACTS[st.contacts].svg() : '') + beads(st) : '');
+    var m = mat(st) + (st.rollE > .995 && (st.phase === 'pray' || st.phase === 'ready') ? contactSVG(st.contacts) : '');
     var r = theRoll(st);                                   // the roll lies on the mat: always after it
-    var parts = [{ at: [(MX0 + MX1) / 2, YC, FT], box: [[MX0 - 4, MY0, FT], [MX1 + 4, MY1, FT + 14]], svg: m + (r ? r.svg : '') }, compass(st)];
+    // while praying the compass has done its job: it is left out, so the picture is only the mat and the child
+    var praying = st.phase === 'pray' || st.phase === 'ready' || st.phase === 'done';
+    var parts = [{ at: [(MX0 + MX1) / 2, YC, FT], box: [[MX0 - 4, MY0, FT], [MX1 + 4, MY1, FT + 14]], svg: m + (r ? r.svg : '') }, praying ? null : compass(st)];
     s += byDepth(parts);
     s += '<!--/DYN--><!--FX-->' + fx(st) + '<!--/FX-->';
     return s;
   }
 
-  window.SALAHFIG = { scene: scene, size: [FW, FD, 24], center: [FW / 2, FD / 2], Q: [QX, QY, QZ], TARGET: Math.PI, CONTACTS: CONTACTS };
+  // the mat as flat shapes only (field, border, line), for a close-up bubble drawn with another camera
+  function patch() {
+    return flat(rectXY(MX0, MY0, MX1, MY1), BORDER, .8) + flat(rectXY(MX0 + 5, MY0 + 5, MX1 - 5, MY1 - 5), FIELD, .8) +
+      line(z1(rectXY(MX0 + 2.2, MY0 + 2.2, MX1 - 2.2, MY1 - 2.2).concat([[MX0 + 2.2, MY0 + 2.2]])), .9).replace(INK, LINE);
+  }
+  // the child stands at the foot of the mat, between the glowing feet, facing the arch
+  if (window.SALAHKID) SALAHKID.place(101, YC, TOP);
+  // the praying view: from the child's front right, low, so the bow, the sujood and the sitting read in profile and the
+  // raised hands still show; framed on the mat and every position of the child
+  var CAM = [-118, 21];
+  function frame() {
+    var pts = [[MX0 - 3, MY0, FT], [MX1 + 3, MY0, FT], [MX0 - 3, MY1, FT], [MX1 + 3, MY1, FT]];
+    return window.SALAHKID ? pts.concat(SALAHKID.extent()) : pts;
+  }
+  window.SALAHFIG = { scene: scene, size: [FW, FD, 24], center: [FW / 2, FD / 2], Q: [QX, QY, QZ], TARGET: Math.PI, CAM: CAM, frame: frame, contacts: contactsOf, patch: patch };
 })();

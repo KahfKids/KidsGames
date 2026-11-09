@@ -106,6 +106,7 @@
     moon: '<path d="M19 14.5A7.5 7.5 0 0 1 9.5 5a7.5 7.5 0 1 0 9.5 9.5z"/>',
     dawn: '<path d="M3 17h18"/><path d="M7 17a5 5 0 0 1 10 0"/><path d="M12 7v2.2M5.5 10.5l1.5 1.5M18.5 10.5 17 12"/><path d="M6 20.5h12"/>',
     dusk: '<path d="M3 17h18"/><path d="M7 17a5 5 0 0 1 10 0"/><path d="M6 20.5h12"/><path d="M12 6.5v3M10.5 8 12 9.5 13.5 8"/>',
+    next: '<path d="M4.5 12h14"/><path d="M13 6l6 6-6 6"/>',
   };
   PS.icons = I;
   PS.icon = function (n, col) { return '<svg viewBox="0 0 24 24" fill="none" stroke="' + (col || '#231e16') + '" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">' + (I[n] || '') + '</svg>'; };
@@ -154,7 +155,9 @@
       if (fx !== last[3]) { gF.innerHTML = fx; last[3] = fx; }
       if (PS.after) PS.after(st);
     };
-    PS.redraw = function () { last = ['', '', '', '']; ui.render(); };
+    PS.redraw = function () { last = ['', '', '', '']; ui.render(); if (PS.onRefit) PS.onRefit(); };
+    // an extra layer above the others (a station's own moving part): the returned <g> is written by the station
+    PS.layer = function (filtered, cls) { var g = lay(filtered); if (cls) g.parentNode.setAttribute('class', g.parentNode.getAttribute('class') + ' ' + cls); return g; };
     // presses on parts drawn in the upper layers (the engine only listens on the bottom one)
     stack.addEventListener('pointerdown', function (e) {
       if (e.button || fig.contains(e.target)) return;
@@ -218,10 +221,19 @@
      so the figure fills its area on a phone and on a tablet. Line weight and the hand-drawn filter are re-scaled
      for the new frame, exactly as the engine does at mount, so the look stays the same. ---------- */
   PS.fit = function (pad) {
-    var svgs = [].slice.call(PS.stack.querySelectorAll('svg')), fig = document.getElementById('fig'), bb = null;
+    var svgs = [].slice.call(PS.stack.querySelectorAll('svg')), bb = null;
     svgs.forEach(function (s) { var g = s.firstElementChild === s.querySelector('defs') ? document.getElementById('art') : s.querySelector('g');
       try { var b = g.getBBox(); if (b.width && b.height) bb = bb ? { x0: Math.min(bb.x0, b.x), y0: Math.min(bb.y0, b.y), x1: Math.max(bb.x1, b.x + b.width), y1: Math.max(bb.y1, b.y + b.height) }
         : { x0: b.x, y0: b.y, x1: b.x + b.width, y1: b.y + b.height }; } catch (e) {} });
+    fitTo(bb, pad);
+  };
+  // frame on a set of 3D points for the current camera (a station that wants a steady frame while things move in it)
+  PS.fitBox = function (pts3, pad) {
+    var q = pts3.map(function (p) { return P(p[0], p[1], p[2]); }), xs = q.map(function (v) { return v[0]; }), ys = q.map(function (v) { return v[1]; });
+    fitTo({ x0: Math.min.apply(null, xs), y0: Math.min.apply(null, ys), x1: Math.max.apply(null, xs), y1: Math.max.apply(null, ys) }, pad);
+  };
+  function fitTo(bb, pad) {
+    var svgs = [].slice.call(PS.stack.querySelectorAll('svg')), fig = document.getElementById('fig');
     if (!bb) return;
     var p = (pad == null ? .05 : pad) * Math.max(bb.x1 - bb.x0, bb.y1 - bb.y0), w = bb.x1 - bb.x0 + 2 * p, h = bb.y1 - bb.y0 + 2 * p;
     var vb = [bb.x0 - p, bb.y0 - p, w, h].map(function (v) { return v.toFixed(2); }).join(' ');
@@ -229,9 +241,9 @@
     var old = INK_K; INK_K = Math.max(w, h * .75) / INK_REF_VB;
     if (Math.abs(old - INK_K) > 1e-3) {
       document.getElementById('fdefs').innerHTML = filterFor(INK_K); bakeNoise(fig);
-      PS.redraw();
     }
-  };
+    PS.redraw();
+  }
 
   /* ---------- words ---------- */
   // one line of religious text: Arabic, transliteration, meaning (+ a tag such as "Al-Fatihah 1", + repeat dots)
@@ -257,7 +269,19 @@
 
   /* ---------- voice: say a list of lines in order (each may repeat); cancel with PS.hush() ---------- */
   var sayId = 0;
-  PS.hush = function () { sayId++; try { HHVoice.stop(); } catch (e) {} };
+  PS.hush = function () { sayId++; PS.clip = null; try { HHVoice.stop(); } catch (e) {} };
+  // the clip being said, for a word-by-word highlight: { seq, at (performance.now() when it started), dur (ms) }.
+  // HHVoice doesn't report a clip's length, so the first buffer that starts after PS.say asks for a clip is noted
+  // (recorded clips are far longer than the kit's short noise bursts, which are ignored).
+  var clipSeq = 0, want = 0;
+  PS.clip = null;
+  try {
+    var ABS = window.AudioBufferSourceNode && AudioBufferSourceNode.prototype, start0 = ABS && ABS.start;
+    if (start0 && !ABS.__psClip) {
+      ABS.__psClip = true;
+      ABS.start = function () { try { if (want && this.buffer && this.buffer.duration > .3) { PS.clip = { seq: want, at: performance.now(), dur: this.buffer.duration * 1000 }; want = 0; } } catch (e) {} return start0.apply(this, arguments); };
+    }
+  } catch (e) {}
   // lines: [{ audio, ms, repeat }], cb.line(i, rep) before each clip; resolves true when all were said, false if cancelled
   PS.say = function (lines, cb) {
     var id = ++sayId; cb = cb || {};
@@ -268,6 +292,7 @@
         if (id !== sayId) return done(false);
         if (i >= lines.length) return done(true);
         var L = lines[i], n = L.repeat > 1 ? L.repeat : 1;
+        PS.clipSeq = want = ++clipSeq; PS.clipStart = performance.now(); PS.clip = null;
         if (cb.line) cb.line(i, rep);
         var p = L.audio && window.HHVoice ? HHVoice.play(L.audio, { fallbackMs: L.ms || 2000 }) : new Promise(function (ok) { setTimeout(ok, L.ms || 2000); });
         // a watchdog: if the audio never ends (a context the system suspended), move on instead of waiting forever

@@ -64,6 +64,15 @@
       <p class="note" id="qibla" style="margin:10px 0 0"></p>
     </div>
 
+    <div class="card">
+      <h2>School days</h2>
+      <p class="note">On school days the house packs a schoolbag and sets homework. Tap to choose.</p>
+      <div id="sdays" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+      <label for="hoff">Hijri date</label>
+      <select id="hoff"><option value="-2">2 days earlier</option><option value="-1">1 day earlier</option><option value="0">As calculated</option><option value="1">1 day later</option><option value="2">2 days later</option></select>
+      <p class="note" id="hnow" style="margin:8px 0 0"></p>
+    </div>
+
     <button class="btn go" id="save" type="button">Save</button>
     <div id="msg" role="status"></div>
     <button class="btn" id="back" type="button" style="margin-top:6px">Back to the house</button>
@@ -72,6 +81,7 @@
   <script src="/KidsGames/games/helping-home/iso/vendor/adhan.js"></script>
   <script src="/KidsGames/games/helping-home/iso/prayer.js"></script>
   <script src="/KidsGames/games/helping-home/iso/cities.js"></script>
+  <script src="/KidsGames/games/helping-home/house/days.js"></script>
   <script>
   (function () {
     var $ = function (id) { return document.getElementById(id); };
@@ -100,11 +110,40 @@
       $('madhab').onchange = function () { st.madhab = $('madhab').value; render(); };
       $('q').oninput = list;
       $('save').onclick = function () {
-        if (st.lat === null) { $('msg').textContent = 'Pick a city first.'; return; }
-        st.manual = true; P.save(st); $('msg').textContent = 'Saved.';
+        if (st.lat === null) {
+          if (window.HHDays && dset) { HHDays.saveSettings({ hijriOffset: dset.hijriOffset, schoolDays: dset.schoolDays }); $('msg').textContent = 'Saved school days. Pick a city for prayer times.'; return; }
+          $('msg').textContent = 'Pick a city first.'; return;
+        }
+        st.manual = true; P.save(st);
+        if (window.HHDays && dset) HHDays.saveSettings({ hijriOffset: dset.hijriOffset, schoolDays: dset.schoolDays });
+        $('msg').textContent = 'Saved.';
       };
       $('back').onclick = function () { location.href = (window.HHFlow ? HHFlow.url('house') : '/KidsGames/games/helping-home/index.html'); };
-      list(); render();
+      initDays(); list(); render();
+    }
+    var DN = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], dset;
+    function initDays() {
+      var D = window.HHDays; if (!D) return;
+      dset = D.settings(); $('hoff').value = String(dset.hijriOffset);
+      var box = $('sdays'); box.textContent = '';
+      [1, 2, 3, 4, 5, 6, 0].forEach(function (n) {
+        var b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.style.cssText = 'width:auto;min-width:64px;min-height:48px;padding:0 12px';
+        b.textContent = DN[n]; b.setAttribute('aria-pressed', String(dset.schoolDays.indexOf(n) >= 0));
+        b.style.background = dset.schoolDays.indexOf(n) >= 0 ? 'var(--soft)' : 'var(--paper)';
+        b.onclick = function () {
+          var i = dset.schoolDays.indexOf(n); if (i >= 0) dset.schoolDays.splice(i, 1); else dset.schoolDays.push(n);
+          b.setAttribute('aria-pressed', String(i < 0)); b.style.background = i < 0 ? 'var(--soft)' : 'var(--paper)';
+        };
+        box.appendChild(b);
+      });
+      $('hoff').onchange = function () { dset.hijriOffset = parseInt($('hoff').value, 10) || 0; hshow(); };
+      hshow();
+    }
+    function hshow() {
+      var D = window.HHDays; if (!D) return;
+      var keep = D.settings(); D.saveSettings({ hijriOffset: dset.hijriOffset, schoolDays: dset.schoolDays });   // preview with the chosen offset
+      var h = D.hijri(new Date()); $('hnow').textContent = 'Today: ' + h.day + ' ' + h.monthName + ' ' + h.year;
+      D.saveSettings(keep);
     }
     function list() {
       var q = $('q').value.trim().toLowerCase(), box = $('list'), n = 0, out = [];
