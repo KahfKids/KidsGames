@@ -105,7 +105,7 @@ function makeObjs(S,b,legs,setLevel,keys,settle){
   const L=S.L,hz=document.createElement('canvas');hz.width=hz.height=2*HR;
   const hg=hz.getContext('2d',{willReadFrequently:true});
   const sg=document.createElement('canvas');sg.width=sg.height=DW;const sgc=sg.getContext('2d',{willReadFrequently:true});DYN.d=null;
-  let T=0,TS=0,SPD=S.n==21?.9:S.n==18?.65:1,fxs=[],boom=false,acc=0,col=0,won=0,tpc=0,sf=null,blobs,orbs,spins,elec;
+  let T=0,TS=0,SPD=S.n==21?.9:S.n==18?.65:S.n==14?.55:1,fxs=[],boom=false,acc=0,col=0,won=0,tpc=0,sf=null,blobs,orbs,spins,elec;
   const reset=()=>{T=0;TS=0;col=0;fxs=[];
     blobs=L.blobs.map(([x,y,t])=>({x,y,ox:x,oy:y,t,rot:Math.random()*360,sz:t==1?10:40,fr:0,gh:0,vis:true}));
     orbs=L.orbs.map(([x,y,s])=>({x,y,s,gh:100,fade:0,sz:60}));
@@ -117,14 +117,14 @@ function makeObjs(S,b,legs,setLevel,keys,settle){
   reset();
   const tickOnce=(px,py)=>{
     T+=1/30;TS+=SPD/30;
-    for(const f of fxs)f.t+=1/18;fxs=fxs.filter(f=>f.t<1);
+    for(const f of fxs)f.t+=1/7;fxs=fxs.filter(f=>f.t<1);
     for(let i=0;i<blobs.length;i++){const a=blobs[i];if(a.dead||!a.vis||a.fr<1||!(a.t==2||a.t==4)||a.gh>60)continue;
       for(let j=i+1;j<blobs.length;j++){const c=blobs[j];if(c.dead||!c.vis||c.fr<1||!(c.t==2||c.t==4)||c.gh>60)continue;
         if(Math.hypot(a.x-c.x,a.y-c.y)<(a.sz+c.sz)*.17){a.dead=c.dead=true;fxs.push({x:(a.x+c.x)/2,y:(a.y+c.y)/2,t:0,s:a.sz+c.sz});break;}}}
     for(const o of blobs){
       if(o.dead)continue;const dx=px-o.x,dy=py-o.y,d=Math.hypot(dx,dy)||1,big=o.t==2||o.t==4,f=(S.n==21&&(o.t==3||o.t==5))?.55:(o.t==2||o.t==4)?.6:1,mv=s=>{o.x+=dx/d*s*f;o.y+=dy/d*s*f;};
       if(o.t==1){const gf=(S.n>=16&&S.n<=20)?.45:1;if(d<50){o.w=(o.w||0)+1;if(o.w>10)o.sz+=1.5*gf;}else{o.w=0;o.sz+=(1-d/50)*gf;if(o.sz<10)o.sz=10;}o.sz=Math.min(o.sz,220);continue;}
-      if(o.t==2||o.t==4){o.rot+=4;if(o.fuse===undefined)o.fuse=-1;if(o.fuse<0){if(d<45)o.fuse=0;}else{o.fuse++;o.sz=40+(o.fuse%4<2?7:0);if(o.fuse>=12){o.dead=true;fxs.push({x:o.x,y:o.y,t:0,s:48});}}continue;}
+      if(o.t==2||o.t==4){o.rot+=4;if(o.fuse===undefined)o.fuse=-1;if(o.fuse<0){if(d<45)o.fuse=0;}else{o.fuse++;o.sz=40+(o.fuse%4<2?7:0);if(o.fuse>=12){o.dead=true;fxs.push({x:o.x,y:o.y,t:0,s:150});}}continue;}
       o.rot+=4;
       if(d<140&&o.fr<2){if(big){o.sz=40;o.fr=1;}else o.fr++;o.vis=true;o.gh=Math.max(0,o.gh-5);mv(o.t==2?1:o.t==4?1.7:2);}
       else if(o.fr>0){
@@ -153,6 +153,10 @@ function makeObjs(S,b,legs,setLevel,keys,settle){
     orbs=orbs.filter(o=>o.fade<11);
   };
   const A=DATA.A;
+  // Portals and teleportals trigger when the spider touches the drawn art (not a fixed circle). Only tested once the spider is
+  // within NEAR level px of the centre, so it costs nothing the rest of the time. Reads a 32x32 patch, never the whole level.
+  const NEAR=40,tcv=document.createElement('canvas');tcv.width=tcv.height=32;const tcg=tcv.getContext('2d',{willReadFrequently:true});
+  const touchP=(a,x,y,dir,size)=>{tcg.setTransform(1,0,0,1,0,0);tcg.clearRect(0,0,32,32);tcg.setTransform(1,0,0,1,16-b.x,16-b.y);spr(tcg,a,x,y,dir,size,1);tcg.setTransform(1,0,0,1,0,0);const d=tcg.getImageData(0,0,32,32).data;for(let yy=0;yy<32;yy+=2)for(let xx=0;xx<32;xx+=2)if(d[(yy*32+xx)*4+3]>120&&Math.hypot(xx-16,yy-16)<11)return true;return false;};
   const spinAt=(x,y)=>{if(x<0||y<0||x>=W||y>=H||S.m[(y|0)*W+(x|0)])return -1;let bi=-1,bd=1e9;spins.forEach((o,i)=>{if(!SP[o.t])return;const d=Math.hypot(x-wx(o.x),y-wy(o.y));if(d<bd){bd=d;bi=i;}});return bi;};
   const xf=(q,o,x,y)=>{const rot=SP[o.t]&&SP[o.t][1]=='o'?0:rad(o.dir-q[2]),c=Math.cos(rot),s=Math.sin(rot),rx=x-wx(q[0]),ry=y-wy(q[1]);return[wx(o.x)+rx*c-ry*s,wy(o.y)+rx*s+ry*c,c,s];};
   const carry=pre=>{
@@ -177,12 +181,13 @@ function makeObjs(S,b,legs,setLevel,keys,settle){
     let hit=0;for(let y=0;y<2*r&&!hit;y+=2)for(let x=0;x<2*r;x+=2)if(im[(y*2*r+x)*4+3]>110&&Math.hypot(x-r,y-r)<r){hit=1;break;}
     if(hit){die();return;}
     // teleportals
-    tpc=Math.max(0,tpc-dt);
-    if(!tpc)for(const p of L.port){if(Math.hypot(px-p[0],py-p[1])<8){const q=L.port.find(z=>z!==p&&z[2]==p[2]);if(q){b.x=wx(q[0]);b.y=wy(q[1]);b.vx=b.vy=0;tpc=1;for(const l of legs){l.att=false;l.stepping=false;l.fx=b.x;l.fy=b.y;}}break;}}
+    if(!L.port.some(z=>Math.hypot(px-z[0],py-z[1])<30))tpc=0;
+    if(!tpc)for(const p of L.port){if(Math.hypot(px-p[0],py-p[1])<NEAR&&touchP(A.tele[0],p[0],p[1],90+T*60,60*(1+.1*Math.sin(T*1.6)))){const q=L.port.find(z=>z!==p&&z[2]==p[2]);if(q){b.x=wx(q[0]);b.y=wy(q[1]);b.vx=b.vy=0;tpc=1;SFX.tele();for(const l of legs){l.att=false;l.stepping=false;l.fx=b.x;l.fy=b.y;}}break;}}
     // finish
-    if(!won&&col>=L.req&&Math.hypot(px-L.en[0],py-L.en[1])<16){won=1;levelDone(S.n);
-      if(S.n>=LEVELS){endSeq().then(async()=>{const f=document.getElementById('fade');if(f)f.style.transition='opacity 2.5s ease';fade(1);await cardClose();if(f)f.style.transition='';openMenu(true);});}
+    if(!won&&col>=L.req&&Math.hypot(px-L.en[0],py-L.en[1])<NEAR&&(touchP(A.portal[0],L.en[0],L.en[1],90+T*90,55*(1+.1*Math.sin(T*1.6)))||touchP(A.portal[1],L.en[0],L.en[1],90-T*130,55*(1+.1*Math.sin(T*1.6))))){won=1;levelDone(S.n);SFX.portal();
+      if(S.n>=LEVELS){endSeq().then(async()=>{const f=document.getElementById('fade');if(f)f.style.transition='opacity 2.5s ease';fade(1);await cardClose();if(f)f.style.transition='';SFX.hush();openMenu(true);});}
       else{fade(1);setTimeout(()=>setLevel(S.n+1),450);}}
+    {let dm=1e9;for(const o of orbs)if(!o.fade)dm=Math.min(dm,Math.hypot(px-o.x,py-o.y));for(const e of elec)dm=Math.min(dm,Math.hypot(px-e.x,py-e.y));SFX.near(dm,orbs.length>0||elec.some(e=>e.gh<100||e.st>0));}
     hud(S.n,col,L.req);
   };
   const below=g=>{
@@ -198,7 +203,7 @@ function makeObjs(S,b,legs,setLevel,keys,settle){
     for(const o of blobs){if(!o.vis||o.dead||o.t==1)continue;const a=A.blob[(o.t==2||o.t==4)?'costume4':'costume5'];spr(g,a,o.x,o.y,90+o.rot,o.sz,1-o.gh/100);}
     for(const e of elec){if(e.gh>=100)continue;spr(g,A.elec[Math.floor(T*15)%5],e.x,e.y,e.r-90,e.sz,1-e.gh/100);}}
   const above=g=>{drawSolids(g);drawHaz(g);
-    for(const f of fxs){const x=wx(f.x),y=wy(f.y),r=(10+f.t*f.s*.8)*K;g.globalAlpha=1-f.t;g.fillStyle=themeFx(S.n)[0];g.beginPath();g.arc(x,y,r*.7,0,TAU);g.fill();g.strokeStyle=themeFx(S.n)[1];g.lineWidth=5;g.beginPath();g.arc(x,y,r,0,TAU);g.stroke();for(let i=0;i<10;i++){const a=i*.628+f.t;g.beginPath();g.moveTo(x+Math.cos(a)*r*.6,y+Math.sin(a)*r*.6);g.lineTo(x+Math.cos(a)*r*1.5,y+Math.sin(a)*r*1.5);g.stroke();}g.globalAlpha=1;}if(LC.on)blitLayer(g,LC.fore);else g.drawImage(S.fore,0,0,W,H);};
+    for(const f of fxs){const x=wx(f.x),y=wy(f.y),r=(10+f.t*f.s*.8)*K;g.globalAlpha=Math.pow(1-f.t,2);g.fillStyle=themeFx(S.n)[0];g.beginPath();g.arc(x,y,r*.7,0,TAU);g.fill();g.strokeStyle=themeFx(S.n)[1];g.lineWidth=5;g.beginPath();g.arc(x,y,r,0,TAU);g.stroke();for(let i=0;i<10;i++){const a=i*.628+f.t;g.beginPath();g.moveTo(x+Math.cos(a)*r*.6,y+Math.sin(a)*r*.6);g.lineTo(x+Math.cos(a)*r*1.5,y+Math.sin(a)*r*1.5);g.stroke();}g.globalAlpha=1;}if(LC.on)blitLayer(g,LC.fore);else g.drawImage(S.fore,0,0,W,H);};
   return{update,below,above,spinAt};
 }
 
@@ -273,20 +278,21 @@ async function cardClose(){const c=cardEl();c.style.opacity=0;await sleep(1600);
 const waitRing=()=>new Promise(res=>{const c=cardEl();c.style.pointerEvents='auto';c.onclick=()=>{c.onclick=null;c.style.pointerEvents='';res();};});
 function startFlow(n){
   const my=++FLOW,c=cardEl();PAUSE=false;INTRO=false;if(c){c.style.opacity=0;c.style.pointerEvents='';c.onclick=null;}
+  SFX.level(n);SFX.mix(false);
   if(SEEN[n])return;SEEN[n]=1;
   (async()=>{
     const live=()=>my===FLOW;
-    if(n==1&&!SEEN.intro){SEEN.intro=1;PAUSE=true;INTRO=true;
+    if(n==1&&!SEEN.intro){SEEN.intro=1;PAUSE=true;INTRO=true;SFX.mix(true);
       await cardOpen(cimg('intro',0,0,66,'iz'));if(!live())return;
       await sleep(1700);if(!live())return;await cardClose();if(!live())return;await sleep(500);if(!live())return;}
-    if(CHAP[n]){PAUSE=true;INTRO=true;
+    if(CHAP[n]){PAUSE=true;INTRO=true;SFX.mix(true);
       await cardOpen(cimg(CHAP[n],0,20,80)+ringHtml());if(!live())return;
       await waitRing();setTimeout(()=>{if(my===FLOW)INTRO=false;},1600);if(!live())return;await cardClose();if(!live())return;}
-    PAUSE=false;
+    PAUSE=false;SFX.mix(false);
   })();
 }
 async function endSeq(){
-  PAUSE=true;
+  PAUSE=true;SFX.mix(true);
   await cardOpen(cimg('c6',0,20,80)+ringHtml());
   await waitRing();await cardClose();await cardOpen(cimg('end',0,0,80));await sleep(3500);
 }
@@ -421,6 +427,63 @@ function game(level){
     return()=>{cancelAnimationFrame(raf);removeEventListener('resize',resize);RETRY=null;freeLayers();};
 }
 
+/* ---------- Sound ----------
+   Web Audio (not <audio> elements, so the Kahf bridge does not count the ambience as listening). Nothing is fetched until the
+   child's first tap, nothing at all while muted, and the whole context is suspended when muted or when the page is hidden, so it
+   costs no CPU or battery then. Mix: wind + leaves + a soft suspense bed; the electric hum swells near orbs and zaps; story
+   cards hush everything but the bed. M or the speaker button mutes; the choice is remembered. */
+const SFX=(()=>{
+  const WL=.062,LL=.26,SL=.17,SQ=.13,EL=.036,VOL=1,KEY='kahf-spider-mute';
+  let AC=null,MASTER=null,G={},PB=null,PT=null,card=true,elv=0,elf=1,lastE=-1,up=0,muted=false,gen=0;
+  try{muted=localStorage.getItem(KEY)==='1';}catch(e){}
+  const now=()=>AC.currentTime,tgt=(g,v,tc)=>{try{g.gain.setTargetAtTime(v,now(),tc);}catch(e){}};
+  const dec=buf=>new Promise((res,rej)=>{const p=AC.decodeAudioData(buf,res,rej);if(p&&p.catch)p.catch(rej);});
+  const get=n=>fetch('audio/'+n+'.mp3').then(r=>{if(!r.ok)throw new Error(n);return r.arrayBuffer();}).then(dec);
+  const loop=(n,rate,node,my)=>get(n).then(b=>{if(my!==gen||!AC)return;const s=AC.createBufferSource();s.buffer=b;s.loop=true;s.playbackRate.value=rate;s.connect(node);s.start(0);return b;}).catch(()=>{});
+  function mix(on){card=on;if(!AC||!G.w)return;tgt(G.w,on?0:WL,1.1);tgt(G.l,on?0:LL,1.1);tgt(G.s,on?SL:SQ,1.1);tgt(G.e,on?0:elv*elf,1.1);lastE=-1;}
+  function fadeUp(){if(!AC||muted||up||AC.state!=='running')return;up=1;const t=now();MASTER.gain.cancelScheduledValues(t);MASTER.gain.setValueAtTime(0,t);MASTER.gain.linearRampToValueAtTime(VOL,t+3);}
+  function start(){
+    if(muted||document.hidden)return;
+    if(AC){if(AC.state==='suspended')AC.resume().catch(()=>{});return;}
+    const AX=window.AudioContext||window.webkitAudioContext;if(!AX)return;
+    try{AC=new AX({latencyHint:'playback'});}catch(e){try{AC=new AX();}catch(e2){AC=null;return;}} // 'playback' = bigger buffers, less CPU/battery; there is nothing to play in sync
+    const my=++gen;
+    MASTER=AC.createGain();MASTER.gain.value=0;MASTER.connect(AC.destination);
+    for(const k of['w','l','s','e']){G[k]=AC.createGain();G[k].connect(MASTER);}
+    G.w.gain.value=card?0:WL;G.l.gain.value=card?0:LL;G.s.gain.value=card?SL:SQ;G.e.gain.value=card?0:elv*elf;
+    AC.onstatechange=fadeUp;fadeUp();
+    // Wait a moment so the first level's art loads and draws without competing for the network and decoder. Short effects first,
+    // the long suspense bed last; each starts as soon as it is decoded. (Files are mono and small: ~1 MB total, ~18 MB decoded.)
+    setTimeout(()=>{if(my!==gen||!AC)return;get('tele').then(b=>{PT=b;}).catch(()=>{})
+      .then(()=>get('portal')).then(b=>{PB=b;}).catch(()=>{})
+      .then(()=>loop('wind',1,G.w,my)).then(()=>loop('leaves',.667,G.l,my)).then(()=>loop('zap',1,G.e,my)).then(()=>loop('sus',1,G.s,my));},900);
+  }
+  function play(b,v){if(!AC||!b||muted||AC.state!=='running')return;const s=AC.createBufferSource(),g=AC.createGain();g.gain.value=v;s.buffer=b;s.connect(g);g.connect(MASTER);s.start();}
+  function setMuted(m,initial){
+    muted=m;if(!initial)try{localStorage.setItem(KEY,m?'1':'0');}catch(e){}
+    document.body.classList.toggle('muted',m);
+    const b=document.getElementById('snd');if(b){b.setAttribute('aria-pressed',m?'true':'false');b.setAttribute('aria-label',m?'Sound off, tap to turn on':'Sound on, tap to turn off');}
+    if(initial)return; // page load: just show the saved state, start nothing until the first tap
+    if(m){if(AC&&MASTER){const t=now();MASTER.gain.cancelScheduledValues(t);MASTER.gain.setTargetAtTime(0,t,.05);const a=AC;setTimeout(()=>{if(muted&&a.state==='running')a.suspend().catch(()=>{});},300);up=0;}}
+    else{if(AC){up=0;AC.resume().then(fadeUp).catch(()=>{});}else start();}
+  }
+  const unlock=()=>{if(!AC)start();else if(!muted&&AC.state==='suspended')AC.resume().catch(()=>{});};
+  for(const e of['pointerdown','pointerup','keydown','touchend','click'])addEventListener(e,unlock,{passive:true});
+  document.addEventListener('visibilitychange',()=>{if(!AC)return;if(document.hidden){AC.suspend().catch(()=>{});}else if(!muted){AC.resume().catch(()=>{});}});
+  return{
+    init(){setMuted(muted,true);},
+    toggle(){setMuted(!muted);},
+    level(n){const L=DATA.L[n-1];elv=L.elec.length?EL:L.orbs.length?EL*.58:0;elf=1;lastE=-1;},
+    mix,
+    // Electric hum: louder the closer the spider is to a live orb or zap; silent when none is left.
+    near(dm,live){if(!AC||card||!G.e)return;const v=live?elv*(.6+.4*Math.max(0,1-dm/220)):0;if(Math.abs(v-lastE)>.0015){lastE=v;tgt(G.e,v,.25);}},
+    tele(){play(PT,.45);},
+    portal(){play(PB,.3);},
+    hush(){card=true;if(!AC||!G.w)return;for(const k in G)tgt(G[k],0,1.2);lastE=-1;},
+  };
+})();
+addEventListener('keydown',e=>{if(e.key&&e.key.toLowerCase()==='m'&&!e.metaKey&&!e.ctrlKey&&!e.altKey)SFX.toggle();});
+
 /* ---------- Shell: level switching, input, HUD, progress ---------- */
 const KEYS={};let RETRY=null,LEVEL=0,OFF=null,LOADING=0,MENU=false;
 // Saved progress: cur = level to continue, max = highest unlocked level, won = finished level 21 at least once.
@@ -518,6 +581,7 @@ function boot(){
   let inApp=!!window.ReactNativeWebView;try{inApp=inApp||window.self!==window.top;}catch(e){inApp=true;}
   if(!inApp&&(d.fullscreenEnabled||d.webkitFullscreenEnabled)){fs.hidden=false;fs.onclick=()=>{try{const el=d.documentElement;if(d.fullscreenElement||d.webkitFullscreenElement){(d.exitFullscreen||d.webkitExitFullscreen).call(d);}else{(el.requestFullscreen||el.webkitRequestFullscreen).call(el);}}catch(e){}};}
   document.getElementById('retry').onclick=()=>{if(RETRY)RETRY();};
+  document.getElementById('snd').onclick=()=>SFX.toggle();SFX.init();
   document.getElementById('levels').onclick=()=>openMenu();
   document.getElementById('mclose').onclick=()=>closeMenu();
   document.getElementById('play').onclick=()=>{if(OFF&&LEVEL===PROG.cur&&!document.getElementById('mclose').hidden)closeMenu();else setLevel(PROG.cur,true);};

@@ -33,6 +33,7 @@ button{font:inherit;color:inherit;-webkit-tap-highlight-color:transparent;touch-
   -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;cursor:pointer}
 .ibtn:active{transform:scale(.92)}
 .ibtn svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+#snd .x{display:none}body.muted #snd .x{display:inline}body.muted #snd .w{display:none}
 #fs{position:fixed;z-index:20;top:calc(8px + var(--st));right:calc(10px + var(--sr))}
 .hint{position:fixed;z-index:20;left:50%;bottom:calc(14px + var(--sb));transform:translateX(-50%);font-size:13px;opacity:.75;pointer-events:none;white-space:nowrap}
 body.touch .hint,body.hint-off .hint{opacity:0}.hint{transition:opacity 1s}
@@ -112,6 +113,7 @@ body.menu-open .zone,body.menu-open #joy,body.menu-open #jb,body.menu-open .tip,
   <div class="pill" hidden><span class="orb"></span><span id="orbs">0 / 0</span></div>
   <button class="ibtn" id="levels" aria-label="Levels"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="1.5"/><rect x="14" y="4" width="6" height="6" rx="1.5"/><rect x="4" y="14" width="6" height="6" rx="1.5"/><rect x="14" y="14" width="6" height="6" rx="1.5"/></svg></button>
   <button class="ibtn" id="retry" aria-label="Restart level"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v5h5"/></svg></button>
+  <button class="ibtn" id="snd" aria-pressed="false" aria-label="Sound on, tap to turn off"><svg viewBox="0 0 24 24"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5z"/><path class="w" d="M15.5 9a4.2 4.2 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11"/><path class="x" d="M16 9.5l5 5M21 9.5l-5 5"/></svg></button>
 </div>
 <button class="ibtn" id="fs" hidden aria-label="Fullscreen"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
 <div class="tip tip-l" aria-hidden="true">Drag here to crawl</div>
