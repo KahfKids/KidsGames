@@ -668,12 +668,30 @@
   function key(name, pose, at, facing, frame, opts){
     return [name, pose, at.map(v => v.toFixed(1)).join(','), (+facing || 0).toFixed(1), frame || 0, YAW.toFixed(2), PITCH.toFixed(2), OX, OY, (INK_K || 1).toFixed(3), SKIN, opts ? JSON.stringify(opts) : ''].join('|');
   }
+  // A picture speech bubble over whoever is talking, so a chat reads as talking (no words: pre-readers). The picture
+  // changes with the talk (seeded by person + place + minute), drawn in the game's ink style. Cached with the figure.
+  const TALK_ICONS = [
+    '<path d="M-5 -2h8v5a4 4 0 0 1-8 0z" fill="#fbf6ea"/><path d="M3 0h2a2 2 0 0 1 0 4h-2" fill="none"/><path d="M-3 -6c0-2 2-2 2-4M0 -6c0-2 2-2 2-4" fill="none"/>',   // tea
+    '<circle cx="0" cy="0" r="4" fill="#f4b829"/><path d="M0-8v2M0 6v2M-8 0h2M6 0h2M-5.5-5.5l1.5 1.5M4 4l1.5 1.5M-5.5 5.5l1.5-1.5M4-4l1.5-1.5" fill="none"/>',   // sun
+    '<path d="M-7 2a7 4 0 0 0 14 0z" fill="#fbf6ea"/><circle cx="-2" cy="-1" r="2.4" fill="#e2483d"/><circle cx="2.5" cy="-1.5" r="2.2" fill="#8cc152"/>',   // food
+    '<path d="M0-4c-2-2-6-2-7 0v9c1-2 5-2 7 0c2-2 6-2 7 0v-9c-1-2-5-2-7 0z" fill="#fbf6ea"/><path d="M0-4v9" fill="none"/>',   // book
+    '<circle cx="0" cy="-2" r="2" fill="#f4b829"/><g fill="#e98fb0"><circle cx="0" cy="-6" r="2.4"/><circle cx="4" cy="-2" r="2.4"/><circle cx="0" cy="2" r="2.4"/><circle cx="-4" cy="-2" r="2.4"/></g><path d="M0 4v5" fill="none"/>',   // flower
+    '<path d="M-6 0l6-5 6 5v6h-12z" fill="#fbf6ea"/><path d="M-2 6v-4h4v4" fill="none"/>',   // house
+  ];
+  function talkBubble(name, at, head){
+    const seed = Math.abs(((at[0] * 31 + at[1] * 17) | 0) + name.length * 7 + Math.floor(Date.now() / 7000)) % TALK_ICONS.length;
+    const h = P(head[0], head[1], head[2] + 14), top = P(head[0], head[1], head[2] + 40), s = 1.5 * Math.max(.6, Math.min(2.2, (h[1] - top[1]) / 22));
+    const cx = h[0] + 10 * s, cy = top[1];
+    return `<g transform="translate(${fx(cx)} ${fx(cy)}) scale(${fx(s)})" stroke="#231e16" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round">` +
+      `<path d="M-13-10h26a4 4 0 0 1 4 4v12a4 4 0 0 1-4 4h-15l-6 7 1-7h-6a4 4 0 0 1-4-4v-12a4 4 0 0 1 4-4z" fill="#fffdf6" stroke-width="1.8"/>` +
+      `<g transform="translate(0 0)">${TALK_ICONS[seed]}</g></g>`;
+  }
   function draw(name, pose, at, facing, frame, opts){
     at = at || [0, 0, 0];
     const k = key(name, pose, at, facing, frame, opts);
     let r = CACHE.get(k);
     if (!r){ const t0 = performance.now(); const fg = figure(name, pose, at, facing, frame, opts);
-      r = { box: fg.box, at: [(fg.box[0][0] + fg.box[1][0])/2, (fg.box[0][1] + fg.box[1][1])/2, at[2] + 30], svg: fg.svg, who: name, head: fg.head };
+      r = { box: fg.box, at: [(fg.box[0][0] + fg.box[1][0])/2, (fg.box[0][1] + fg.box[1][1])/2, at[2] + 30], svg: fg.svg + (pose === 'talk' && fg.head ? talkBubble(name, at, fg.head) : ''), who: name, head: fg.head };
       // a head on the pillow sorts after its bed; a toddler in his cot sorts before it (the bars and the near side cover him)
       if (pose === 'sleep' && opts && opts.inBed) r.at = add(fg.head, [0, 0, 50]);
       if (pose === 'sleep' && opts && opts.inCot) r.at = sub(r.at, [0, 0, 60]);
@@ -1023,9 +1041,11 @@
         let w = pool.reduce((s, e) => s + e.w, 0)*R(), e = pool[0]; for (const c of pool){ w -= c.w; if (w <= 0){ e = c; break; } }
         const rooms = e.rooms.filter(r => r !== 'yard' || daylight(tm)), room = roomId(rooms[Math.floor(R()*rooms.length)], ctx), g = roomGeo(room, ctx);
         const dur = (e.dur[0] + R()*(e.dur[1] - e.dur[0]))*1000, x = g.fl < 0 ? Math.min(g.x1 - 20, 130) : Math.min(g.x1 - 22, 104 + R()*14), yc = g.y0 + (g.y1 - g.y0)*(.35 + R()*.3);
-        const id = 'meet' + ne++, sep = e.kind === 'pickup' ? 0 : e.kind === 'play' ? 21 : 13, fa = e.kind === 'pickup' ? 30 : 90;
-        O[id + '-' + e.a] = { id: id + '-' + e.a, room, at: [x, yc - sep, g.z], face: fa, pose: e.pa, who: [e.a], offers: { social: 160, fun: 40 }, kind: 'social', opts: e.kind === 'tea' ? { cup: 1 } : null };
-        O[id + '-' + e.b] = { id: id + '-' + e.b, room, at: [x, yc + sep, g.z], face: e.kind === 'pickup' ? fa : fa - 180, pose: e.pb, who: [e.b], offers: { social: 160, fun: 60 }, kind: 'social' };
+        // People who talk stand a proper arm's length apart and turn partly toward the viewer (never nose to nose, which
+        // read as a kiss between Abu and Ummi). Only the pickup (Ummi holding the toddler) is close.
+        const id = 'meet' + ne++, sep = e.kind === 'pickup' ? 0 : e.kind === 'play' ? 21 : 25, fa = e.kind === 'pickup' ? 30 : 90, turn = e.kind === 'pickup' || e.kind === 'play' ? 0 : 50;
+        O[id + '-' + e.a] = { id: id + '-' + e.a, room, at: [x, yc - sep, g.z], face: fa - turn, pose: e.pa, who: [e.a], offers: { social: 160, fun: 40 }, kind: 'social', opts: e.kind === 'tea' ? { cup: 1 } : null };
+        O[id + '-' + e.b] = { id: id + '-' + e.b, room, at: [x, yc + sep, g.z], face: e.kind === 'pickup' ? fa : fa - 180 + turn, pose: e.pb, who: [e.b], offers: { social: 160, fun: 60 }, kind: 'social' };
         const ev = { id, kind: e.kind, a: e.a, b: e.b, t0: tm, t1: tm + dur, room };
         events.push(ev); lastK = e.kind + e.a + e.b;
         P[e.a].push({ t0: tm, t1: tm + dur, obj: id + '-' + e.a, act: 'social', social: e.kind, partner: e.b, fixed: true });
