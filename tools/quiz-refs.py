@@ -50,7 +50,7 @@ def quran(s, a, b):
 js = """
 global.window = global; global.document = { currentScript: null }; global.Kit = {}; global.location = { search: '' };
 const p = require('path'), R = %s;
-['quiz.js','themes.js','catalog.js','surahs.js'].forEach(f => require(p.join(R,'js/quiz',f)));
+['quiz.js','themes.js','catalog.js','surahs.js','scenes.js'].forEach(f => require(p.join(R,'js/quiz',f)));
 require(p.join(R,'games',%s,'data.js'));
 const T = o => o ? (o.t ? o.t.en : o.p ? '<'+o.p+'>' : o.en || '') : '';
 const out = KahfQuiz.defs[%s].bank.map(q => ({ ref: q.ref || '', band: q.band, q: q.q.en,

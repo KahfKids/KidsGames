@@ -271,3 +271,36 @@ Owner direction (2026-11-10): there is no one else to review or record, so Claud
 - **Ramadan Nights:** `games/ramadan-nights/`. 68 questions (20 Seedling, 26 Explorer, 22 Champion), each with a reference that was opened and read. `games/ramadan-quest/` is now a redirect.
 - **Not built yet:** "tap the place" questions, the lightning round, Today's five, the sticker book, `KahfBridge.item()` calls, recitation audio.
 - **Known gaps:** the bank is 68 questions, short of the 120 target, and bands 2 and 3 are mostly text choice; more sort, order and match questions are needed. Not tested on a real phone or inside the Kahf app. The catalog tile still uses the old Ramadan Quest thumbnail.
+
+**2026-11-10, later: engine rebuilt for the full catalog; six quizzes ready.**
+
+Owner directions added today: every picture must be a raster image for low-end Android WebViews; the catalog page keeps its
+current design and only its tiles and thumbnails change (so the three-shelf page, and Today's five and the sticker book on the
+catalog page, in sections 4 to 6 are replaced by: stickers inside each quiz, and Today's five as its own tile);
+thumbnails are generated with Codex `gpt-6-luna` at high effort; no subagents.
+
+## 14. How a quiz is built now (working notes)
+
+| Piece | Where | Notes |
+|-------|-------|-------|
+| Engine | `js/quiz/quiz.js`, `quiz.css`, `sounds.js`, `themes.js` | Seven question types (choice, yesno, sort, order, match, place, plus `audio` on any question), stickers, lightning round, daily mode, level-up offer. |
+| Catalog list | `js/quiz/catalog.js` | One entry per quiz: id, shelf, title, theme, stop name, stops, bossEvery, bands, sticker cards. All 28 plus `todays-five` are listed; a quiz is live once `games/<id>/data.js` exists. |
+| Questions | `games/<id>/data.js` | Written with `KahfQuiz.bank()` (`B.c`, `B.yn`, `B.sort`, `B.order`, `B.match`, `B.place`, `B.facts`, `B.pairs`), ending in `KahfQuiz.define(id, { bank })`. A quiz can also give `gen(band, n, ctx)` to make questions fresh (Number Garden). |
+| Shared data | `js/quiz/surahs.js`, `js/quiz/scenes.js` | Surah table from quran.com. Scenes file is generated. |
+| Pictures | source `tools/quiz-art/pics.src.js`, `themes.src.js`, `scenes.src.js`; output `js/quiz/img/` | `node tools/quiz-art/build.js` renders SVG source to WebP with Chrome and ImageMagick. Picture keys are in `js/quiz/img/keys.json`. Also `dots-N`, `many-<key>-N`, `clock-H-M`. Scenes: world, body, plant, masjid, hajj. |
+| Pages and catalog tiles | `node tools/quiz-pages.js` | Writes every `games/<id>/index.html`, fills the tiles in `quizzes.html`, and turns a replaced old quiz into a redirect. |
+| Checks | `node tools/quiz-check.js`, `python3 tools/quiz-refs.py <id> --brief --cache <dir>` | The first checks every bank (ids, both languages, pictures, references). The second prints each question beside the fetched text of its source (Saheeh International from api.alquran.cloud; hadith from the open hadith-api, matched on the standard number). Both are run for every Islamic quiz before commit. |
+| Thumbnails | `quiz-thumbs/<id>.webp` | All 29 generated with Codex `gpt-6-luna`, high effort. |
+
+Launch size was reset from 120 questions to about 60 per written quiz (about 20 per band) because the catalog grew to 28;
+quizzes built from tables (Quran Explorer) or generators (Number Garden) are larger. Most quizzes have 12 stops.
+
+**Ready:** Ramadan Nights (68), Quran Explorer (155), Stories of the Prophets (69), Salah and Wudu (59), Good Manners and Duas (58),
+Number Garden (generated). All passed both checks.
+**Still to write:** Short Surahs, Creation in the Quran, Quran Words, Arabic Letters, Names of Allah, Tajweed Basics, Pillars and
+Beliefs, Life of the Prophet ﷺ, Hajj Journey, Hadith for Kids, Sunnah Every Day, Companions, Islamic Months and Eid, Masjids of
+the World, World Explorer, Nature and Science, Time Travellers, Think It Through, Words, Animals of the World, Healthy Me,
+Time and Money, Today's Five. Arabic Letters and Tajweed Basics will be text-only (no audio) rather than wait.
+**Then:** grow Ramadan Nights, recitation clips for Short Surahs, service worker and manifest version bump, remove dead files of
+the replaced old quizzes, browser pass on every quiz at phone and tablet sizes. Sticker card references in `catalog.js` still
+need the same source check (known fix: Madinah masjid card should cite Bukhari 3932, drinking card should say "three breaths").

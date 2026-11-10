@@ -96,6 +96,11 @@ for (const g in groups) {
 }
 fs.writeFileSync(manPath, JSON.stringify(man));
 fs.writeFileSync(path.join(OUT, 'keys.json'), JSON.stringify(keys));
+if (K.srcScenes) {   // the tap places for each scene, for the pages
+  const sc = {};
+  for (const name in K.srcScenes) { const s = K.srcScenes[name]; sc[name] = { w: s.w, h: s.h, spots: {} }; for (const id in s.spots) sc[name].spots[id] = { x: s.spots[id].x, y: s.spots[id].y, t: { en: s.spots[id].t[0], bn: s.spots[id].t[1] } }; }
+  fs.writeFileSync(path.join(ROOT, 'js/quiz/scenes.js'), '/* Kahf KidsGames quiz engine: scenes.js\n   Made by tools/quiz-art/build.js from tools/quiz-art/scenes.src.js. Do not edit by hand.\n   The tap places for each "tap the right place" picture (js/quiz/img/scene/<name>.webp). */\n(function () {\n  var KQ = window.KahfQuiz = window.KahfQuiz || {};\n  KQ.scenes = ' + JSON.stringify(sc) + ';\n})();\n');
+}
 fs.rmSync(tmp, { recursive: true, force: true });
 let bytes = 0; items.forEach(it => { bytes += fs.statSync(path.join(OUT, it.file)).size; });
 console.log('\ndone: ' + items.length + ' images, ' + (bytes / 1024).toFixed(0) + ' KB in js/quiz/img');

@@ -66,4 +66,38 @@ K.catalog.forEach(q => {
 `);
   n++;
 });
-console.log(n + ' quiz pages written');
+
+// ---------- the catalog page keeps its design; only its tiles are written here ----------
+// an old quiz stays on the page until the quiz that replaces it has its questions; then it becomes a redirect
+const OLD = [['quran-quest', 'quran-explorer', 'Quran Quest', 'quran-quest.jpeg'], ['geography-quiz', 'world-explorer', 'Geography Quiz', 'geography-quiz.png'],
+  ['history-quiz', 'time-travellers', 'History Quiz', 'history-quiz.png'], ['science-quiz', 'nature-science', 'Science Quiz', 'science-quiz.png'], ['math-challenge', 'number-garden', 'Math Challenge', 'math-challenge.png']];
+const ready = id => fs.existsSync(path.join(ROOT, 'games', id, 'data.js'));
+const tile = (href, img, name) => `        <a href="./games/${href}/index.html" class="game-link">
+          <div class="game-card">
+            <img src="./${img}" alt="${esc(name)}" class="game-thumbnail" loading="lazy" />
+            <div class="game-title">${esc(name)}</div>
+          </div>
+        </a>
+`;
+let tiles = '';
+K.catalog.forEach(q => { if (ready(q.id)) tiles += tile(q.id, 'quiz-thumbs/' + q.id + '.webp', q.title.en); });
+OLD.forEach(o => {
+  if (!ready(o[1])) { tiles += tile(o[0], o[3], o[2]); return; }
+  fs.writeFileSync(path.join(ROOT, 'games', o[0], 'index.html'), `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>${esc(K.catalog.filter(q => q.id === o[1])[0].title.en)}</title>
+  <!-- ${o[2]} was replaced by a new quiz. Old links and home-screen shortcuts land here. -->
+  <meta http-equiv="refresh" content="0; url=../${o[1]}/index.html" />
+  <script>location.replace('../${o[1]}/index.html' + location.search);</script>
+</head>
+<body></body>
+</html>
+`);
+});
+const cp = path.join(ROOT, 'quizzes.html'), page = fs.readFileSync(cp, 'utf8');
+const A = '<!-- quiz tiles: written by tools/quiz-pages.js from js/quiz/catalog.js -->\n', Z = '        <!-- /quiz tiles -->';
+fs.writeFileSync(cp, page.slice(0, page.indexOf(A) + A.length) + tiles + page.slice(page.indexOf(Z)));
+console.log(n + ' quiz pages written; catalog page tiles updated');

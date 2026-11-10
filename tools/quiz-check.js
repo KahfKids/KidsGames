@@ -7,8 +7,7 @@ const fs = require('fs'), path = require('path');
 const ROOT = path.resolve(__dirname, '..');
 global.window = global; global.document = { currentScript: null }; global.Kit = {};
 global.location = { search: '' };
-['quiz.js', 'themes.js', 'catalog.js', 'surahs.js'].forEach(f => require(path.join(ROOT, 'js/quiz', f)));
-if (fs.existsSync(path.join(ROOT, 'js/quiz/scenes.js'))) require(path.join(ROOT, 'js/quiz/scenes.js'));
+['quiz.js', 'themes.js', 'catalog.js', 'surahs.js', 'scenes.js'].forEach(f => require(path.join(ROOT, 'js/quiz', f)));
 const K = global.KahfQuiz, keys = require(path.join(ROOT, 'js/quiz/img/keys.json'));
 let bad = 0, total = 0;
 K.catalog.forEach(q => {
