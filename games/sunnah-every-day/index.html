@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <title>Sunnah Every Day</title>
+  <meta name="description" content="A day lived the way the Prophet ﷺ taught, from waking to sleeping." />
+  <meta name="theme-color" content="#243f7c" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="manifest" href="/KidsGames/manifest.json" />
+  <link rel="apple-touch-icon" href="/KidsGames/icons/icon-192x192.png" />
+  <link rel="stylesheet" href="/KidsGames/js/kit/kit.css" />
+  <link rel="stylesheet" href="/KidsGames/js/quiz/quiz.css" />
+  <style>:root { --qz-bg-top: #243f7c; --qz-bg-bot: #4f79c9; }</style>
+  <script src="/KidsGames/js/kahf-bridge.js" defer></script>
+</head>
+<body>
+  <div id="qz-load" class="qz-load"><div class="qz-spin"></div></div>
+  <script src="/KidsGames/js/kit/core.js"></script>
+  <script src="/KidsGames/js/kit/fx.js"></script>
+  <script src="/KidsGames/js/kit/audio.js"></script>
+  <script src="/KidsGames/js/kit/ui.js"></script>
+  <script src="/KidsGames/js/quiz/quiz.js"></script>
+  <script src="/KidsGames/js/quiz/sounds.js"></script>
+  <script src="/KidsGames/js/quiz/themes.js"></script>
+  <script src="/KidsGames/js/quiz/catalog.js"></script>
+  <script src="data.js"></script>
+  <script>
+    (function () {
+      var box = document.getElementById("qz-load");
+      if (window.KahfQuiz && KahfQuiz.defs && KahfQuiz.defs["sunnah-every-day"] && window.Kit) { box.remove(); KahfQuiz.run("sunnah-every-day"); }
+      else {   // a file did not arrive (the iPhone app is online only): say so and offer to try again
+        var bn = /^bn/i.test(navigator.language || "");
+        box.innerHTML = "<p>" + (bn ? "লোড হয়নি। ইন্টারনেট সংযোগ দেখো।" : "Could not load. Please check the internet.") + "</p><button class=\"kit-btn primary\">" + (bn ? "আবার চেষ্টা করো" : "Try again") + "</button>";
+        box.querySelector("button").onclick = function () { location.reload(); };
+      }
+      if ("serviceWorker" in navigator && location.pathname.indexOf("/KidsGames/") === 0 && !/[?&](debug|nosw)\b/.test(location.search)) {
+        addEventListener("load", function () { navigator.serviceWorker.register("/KidsGames/sw.js").catch(function () {}); });
+      }
+    })();
+  </script>
+</body>
+</html>
