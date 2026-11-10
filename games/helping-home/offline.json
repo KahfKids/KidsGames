@@ -1,7 +1,8 @@
 {
- "version": "kidsgames-games-v1.5.3",
- "bytes": 3237020,
+ "version": "kidsgames-games-v1.5.6",
+ "bytes": 3421405,
  "files": [
+  "/KidsGames/games/helping-home/classic.html",
   "/KidsGames/games/helping-home/index.html",
   "/KidsGames/games/helping-home/settings.html",
   "/KidsGames/games/helping-home/iso/cities.js",
@@ -26,6 +27,12 @@
   "/KidsGames/games/helping-home/pray/wudu-text.js",
   "/KidsGames/games/helping-home/pray/wudu.html",
   "/KidsGames/games/helping-home/pray/wudu.js",
+  "/KidsGames/games/helping-home/world/engine.js",
+  "/KidsGames/games/helping-home/world/extra.js",
+  "/KidsGames/games/helping-home/world/game.js",
+  "/KidsGames/games/helping-home/world/places.js",
+  "/KidsGames/games/helping-home/world/sim.js",
+  "/KidsGames/games/helping-home/world/world.css",
   "/KidsGames/games/helping-home/audio/adhan-fajr1.m4a",
   "/KidsGames/games/helping-home/audio/adhan-fajr2.m4a",
   "/KidsGames/games/helping-home/audio/adhan-falah1.m4a",

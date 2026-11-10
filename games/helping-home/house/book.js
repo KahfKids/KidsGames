@@ -271,7 +271,7 @@
     { id: 'garden', icon: 'carrot', title: 'Garden' },
     { id: 'special', icon: 'moon', title: 'Special days' },
   ];
-  const say = t => { try { window.Kit && Kit.say && Kit.say.text(t, 'en'); } catch (e) {} };
+  const say = () => {};   // no device voice: pictures and sounds only
   const sfx = n => { try { window.Kit && Kit.sfx && Kit.sfx.play(n); } catch (e) {} };
   function sounds(){
     if (!window.Kit || !Kit.sfx || !Kit.sfx.define) return;

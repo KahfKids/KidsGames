@@ -38,7 +38,7 @@
     /* top bar */
     '.hh-top{position:fixed;left:0;right:0;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:8px;' +
       'padding:calc(env(safe-area-inset-top) + 10px) 14px 8px;pointer-events:none}' +
-    '.hh-top>*{pointer-events:auto}' +
+    '.hh-top>*,.hh-top>.hh-round{pointer-events:auto}' +
     '.hh-sw{display:flex;gap:clamp(5px,1.6vw,8px)}' +
     '.hh-sw button{all:unset;width:clamp(24px,7vw,30px);height:clamp(24px,7vw,30px);border-radius:50%;border:2px solid var(--ink);box-shadow:0 2px 0 var(--ink);cursor:pointer}' +
     '.hh-sw button[aria-pressed=true]{outline:3px solid var(--ink);outline-offset:2px}' +

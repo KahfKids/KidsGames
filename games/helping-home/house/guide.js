@@ -24,7 +24,7 @@
   const icon = (n, o) => window.HHBook && HHBook.icon ? HHBook.icon(n, o) :
     '<svg viewBox="0 0 24 24"><path d="M12 2.8l2.7 5.9 6.4.7-4.8 4.4 1.3 6.4L12 17l-5.6 3.2 1.3-6.4L2.9 9.4l6.4-.7z" fill="#f4b829" stroke="#231e16" stroke-width="1.8" stroke-linejoin="round"/></svg>';
   const sfx = n => { try { window.Kit && Kit.sfx && Kit.sfx.play(n); } catch (e) {} };
-  const say = t => { try { window.Kit && Kit.say && Kit.say.text(t, 'en'); } catch (e) {} };
+  const say = () => {};   // no device voice: pictures and sounds only
   let praiseN = 0;
   const praise = () => { try { window.Kit && Kit.say && Kit.say.praise(['mashaallah', 'ahsant', 'barakallah'][praiseN++ % 3]); } catch (e) {} };
   const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };

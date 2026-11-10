@@ -916,7 +916,7 @@
     HHVoice.has(s.voice).then(has => {
       if (me !== sayId) return null;
       if (has) return HHVoice.play(s.voice, { fallbackMs: 0 });
-      try { Kit.say && Kit.say.text(s.speak, 'en'); } catch (e) {}
+      /* no device voice: the picture, the words on screen and the recorded Arabic are enough */
       return new Promise(r => { sayT = setTimeout(r, Math.min(6500, 700 + s.speak.split(' ').length*360)); });
     }).then(() => {
       if (me !== sayId) return;
@@ -924,7 +924,7 @@
       if (s.arabicVoice) HHVoice.play(s.arabicVoice, { fallbackMs: 0 });
     });
   }
-  const sayLine = t => { try { Kit.say && Kit.say.text(t, 'en'); } catch (e) {} };
+  const sayLine = () => {};   // no device voice
 
   /* =====================================================================================================
      6. THE PAGE
