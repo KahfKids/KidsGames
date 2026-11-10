@@ -304,3 +304,20 @@ Time and Money, Today's Five. Arabic Letters and Tajweed Basics will be text-onl
 **Then:** grow Ramadan Nights, recitation clips for Short Surahs, service worker and manifest version bump, remove dead files of
 the replaced old quizzes, browser pass on every quiz at phone and tablet sizes. Sticker card references in `catalog.js` still
 need the same source check (known fix: Madinah masjid card should cite Bukhari 3932, drinking card should say "three breaths").
+
+**2026-11-10, end of day: all 28 quizzes and Today's Five are written.**
+
+- Every Islamic bank passes both checks (`quiz-check`: no problems; `quiz-refs`: 0 references not found). 2,700+ written
+  questions in total, plus the generated ones.
+- Today's Five (`games/todays-five/data.js`) has no bank of its own: it loads the banks of the six most recently opened
+  quizzes (three starter quizzes on a first visit) and the engine picks five for the child's level.
+- Ramadan Nights grew from 68 to 104 questions. Sticker card references were source-checked and three were corrected
+  (Madinah masjid card, drinking card, tawaf card).
+- Engine: the answer area now scrolls instead of spilling over the question when five long lines do not fit a 360x640
+  phone, and order questions are tighter on short screens. `B.pairs` accepts picture-only left sides.
+- Service worker and manifest are at 1.6.0. The replaced old quizzes (Quran Quest, Geography, History, Science, Math
+  Challenge, Ramadan Quest) are redirect pages only.
+- Browser pass: all 29 pages load and start a stop at phone size in both languages; the longest question of every type in
+  every quiz was laid out at 360x640 with no clipped or off-screen controls; spot checks at 375x812, landscape and tablet.
+- **Still owed:** a run on a real low-end Android phone and inside the Kahf app; listening to the recitation clips in
+  Short Surahs on a device; deploy (push) when the owner asks.
