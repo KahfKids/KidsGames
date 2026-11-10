@@ -1,7 +1,7 @@
 {
   "name": "Kahf KidsGames - Educational Games for Children",
   "short_name": "KidsGames",
-  "version": "1.5.8",
+  "version": "1.5.9",
   "description": "A collection of fun and educational games for kids including Islamic games, puzzles, and learning activities",
   "start_url": "/KidsGames/",
   "display": "standalone",
@@ -144,10 +144,10 @@
       ]
     },
     {
-      "name": "Ramadan Quest",
-      "short_name": "Ramadan Quiz",
-      "description": "Islamic knowledge quiz game",
-      "url": "/KidsGames/games/ramadan-quest/index.html",
+      "name": "Ramadan Nights",
+      "short_name": "Ramadan Nights",
+      "description": "Light thirty lanterns with questions from the Quran and Sunnah",
+      "url": "/KidsGames/games/ramadan-nights/index.html",
       "icons": [
         {
           "src": "/KidsGames/icons/shortcut-ramadan-quest.png",

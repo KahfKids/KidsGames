@@ -1,6 +1,6 @@
-const CACHE_NAME = 'kidsgames-v1.5.8';
-const STATIC_CACHE = 'kidsgames-static-v1.5.8';
-const GAMES_CACHE = 'kidsgames-games-v1.5.8';
+const CACHE_NAME = 'kidsgames-v1.5.9';
+const STATIC_CACHE = 'kidsgames-static-v1.5.9';
+const GAMES_CACHE = 'kidsgames-games-v1.5.9';
 const PREMIUM_CACHE = 'kidsgames-premium-v1.3.5';
 
 // Core files that should be cached immediately
@@ -95,6 +95,7 @@ const STATIC_ASSETS = [
   '/KidsGames/games/ramadan-maze/index.html',
   '/KidsGames/ramadan-quest.png',
   '/KidsGames/games/ramadan-quest/index.html',
+  '/KidsGames/games/ramadan-nights/index.html',
   '/KidsGames/icons/shortcut-ramadan-quest.png',
 ];
 
