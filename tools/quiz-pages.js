@@ -14,7 +14,10 @@ K.catalog.forEach(q => {
   const dir = path.join(ROOT, 'games', q.id);
   if (!fs.existsSync(path.join(dir, 'data.js'))) return;
   const bg = K.theme(q.theme).bg;
-  const extra = fs.existsSync(path.join(ROOT, 'js/quiz/scenes.js')) ? '\n  <script src="/KidsGames/js/quiz/scenes.js"></script>' : '';
+  const src = fs.readFileSync(path.join(dir, 'data.js'), 'utf8');
+  let extra = '';
+  if (/\.surahs\b/.test(src) || q.daily) extra += '\n  <script src="/KidsGames/js/quiz/surahs.js"></script>';
+  if (/B\.place\(|type: 'place'/.test(src) || q.daily) extra += '\n  <script src="/KidsGames/js/quiz/scenes.js"></script>';
   fs.writeFileSync(path.join(dir, 'index.html'), `<!DOCTYPE html>
 <html lang="en">
 <head>
