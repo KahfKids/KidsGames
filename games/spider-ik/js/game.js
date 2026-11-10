@@ -584,6 +584,12 @@ function boot(){
   document.getElementById('snd').onclick=()=>SFX.toggle();SFX.init();
   document.getElementById('levels').onclick=()=>openMenu();
   document.getElementById('mclose').onclick=()=>closeMenu();
+  // Inside the Kahf Kids app the menu offers an Exit that asks the app to leave the game (protocol: kahfNav).
+  const RN=window.ReactNativeWebView;
+  if(RN&&RN.postMessage){
+    const ex=document.getElementById('mexit'),nav=a=>{try{RN.postMessage(JSON.stringify({type:'kahfNav',v:1,action:a}));}catch(e){}};
+    ex.hidden=false;ex.onclick=()=>nav('exit');nav('exitReady');
+  }
   document.getElementById('play').onclick=()=>{if(OFF&&LEVEL===PROG.cur&&!document.getElementById('mclose').hidden)closeMenu();else setLevel(PROG.cur,true);};
   document.getElementById('msg').querySelector('button').onclick=()=>setLevel(LEVEL,true);
   if(isTouch)setupTouch();

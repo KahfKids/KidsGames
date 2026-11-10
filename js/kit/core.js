@@ -10,6 +10,17 @@
   var inApp = !!window.ReactNativeWebView;
   try { inApp = inApp || window.self !== window.top; } catch (e) { inApp = true; }
   Kit.inApp = inApp;
+  // The Kahf Kids app hosts pages in a WebView. A page that offers its own Exit button asks the app to leave it
+  // (Kit.host.exit) and announces that once (Kit.host.ready), so the app can drop its own back strip.
+  // Message: JSON { type: 'kahfNav', v: 1, action: 'exit' | 'exitReady' }. Does nothing outside the app.
+  Kit.host = {
+    isNative: function () { var rn = window.ReactNativeWebView; return !!(rn && rn.postMessage); },
+    post: function (action) {
+      try { window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'kahfNav', v: 1, action: action })); } catch (e) { /* never break a page */ }
+    },
+    exit: function () { Kit.host.post('exit'); },
+    ready: function () { if (Kit.host.isNative()) Kit.host.post('exitReady'); }
+  };
   Kit.isTouch = (navigator.maxTouchPoints > 0) || matchMedia('(pointer: coarse)').matches;
   Kit.reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
   document.documentElement.classList.toggle('kit-touch', Kit.isTouch);

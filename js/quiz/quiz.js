@@ -36,7 +36,7 @@
       good: ['Well done!', 'That is right!', 'Excellent!', 'You got it!'], bad: 'Not quite', learned: 'Now you know',
       done: 'Finished!', perfect: 'Perfect!', bandTitle: 'Who is playing?', lang: 'Language',
       bands: ['Seedling', 'Explorer', 'Champion'], ages: ['Ages 4 to 6', 'Ages 7 to 9', 'Ages 10 to 12'],
-      leave: 'Leave this stop?', leaveText: 'Your answers so far will not be saved.', stay: 'Keep playing', quit: 'Leave',
+      leave: 'Leave this stop?', leaveText: 'Your answers so far will not be saved.', stay: 'Keep playing', quit: 'Leave', exit: 'Exit',
       order: 'Tap them in order', match: 'Tap two that go together', sort: 'Tap the right basket', place: 'Tap the right place',
       source: 'Source', listen: 'Listen', stickers: 'Stickers', newSticker: 'New sticker!', stickerLocked: 'Keep playing to win this one',
       lightning: 'Lightning round', lightningText: 'Ten quick questions. Can you beat your own best time?', go: 'Go',
@@ -48,7 +48,7 @@
       good: ['সাবাশ!', 'একদম ঠিক!', 'দারুণ!', 'ঠিক বলেছ!'], bad: 'ঠিক হয়নি', learned: 'এবার জেনে নিলে',
       done: 'শেষ হলো!', perfect: 'সব ঠিক!', bandTitle: 'কে খেলছে?', lang: 'ভাষা',
       bands: ['চারাগাছ', 'অভিযাত্রী', 'চ্যাম্পিয়ন'], ages: ['বয়স ৪ থেকে ৬', 'বয়স ৭ থেকে ৯', 'বয়স ১০ থেকে ১২'],
-      leave: 'এই ধাপ ছেড়ে যাবে?', leaveText: 'এ পর্যন্ত দেওয়া উত্তর জমা থাকবে না।', stay: 'খেলতে থাকো', quit: 'ছেড়ে যাও',
+      leave: 'এই ধাপ ছেড়ে যাবে?', leaveText: 'এ পর্যন্ত দেওয়া উত্তর জমা থাকবে না।', stay: 'খেলতে থাকো', quit: 'ছেড়ে যাও', exit: 'বের হও',
       order: 'পরপর সাজিয়ে চাপো', match: 'যে দুটি মেলে, সে দুটি চাপো', sort: 'ঠিক ঝুড়িতে চাপো', place: 'ঠিক জায়গায় চাপো',
       source: 'সূত্র', listen: 'শোনো', stickers: 'স্টিকার', newSticker: 'নতুন স্টিকার!', stickerLocked: 'খেলতে থাকো, এটি পাবে',
       lightning: 'ঝটপট রাউন্ড', lightningText: 'দশটি ঝটপট প্রশ্ন। নিজের সেরা সময়কে হারাতে পারবে?', go: 'শুরু',
@@ -227,6 +227,11 @@
     function speak(text) { if (canSpeak()) Kit.say.text(text, lang, { rate: 0.9 }); }
 
     // ---------- HUD on the map ----------
+    if (Kit.host && Kit.host.isNative()) {
+      var exitBtn = Kit.ui.iconButton('back', L().exit, Kit.host.exit);
+      exitBtn.classList.add('qz-exit');
+      exitBtn.insertAdjacentHTML('beforeend', '<span>' + L().exit + '</span>');
+    }
     var hudTitle = Kit.ui.pill('');
     hudTitle.classList.add('qz-title');
     Kit.ui.spacer();
@@ -333,7 +338,7 @@
         });
       }
       box.appendChild(langs); box.appendChild(bands);
-      var sh = Kit.ui.sheet({ title: L().bandTitle, content: box, closeable: closeable });
+      var sh = Kit.ui.sheet({ title: L().bandTitle, content: box, closeable: closeable, exit: !closeable });
       var title = sh.el.querySelector('h2');
       fill();
     }

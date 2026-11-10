@@ -12,6 +12,7 @@
     restart: '<svg viewBox="0 0 24 24" ' + P + '><path d="M4 12a8 8 0 1 0 2.6-5.9"/><path d="M4 4v5h5"/></svg>',
     levels: '<svg viewBox="0 0 24 24" ' + P + '><rect x="4" y="4" width="6" height="6" rx="1.5"/><rect x="14" y="4" width="6" height="6" rx="1.5"/><rect x="4" y="14" width="6" height="6" rx="1.5"/><rect x="14" y="14" width="6" height="6" rx="1.5"/></svg>',
     next: '<svg viewBox="0 0 24 24" ' + P + '><path d="M5 12h13M13 6l6 6-6 6"/></svg>',
+    back: '<svg viewBox="0 0 24 24" ' + P + '><path d="M19 12H6M11 6l-6 6 6 6"/></svg>',
     close: '<svg viewBox="0 0 24 24" ' + P + '><path d="M6 6l12 12M18 6L6 18"/></svg>',
     sound: '<svg viewBox="0 0 24 24" ' + P + '><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>',
     soundOff: '<svg viewBox="0 0 24 24" ' + P + '><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M17 9l5 6M22 9l-5 6"/></svg>',
@@ -95,6 +96,10 @@
         });
       }
       if (o.content) box.appendChild(o.content);
+      // In the Kahf Kids app the Pause sheet (or any sheet with exit: true) also offers a way back to the app.
+      if ((o.exit || o.title === 'Paused') && Kit.host && Kit.host.isNative()) {
+        o.buttons = (o.buttons || []).concat([{ label: 'Exit', icon: 'back', onClick: Kit.host.exit }]);
+      }
       if (o.buttons && o.buttons.length) {
         var acts = el('div', 'kit-actions'), row = null;
         o.buttons.forEach(function (b) {
@@ -145,4 +150,6 @@
       return sh;
     }
   };
+  // Every page that loads this kit offers an Exit (Pause sheet or a back button), so tell the app now.
+  if (Kit.host) Kit.host.ready();
 })();

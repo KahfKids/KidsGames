@@ -282,3 +282,7 @@ html, body { background: var(--qz-bg-top); font-family: var(--qz-font); }
 .qz-spin { width: 46px; height: 46px; border-radius: 50%; border: 5px solid rgba(255, 255, 255, 0.25); border-top-color: var(--qz-accent); animation: qz-spin 0.9s linear infinite; }
 @keyframes qz-spin { to { transform: rotate(360deg); } }
 .qz-sky.playing .qz-sky-tile { opacity: 0.4; }
+
+/* Exit button (Kahf Kids app only): arrow and the word, so it reads as a way out */
+.qz-exit { width: auto; padding: 0 16px 0 12px; gap: 6px; border-radius: 23px; font: 800 15px/1 var(--qz-font); color: var(--kit-ink); }
+.qz-exit svg { width: 22px; height: 22px; }

@@ -480,7 +480,7 @@
     buttons.push({ label: 'My Gardens', icon: 'garden', row: true, onClick: openGardens });
     if (items.length) buttons.push({ label: 'Clear Garden', icon: 'basket', onClick: confirmClear });
     buttons.push({ label: K.sfx.muted ? 'Sound: Off' : 'Sound: On', icon: K.sfx.muted ? 'soundOff' : 'sound', onClick: function () { K.sfx.toggle(); openMenu(); } });
-    sheet({ title: mode === 'level' ? 'Level ' + level : 'My Garden ' + (slot + 1), text: GD.AREAS[area].name, buttons: buttons, closeable: true });
+    sheet({ title: mode === 'level' ? 'Level ' + level : 'My Garden ' + (slot + 1), text: GD.AREAS[area].name, buttons: buttons, closeable: true, exit: true });
   }
   function confirmClear() {
     var th = thumb(area, items, 220, 130); th.className = 'jg-thumb';

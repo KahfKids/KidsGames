@@ -750,7 +750,7 @@
     }
     tPages.onclick = function () { K.sfx.play('tap'); show('pages'); };
     tGal.onclick = function () { K.sfx.play('tap'); show('gallery'); };
-    var sh = K.ui.sheet({ content: wrap, closeable: true, onClose: function () { sheetOpen = false; cancelAnimationFrame(qT); } });
+    var sh = K.ui.sheet({ content: wrap, closeable: true, exit: true, onClose: function () { sheetOpen = false; cancelAnimationFrame(qT); } });
     sh.el.classList.add('cb-sheet');
     function close() { sheetOpen = false; cancelAnimationFrame(qT); sh.close(); }
     show(tab || 'pages');

@@ -482,7 +482,7 @@
 
   /* ---------- make your character ---------- */
   function openEditor(first){
-    closeRing(); modal = 'editor'; const a = Object.assign({}, G.av), v = el('div', 'w-sheet'), prev = el('img', 'w-prev');
+    closeRing(); modal = 'editor'; const a = Object.assign({}, G.av), v = el('div', 'w-sheet maker'), prev = el('img', 'w-prev');
     const row = (items, cur, set, cls) => { const r = el('div', 'w-row'); items.forEach(it => { const b = el('button', 'w-sw ' + (cls || ''), it.h || ''); if (it.c) b.style.background = it.c; if (it.v === cur()) b.classList.add('sel');
       b.onclick = () => { sfx('tap'); set(it.v); for (const x of r.children) x.classList.toggle('sel', x === b); show(); }; r.appendChild(b); }); return r; };
     const show = () => { const keep = G.av; G.av = a; applyAv(); prev.src = WE.figUrl('me', 'stand', 45, 150); G.av = keep; };
@@ -515,11 +515,17 @@
       const here = me.place === pl || (pl === 'home0' && (me.place === 'home1' || me.place === 'yard')), b = el('button', 'w-mb' + (here ? ' sel' : ''), `<img src="${src}">`);
       b.onclick = () => { sfx('tap'); guide = here ? null : { place: pl }; hudWants.k = ''; close(); }; g.appendChild(b); }
     v.appendChild(g); document.body.appendChild(v); sfx('whoosh');
+    if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage){   // inside the Kahf Kids app: a way back to the app
+      const ex = el('button', 'w-x w-exit', '<svg viewBox="0 0 24 24" fill="none" stroke="#231e16" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H6M11 6l-6 6 6 6"/></svg><b>Exit</b>');
+      ex.setAttribute('aria-label', 'Exit'); ex.onclick = () => { sfx('tap'); kahfNav('exit'); }; v.appendChild(ex);
+    }
   }
 
+  function kahfNav(action){ try { window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'kahfNav', v: 1, action })); } catch (e) {} }
   /* ---------- the buttons on screen ---------- */
   function buildHud(){
     veil = el('div', 'w-veil on', '<i></i>'); document.body.appendChild(veil);
+    if (window.ReactNativeWebView) kahfNav('exitReady');
     const top = el('div', 'w-top'); hud.clock = el('button', 'w-chip'); hud.sun = el('i'); hud.time = el('b', '', '0:00'); hud.fast = el('i', 'ff', IC.fast);
     hud.clock.append(hud.sun, hud.time, hud.fast); hud.clock.classList.toggle('fast', !!G.fast);
     hud.clock.onclick = () => { G.fast = !G.fast; save(); sfx('whoosh'); hud.clock.classList.toggle('fast', G.fast); if (G.fast) S.setSpeed(72); else { S.clock = { base: Date.now(), real0: S.t, speed: 1 }; } slow(); };
