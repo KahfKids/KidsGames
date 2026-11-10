@@ -2,6 +2,18 @@
 
 Written 2026-11-10 after your review of v1.5.x. This replaces the phase lists in `helping-home-plan.md`. Nothing here is built. Same rule as before: one phase at a time, a walkthrough and your OK before each commit.
 
+## Phone pass (v1.5.8, 2026-11-10)
+
+Reported from real phones in the Kahf Kids app: the town did not open on iPhone, and play dipped on Android (inside too).
+Causes found in the engine and fixed (not yet confirmed on a phone):
+- Memory cap was fixed at 48 MB, but a 3x phone needs about 2.3x the pixels of the 2x test screen, so pictures were thrown away and remade all the time. The cap now grows with screen sharpness, people's poses are kept longest, and a place's pictures are freed the moment you leave it.
+- Freed canvases were left for the garbage collector (iPhone keeps that memory); they are now emptied at once. A failed canvas could stop the picture queue for good; it now recovers, and a place opens after 8 s whatever happens.
+- Every copy of a tree, lamp or bench had its own picture; they now share one per kind (town at 3x: about 136 MB down to about 76 MB).
+- The hand filter ran 7 noise passes per picture; 5 of them (grain and blots) are now made once as a repeating tile and laid over. Same look.
+- While playing, pictures are made in pieces of at most 400 px, one per frame, and the next ground tiles, nearby things and walk steps are made ahead.
+- Small per-frame waste removed (name building, list making, page updates that changed nothing).
+- `?perf=1` shows frames per second, the longest frame of the last second, the picture queue and memory, for checking on a phone.
+
 ## Status (2026-11-10): built, not committed, not on the hub
 
 You asked for the whole thing in one go, so the phases below were built together as version 1.5.5.

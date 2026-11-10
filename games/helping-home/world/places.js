@@ -187,7 +187,9 @@
   function thing(pl, type, x, y, o){
     o = o || {}; const t = T[type], sw = !!o.sw, w0 = (type === 'bed' && o.wide) ? 78 : t.w, w = sw ? t.d : w0, d = sw ? w0 : t.d;
     const p = { id: o.id || type + (++uid), type, o, x0: x, y0: y, x1: x + w, y1: y + d, h: t.h, solid: !!t.solid, flat: !!t.flat, sk: x + w/2 + y + d/2 - (t.flat ? 500 : 0), key: (o.id || type) + '|' + x + '|' + y + '|' + JSON.stringify(o),
-      hit: o.hit === 0 ? false : !!(t.use || o.hit), draw: () => { const k = t.pad || 6; return { svg: t.draw(ctxAt(x, y, sw), o), box: [[x - k, y - k, 0], [x + w + k, y + d + k, t.h + 4 + (t.pad || 0)]] }; } };
+      hit: o.hit === 0 ? false : !!(t.use || o.hit), draw: () => { const k = t.pad || 6; return { svg: t.draw(ctxAt(x, y, sw), o), box: [[x - k, y - k, 0], [x + w + k, y + d + k, t.h + 4 + (t.pad || 0)]] }; },
+      // the same thing drawn at the corner of the world: one picture is shared by every copy (all the trees, lamps, benches)
+      draw0: () => { const k = t.pad || 6; return { svg: t.draw(ctxAt(0, 0, sw), o), box: [[-k, -k, 0], [w + k, d + k, t.h + 4 + (t.pad || 0)]] }; } };
     pl.props.push(p);
     if (t.slots){ const use = Object.assign({}, t.use || {}, o.use || {});
       const ob = { id: p.id, type, place: pl.id, prop: p, use, to: o.to || null, owner: o.owner || null, slots: t.slots(o).map(([u, v, f, poses, onp, z]) => ({ x: sw ? x + v : x + u, y: sw ? y + u : y + v,

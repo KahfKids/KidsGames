@@ -24,43 +24,103 @@
   W.scale = () => S; W.size = () => [vw, vh];
 
   /* ---------- sprites ---------- */
-  const SPR = new Map(), Q = []; let busy = 0, bytes = 0; const CAP = 48e6;
-  W.stats = () => ({ sprites: SPR.size, mb: +(bytes/1e6).toFixed(1), queue: Q.length + busy });
-  function bake(key, make, pin){
+  /* Each picture is made in small pieces (never more than about 450 x 450 pixels of filter work at a time), one piece per
+     frame while you play, so making pictures never holds a frame up. The wobbly line is still the SVG filter; the paper
+     grain and blots are the same noise, made ONCE as a repeating tile and laid over each picture (5 of the 7 noise passes
+     of the old filter were the grain, redone for every picture). */
+  const SPR = new Map(), Q = [], Q2 = [], RUN = [], FAILS = {}; let busy = 0, bytes = 0, NOISE = null, noiseK = 1, noiseGen = 0;
+  const STR = 400, PADPX = 24;
+  const cap = () => Math.min(150e6, 52e6*Math.max(1, Math.pow(S*DPR/2.2, 2)));
+  W.calm = false;             // true while playing: one piece per frame. false while a place is loading: as fast as it goes
+  W.stats = () => ({ sprites: SPR.size, mb: +(bytes/1e6).toFixed(1), queue: Q.length + Q2.length + RUN.length + busy, made: W.made, ms: W.bakeMs });
+  W.made = 0; W.bakeMs = 0;
+  W.top = n => [...SPR.values()].filter(s => s.img).sort((a, b) => b.bytes - a.bytes).slice(0, n || 12).map(s => s.key.slice(0, 40) + ' ' + (s.bytes/1e6).toFixed(1) + (s.pin ? ' pin' : '') + ' age ' + (tickN - s.t));
+  function free(s){ if (s.img){ bytes -= s.bytes; try { s.img.width = s.img.height = 0; } catch (e) {} s.img = null; } s.job = null; }
+  function bake(key, make, pin, low){
     let s = SPR.get(key);
-    if (s){ s.t = tickN; return s.img ? s : null; }
-    s = { key, img: null, t: tickN, pin: !!pin }; SPR.set(key, s); Q.push([s, make]); pump(); return null;
+    if (s){ s.t = tickN; if (!low && s.q === 2){ const i = Q2.indexOf(s); if (i >= 0){ Q2.splice(i, 1); Q.push(s); } s.q = 1; } return s.img ? s : null; }
+    if (low && bytes > cap()*.75) return null;
+    s = { key, img: null, t: tickN, pin: !!pin, make, q: low ? 2 : 1 }; SPR.set(key, s); (low ? Q2 : Q).push(s); if (!W.calm) pump(); return null;
   }
-  function pump(){
-    while (busy < 3 && Q.length){
-      const [s, make] = Q.shift(); let m;
-      try { m = make(); } catch (e) { console.warn('bake', s.key, e); SPR.delete(s.key); continue; }
-      if (!m || !m.svg){ SPR.delete(s.key); continue; }
-      busy++;
-      let x0 = Math.floor(m.box[0]), y0 = Math.floor(m.box[1]), w = Math.ceil(m.box[2]) - x0, h = Math.ceil(m.box[3]) - y0;
-      let K = S*DPR; if (w*K > 4096) K = 4096/w; if (w*K*h*K > 8e6) K = Math.sqrt(8e6/(w*h));
-      let pw = Math.max(1, Math.round(w*K)), ph = Math.max(1, Math.round(h*K)), filt = FILT;
-      // a ground tile: exact pixels, and the hand filter worked out for this tile only
-      if (m.px){ x0 = m.box[0]; y0 = m.box[1]; w = m.box[2] - x0; h = m.box[3] - y0; pw = ph = m.px;
-        filt = FILT.replace('x="-3%" y="-3%" width="106%" height="106%"', `filterUnits="userSpaceOnUse" x="${x0}" y="${y0}" width="${w}" height="${h}"`); }
-      const src = `<svg xmlns="http://www.w3.org/2000/svg" width="${pw}" height="${ph}" viewBox="${x0} ${y0} ${w} ${h}"><defs>${filt}</defs>` +
-        `<g filter="url(#hand)"><rect x="${x0}" y="${y0}" width="${w}" height="${h}" fill="none"/>${m.svg}</g></svg>`;
-      const im = new Image();
-      im.onload = () => { const c = document.createElement('canvas'); c.width = pw; c.height = ph; c.getContext('2d').drawImage(im, 0, 0, pw, ph);
-        s.img = c; s.x = x0; s.y = y0; s.w = w; s.h = h; s.bytes = pw*ph*4; bytes += s.bytes; busy--; W.dirty = true; trim(); pump(); };
-      im.onerror = () => { busy--; SPR.delete(s.key); pump(); };
-      im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(src);
+  function load(src, ok, bad){
+    const im = new Image(); let url = null, data = false;
+    const asData = () => { data = true; im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(src); };
+    im.onload = () => { if (url){ URL.revokeObjectURL(url); url = null; } ok(im); };
+    im.onerror = () => { if (url){ URL.revokeObjectURL(url); url = null; } if (!data) asData(); else bad(); };
+    try { url = URL.createObjectURL(new Blob([src], { type: 'image/svg+xml' })); im.src = url; } catch (e) { asData(); }
+  }
+  const handF = (x, y, w, h) => NOISE
+    ? `<filter id="hand" filterUnits="userSpaceOnUse" x="${x}" y="${y}" width="${w}" height="${h}" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency="0.0450" numOctaves="2" seed="4" result="warp"/><feDisplacementMap in="SourceGraphic" in2="warp" scale="2.40" xChannelSelector="R" yChannelSelector="G"/></filter>`
+    : FILT.replace('x="-3%" y="-3%" width="106%" height="106%"', `filterUnits="userSpaceOnUse" x="${x}" y="${y}" width="${w}" height="${h}"`);
+  // the grain and blot tile: black, with the darkening as its alpha, so "source-atop" gives exactly picture x grain x blot
+  function makeNoise(){
+    const gen = ++noiseGen, K = S*DPR, N = 256, px = Math.round(N*K); NOISE = null; W.noise = 'wait';
+    const src = `<svg xmlns="http://www.w3.org/2000/svg" width="${px}" height="${px}" viewBox="0 0 ${N} ${N}"><defs><filter id="n" filterUnits="userSpaceOnUse" x="0" y="0" width="${N}" height="${N}" color-interpolation-filters="sRGB">` +
+      `<feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="3" seed="11" stitchTiles="stitch" result="n1"/><feColorMatrix in="n1" type="matrix" values=".3 0 0 0 .84  .3 0 0 0 .84  .3 0 0 0 .84  0 0 0 0 1" result="grain"/>` +
+      `<feTurbulence type="fractalNoise" baseFrequency="0.012" numOctaves="2" seed="7" stitchTiles="stitch" result="n2"/><feColorMatrix in="n2" type="matrix" values=".3 0 0 0 .85  .3 0 0 0 .85  .3 0 0 0 .85  0 0 0 0 1" result="blot"/>` +
+      `<feBlend in="grain" in2="blot" mode="multiply" result="m"/><feColorMatrix in="m" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  -1 0 0 0 1"/></filter></defs><rect width="${N}" height="${N}" filter="url(#n)"/></svg>`;
+    const done = c => { if (gen !== noiseGen) return; NOISE = c; noiseK = K; W.noise = c ? 'tile' : 'filter'; pump(); };
+    load(src, im => { let c = null; try { c = document.createElement('canvas'); c.width = c.height = px; c.getContext('2d').drawImage(im, 0, 0, px, px); } catch (e) { c = null; } done(c); }, () => done(null));
+  }
+  function fail(s){
+    if (SPR.get(s.key) !== s) return; free(s); SPR.delete(s.key); FAILS[s.key] = (FAILS[s.key] || 0) + 1; console.warn('bake failed', s.key);
+    for (let i = RUN.length - 1; i >= 0; i--) if (RUN[i][0] === s) RUN.splice(i, 1);
+    trim(cap()*.5, true);
+  }
+  function start(s){
+    let m; try { m = s.make(); } catch (e) { console.warn('bake', s.key, e); SPR.delete(s.key); return; }
+    if (!m || !m.svg || (FAILS[s.key] || 0) > 2){ SPR.delete(s.key); if (m && m.svg) SPR.set(s.key, { key: s.key, img: null, dead: true, t: tickN, pin: true }); return; }
+    let x0, y0, w, h, K, pw, ph, pad = PADPX;
+    if (m.px){ x0 = m.box[0]; y0 = m.box[1]; w = m.box[2] - x0; h = m.box[3] - y0; pw = ph = m.px; K = pw/w; }   // a ground tile: exact pixels, its own margin
+    else { x0 = Math.floor(m.box[0]); y0 = Math.floor(m.box[1]); w = Math.ceil(m.box[2]) - x0; h = Math.ceil(m.box[3]) - y0;
+      K = S*DPR; if (w*K > 4096) K = 4096/w; if (w*K*h*K > 8e6) K = Math.sqrt(8e6/(w*h)); pw = Math.max(1, Math.ceil(w*K - .01)); ph = Math.max(1, Math.ceil(h*K - .01)); }
+    let c, cx; try { c = document.createElement('canvas'); c.width = pw; c.height = ph; cx = c.getContext('2d'); } catch (e) { cx = null; }
+    if (!cx){ fail(s); return; }
+    const j = s.job = { c, cx, svg: m.svg, x0, y0, K, pw, ph, pad, n: 0, of: 0, nx: m.nx || 0, ny: m.ny || 0 };
+    const st = W.calm ? STR : 1600;      // small pieces while playing (no frame waits long); big ones while a place loads (fewer, faster)
+    for (let py = 0; py < ph; py += st) for (let px = 0; px < pw; px += st){ RUN.push([s, j, px, py, Math.min(st, pw - px), Math.min(st, ph - py)]); j.of++; }
+  }
+  function piece(r){
+    const s = r[0], j = r[1], px = r[2], py = r[3], cw = r[4], ch = r[5], p = j.pad, K = j.K;
+    const ux = j.x0 + (px - p)/K, uy = j.y0 + (py - p)/K, uw = (cw + 2*p)/K, uh = (ch + 2*p)/K;
+    const src = `<svg xmlns="http://www.w3.org/2000/svg" width="${cw + 2*p}" height="${ch + 2*p}" viewBox="${ux} ${uy} ${uw} ${uh}"><defs>${handF(ux, uy, uw, uh)}</defs><g filter="url(#hand)">${j.svg}</g></svg>`;
+    busy++;
+    const end = () => { busy--; if (!W.calm) pump(); };
+    load(src, im => {
+      const t0 = performance.now();
+      try {
+        if (SPR.get(s.key) === s && s.job === j){
+          const cx = j.cx; cx.drawImage(im, p, p, cw, ch, px, py, cw, ch);
+          if (NOISE){ const k = K/noiseK, np = NOISE.width*k, ox = ((j.nx % np) + np) % np, oy = ((j.ny % np) + np) % np;
+            cx.save(); cx.globalCompositeOperation = 'source-atop'; cx.fillStyle = j.pat || (j.pat = cx.createPattern(NOISE, 'repeat'));
+            cx.beginPath(); cx.rect(px, py, cw, ch); cx.clip(); cx.translate(-ox, -oy); cx.scale(k, k); cx.fillRect((px + ox)/k - 1, (py + oy)/k - 1, cw/k + 2, ch/k + 2); cx.restore(); }
+          if (++j.n === j.of){ s.img = j.c; s.x = j.x0; s.y = j.y0; s.w = j.pw/K; s.h = j.ph/K; s.bytes = j.pw*j.ph*4; bytes += s.bytes; s.job = null; s.make = null; W.dirty = true; trim(); }
+        }
+      } catch (e) { fail(s); }
+      W.made++; W.bakeMs = Math.max(W.bakeMs*.9, performance.now() - t0);
+      end();
+    }, () => { fail(s); end(); });
+  }
+  function pump(one){
+    if (W.noise === 'wait') return;
+    const lim = W.calm ? 1 : 3; let n = 0;
+    while (busy < lim && !(one && n)){
+      if (!RUN.length){ const s = Q.shift() || Q2.shift(); if (!s) break; if (SPR.get(s.key) !== s) continue; s.q = 0; start(s); continue; }
+      const r = RUN.shift(); if (r[0].job !== r[1]) continue; piece(r); n++;
     }
   }
-  // keep memory down: pictures not used for a while go first; the ground and things of a place you left go at once
-  function trim(limit){
-    limit = limit || CAP; if (bytes < limit) return;
-    const old = [...SPR.values()].filter(s => s.img && !s.pin && s.t < tickN - 30).sort((a, b) => a.t - b.t);
-    for (const s of old){ if (bytes < limit*.8) break; bytes -= s.bytes; SPR.delete(s.key); }
+  W.tick = () => pump(W.calm);
+  // keep memory down: pictures not used for a while go first (people's poses last, they are small and come back often);
+  // the ground and things of a place you left go at once. The canvas memory is handed back straight away (iPhone keeps it otherwise).
+  function trim(limit, hard){
+    limit = limit || cap(); if (bytes < limit) return;
+    const over = bytes > limit*1.4 || hard;
+    const old = [...SPR.values()].filter(s => s.img && !s.pin && s.t < tickN - 30 && (over || s.key[0] !== 'f' || s.t < tickN - 1800)).sort((a, b) => a.t - b.t);
+    for (const s of old){ if (bytes < limit*.8) break; free(s); SPR.delete(s.key); }
   }
-  W.bake = bake;
-  W.drop = pre => { for (const [k, s] of SPR) if (k.startsWith(pre)){ if (s.img) bytes -= s.bytes; SPR.delete(k); } };
-  W.busy = () => Q.length + busy;
+  W.bake = bake; W.keep = s => { s.t = tickN; return s; };
+  W.drop = pre => { for (const [k, s] of SPR) if (k.startsWith(pre)){ free(s); SPR.delete(k); } };
+  W.busy = () => Q.length + RUN.length + busy;
   // the screen box of a 3D box, padded
   W.box2 = (b, pad = 8) => { let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
     for (const x of [b[0][0], b[1][0]]) for (const y of [b[0][1], b[1][1]]) for (const z of [b[0][2], b[1][2]]){ const q = P(x, y, z);
@@ -70,10 +130,14 @@
   // a person: body, pose, frame, facing (snapped to 45 degrees), look version (clothes), options
   W.fig = (body, pose, frame, face, ver, opts) => {
     const d = ((Math.round(face/45)*45) % 360 + 360) % 360, ok = opts ? JSON.stringify(opts) : '';
-    return bake('f|' + body + '|' + (ver || 0) + '|' + pose + '|' + frame + '|' + d + '|' + ok, () => {
-      const it = FAMILY.draw(body, pose, [0, 0, 0], d, frame, opts)[0], b = W.box2(it.box, 16);
+    const mk = (fr, low) => bake('f|' + body + '|' + (ver || 0) + '|' + pose + '|' + fr + '|' + d + '|' + ok, () => {
+      const it = FAMILY.draw(body, pose, [0, 0, 0], d, fr, opts)[0], b = W.box2(it.box, 16);
       if (pose === 'talk') b[1] -= 70, b[2] += 40;
-      return { svg: inkScale(it.svg), box: b }; });
+      return { svg: inkScale(it.svg), box: b }; }, false, low);
+    // the other steps of this walk (or wave, or sweep) are made ahead, quietly, so the first steps never wait
+    const n = pose === 'walk' ? 6 : pose === 'crawl' ? 4 : (FAMILY.FRAMES && FAMILY.FRAMES[pose]) || 1, r = mk(frame);
+    if (n > 1 && W.calm) for (let i = 1; i < n; i++) mk((frame + i) % n, true);
+    return r;
   };
   // any drawing as an <img> source (HUD pictures): same ink, not cached on the canvas
   W.svgUrl = (svg, box, px) => { const w = box[2] - box[0], h = box[3] - box[1];
@@ -84,46 +148,59 @@
   let place = null, order = [];
   W.setPlace = p => {
     place = p; W.dirty = true;
-    for (const s of SPR.values()){ const k = s.key, other = (k[0] === 'g' || k[0] === 'p') && k[1] === '|' && !k.startsWith('g|' + p.id + '|') && !k.startsWith('p|' + p.id + '|'); if (other){ s.pin = false; s.t = -1e9; } }
+    for (const s of SPR.values()){ const k = s.key, other = (k[0] === 'g' || k[0] === 'p') && k[1] === '|' && !k.startsWith('g|' + p.id + '|') && !k.startsWith('p|' + p.id + '|'); if (other){ free(s); SPR.delete(k); } }
     ground(true);
     W.sortProps();
-    trim(CAP*.45);
+    trim(cap()*.45);
   };
   // the ground: one picture for a room; a big place (the town) is cut into tiles, made at full sharpness as they come into view
-  const TPX = 360, TPAD = 24;
+  const TPX = 360;
   function ground(pin){
     const p = place, b = p.gbox, K = S*DPR, gk = 'g|' + p.id + '|' + (p.ver || 0);
     if ((b[2] - b[0])*K <= 4096 && (b[2] - b[0])*(b[3] - b[1])*K*K <= 8e6){ const g = bake(gk, () => ({ svg: W.world(p.ground()), box: p.gbox }), pin); return g ? [g] : null; }
     if (p._gk !== gk){ p._gk = gk; p._gsvg = W.world(p.ground()); }
-    const T = TPX/K, pad = TPAD/K, gx = Math.floor(b[0]), gy = Math.floor(b[1]), l = cam.x - vw/2/S - 24, t = cam.y - vh/2/S - 24, out = []; let all = true;
-    for (let j = Math.max(0, Math.floor((t - gy)/T)); j <= Math.min(Math.ceil((b[3] - gy)/T) - 1, Math.floor((t + vh/S + 48 - gy)/T)); j++)
-      for (let i = Math.max(0, Math.floor((l - gx)/T)); i <= Math.min(Math.ceil((b[2] - gx)/T) - 1, Math.floor((l + vw/S + 48 - gx)/T)); i++){
-        const s = bake(gk + '|' + i + '|' + j, () => ({ svg: p._gsvg, box: [gx + i*T - pad, gy + j*T - pad, gx + (i + 1)*T + pad, gy + (j + 1)*T + pad], px: TPX + 2*TPAD }));
-        if (s){ s.ti = i; s.tj = j; s.gx = gx; s.gy = gy; out.push(s); } else all = false; }
+    const T = TPX/K, gx = Math.floor(b[0]), gy = Math.floor(b[1]), l = cam.x - vw/2/S - 24, t = cam.y - vh/2/S - 24, out = []; let all = true;
+    const nI = Math.ceil((b[2] - gx)/T) - 1, nJ = Math.ceil((b[3] - gy)/T) - 1, e = W.calm ? T*.4 : 0;      // while playing, the tiles just past the edge are made ahead
+    const i0 = Math.max(0, Math.floor((l - gx)/T)), i1 = Math.min(nI, Math.floor((l + vw/S + 48 - gx)/T)), j0 = Math.max(0, Math.floor((t - gy)/T)), j1 = Math.min(nJ, Math.floor((t + vh/S + 48 - gy)/T));
+    const tl = p._tl && p._tlk === gk + K ? p._tl : (p._tlk = gk + K, p._tl = new Map());
+    for (let j = Math.max(0, Math.floor((t - e - gy)/T)); j <= Math.min(nJ, Math.floor((t + e + vh/S + 48 - gy)/T)); j++)
+      for (let i = Math.max(0, Math.floor((l - e - gx)/T)); i <= Math.min(nI, Math.floor((l + e + vw/S + 48 - gx)/T)); i++){
+        const inView = i >= i0 && i <= i1 && j >= j0 && j <= j1, id = j*4096 + i; let s = tl.get(id);
+        if (s && s.img) s.t = tickN;
+        else { s = bake(gk + '|' + i + '|' + j, () => ({ svg: p._gsvg, box: [gx + i*T, gy + j*T, gx + (i + 1)*T, gy + (j + 1)*T], px: TPX, nx: i*TPX, ny: j*TPX }), false, !inView);
+          if (s){ s.ti = i; s.tj = j; s.gx = gx; s.gy = gy; tl.set(id, s); } else tl.delete(id); }
+        if (!inView) continue;
+        if (s) out.push(s); else all = false; }
     out.tiles = true; out.all = all; return out;
   }
   W.sortProps = () => { order = place.props.slice().sort((a, b) => a.sk - b.sk); W.dirty = true; };
-  const propSprite = o => bake('p|' + place.id + '|' + o.key, () => { const r = o.draw(); return { svg: W.world(r.svg), box: W.box2w(r.box, 10) }; });
+  // one picture per kind of thing (type + its options), shared by every copy in the place and drawn where each one stands
+  const pkey = o => { if (o._kf !== o.key){ o._kf = o.key; o._sk = 'p|' + place.id + '|' + (o.draw0 ? o.type + '|' + (o.x1 - o.x0) + '|' + JSON.stringify(o.o) : o.key); const q = o.draw0 ? W.proj(o.x0, o.y0, 0) : [0, 0]; o._px = q[0]; o._py = q[1]; } return o._sk; };
+  const propSprite = (o, low) => { const c = o._s; if (c && c.img && c.key === pkey(o)){ c.t = tickN; return c; } return o._s = propMake(o, low); };
+  const propMake = (o, low) => bake(pkey(o), () => { const r = o.draw0 ? o.draw0() : o.draw(); return { svg: W.world(r.svg), box: W.box2w(r.box, 10) }; }, false, low);
   // only things on (or near) the screen are made and kept
-  const vis = o => { const b = o._sb || (o._sb = W.box2w([[o.x0 - 34, o.y0 - 34, 0], [o.x1 + 34, o.y1 + 34, o.h + 40]], 0)), hw = vw/2/S + 70, hh = vh/2/S + 70; return b[2] > cam.x - hw && b[0] < cam.x + hw && b[3] > cam.y - hh && b[1] < cam.y + hh; };
-  W.ready = () => { if (!place) return false; const g = ground(true); return !!g && (!g.tiles || g.all) && place.props.every(o => !vis(o) || !!propSprite(o)); };
+  const vis = (o, m) => { const b = o._sb || (o._sb = W.box2w([[o.x0 - 34, o.y0 - 34, 0], [o.x1 + 34, o.y1 + 34, o.h + 40]], 0)), hw = vw/2/S + (m || 70), hh = vh/2/S + (m || 70); return b[2] > cam.x - hw && b[0] < cam.x + hw && b[3] > cam.y - hh && b[1] < cam.y + hh; };
+  const done = s => !!s && !!(s.img || s.dead);
+  W.ready = () => { if (!place || W.noise === 'wait') return false; const g = ground(true); return !!g && (!g.tiles || g.all) && place.props.every(o => !vis(o) || !!propSprite(o) || done(SPR.get(pkey(o)))); };
   const inFront = (a, o) => a.x >= o.x1 - .5 || a.y >= o.y1 - .5;
   const near = (a, o) => a.x > o.x0 - 90 && a.x < o.x1 + 90 && a.y > o.y0 - 90 && a.y < o.y1 + 90;
 
   function blit(s, ox, oy){
+    if (!s.img) return;
     const k = S*DPR, x = Math.round(((s.x - cam.x)*S + vw/2 + ox)*DPR), y = Math.round(((s.y - cam.y)*S + vh/2 + oy)*DPR);
     ctx.drawImage(s.img, x, y, Math.round(s.w*k), Math.round(s.h*k));
   }
+  const slotsA = [], firstA = [];
   const drawn = [];           // what was drawn this frame, for picking: { x0, y0, x1, y1, actor | prop }
   W.frame = (actors, fx) => {
     tickN++; if (!place) return;
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = place.sky || '#f2efe7'; ctx.fillRect(0, 0, cv.width, cv.height);
     const g = ground(true);
-    if (g && g.tiles){ if (!g.all) W.dirty = true; for (const s of g){ const bx = Math.round(((s.gx - cam.x)*S + vw/2)*DPR), by = Math.round(((s.gy - cam.y)*S + vh/2)*DPR);
-      ctx.drawImage(s.img, TPAD, TPAD, TPX, TPX, bx + s.ti*TPX, by + s.tj*TPX, TPX, TPX); } }
+    if (g && g.tiles){ if (!g.all) W.dirty = true; for (const s of g){ if (!s.img) continue; const bx = Math.round(((s.gx - cam.x)*S + vw/2)*DPR), by = Math.round(((s.gy - cam.y)*S + vh/2)*DPR);
+      ctx.drawImage(s.img, bx + s.ti*TPX, by + s.tj*TPX); } }
     else if (g) blit(g[0], 0, 0);
     // people go after the nearest prop they stand in front of (exact box rule), else by depth
-    const slots = order.map(() => []), first = [];
+    while (slotsA.length < order.length) slotsA.push([]); const slots = slotsA, first = firstA; first.length = 0; for (let i = 0; i < order.length; i++) slots[i].length = 0;
     for (const a of actors){
       let idx = -1, k = a.x + a.y;
       for (let i = 0; i < order.length; i++){ const o = order[i];
@@ -147,7 +224,8 @@
         if (a.carry){ const c = a.carry; blit(c, (q[0] + (a.cx || 0))*S, (q[1] - (a.cz || 34)*ZK)*S); } } };
     put(first);
     for (let i = 0; i < order.length; i++){ const o = order[i], s = vis(o) ? propSprite(o) : null;
-      if (s){ blit(s, 0, 0); if (o.hit) drawn.push({ x0: (s.x - cam.x)*S + vw/2, y0: (s.y - cam.y)*S + vh/2, w: s.w*S, h: s.h*S, prop: o }); }
+      if (!s && W.calm && (tickN + i) % 20 === 0 && vis(o, 190)) propSprite(o, true);
+      if (s){ blit(s, o._px*S, o._py*S); if (o.hit) drawn.push({ x0: (s.x + o._px - cam.x)*S + vw/2, y0: (s.y + o._py - cam.y)*S + vh/2, w: s.w*S, h: s.h*S, prop: o }); }
       put(slots[i]); }
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
     if (fx) fx(ctx);
@@ -190,6 +268,7 @@
       if (!gr.g[id] && !(taken && taken.has(id))) return mid(p, i, j); }
     return null;
   };
+  let PB = null;
   W.path = (p, a, b) => {
     const gr = p.grid, cols = gr.cols, rows = gr.rows, g = gr.g, s = cellOf(p, a[0], a[1]), e = cellOf(p, b[0], b[1]);
     const si = s[1]*cols + s[0], ei = e[1]*cols + e[0];
@@ -198,8 +277,9 @@
     if (g[si]){ const n = W.freeNear(p, a[0], a[1], null, 1); if (!n) return null; if (W.cellId(p, n[0], n[1]) === ei) return [b.slice()]; const pa = W.path(p, n, b); return pa ? [n].concat(pa) : null; }
     // a seat or a bed in the middle of a thing: walk to the nearest free cell beside it, then step on
     if (g[ei]){ const n = W.freeNear(p, b[0], b[1], null, 1); if (!n) return null; if (W.cellId(p, n[0], n[1]) === si) return [b.slice()]; const pa = W.path(p, a, n); return pa ? pa.concat([b.slice()]) : null; }
-    const N = cols*rows, cost = new Float32Array(N).fill(1e9), from = new Int32Array(N).fill(-1), open = [si]; cost[si] = 0;
-    const fsc = new Float32Array(N); const hf = i => { const dx = Math.abs(i % cols - e[0]), dy = Math.abs((i/cols | 0) - e[1]); return Math.max(dx, dy) + .41*Math.min(dx, dy); };
+    const N = cols*rows; if (!PB || PB.n < N) PB = { n: N, cost: new Float32Array(N), from: new Int32Array(N), fsc: new Float32Array(N) };
+    const cost = PB.cost, from = PB.from, fsc = PB.fsc, open = [si]; cost.fill(1e9, 0, N); from.fill(-1, 0, N); cost[si] = 0;
+    const hf = i => { const dx = Math.abs(i % cols - e[0]), dy = Math.abs((i/cols | 0) - e[1]); return Math.max(dx, dy) + .41*Math.min(dx, dy); };
     fsc[si] = hf(si); let found = false, guard = 0;
     while (open.length && guard++ < 6000){
       let bi = 0; for (let k = 1; k < open.length; k++) if (fsc[open[k]] < fsc[open[bi]]) bi = k;
@@ -226,10 +306,10 @@
   /* ---------- canvas ---------- */
   W.init = canvas => {
     cv = canvas; ctx = cv.getContext('2d', { alpha: false });
-    const fit = () => { DPR = Math.min(3, window.devicePixelRatio || 1); vw = cv.clientWidth || innerWidth; vh = cv.clientHeight || innerHeight;
+    const fit = () => { const d0 = DPR; DPR = Math.min(3, window.devicePixelRatio || 1); if (d0 !== DPR) S = 0; vw = cv.clientWidth || innerWidth; vh = cv.clientHeight || innerHeight;
       cv.width = Math.round(vw*DPR); cv.height = Math.round(vh*DPR);
       const s = Math.max(.9, Math.min(1.5, Math.min(vw/340, vh/460)));
-      if (Math.abs(s - S) > .02){ S = s; for (const [k, sp] of SPR){ if (sp.img) bytes -= sp.bytes; SPR.delete(k); } if (place) W.setPlace(place); }
+      if (Math.abs(s - S) > .02){ S = s; for (const [k, sp] of SPR){ free(sp); SPR.delete(k); } Q.length = Q2.length = RUN.length = 0; makeNoise(); if (place) W.setPlace(place); }
       W.dirty = true; };
     S = 0; FILT = filterFor(1); fit(); addEventListener('resize', fit);
   };

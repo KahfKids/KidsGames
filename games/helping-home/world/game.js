@@ -7,6 +7,7 @@
   const el = (t, c, h) => { const e = document.createElement(t); if (c) e.className = c; if (h != null) e.innerHTML = h; return e; };
   const rd = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } };
   const G = Object.assign({ av: null, friends: {}, fday: { d: '', by: {} }, album: { salam: 0, give: 0, help: 0, clean: 0, care: 0, learn: 0 }, need: { hunger: 70, rest: 80, fun: 60, clean: 70 }, petDay: {}, decor: [], unlocked: ['plant', 'lamp', 'rugD'], garden: {}, jar: 0, given: 0, days: [], gift: '', fast: false }, rd());
+  const setH = (e, h) => { if (e._h !== h){ e._h = h; e.innerHTML = h; } }, setT = (e, v) => { if (e._t !== v){ e._t = v; e.textContent = v; } };
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(G)); } catch (e) {} };
   const sfx = n => { try { Kit.sfx.play(n); } catch (e) {} };
   const praise = () => { try { Kit.say.praise(['mashaallah', 'barakallah', 'ahsant'][Math.floor(Math.random()*3)]); } catch (e) {} };
@@ -104,6 +105,7 @@
     if (G.av.fresh) openEditor(true);
     else if (back === 'salah'){ setTimeout(() => { praise(); burst(me, 'heart', 5); }, 900); }
     else if (back) setTimeout(() => burst(me, 'star', 4), 900);
+    if (q.get('perf')){ const e = el('div'); e.style.cssText = 'position:fixed;left:6px;bottom:6px;z-index:99;font:12px/1.2 monospace;background:rgba(0,0,0,.6);color:#fff;padding:3px 6px;border-radius:6px;pointer-events:none'; document.body.appendChild(e); perf = { el: e, last: performance.now(), t0: performance.now(), n: 0, worst: 0 }; }
     input(); requestAnimationFrame(loop);
     offline();
     if ('serviceWorker' in navigator && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) try { navigator.serviceWorker.getRegistration('/KidsGames/').then(r => r || navigator.serviceWorker.register('/KidsGames/sw.js', { scope: '/KidsGames/' })).catch(() => {}); } catch (e) {}
@@ -121,7 +123,7 @@
   function enter(place){
     const prev = lastPlace;
     if (me.bike && PL[place].wallH && PL[prev]){ const dr = PL[prev].objs.find(o => o.to && o.to[0] === place), s0 = dr ? dr.slots[0] : { x: 100, y: 100 }, c = WE.freeNear(PL[prev], s0.x + 14, s0.y + 8, PL[prev].noStand || null, 1) || [s0.x, s0.y]; offBike(prev, c[0], c[1]); }
-    lastPlace = place; WE.setPlace(PL[place]); WE.follow(me.x, me.y, true); veil.classList.add('on'); tint(); hud.brush.hidden = !['home0', 'home1', 'yard'].includes(place);
+    lastPlace = place; WE.calm = false; WE.setPlace(PL[place]); WE.follow(me.x, me.y, true); veil.classList.add('on'); tint(); hud.brush.hidden = !['home0', 'home1', 'yard'].includes(place);
     if (decorating) endDecor(); closeRing();
     // a friend who is here says hello
     for (const p of S.people) if (p.ai && p.place === place) p.cool = S.t + 2 + Math.random()*4;
@@ -129,10 +131,14 @@
   function tint(){ const h = S.hour(), pl = PL[me.place], T = S.prayerHours(), night = h < T.fajr || h > T.isha + .3, dusk = !night && (h < T.fajr + 1.2 || h > T.maghrib - .7), inside = !!pl.wallH;
     const t = night ? (inside ? '#d2cfe6' : '#8f98c8') : dusk ? (inside ? '#fdf3e6' : '#fde3c6') : null;
     if (pl.tint !== t){ pl.tint = t; WE.dirty = true; } pl.sky = inside ? '#efe9dc' : night ? '#3d466e' : dusk ? '#f6dcc0' : '#cfe6f2';
-    hud.sun.innerHTML = night ? IC.moon : IC.sun; }
+    setH(hud.sun, night ? IC.moon : IC.sun); }
 
   /* ---------- the loop ---------- */
-  let lastT = 0, lastSig = '', slowT = 0, lastDraw = 0;
+  let lastT = 0, lastSig = '', slowT = 0, lastDraw = 0, veilT = 0;
+  // ?perf=1 : a small readout to check a real phone (frames per second, the longest frame of the last second, pictures being made, memory)
+  let perf = null;
+  function perfTick(t){ const d = t - perf.last; perf.last = t; perf.n++; if (d > perf.worst) perf.worst = d;
+    if (t - perf.t0 >= 1000){ const st = WE.stats(); perf.el.textContent = Math.round(perf.n*1000/(t - perf.t0)) + ' fps  worst ' + Math.round(perf.worst) + ' ms  q ' + st.queue + '  ' + st.mb + ' MB  x' + (window.devicePixelRatio || 1).toFixed(2) + ' ' + (WE.noise || ''); perf.t0 = t; perf.n = 0; perf.worst = 0; } }
   function loop(t){
     requestAnimationFrame(loop);
     const dt = Math.min(.1, (t - lastT)/1000 || 0); lastT = t; if (document.hidden) return;
@@ -146,7 +152,10 @@
     const [vw0, vh0] = WE.size(), seen = (x, y) => { const q = WE.toScreen(x, y, 0); return q[0] > -170 && q[0] < vw0 + 170 && q[1] > -120 && q[1] < vh0 + 230; };
     for (const p of S.people){ if (p.place !== here || (p === me && ride) || (p !== me && !seen(p.x, p.y))) continue;
       const biking = p === me && me.bike, pose = biking ? 'sit' : p.pose, opts = pose === 'sleep' ? { inBed: true } : undefined;
-      const s = WE.fig(p.body, pose, biking ? 0 : p.frame, p.face, p === me ? ver : p.ver, opts) || p._spr; p._spr = s;
+      const fr = biking ? 0 : p.frame, fv = p === me ? ver : p.ver; let s = p._fs;
+      if (s && s.img && p._fp === pose && p._ff === fr && p._fa === p.face && p._fv === fv) WE.keep(s);
+      else { s = WE.fig(p.body, pose, fr, p.face, fv, opts); if (s){ p._fs = s; p._fp = pose; p._ff = fr; p._fa = p.face; p._fv = fv; } else { p._fs = null; s = p._spr; } }
+      p._spr = s;
       const a = { x: p.x + p.ox, y: p.y + p.oy, z: p.z + (biking ? 15 : 0), sprite: s, on: p.on, me: p === me, p };
       if (biking){ const ax = Math.abs(Math.cos(me.face*D2R)) > .7, bs = WE.bake('bk|' + ax, () => ({ svg: inkScale(WP.bike(ax)), box: WE.box2([[-32, -32, 0], [32, 32, 42]], 6) })); acts.push({ x: a.x - .3, y: a.y - .3, z: 0, sprite: bs, veh: 1 }); sig += 'b' + ax; }
       if (pose === 'sleep'){ const o = sleepOff(p), f = p.face*D2R, fx = -Math.cos(f), fy = -Math.sin(f), L = p.id === 'toddler' ? 20 : p.kid ? 34 : 44, ax = Math.abs(fx) > .7;
@@ -162,12 +171,16 @@
     for (const it of S.loose[here]){ const s = itemSprite(it.kind); acts.push({ x: it.x, y: it.y, z: 0, sprite: s, item: it }); sig += it.id + (s ? 1 : 0); }
     for (const a of X.actors(here)){ if (!seen(a.x, a.y)) continue; acts.push(a); sig += (a.sprite ? a.sprite.key : '-') + (a.x*2 | 0) + ',' + (a.y*2 | 0) + ',' + (a.z | 0) + ';'; }
     if (lessonT > 0 && here === 'school') WE.follow((me.x + 20)/2, (me.y + 150)/2); else WE.follow(me.x, me.y);   // in a lesson, look toward the board
-    const ready = WE.ready(); if (ready && veil.classList.contains('on')) veil.classList.remove('on');
+    // a place opens when its pictures are made (or after 8 s whatever happens, so a phone short of memory still gets in)
+    const von = veil.classList.contains('on'), ready = von && WE.ready(); if (von && !veilT) veilT = t;
+    if (von && (ready || t - veilT > 8000)){ veil.classList.remove('on'); veilT = 0; }
+    WE.calm = !(von && !ready && t - veilT <= 8000); WE.tick();
+    if (perf) perfTick(t);
     const out = !PL[here].wallH, live = fxs.length || flies.length || tapMark || guide || decorating || (out && (X.wet || rainbow > S.t)) || lessonT > 0 || S.people.some(p => (p.want || (p.say && p.say.until > S.t)) && p.place === here) || X.pets.some(c => c.say && c.say.until > S.t && c.place === here);
     if ((sig !== lastSig || WE.dirty || live) && t - lastDraw > 15){ lastDraw = t; lastSig = sig; WE.dirty = false; WE.frame(acts, overlays); }
   }
   function slow(){
-    const d = S.now(); hud.time.textContent = d.getHours() + ':' + ('0' + d.getMinutes()).slice(-2); tint();
+    const d = S.now(); setT(hud.time, d.getHours() + ':' + ('0' + d.getMinutes()).slice(-2)); tint();
     const cal = calOf(d); if (cal.eid !== CAL.eid || cal.friday !== CAL.friday || cal.ramadan !== CAL.ramadan) S.cal = CAL = cal;
     // people you know wave when you come near
     for (const p of S.people){ if (!p.ai || p.place !== me.place) continue;
@@ -183,7 +196,7 @@
     const n = me.need, tag = me.st === 'act' && me.act ? me.act.use.tag : null, of = me.st === 'act' && me.act && me.act.use.offers;
     for (const [k, , , rate] of NEEDS) n[k] = Math.max(0, Math.min(100, n[k] - rate*.5));
     if (tag === 'sleep') n.rest = Math.min(100, n.rest + 5); if (tag === 'eat') n.hunger = Math.min(100, n.hunger + 4); if (of && of.fun) n.fun = Math.min(100, n.fun + of.fun/30); if (of && of.rest) n.rest = Math.min(100, n.rest + of.rest/40);
-    hud.nd.forEach((b, i) => { const v = n[NEEDS[i][0]]; b.style.setProperty('--v', Math.round(v)); b.classList.toggle('low', v < 25); });
+    hud.nd.forEach((b, i) => { const v = n[NEEDS[i][0]]; const r = Math.round(v); if (b._v !== r){ b._v = r; b.style.setProperty('--v', r); b.classList.toggle('low', v < 25); } });
     // a lesson at school, a book on the sofa
     const atDesk = me.st === 'act' && me.act && me.act.type === 'sdesk';
     if (atDesk){ lessonT += .5; if (Math.abs(lessonT - 12) < .26){ album('learn'); burst(me, 'star', 4); praise(); } } else lessonT = 0;
@@ -203,8 +216,8 @@
     if (ob.type === 'busStop' && free.length){ meTimer = null; S.useSlot(me, ob, free[0], null, 1e7); me.then = (f => () => { f(); set(); })(me.then); } else walkThen(ob, set); }
   function busCheck(){
     const bus = X.cars.find(v => v.id === 'bus');
-    if (ride){ hud.off.hidden = ride.at == null; hud.off.innerHTML = IC.walk; return; }
-    { const lying = me.st === 'act' && !!me.slot && !me.praying; hud.off.hidden = !lying; if (lying) hud.off.innerHTML = me.pose === 'sleep' ? IC.sun : IC.walk;
+    if (ride){ hud.off.hidden = ride.at == null; setH(hud.off, IC.walk); return; }
+    { const lying = me.st === 'act' && !!me.slot && !me.praying; hud.off.hidden = !lying; if (lying) setH(hud.off, me.pose === 'sleep' ? IC.sun : IC.walk);
       if (lying && me.pose === 'sleep' && me.need.rest >= 100 && (me.napT = (me.napT || 0) + .5) > 6){ me.napT = 0; getUp(); burst(me, 'star', 3); } else if (!lying || me.pose !== 'sleep') me.napT = 0; }
     if (me.busStop == null || me.place !== 'street' || me.bike) return;
     if (bus.at === me.busStop && me.st !== 'walk' && Math.hypot(bus.x - me.x, bus.y - me.y) < 80){ S.release(me); meTimer = null; me.path = null; me.st = 'idle'; me.pose = 'stand'; me.busStop = null; ride = X.rider = bus; bus.wait = Math.max(bus.wait, 2.5); closeRing(); sfx('whoosh'); burst(bus, 'star', 3); } }
