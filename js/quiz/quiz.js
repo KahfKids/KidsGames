@@ -150,7 +150,7 @@
         for (var i = 0; i + size <= rs.length; i += size) {
           var g = rs.slice(i, i + size);
           add('match', band, o.q, o.why, typeof o.ref === 'function' ? o.ref(g) : o.ref, null,
-            { pairs: g.map(function (r) { return { l: op(o.l(r)), r: op(o.r(r)) }; }) }, o.kind + '|' + g.map(function (r) { return op(o.l(r)).t.en; }).sort().join(','));
+            { pairs: g.map(function (r) { return { l: op(o.l(r)), r: op(o.r(r)) }; }) }, o.kind + '|' + g.map(function (r) { var x = op(o.l(r)); return x.t ? x.t.en : x.p; }).sort().join(','));
         }
       }
     };
