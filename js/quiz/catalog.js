@@ -86,7 +86,7 @@
         card('hira', 'cave', 'The cave of Hira', 'হেরা গুহা', 'The first revelation came to him in the cave of Hira. (Bukhari 3)', 'হেরা গুহায় তাঁর কাছে প্রথম ওহি এসেছিল। (বুখারি ৩)'),
         card('iqra', 'quran', 'Iqra', 'ইকরা', 'The first word revealed was "Read". (Quran 96:1)', 'প্রথম নাজিল হওয়া শব্দ ছিল "পড়ো"। (কুরআন ৯৬:১)'),
         card('makkah', 'kaaba', 'Makkah', 'মক্কা', 'The Prophet ﷺ was born in Makkah.', 'নবী ﷺ মক্কায় জন্মগ্রহণ করেন।'),
-        card('madinah', 'mosque', 'Madinah', 'মদিনা', 'He migrated to Madinah and built his masjid there. (Bukhari 3906)', 'তিনি মদিনায় হিজরত করেন আর সেখানে মসজিদ বানান। (বুখারি ৩৯০৬)')] },
+        card('madinah', 'mosque', 'Madinah', 'মদিনা', 'He migrated to Madinah and built his masjid there. (Bukhari 3932)', 'তিনি মদিনায় হিজরত করেন আর সেখানে মসজিদ বানান। (বুখারি ৩৯৩২)')] },
     { id: 'good-manners-duas', shelf: 2, title: t('Good Manners and Duas', 'সুন্দর আচরণ ও দোয়া'), theme: 'street', stopName: t('House', 'বাড়ি'), stops: 12, bossEvery: 6,
       desc: t('What would you do? Kind choices and the duas for every moment.', 'তুমি হলে কী করতে? ভালো কাজ আর প্রতিদিনের দোয়া।'), cards: [
         card('salam', 'heart', 'Salam', 'সালাম', 'Spread salam among yourselves. (Muslim 54)', 'নিজেদের মধ্যে সালামের প্রসার করো। (মুসলিম ৫৪)'),
@@ -95,7 +95,7 @@
         card('parents', 'gift', 'Parents', 'মা-বাবা', 'Be good to your parents. (Quran 17:23)', 'মা-বাবার সঙ্গে ভালো ব্যবহার করো। (কুরআন ১৭:২৩)')] },
     { id: 'hajj-journey', shelf: 2, title: t('Hajj Journey', 'হজের সফর'), theme: 'desert', stopName: t('Step', 'ধাপ'), stops: 10, bossEvery: 5,
       desc: t('Walk the steps of Hajj, place by place.', 'হজের ধাপগুলো একটি একটি করে পার হও।'), cards: [
-        card('tawaf', 'kaaba', 'Tawaf', 'তাওয়াফ', 'Pilgrims go around the Kabah seven times. (Quran 22:29)', 'হাজিরা কাবার চারপাশে সাতবার ঘোরেন। (কুরআন ২২:২৯)'),
+        card('tawaf', 'kaaba', 'Tawaf', 'তাওয়াফ', 'Pilgrims go around the Kabah seven times. (Quran 22:29; Muslim 1218)', 'হাজিরা কাবার চারপাশে সাতবার ঘোরেন। (কুরআন ২২:২৯; মুসলিম ১২১৮)'),
         card('arafah', 'mountain', 'Arafah', 'আরাফা', 'Hajj is Arafah. (Tirmidhi 889)', 'হজ হলো আরাফা। (তিরমিযি ৮৮৯)'),
         card('mina', 'tent', 'Mina', 'মিনা', 'Pilgrims stay in tents at Mina.', 'হাজিরা মিনায় তাঁবুতে থাকেন।'),
         card('zamzam', 'well', 'Zamzam', 'জমজম', 'The well of Zamzam is beside the Kabah. (Bukhari 3364)', 'জমজম কূপ কাবার পাশে। (বুখারি ৩৩৬৪)')] },
@@ -110,7 +110,7 @@
         card('siwak', 'miswak', 'Siwak', 'মিসওয়াক', 'The siwak cleans the mouth and pleases the Lord. (Nasai 5)', 'মিসওয়াক মুখ পরিষ্কার করে আর রবকে সন্তুষ্ট করে। (নাসাঈ ৫)'),
         card('shoes', 'shoe', 'Shoes', 'জুতা', 'Put on the right shoe first, and take off the left one first. (Bukhari 5855)', 'জুতা পরার সময় আগে ডান পা, খোলার সময় আগে বাম পা। (বুখারি ৫৮৫৫)'),
         card('sleep', 'bed', 'Sleeping', 'ঘুম', 'The Prophet ﷺ lay down on his right side to sleep. (Bukhari 6315)', 'নবী ﷺ ডান কাতে শুয়ে ঘুমাতেন। (বুখারি ৬৩১৫)'),
-        card('water', 'water', 'Drinking', 'পানি পান', 'Do not drink in one gulp. Breathe outside the cup. (Bukhari 5631)', 'এক নিঃশ্বাসে পান কোরো না; পাত্রের বাইরে শ্বাস নাও। (বুখারি ৫৬৩১)')] },
+        card('water', 'water', 'Drinking', 'পানি পান', 'The Prophet ﷺ used to take three breaths while drinking. (Bukhari 5631)', 'নবী ﷺ পান করার সময় তিনবার শ্বাস নিতেন। (বুখারি ৫৬৩১)')] },
     { id: 'companions', shelf: 2, title: t('Companions and Great Women of Islam', 'সাহাবি ও মহীয়সী নারী'), theme: 'desert', stopName: t('Step', 'ধাপ'), stops: 10, bossEvery: 5,
       desc: t('The people around the Prophet ﷺ and what they are known for.', 'নবীজির ﷺ সঙ্গীরা আর তাঁদের পরিচয়।'), cards: [
         card('abubakr', 'cave', 'Abu Bakr', 'আবু বকর (রা.)', 'He was with the Prophet ﷺ in the cave during the Hijrah. (Quran 9:40)', 'হিজরতের সময় তিনি গুহায় নবী ﷺ-এর সঙ্গে ছিলেন। (কুরআন ৯:৪০)'),

@@ -219,5 +219,93 @@
         { l: a('Ramadan, then six of Shawwal', 'রমজান, তারপর শাওয়ালের ছয়'), r: a('As if fasting all the time', 'যেন সবসময় রোজা') }, { l: a('Fasting Ramadan with faith', 'ঈমানের সঙ্গে রমজানের রোজা'), r: a('Past sins forgiven', 'আগের গুনাহ মাফ') }],
       why: t('Each reward is stated in a sahih hadith.', 'প্রতিটি প্রতিদান সহিহ হাদিসে বর্ণিত।'), ref: "Jami' at-Tirmidhi 807; " + B + '1782, 38; Sahih Muslim 1164a' }
   ];
-  KahfQuiz.define('ramadan-nights', { bank: window.RamadanBank });
+
+  // ---------- more questions, written with the short builder ----------
+  var X = KahfQuiz.bank('rx'), TI = "Jami' at-Tirmidhi ";
+  function P(en, bn, p) { return [en, bn, p]; }
+
+  // band 1
+  X.c(1, ['When Ramadan begins, which gates are opened?', 'রমজান শুরু হলে কোন দরজাগুলো খুলে দেওয়া হয়?'], [['The gates of Paradise', 'জান্নাতের দরজা'], ['The gates of the market', 'বাজারের দরজা']],
+    ['"When Ramadan begins, the gates of Paradise are opened."', '"রমজান শুরু হলে জান্নাতের দরজাগুলো খুলে দেওয়া হয়।"'], B + '1898');
+  X.c(1, ['Who came to the Prophet ﷺ every night of Ramadan?', 'রমজানের প্রতি রাতে নবী ﷺ-এর কাছে কে আসতেন?'], [['The angel Jibril', 'ফেরেশতা জিবরাইল (আ.)'], ['A merchant', 'একজন ব্যবসায়ী'], ['A king', 'একজন রাজা']],
+    ['Jibril used to meet him on every night of Ramadan.', 'জিবরাইল (আ.) রমজানের প্রতি রাতে তাঁর সঙ্গে দেখা করতেন।'], B + '1902');
+  X.c(1, ['What did the Prophet ﷺ recite to Jibril in Ramadan?', 'রমজানে নবী ﷺ জিবরাইল (আ.)-কে কী পড়ে শোনাতেন?'], [P('The Quran', 'কুরআন', 'quran'), P('A letter', 'চিঠি', 'paper'), P('A story book', 'গল্পের বই', 'book')],
+    ['The Prophet ﷺ used to recite the Quran to Jibril.', 'নবী ﷺ জিবরাইল (আ.)-কে কুরআন পড়ে শোনাতেন।'], B + '1902');
+  X.c(1, ['When does the fasting person break the fast?', 'রোজাদার কখন রোজা ভাঙে?'], [P('When the sun sets', 'সূর্য ডুবলে', 'sunset'), P('At midday', 'দুপুরে', 'sun'), P('At dawn', 'ভোরে', 'dawn')],
+    ['"When the sun sets, then the fasting person should break his fast."', '"সূর্য ডুবে গেলে রোজাদার ইফতার করবে।"'], B + '1954');
+  X.c(1, ['The companions gave their fasting children something to play with. What was it made of?', 'সাহাবিরা রোজাদার শিশুদের খেলার জন্য একটি জিনিস দিতেন। তা কী দিয়ে তৈরি?'], [['Wool', 'পশম'], ['Gold', 'সোনা'], ['Ice', 'বরফ']],
+    ['"We used to make toys of wool for the boys."', '"আমরা ছেলেদের জন্য পশমের খেলনা বানাতাম।"'], B + '1960');
+  X.yn(1, ['Is Allah near when we make dua?', 'আমরা দোয়া করলে আল্লাহ কি কাছে থাকেন?'], true,
+    ['"Indeed I am near. I respond to the invocation of the supplicant when he calls upon Me."', '"আমি তো কাছেই। কেউ আমাকে ডাকলে আমি তার ডাকে সাড়া দিই।"'], 'Quran 2:186');
+  X.yn(1, ['Was the Prophet ﷺ extra generous in Ramadan?', 'নবী ﷺ কি রমজানে আরও বেশি দানশীল হতেন?'], true,
+    ['He was the most generous of people, and even more so in Ramadan.', 'তিনি ছিলেন সবচেয়ে দানশীল, আর রমজানে আরও বেশি।'], B + '1902');
+  X.yn(1, ['Did the Prophet ﷺ wake his family to pray in the last ten nights?', 'শেষ দশ রাতে নবী ﷺ কি তাঁর পরিবারকে নামাজের জন্য জাগাতেন?'], true,
+    ['He used to pray all the night and keep his family awake for the prayers.', 'তিনি সারা রাত নামাজ পড়তেন এবং পরিবারকেও জাগিয়ে রাখতেন।'], B + '2024');
+  X.c(1, ['In Ramadan a caller calls, "O seeker of good, ..."', 'রমজানে একজন আহ্বানকারী ডাকেন, "হে কল্যাণের সন্ধানী, ..."'], [['come near!', 'এগিয়ে এসো!'], ['go to sleep!', 'ঘুমিয়ে পড়ো!']],
+    ['"O seeker of the good, come near! O seeker of evil, stop!"', '"হে কল্যাণের সন্ধানী, এগিয়ে এসো! হে অকল্যাণের সন্ধানী, থেমে যাও!"'], TI + '682');
+  X.match(1, ['Match the picture to the Ramadan word.', 'ছবির সঙ্গে রমজানের শব্দ মেলাও।'],
+    [[{ p: 'dates' }, ['Iftar', 'ইফতার']], [{ p: 'crescent' }, ['A new month', 'নতুন মাস']], [{ p: 'quran' }, ['Revealed in Ramadan', 'রমজানে নাজিল']]],
+    ['Dates at iftar, the new moon, and the Quran.', 'ইফতারে খেজুর, নতুন চাঁদ আর কুরআন।'], 'Sunan Abi Dawud 2356; ' + B + '1909; ' + Q185);
+
+  // band 2
+  X.c(2, ['Whoever prays in the nights of Ramadan with faith, hoping for reward, what does he get?', 'যে ঈমান ও সওয়াবের আশায় রমজানের রাতে নামাজ পড়ে, সে কী পায়?'], [['His past sins are forgiven', 'তার আগের গুনাহ মাফ হয়'], ['A larger house', 'একটি বড় বাড়ি'], ['A longer holiday', 'লম্বা ছুটি']],
+    ['"...all his past sins will be forgiven."', '"...তার আগের সব গুনাহ মাফ করে দেওয়া হবে।"'], B + '37');
+  X.c(2, ['Whoever stands in prayer on the Night of Decree with faith and hope, what happens?', 'যে ঈমান ও সওয়াবের আশায় কদরের রাতে নামাজে দাঁড়ায়, তার কী হয়?'], [['His previous sins are forgiven', 'তার আগের গুনাহ মাফ হয়'], ['He never gets tired', 'সে কখনো ক্লান্ত হয় না'], ['He becomes rich', 'সে ধনী হয়']],
+    ['"Whoever established prayers on the night of Qadr out of sincere faith... all his previous sins will be forgiven."', '"যে ঈমানের সঙ্গে কদরের রাতে নামাজ পড়ে... তার আগের সব গুনাহ মাফ করা হবে।"'], B + '1901');
+  X.c(2, ['The Prophet ﷺ in Ramadan was more generous than ...', 'রমজানে নবী ﷺ ছিলেন যার চেয়েও বেশি দানশীল ...'], [['a fast wind that brings rain', 'বৃষ্টি বয়ে আনা প্রবাহিত বাতাস'], ['a river in summer', 'গ্রীষ্মের নদী'], ['a full market', 'ভরা বাজার']],
+    ['"He used to be more generous than a fast wind."', '"তিনি প্রবাহিত বাতাসের চেয়েও বেশি দানশীল হতেন।"'], B + '1902');
+  X.c(2, ['In the last ten days of Ramadan, the Prophet ﷺ used to ...', 'রমজানের শেষ দশ দিনে নবী ﷺ ...'], [['pray all night and wake his family', 'সারা রাত নামাজ পড়তেন ও পরিবারকে জাগাতেন'], ['travel to another city', 'অন্য শহরে সফর করতেন'], ['sleep earlier', 'আগে আগে ঘুমাতেন']],
+    ['He tightened his waist belt, prayed all the night, and kept his family awake for the prayers.', 'তিনি কোমর বেঁধে নামতেন, সারা রাত নামাজ পড়তেন এবং পরিবারকে জাগিয়ে রাখতেন।'], B + '2024');
+  X.c(2, ['Who gathered the people to pray the Ramadan night prayer behind one reciter?', 'কে মানুষকে একজন কারির পেছনে রমজানের রাতের নামাজে একত্র করেছিলেন?'], [['Umar ibn al-Khattab', 'উমর ইবনুল খাত্তাব (রা.)'], ['Bilal', 'বিলাল (রা.)'], ['Anas', 'আনাস (রা.)']],
+    ['He found people praying in separate groups and gathered them behind one reciter.', 'তিনি মানুষকে আলাদা আলাদা দলে নামাজ পড়তে দেখে একজন কারির পেছনে একত্র করেন।'], B + '2010');
+  X.c(2, ['Behind which reciter did Umar gather the people?', 'উমর (রা.) মানুষকে কোন কারির পেছনে একত্র করেছিলেন?'], [['Ubayy ibn Kab', 'উবাই ইবনে কাব (রা.)'], ['Khalid ibn al-Walid', 'খালিদ ইবনুল ওয়ালিদ (রা.)'], ['Abu Hurairah', 'আবু হুরাইরা (রা.)']],
+    ['"He made up his mind to congregate them behind Ubayy bin Kab."', '"তিনি তাদের উবাই ইবনে কাবের পেছনে একত্র করার সিদ্ধান্ত নিলেন।"'], B + '2010');
+  X.c(2, ['On which night of Ramadan are the devils shackled and the caller begins to call?', 'রমজানের কোন রাতে শয়তানদের শিকলে বাঁধা হয় এবং আহ্বানকারী ডাকতে শুরু করেন?'], [['The first night', 'প্রথম রাত'], ['The last night', 'শেষ রাত'], ['The tenth night', 'দশম রাত']],
+    ['"On the first night of the month of Ramadan, the devils are shackled."', '"রমজান মাসের প্রথম রাতে শয়তানদের শিকলে বাঁধা হয়।"'], TI + '682');
+  X.c(2, ['How often in Ramadan does Allah free people from the Fire?', 'রমজানে আল্লাহ কত ঘন ঘন মানুষকে জাহান্নাম থেকে মুক্তি দেন?'], [['Every night', 'প্রতি রাতে'], ['Once in the month', 'মাসে একবার'], ['Only on Eid', 'শুধু ঈদে']],
+    ['"There are those whom Allah frees from the Fire. And that is every night."', '"আল্লাহ কিছু মানুষকে জাহান্নাম থেকে মুক্তি দেন, আর তা প্রতি রাতেই।"'], TI + '682');
+  X.c(2, ['What did the companions do when a fasting child cried for food?', 'রোজাদার শিশু খাবারের জন্য কাঁদলে সাহাবিরা কী করতেন?'], [['Gave him a toy of wool', 'তাকে পশমের খেলনা দিতেন'], ['Scolded him', 'তাকে বকা দিতেন'], ['Sent him away', 'তাকে দূরে পাঠিয়ে দিতেন']],
+    ['"If anyone of them cried for food, he was given those toys."', '"তাদের কেউ খাবারের জন্য কাঁদলে তাকে সেই খেলনা দেওয়া হতো।"'], B + '1960');
+  X.c(2, ['What did Sahl do right after his suhur meal?', 'সাহল (রা.) সাহরি খাওয়ার পরপরই কী করতেন?'], [['Hurried to the Fajr prayer with the Prophet ﷺ', 'নবী ﷺ-এর সঙ্গে ফজরের নামাজে ছুটে যেতেন'], ['Went back to bed', 'আবার ঘুমাতে যেতেন'], ['Went to the market', 'বাজারে যেতেন']],
+    ['"I used to take my suhur with my family and then hurry for the prayer with Allah\'s Messenger ﷺ."', '"আমি পরিবারের সঙ্গে সাহরি খেতাম, তারপর রাসুলুল্লাহ ﷺ-এর সঙ্গে নামাজ পড়তে তাড়াতাড়ি যেতাম।"'], B + '1920');
+  X.c(2, ['In what kind of night was the Quran sent down?', 'কুরআন কেমন রাতে নাজিল হয়েছে?'], [['A blessed night', 'এক বরকতময় রাতে'], ['A stormy night', 'এক ঝড়ের রাতে'], ['A night with no moon', 'চাঁদহীন এক রাতে']],
+    ['"Indeed, We sent it down during a blessed night."', '"নিশ্চয়ই আমি একে এক বরকতময় রাতে নাজিল করেছি।"'], 'Quran 44:3');
+  X.yn(2, ['After the fast is complete, are we told to glorify Allah and be grateful?', 'রোজা পূর্ণ হলে আমাদের কি আল্লাহর বড়ত্ব ঘোষণা ও শোকর করতে বলা হয়েছে?'], true,
+    ['"...to complete the period and to glorify Allah for that which He has guided you; and perhaps you will be grateful."', '"...যাতে তোমরা সংখ্যা পূর্ণ করো, আল্লাহর বড়ত্ব ঘোষণা করো এবং শোকর করো।"'], Q185);
+  X.sort(2, ['From the first night of Ramadan: opened, or shut?', 'রমজানের প্রথম রাত থেকে: খোলা, নাকি বন্ধ?'], [['Opened', 'খোলা'], ['Shut or chained', 'বন্ধ বা শিকলবদ্ধ']],
+    [['The gates of Paradise', 'জান্নাতের দরজা', 0], ['The gates of the Fire', 'জাহান্নামের দরজা', 1], ['The devils', 'শয়তানরা', 1]],
+    ['Paradise is opened, the Fire is shut, and the devils are shackled.', 'জান্নাত খুলে দেওয়া হয়, জাহান্নাম বন্ধ করা হয়, শয়তানদের বাঁধা হয়।'], TI + '682');
+  X.match(2, ['Match the person to what he did in Ramadan.', 'ব্যক্তির সঙ্গে রমজানে তাঁর কাজ মেলাও।'],
+    [[['Jibril', 'জিবরাইল (আ.)'], ['Met the Prophet ﷺ every night', 'প্রতি রাতে নবী ﷺ-এর সঙ্গে দেখা করতেন']], [['Umar', 'উমর (রা.)'], ['Gathered people behind one reciter', 'মানুষকে এক কারির পেছনে একত্র করেন']], [['Ubayy ibn Kab', 'উবাই ইবনে কাব (রা.)'], ['Led the night prayer', 'রাতের নামাজ পড়ান']]],
+    ['Ramadan nights were full of Quran and prayer.', 'রমজানের রাতগুলো কুরআন ও নামাজে ভরা ছিল।'], B + '1902; ' + B + '2010');
+
+  // band 3
+  X.c(3, ['With what two things must one fast or pray in Ramadan to be forgiven?', 'মাফ পেতে হলে রমজানের রোজা বা নামাজ কোন দুটি বিষয়ের সঙ্গে হতে হবে?'], [['Sincere faith and hope for Allah\'s reward', 'খাঁটি ঈমান ও আল্লাহর সওয়াবের আশা'], ['Strength and speed', 'শক্তি ও গতি'], ['Wealth and fame', 'সম্পদ ও খ্যাতি']],
+    ['"...out of sincere faith and hoping for a reward from Allah."', '"...ঈমানের সঙ্গে এবং আল্লাহর কাছে সওয়াবের আশায়।"'], B + '1901');
+  X.c(3, ['"He used to tighten his waist belt" in the last ten days. What does that mean?', 'শেষ দশ দিনে "তিনি কোমর বেঁধে নিতেন" এর অর্থ কী?'], [['He worked harder in worship', 'তিনি ইবাদতে আরও পরিশ্রম করতেন'], ['He ate less food', 'তিনি কম খেতেন'], ['He prepared to travel', 'তিনি সফরের প্রস্তুতি নিতেন']],
+    ['He prayed all the night and kept his family awake for the prayers.', 'তিনি সারা রাত নামাজ পড়তেন এবং পরিবারকে জাগিয়ে রাখতেন।'], B + '2024');
+  X.c(3, ['What had Umar seen in the mosque before he gathered the people behind one reciter?', 'মানুষকে একজন কারির পেছনে একত্র করার আগে উমর (রা.) মসজিদে কী দেখেছিলেন?'], [['People praying in separate groups', 'মানুষ আলাদা আলাদা দলে নামাজ পড়ছে'], ['Nobody praying at all', 'কেউই নামাজ পড়ছে না'], ['People sleeping', 'মানুষ ঘুমাচ্ছে']],
+    ['"A man praying alone, or a man praying with a little group behind him."', '"কেউ একা নামাজ পড়ছে, কারও পেছনে ছোট একটি দল।"'], B + '2010');
+  X.c(3, ['Which three signs tell the fasting person to break the fast?', 'কোন তিনটি চিহ্ন রোজাদারকে ইফতারের সময় জানায়?'], [['Night comes, day goes, and the sun sets', 'রাত আসে, দিন চলে যায় ও সূর্য ডোবে'], ['The stars, the moon and the wind', 'তারা, চাঁদ ও বাতাস'], ['Rain, cloud and thunder', 'বৃষ্টি, মেঘ ও বজ্র']],
+    ['"When night falls from this side and the day vanishes from this side and the sun sets."', '"যখন এদিক থেকে রাত আসে, ওদিক থেকে দিন চলে যায় এবং সূর্য ডুবে যায়।"'], B + '1954');
+  X.c(3, ['What do the two calls say on every night of Ramadan?', 'রমজানের প্রতি রাতে দুটি আহ্বানে কী বলা হয়?'], [['Seeker of good, come near; seeker of evil, stop', 'কল্যাণের সন্ধানী, এগিয়ে এসো; অকল্যাণের সন্ধানী, থামো'], ['Wake up; go to sleep', 'জেগে ওঠো; ঘুমিয়ে পড়ো'], ['Eat now; drink now', 'এখন খাও; এখন পান করো']],
+    ['"O seeker of the good, come near! O seeker of evil, stop!"', '"হে কল্যাণের সন্ধানী, এগিয়ে এসো! হে অকল্যাণের সন্ধানী, থেমে যাও!"'], TI + '682');
+  X.c(3, ['Right in the middle of the verses on fasting, what does Allah say about Himself?', 'রোজার আয়াতগুলোর মাঝখানে আল্লাহ নিজের সম্পর্কে কী বলেছেন?'], [['"Indeed I am near"', '"আমি তো কাছেই"'], ['"I am far above"', '"আমি অনেক দূরে"'], ['"Ask the angels"', '"ফেরেশতাদের জিজ্ঞেস করো"']],
+    ['"I respond to the invocation of the supplicant when he calls upon Me."', '"কেউ আমাকে ডাকলে আমি তার ডাকে সাড়া দিই।"'], 'Quran 2:186');
+  X.c(3, ['What is the ransom for one who can fast only with great hardship?', 'যে অত্যন্ত কষ্ট ছাড়া রোজা রাখতে পারে না, তার ফিদইয়া কী?'], [['Feeding a poor person', 'একজন মিসকিনকে খাওয়ানো'], ['Giving a camel', 'একটি উট দেওয়া'], ['Fasting twice as long', 'দ্বিগুণ সময় রোজা রাখা']],
+    ['"...a ransom of feeding a poor person."', '"...ফিদইয়া হলো একজন মিসকিনকে খাওয়ানো।"'], 'Quran 2:184');
+  X.c(3, ['What should people do in return, since Allah answers the one who calls on Him?', 'আল্লাহ তো ডাকে সাড়া দেন; বিনিময়ে মানুষের কী করা উচিত?'], [['Respond to Him and believe in Him', 'তাঁর ডাকে সাড়া দেওয়া ও তাঁর ওপর ঈমান আনা'], ['Ask someone else', 'অন্য কারও কাছে চাওয়া'], ['Stop asking', 'চাওয়া বন্ধ করা']],
+    ['"So let them respond to Me and believe in Me that they may be guided."', '"অতএব তারা যেন আমার ডাকে সাড়া দেয় ও আমার ওপর ঈমান আনে, যাতে তারা সঠিক পথ পায়।"'], 'Quran 2:186');
+  X.c(3, ['On the day of Ashura, what were those who had already eaten told to do?', 'আশুরার দিন যারা আগেই খেয়ে ফেলেছিল, তাদের কী করতে বলা হয়েছিল?'], [['Not to eat more, and complete the fast', 'আর না খেয়ে রোজা পূর্ণ করা'], ['To eat again', 'আবার খাওয়া'], ['To leave the village', 'গ্রাম ছেড়ে যাওয়া']],
+    ['"Whoever has eaten something should not eat but complete the fast."', '"যে কিছু খেয়েছে, সে যেন আর না খায় এবং রোজা পূর্ণ করে।"'], B + '1960');
+  X.yn(3, ['Did the Prophet\'s ﷺ generosity grow when Jibril met him?', 'জিবরাইল (আ.)-এর সঙ্গে দেখা হলে নবী ﷺ-এর দানশীলতা কি বেড়ে যেত?'], true,
+    ['"When Jibril met him, he used to be more generous than a fast wind."', '"জিবরাইল (আ.) দেখা করলে তিনি প্রবাহিত বাতাসের চেয়েও বেশি দানশীল হতেন।"'], B + '1902');
+  X.order(3, ['Put the hadith of the first night of Ramadan in order.', 'রমজানের প্রথম রাতের হাদিসটি ক্রমে সাজাও।'],
+    [['The devils are shackled', 'শয়তানদের শিকলে বাঁধা হয়'], ['The gates of the Fire are shut', 'জাহান্নামের দরজা বন্ধ করা হয়'], ['The gates of Paradise are opened', 'জান্নাতের দরজা খোলা হয়'], ['A caller calls', 'একজন আহ্বানকারী ডাকেন']],
+    ['The devils, the Fire, Paradise, and then the caller.', 'শয়তান, জাহান্নাম, জান্নাত, তারপর আহ্বানকারী।'], TI + '682');
+  X.match(3, ['Match the deed to the hadith\'s promise.', 'আমলের সঙ্গে হাদিসের ওয়াদা মেলাও।'],
+    [[['Praying the nights of Ramadan with faith', 'ঈমানের সঙ্গে রমজানের রাতে নামাজ'], ['Past sins forgiven', 'আগের গুনাহ মাফ']], [['Seeking good in Ramadan', 'রমজানে কল্যাণ খোঁজা'], ['"Come near!"', '"এগিয়ে এসো!"']], [['Calling upon Allah', 'আল্লাহকে ডাকা'], ['"I respond"', '"আমি সাড়া দিই"']]],
+    ['Ramadan is the month of forgiveness, goodness and dua.', 'রমজান ক্ষমা, কল্যাণ ও দোয়ার মাস।'], B + '37; ' + TI + '682; Quran 2:186');
+
+  KahfQuiz.define('ramadan-nights', { bank: window.RamadanBank.concat(X.list) });
 })();
