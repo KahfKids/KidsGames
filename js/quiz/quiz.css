@@ -24,12 +24,16 @@ html, body { background: var(--qz-bg-top); font-family: var(--qz-font); }
   -webkit-overflow-scrolling: touch; overscroll-behavior: contain; scrollbar-width: none; z-index: 1; }
 .qz-sky { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
   background: linear-gradient(180deg, var(--qz-bg-top), var(--qz-bg-bot)); }
-.qz-sky svg { position: absolute; }
+.qz-sky-tile { position: absolute; inset: 0; background-repeat: repeat; background-size: 256px 256px; }
+.qz-orb { position: absolute; right: 18px; top: calc(70px + var(--kit-st)); width: 96px; height: 96px; }
+.qz-orb img, .pic img, .qpic img, .qz-decor img, .qz-scene > img { display: block; width: 100%; height: 100%; object-fit: contain; pointer-events: none; -webkit-user-drag: none; user-select: none; }
 .qz-sky.playing .qz-hide-play { display: none; }
 .qz-map::-webkit-scrollbar { display: none; }
 .qz-map-in { position: relative; width: 100%; margin: 0 auto; }
 .qz-map-bg { position: absolute; inset: 0; pointer-events: none; }
-.qz-map-bg svg { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
+.qz-decor { position: absolute; left: 0; right: 0; bottom: 0; aspect-ratio: 760 / 200; }
+.qz-decor img { object-fit: fill; }
+.qz-dots i { position: absolute; width: 6px; height: 6px; margin: -3px 0 0 -3px; border-radius: 3px; background: currentColor; }
 .qz-stop { position: absolute; width: 84px; height: 108px; margin: -54px 0 0 -42px; padding: 0; border: 0;
   background: none; color: var(--kit-ink); cursor: pointer; touch-action: manipulation;
   display: flex; flex-direction: column; align-items: center; justify-content: flex-start; }
@@ -222,3 +226,50 @@ html, body { background: var(--qz-bg-top); font-family: var(--qz-font); }
 .qz-b1 .qz-pool .qz-card .pic { width: 56px; }
 .qz-b1 .qz-slot { min-height: 58px; } .qz-b1 .qz-slot .pic { width: 44px; height: 44px; }
 .qz-b1 .qz-match .qz-card .pic { width: 68px; }
+
+/* Arabic text on cards and slots */
+.qz-card .ar, .qz-slot .ar, .qz-bin .ar { font-family: var(--qz-arabic); font-size: 1.45em; line-height: 1.6; direction: rtl; font-weight: 700; }
+.qz-q .qt small { display: block; font-size: 0.56em; font-weight: 700; opacity: 0.7; margin-top: 4px; }
+.qz-listen { margin-top: 10px; min-height: 48px; padding: 0 18px; font-size: 17px; }
+.qz-listen svg { width: 22px; height: 22px; }
+.qz-listen.on { background: var(--qz-accent); color: #2a1c4a; }
+.qz-time { flex: none; font: 900 18px var(--qz-font); min-width: 54px; text-align: center; font-variant-numeric: tabular-nums; }
+.qz-play.off { opacity: 0.7; }
+.qz-hud-btn.has::after { content: ""; position: absolute; top: 6px; right: 6px; width: 10px; height: 10px; border-radius: 5px; background: var(--qz-accent); }
+.qz-hud-btn { position: relative; }
+.qz-bolt { color: var(--qz-accent); }
+
+/* tap the place */
+.qz-scene { position: relative; width: 100%; max-width: calc((100vh - 300px) * var(--r, 1.5)); margin: 0 auto; border-radius: 20px; overflow: hidden;
+  box-shadow: 0 5px 0 rgba(0, 0, 0, 0.25); animation: qz-in 0.32s cubic-bezier(0.2, 1.2, 0.4, 1) both; }
+.qz-scene > img { position: absolute; inset: 0; }
+.qz-spot { position: absolute; width: 48px; height: 48px; margin: -24px 0 0 -24px; padding: 0; border: 0; background: none; cursor: pointer; touch-action: manipulation; }
+.qz-spot i { position: absolute; left: 9px; top: 9px; width: 30px; height: 30px; border-radius: 15px; background: #fffaf0; border: 4px solid var(--qz-accent-2);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4); animation: qz-breathe 1.8s ease-in-out infinite; }
+.qz-spot.good i { background: var(--qz-good); border-color: #fff; animation: qz-pop 0.4s; }
+.qz-spot.bad i { background: var(--qz-bad); border-color: #fff; animation: qz-shake 0.45s; }
+.qz-spot.dim { opacity: 0.35; }
+.qz-spot span { position: absolute; left: 50%; top: 44px; transform: translateX(-50%); white-space: nowrap; padding: 3px 10px; border-radius: 12px;
+  background: #fffaf0; color: #2a1c4a; font: 800 14px var(--qz-font); box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3); z-index: 2; }
+@media (orientation: landscape) and (min-width: 620px) { .qz-scene { max-width: calc((100vh - 110px) * var(--r, 1.5)); } }
+
+/* stickers */
+.qz-stickers { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 10px; margin-top: 14px; }
+.qz-sticker { border: 0; border-radius: 18px; padding: 10px 6px; background: #fffaf0; color: #2a1c4a; cursor: pointer; touch-action: manipulation;
+  display: flex; flex-direction: column; align-items: center; gap: 4px; font: 800 14px/1.2 var(--qz-font); box-shadow: 0 4px 0 var(--qz-card-edge); }
+.qz-sticker .pic { width: 64px; height: 64px; }
+.qz-sticker.off { background: rgba(255, 255, 255, 0.1); color: var(--kit-ink-dim); box-shadow: none; }
+.qz-sticker.off .pic { filter: grayscale(1) brightness(0.55); opacity: 0.6; }
+.qz-sticker:active { transform: scale(0.95); }
+.qz-note { grid-column: 1 / -1; font-size: 14px; opacity: 0.7; text-align: center; margin: 4px 0 0; }
+.qz-won { display: flex; flex-direction: column; align-items: center; gap: 8px; margin-top: 10px; }
+.qz-won .h { font: 900 18px var(--qz-font); color: var(--qz-accent); }
+.qz-won .qz-sticker { width: 130px; animation: qz-pop 0.5s 0.9s both; }
+.qz-card-big { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 10px; }
+.qz-card-big .pic { width: 150px; height: 150px; }
+.qz-card-big p { font: 700 18px/1.4 var(--qz-font); margin: 0; text-align: center; }
+.qz-load { color: #fff; }
+.qz-load p { margin: 0; font-weight: 800; }
+.qz-spin { width: 46px; height: 46px; border-radius: 50%; border: 5px solid rgba(255, 255, 255, 0.25); border-top-color: var(--qz-accent); animation: qz-spin 0.9s linear infinite; }
+@keyframes qz-spin { to { transform: rotate(360deg); } }
+.qz-sky.playing .qz-sky-tile { opacity: 0.4; }
