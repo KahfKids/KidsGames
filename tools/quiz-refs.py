@@ -68,10 +68,11 @@ for ref in sorted(groups):
     if only and only.lower() not in ref.lower(): continue
     texts = []
     for part in re.split(r';\s*', ref):
-        m = re.match(r'Quran (\d+):(\d+)(?:-(\d+))?', part)
-        if m:
-            s, a = int(m.group(1)), int(m.group(2)); b = int(m.group(3) or a)
-            texts.append(quran(s, a, b) or 'NOT FOUND'); continue
+        if re.match(r'Quran \d+:', part):
+            for m in re.finditer(r'(\d+):(\d+)(?:-(\d+))?', part):
+                s, a = int(m.group(1)), int(m.group(2)); b = int(m.group(3) or a)
+                texts.append(('%d:%d ' % (s, a)) + (quran(s, a, b) or 'NOT FOUND') if quran(s, a, b) else 'NOT FOUND')
+            continue
         if re.match(r'Quran, surah (\d+)|Surah list', part): texts.append('(surah table from quran.com)'); continue
         hit = False
         for book, rx in BOOKS:
@@ -83,8 +84,8 @@ for ref in sorted(groups):
         if texts == ['(surah table from quran.com)']: continue
         for t in texts:
             if t == 'NOT FOUND': missing += 1
-        print('\n# ' + (ref or 'NO REF') + '  ::  ' + ' || '.join(t[:230] for t in texts))
-        for q in groups[ref]: print('   b%s %s -> %s' % (q['band'], q['q'][:110], str(q['a'])[:120]))
+        print('\n# ' + (ref or 'NO REF') + '  ::  ' + ' || '.join(t[:150] for t in texts))
+        for q in groups[ref]: print('   b%s %s -> %s' % (q['band'], q['q'][:80], str(q['a'])[:70]))
         continue
     print('\n=== ' + (ref or 'NO REF'))
     for t in texts:
