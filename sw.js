@@ -1,6 +1,6 @@
-const CACHE_NAME = 'kidsgames-v1.5.6';
-const STATIC_CACHE = 'kidsgames-static-v1.5.6';
-const GAMES_CACHE = 'kidsgames-games-v1.5.6';
+const CACHE_NAME = 'kidsgames-v1.5.7';
+const STATIC_CACHE = 'kidsgames-static-v1.5.7';
+const GAMES_CACHE = 'kidsgames-games-v1.5.7';
 const PREMIUM_CACHE = 'kidsgames-premium-v1.3.5';
 
 // Core files that should be cached immediately

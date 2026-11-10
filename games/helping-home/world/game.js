@@ -149,6 +149,14 @@
       const s = WE.fig(p.body, pose, biking ? 0 : p.frame, p.face, p === me ? ver : p.ver, opts) || p._spr; p._spr = s;
       const a = { x: p.x + p.ox, y: p.y + p.oy, z: p.z + (biking ? 15 : 0), sprite: s, on: p.on, me: p === me, p };
       if (biking){ const ax = Math.abs(Math.cos(me.face*D2R)) > .7, bs = WE.bake('bk|' + ax, () => ({ svg: inkScale(WP.bike(ax)), box: WE.box2([[-32, -32, 0], [32, 32, 42]], 6) })); acts.push({ x: a.x - .3, y: a.y - .3, z: 0, sprite: bs, veh: 1 }); sig += 'b' + ax; }
+      if (pose === 'sleep'){ const o = sleepOff(p), f = p.face*D2R, fx = -Math.cos(f), fy = -Math.sin(f), L = p.id === 'toddler' ? 20 : p.kid ? 34 : 44, ax = Math.abs(fx) > .7;
+        a.x = p.x - o[0]; a.y = p.y - o[1];
+        const col = mix((p.act && p.act.prop && p.act.prop.o.col) || C.blue, '#ffffff', .16), sg = ax ? Math.sign(fx) : Math.sign(fy), bs = WE.bake('bl|' + col + L + ax + sg, () => {
+          // a low shape under the blanket: shoulders and body
+          const seg = (u0, u1, hw, h) => { const lo = Math.min(u0*sg, u1*sg), hi = Math.max(u0*sg, u1*sg), b = ax ? [lo, -hw, 0, hi, hw] : [-hw, lo, 0, hw, hi]; return [(b[0] + b[3])/2 + (b[1] + b[4])/2, H3.bx(b[0], b[1], 0, b[3], b[4], h, matOf(col), .7)]; };
+          const parts = [seg(7, 7 + L, 7, 3), seg(8, 8 + L*.36, 8.500, 4.600)].sort((a, b) => a[0] - b[0]);
+          const e = 9 + L; return { svg: WE.world(parts.map(q => q[1]).join('')), box: WE.box2w([[-e, -e, 0], [e, e, 7]], 8) }; });
+        acts.push({ x: p.x, y: p.y, z: p.z - 1, sprite: bs, on: p.on, veh: 1 }); sig += 'z'; }
       if (p === me && carry){ a.carry = itemSprite(carry); a.cz = 30; if (!a.carry) a.carry = null; }
       acts.push(a); sig += (s ? s.key : '-') + ((a.x*2 | 0)) + ',' + ((a.y*2 | 0)) + ';'; }
     for (const it of S.loose[here]){ const s = itemSprite(it.kind); acts.push({ x: it.x, y: it.y, z: 0, sprite: s, item: it }); sig += it.id + (s ? 1 : 0); }
@@ -195,7 +203,9 @@
     if (ob.type === 'busStop' && free.length){ meTimer = null; S.useSlot(me, ob, free[0], null, 1e7); me.then = (f => () => { f(); set(); })(me.then); } else walkThen(ob, set); }
   function busCheck(){
     const bus = X.cars.find(v => v.id === 'bus');
-    if (ride){ hud.off.hidden = ride.at == null; return; }
+    if (ride){ hud.off.hidden = ride.at == null; hud.off.innerHTML = IC.walk; return; }
+    { const lying = me.st === 'act' && !!me.slot && !me.praying; hud.off.hidden = !lying; if (lying) hud.off.innerHTML = me.pose === 'sleep' ? IC.sun : IC.walk;
+      if (lying && me.pose === 'sleep' && me.need.rest >= 100 && (me.napT = (me.napT || 0) + .5) > 6){ me.napT = 0; getUp(); burst(me, 'star', 3); } else if (!lying || me.pose !== 'sleep') me.napT = 0; }
     if (me.busStop == null || me.place !== 'street' || me.bike) return;
     if (bus.at === me.busStop && me.st !== 'walk' && Math.hypot(bus.x - me.x, bus.y - me.y) < 80){ S.release(me); meTimer = null; me.path = null; me.st = 'idle'; me.pose = 'stand'; me.busStop = null; ride = X.rider = bus; bus.wait = Math.max(bus.wait, 2.5); closeRing(); sfx('whoosh'); burst(bus, 'star', 3); } }
   function getOff(){ if (!ride || ride.at == null) return; const pl = PL.street, ob = pl.objs.find(o => o.id === 'bus' + ride.at), s0 = ob.slots[0], c = WE.freeNear(pl, s0.x, s0.y, pl.noStand, 0) || [s0.x, s0.y];
@@ -204,6 +214,10 @@
   function offBike(place, x, y){ if (!me.bike) return; me.bike = false; me.sp = 60; hud.bike.hidden = true; const pl = PL[place || me.place], c = x != null ? [x, y] : (WE.freeNear(pl, me.x + 12, me.y + 6, occupied(pl), 1) || [me.x, me.y]);
     S.loose[pl.id].push({ kind: 'bike', x: c[0], y: c[1], id: 'bike' }); G.bike = { place: pl.id, x: c[0], y: c[1] }; save(); sfx('tap'); }
   const petCare = id => { const t = dkey(new Date()); if (G.petDay.d !== t) G.petDay = { d: t }; if (G.petDay[id]) return; G.petDay[id] = 1; album('care'); };
+  // where the head of a sleeper is drawn, measured from the drawing itself, so it can be put on the pillow
+  const sleepOffs = {}, sleepOff = p => { const d = ((Math.round(p.face/45)*45) % 360 + 360) % 360, k = p.body + d; if (!sleepOffs[k]){ let o = [0, 0]; try { const h = FAMILY.draw(p.body, 'sleep', [0, 0, 0], d, 0, { inBed: true })[0].at; o = [h[0]/WE.WK, h[1]/WE.WK]; } catch (e) {} sleepOffs[k] = o; } return sleepOffs[k]; };
+  // get up from a bed or a seat
+  function getUp(){ if (!me.slot && me.st !== 'act') return; const pl = PL[me.place], c = WE.freeNear(pl, me.x, me.y, occupied(pl), 1); meTimer = null; if (c) meGo(c); else S.release(me); hud.off.hidden = true; sfx('whoosh'); }
   const itemSprite = kind => WE.bake('i|' + kind, () => { const r = WP.ITEM[kind](); return { svg: inkScale(r.svg), box: WE.box2(r.box, 6) }; });
   const itemUrl = (kind, px) => { const r = WP.ITEM[kind](); return WE.svgUrl(inkScale(r.svg), WE.box2(r.box, 4), px || 64); };
   const thingUrl = (type, px, o) => { const t = WP.T[type]; return WE.svgUrl(inkScale(t.draw(WP.ctxAt(0, 0, false), o || {})), WE.box2([[0, 0, 0], [t.w, t.d, t.h]], 6), px || 72); };
@@ -504,7 +518,7 @@
     hud.wants = el('div', 'w-wants'); document.body.appendChild(hud.wants);
     hud.carry = el('button', 'w-carry'); hud.carry.hidden = true; hud.carry.onclick = dropCarry; document.body.appendChild(hud.carry);
     hud.bike = el('button', 'w-carry side', `<img src="${itemUrl('bike', 56)}"><i>${IC.x}</i>`); hud.bike.hidden = true; hud.bike.onclick = () => offBike(); document.body.appendChild(hud.bike);
-    hud.off = el('button', 'w-carry side r', IC.walk); hud.off.hidden = true; hud.off.onclick = getOff; document.body.appendChild(hud.off);
+    hud.off = el('button', 'w-carry side r', IC.walk); hud.off.hidden = true; hud.off.onclick = () => ride ? getOff() : getUp(); document.body.appendChild(hud.off);
   }
   function input(){
     const cv = document.getElementById('cv'); let down = null;
@@ -515,7 +529,7 @@
     if (modal || ride) return; me.busStop = null; const r = document.getElementById('cv').getBoundingClientRect(), h = WE.pick(px - r.left, py - r.top), pl = PL[me.place]; auto = null; me.praying = false;
     if (decorating){ if (h.prop && h.prop.decor) return removeDecor(h.prop); if (decorating.type){ const g = WE.fromScreen(px - r.left, py - r.top); return placeDecor(g[0], g[1]); } }
     if (h.actor){ sfx('tap'); const a = h.actor; if (a.pet) return a.pet.kind === 'bird' ? feedBirds(a.pet) : approach(a.pet); return a.item ? takeLoose(a.item) : approach(a.p); }
-    if (h.prop){ sfx('tap'); if (h.prop.obj) return useObj(h.prop.obj); if (h.prop.type === 'ducks') return feedDucks(); }
+    if (h.prop){ sfx('tap'); if (h.prop.obj && me.act === h.prop.obj && me.st === 'act' && me.slot) return getUp(); if (h.prop.obj) return useObj(h.prop.obj); if (h.prop.type === 'ducks') return feedDucks(); }
     const g = h.ground || WE.fromScreen(px - r.left, py - r.top);
     // a free place to sit or play right where you tapped (a picnic rug, the sandpit, a prayer row)
     let best = null, bd = 15; for (const ob of pl.objs){ if (ob.prop || ob.use.who === 'none' || ob.use.tag === 'teach' || ob.use.tag === 'door') continue; for (const s of ob.slots){ const d = Math.hypot(s.x - g[0], s.y - g[1]); if (d < bd && !s.by){ bd = d; best = [ob, s]; } } }
