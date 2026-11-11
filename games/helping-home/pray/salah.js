@@ -156,30 +156,35 @@
     '.sp-ch{all:unset;box-sizing:border-box;min-height:48px;padding:6px 14px;border-radius:14px;border:2px solid var(--ink);background:#fff;box-shadow:0 2.5px 0 var(--ink);font:800 14px/1.2 ' + UIF + ';text-align:center;cursor:pointer;display:inline-flex;align-items:center;gap:6px}' +
     '.sp-ch svg{width:30px;height:30px}.sp-ch.on{outline:3.5px solid #f4b829;outline-offset:2px}' +
     '.ps-ctl .ps-big.sp-alt{flex:0 1 auto;background:var(--paper);font-size:16px;padding:8px 16px;min-width:0}.ps-app .ps-big.sp-alt:hover{background:var(--paper)}' +
-    // the moving child's layers: the last position as a ghost, and the motion arrow (drawn on, then breathing)
-    '.figstack svg.sp-ghost{opacity:0;transition:opacity .6s ease-out}.figstack svg.sp-ghost.on{opacity:.26;transition:none}' +
     // RIGHT and LEFT always in the same colours, in the words and on the picture
     '.rl{font-weight:900;white-space:nowrap}.rl.r{color:#c4502b}.rl.l{color:#5b48a0}.rl::before{content:"";display:inline-block;width:.62em;height:.62em;border-radius:50%;margin:0 .2em .05em .05em;border:2px solid var(--ink);vertical-align:middle}' +
     '.rl.r::before{background:#ef7a4f}.rl.l::before{background:#8b78cf}' +
     '.sp-dt b .rl::before{width:.5em;height:.5em}' +
-    // the close-up bubble: a round magnifier beside the child, a line to the part it shows
-    '.sp-mag{position:absolute;top:8px;width:var(--mag,170px);height:var(--mag,170px);border-radius:50%;overflow:hidden;background:#fbf6ea;border:3px solid var(--ink);box-shadow:0 4px 0 var(--ink),inset 0 0 0 5px #fff6dc;z-index:2;pointer-events:none;opacity:0;transform:scale(.6);transition:opacity .25s,transform .3s cubic-bezier(.3,1.5,.6,1)}' +
-    '.sp-mag.on{opacity:1;transform:none}.sp-mag svg{display:block;width:100%;height:100%}.sp-mag.r{right:10px}.sp-mag.l{left:10px}' +
-    '.sp-magl{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1;opacity:0;transition:opacity .25s}.sp-magl.on{opacity:1}' +
-    '.sp-arr .num{opacity:0;animation:spIn .2s ease-out forwards}.sp-arr .mk{opacity:0;animation:spIn .3s ease-out forwards}' +
-    '.sp-arr g.fade{opacity:0!important;transition:opacity .4s}' +
-    '.sp-arr path{fill:none;stroke-linecap:round;stroke-linejoin:round}.sp-arr .go path.b{stroke-dasharray:1;stroke-dashoffset:1;animation:spDraw .75s ease-out forwards}' +
-    '.sp-arr .go .hd{opacity:0;animation:spIn .2s ease-out .6s forwards}.sp-arr .go{animation:spBreathe 1.8s ease-in-out 1.2s infinite}' +
-    '@keyframes spDraw{to{stroke-dashoffset:0}}@keyframes spIn{to{opacity:1}}@keyframes spBreathe{0%,100%{opacity:1}50%{opacity:.55}}' +
-    '@media (prefers-reduced-motion:reduce){.sp-arr .go path.b{animation:none;stroke-dashoffset:0}.sp-arr .go .hd{animation:none;opacity:1}.sp-arr .go{animation:none}}' +
     '@media (min-width:760px) and (min-aspect-ratio:1/1){.sp-dt b{font-size:24px}}';
   document.head.appendChild(style);
-  PS.mount({ ui: ui, scene: FIG.scene, acts: { mat: function () { if (st.phase === 'mat') rollOut(); }, compass: function () { if (st.phase === 'qibla') turnStep(); } } });
+  PS.mount({ ui: ui, scene: FIG.scene, acts: { mat: function () { if (st.phase === 'mat') rollOut(); } } });   // the compass has its own press-and-drag below
   var side = PS.card.parentNode, doRow = PS.el('div', 'sp-do');
   side.insertBefore(doRow, PS.card);
-  // the child: the last position (a ghost while moving), the child, the motion arrow
-  var ghostG = PS.layer(true, 'sp-ghost'), kidG = PS.layer(true, 'sp-kid'), arrG = PS.layer(false, 'sp-arr');
-  var ghostSvg = ghostG.parentNode;
+  // the child, above the mat (iso/pix.js): the last position (a ghost while moving), the child, the motion arrow,
+  // the marks, then the close-up bubble and its line. The child's pictures are kept, so a move plays as a flipbook.
+  var PX = PS.px, ghostL = PX.layer({ cache: true }), kidL = PX.layer({ cache: ghostL }), arrL = PX.fx(), markL = PX.fx();
+  var magLine = PX.sticker(), magS = PX.sticker();
+  ghostL.alpha(0);
+  // the arrow is drawn on, then breathes; numbers and marks fade in (these were CSS animations)
+  (function () {
+    var Ez = HHPix.ease, breathe = function (T) { return T < 1.2 ? 1 : 1 - .45 * Ez.swing(((T - 1.2) % 1.8) / 1.8); };
+    var fade = function (sec) { return { delay: function (el) { return +el.getAttribute('data-delay') || 0; },
+      state: function (t) { return t < 0 ? { alpha: 0 } : { alpha: Ez.out(Math.min(1, t / sec)), done: t >= sec }; }, still: { alpha: 1 } }; };
+    HHPix.effects['sp-num'] = fade(.2); HHPix.effects['sp-mk'] = fade(.3);
+    var N = 14;
+    HHPix.effects['sp-go'] = {
+      frames: function (g) { var out = [null], ps = g.querySelectorAll('path');
+        for (var i = 1; i < N; i++) { [].forEach.call(ps, function (p) { p.setAttribute('stroke-dasharray', '1'); p.setAttribute('stroke-dashoffset', (1 - i / (N - 1)).toFixed(3)); }); out.push(g.outerHTML); }
+        return out; },
+      state: function (t, p, T) { var fr = Math.round(Ez.out(Math.min(1, Math.max(0, t) / .75)) * (N - 1)); return { frame: fr, alpha: fr ? breathe(T) : 0 }; },
+      still: { frame: N - 1, alpha: 1 } };
+    HHPix.effects['sp-hd'] = { delay: function () { return .6; }, state: function (t, p, T) { return t < 0 ? { alpha: 0 } : { alpha: Ez.out(Math.min(1, t / .2)) * breathe(T) }; }, still: { alpha: 1 } };
+  })();
   function pill() {
     PS.title(PS.icon(PS.prayerIcon[PRAYER]) + '<span>' + PNAME + ' · ' + (UNIT.kind === 'witr' ? 'Witr · ' + N + ' rak’ah' : short(UNIT, N)) + '</span>');
     PS.top.querySelector('.ps-pill').style.setProperty('--bead', HHChart.COL[UNIT.kind]);
@@ -214,24 +219,31 @@
   }
 
   /* ---------- the child on the mat: moves from the last position into this one, then holds ---------- */
-  var MOVE_MS = 850, STEPS_N = 48, kidCache = {}, kidN = 0, kidRaf = 0, kidShown = '', ghostT = 0;
+  var MOVE_MS = 850, STEPS_N = 30, kidCache = {}, kidN = 0, kidRaf = 0, ghostT = 0;
   var prayView = false;
   function kidSVG(a, b, t) {
     var k = KID.look + (t >= 1 || !a || a === b ? '|' + b : '|' + a + '>' + b + '>' + t);
     if (!kidCache[k]) { if (++kidN > 400) { kidCache = {}; kidN = 0; } kidCache[k] = inkScale(t >= 1 || !a || a === b ? KID.svg(b) : KID.frame(a, b, t)); }
     return kidCache[k];
   }
-  function setKid(h) { if (h !== kidShown) { kidG.innerHTML = h; kidShown = h; } }
+  function setKid(h) { kidL.set(h); }
+  // the pictures of the next move, made ahead while the child listens, so the move itself only shows them
+  function warmMove(a, b) {
+    if (!prayView || !a || !b || a === b || (window.Kit && Kit.reducedMotion)) return;
+    var list = [];
+    for (var i = 0; i <= STEPS_N; i++) (function (t) { list.push(function () { return kidSVG(a, b, t); }); })(i / STEPS_N);
+    kidL.warm(list, .6);
+  }
   var kidNow = { from: null, to: null };
   function showKid(name, from, animate, onEnd) {
     cancelAnimationFrame(kidRaf); clearTimeout(ghostT);
     var end = function () { if (onEnd) { var f = onEnd; onEnd = null; f(); } };
     kidNow = { from: from, to: name };
-    arrG.innerHTML = ''; ghostSvg.classList.remove('on'); hideMag();
-    if (!prayView || !name) { setKid(''); ghostG.innerHTML = ''; return end(); }
+    arrL.set(''); markL.set(''); hideMag();
+    if (!prayView || !name) { setKid(''); ghostL.set(''); return end(); }
     var reduce = window.Kit && Kit.reducedMotion;
-    if (!animate || !from || from === name || reduce) { setKid(kidSVG(null, name, 1)); if (from && from !== name) arrows(from, name, !reduce); return end(); }
-    ghostG.innerHTML = kidSVG(null, from, 1); ghostSvg.classList.add('on');
+    if (!animate || !from || from === name || reduce) { ghostL.alpha(0, 600); setKid(kidSVG(null, name, 1)); if (from && from !== name) arrows(from, name, !reduce); return end(); }
+    ghostL.set(kidSVG(null, from, 1)); ghostL.alpha(.26);
     // into and out of sujood the move has three beats (knees, hands, forehead): a little longer
     var ms = KID.via(from, name) ? 1200 : MOVE_MS;
     arrows(from, name, true, ms);
@@ -240,14 +252,14 @@
       var u = Math.min(1, Math.max(0, (now - t0) / ms)), tq = Math.round(u * STEPS_N) / STEPS_N;
       setKid(kidSVG(from, name, tq));
       if (u < 1) kidRaf = requestAnimationFrame(step);
-      else { ghostT = setTimeout(function () { ghostSvg.classList.remove('on'); }, 350); end(); }
+      else { ghostT = setTimeout(function () { ghostL.alpha(0, 600); }, 350); end(); }
     })(t0);
   }
   // the motion arrow: the real path of the head (or of the hands, or the turn of the head), beside the body
   // a round numbered (or lettered) badge on the picture, in svg units of the main view
   function badge(x, y, text, col, cls, delay) {
     var k = INK_K / .36, r = 6.2 * k;
-    return '<g class="' + (cls || 'mk') + '" style="animation-delay:' + (delay || 0) + 's"><circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + r.toFixed(2) + '" fill="' + col + '" stroke="#231e16" stroke-width="' + (1.4 * k).toFixed(2) + '"/>' +
+    return '<g class="sp-' + (cls || 'mk') + '" data-delay="' + (delay || 0) + '"><circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + r.toFixed(2) + '" fill="' + col + '" stroke="#231e16" stroke-width="' + (1.4 * k).toFixed(2) + '"/>' +
       '<text x="' + x.toFixed(1) + '" y="' + (y + 3.1 * k).toFixed(1) + '" text-anchor="middle" font-family="ui-rounded,system-ui,sans-serif" font-weight="900" font-size="' + (8.6 * k).toFixed(2) + '" fill="#231e16">' + text + '</text></g>';
   }
   function arrows(a, b, draw, ms) {
@@ -262,7 +274,7 @@
       if (hn) { var p2 = at(hn.x + 4, hn.y - 6); h += badge(p2[0] - 9 * kk, p2[1] + 7 * kk, '2', '#fff1b8', 'num', T * .62); }
       if (hd0) { var p3 = at(hd0.x, hd0.y); h += badge(p3[0] + 16 * kk, p3[1] - 14 * kk, '3', '#fff1b8', 'num', T * .97); }
     }
-    if (!tr.paths.length) { arrG.innerHTML = h + '<g class="marks"></g>'; return; }
+    if (!tr.paths.length) { arrL.play(h); return; }
     tr.paths.forEach(function (pts) {
       var Q = pts.map(function (p) { return P(p[0], p[1], p[2]); });
       var n = Q.length, i0 = tr.kind === 'turn' ? 1 : tr.kind === 'head' ? Math.round(n * .3) : Math.round(n * .12), i1 = n - (tr.kind === 'turn' ? 1 : Math.max(2, Math.round(n * .1)));
@@ -275,36 +287,36 @@
       var hd = 'M' + (tip[0] - Math.cos(ang) * L - Math.sin(ang) * W).toFixed(1) + ' ' + (tip[1] - Math.sin(ang) * L + Math.cos(ang) * W).toFixed(1) + 'L' + tip[0].toFixed(1) + ' ' + tip[1].toFixed(1) +
         'L' + (tip[0] - Math.cos(ang) * L + Math.sin(ang) * W).toFixed(1) + ' ' + (tip[1] - Math.sin(ang) * L - Math.cos(ang) * W).toFixed(1) + 'Z';
       var bw = 3.2 * k / .36;
-      h += '<g class="' + (draw ? 'go' : '') + (tr.kind === 'hands' ? ' hands' : '') + '"><path class="b" pathLength="1" d="' + d + '" stroke="#231e16" stroke-width="' + (bw + 2.4 * k / .36).toFixed(2) + '"/>' +
-        '<path class="b" pathLength="1" d="' + d + '" stroke="#e8774f" stroke-width="' + bw.toFixed(2) + '"/>' +
-        '<path class="hd" d="' + hd + '" fill="#e8774f" stroke="#231e16" stroke-width="' + (1.2 * k / .36).toFixed(2) + '" style="fill:#e8774f"/></g>';
+      var LN = ' fill="none" stroke-linecap="round" stroke-linejoin="round"';
+      h += '<g class="' + (draw ? 'sp-go' : '') + (tr.kind === 'hands' ? ' hands' : '') + '"><path pathLength="1" d="' + d + '" stroke="#231e16" stroke-width="' + (bw + 2.4 * k / .36).toFixed(2) + '"' + LN + '/>' +
+        '<path pathLength="1" d="' + d + '" stroke="#e8774f" stroke-width="' + bw.toFixed(2) + '"' + LN + '/>' +
+        '<path' + (draw ? ' class="sp-hd"' : '') + ' d="' + hd + '" fill="#e8774f" stroke="#231e16" stroke-width="' + (1.2 * k / .36).toFixed(2) + '" stroke-linejoin="round"/></g>';
       // the salam: 1 to the right first, then 2 to the left
       if (tr.kind === 'turn') h += badge(tip[0] + Math.cos(ang) * 9 * k / .36, tip[1] + Math.sin(ang) * 9 * k / .36 - 4 * k / .36, b === 'salamR' ? '1' : '2', b === 'salamR' ? '#ef7a4f' : '#8b78cf', 'mk', .5);
     });
-    arrG.innerHTML = h + '<g class="marks"></g>';
+    arrL.play(h);
   }
   function replay() { if (st.phase === 'pray' && kidNow.from && kidNow.from !== kidNow.to) { var S = STEPS[cur]; PS.play('tap'); showKid(kidNow.to, kidNow.from, true, function () { marks(S.pose); showMag(S.pose, S.how); }); } }
 
   /* ---------- the marks on the picture after a move: R on the right hand, the level of the back in ruku' ---------- */
   function marks(name) {
-    var g = arrG.querySelector('.marks'); if (!g) { arrG.insertAdjacentHTML('beforeend', '<g class="marks"></g>'); g = arrG.querySelector('.marks'); }
-    var k = INK_K / .36, h = '', pt = function (part) { var w = KID.at(name, part); return w ? P(w[0], w[1], w[2]) : null; };
+    var k = INK_K / .36, h = '', LN = ' fill="none" stroke-linecap="round" stroke-linejoin="round"', pt = function (part) { var w = KID.at(name, part); return w ? P(w[0], w[1], w[2]) : null; };
     if (name === 'takbir' || name === 'stand' || name === 'tash' || name === 'ruku' || name === 'qunut') {
       var r = pt('handR'); if (r) h += badge(r[0] + 9 * k, r[1] + 6 * k, 'R', '#ef7a4f', 'mk', 0);
     }
     if (name === 'ruku') {
       // the back is level: a dashed level line along it, and a dotted line from the head to the sujood spot
       var hip = KID.at('ruku', 'hip'), hd = KID.at('ruku', 'head'), A = P(hip[0] + 6, hip[1], hip[2] + 11), B2 = P(hd[0] + 2, hd[1], hip[2] + 11);
-      h += '<g class="mk"><path d="M' + A[0].toFixed(1) + ' ' + A[1].toFixed(1) + 'L' + B2[0].toFixed(1) + ' ' + B2[1].toFixed(1) + '" stroke="#231e16" stroke-width="' + (1.6 * k).toFixed(2) + '" stroke-dasharray="' + (4 * k).toFixed(1) + ' ' + (3 * k).toFixed(1) + '"/>' +
+      h += '<g class="sp-mk"' + LN + '><path d="M' + A[0].toFixed(1) + ' ' + A[1].toFixed(1) + 'L' + B2[0].toFixed(1) + ' ' + B2[1].toFixed(1) + '" stroke="#231e16" stroke-width="' + (1.6 * k).toFixed(2) + '" stroke-dasharray="' + (4 * k).toFixed(1) + ' ' + (3 * k).toFixed(1) + '"/>' +
         '<path d="M' + A[0].toFixed(1) + ' ' + (A[1] - 4 * k).toFixed(1) + 'v' + (8 * k).toFixed(1) + 'M' + B2[0].toFixed(1) + ' ' + (B2[1] - 4 * k).toFixed(1) + 'v' + (8 * k).toFixed(1) + '" stroke="#231e16" stroke-width="' + (1.6 * k).toFixed(2) + '"/></g>';
       var c = FIG.contacts('sujud').filter(function (x) { return x.kind === 'head'; })[0];
       if (c) { var E = P(hd[0], hd[1], hd[2]), F = P(c.x, c.y, 3.9);
-        h += '<g class="mk"><path d="M' + E[0].toFixed(1) + ' ' + E[1].toFixed(1) + 'L' + F[0].toFixed(1) + ' ' + F[1].toFixed(1) + '" stroke="#e8774f" stroke-width="' + (1.8 * k).toFixed(2) + '" stroke-dasharray="' + (.5 * k).toFixed(2) + ' ' + (4 * k).toFixed(1) + '"/>' +
+        h += '<g class="sp-mk"' + LN + '><path d="M' + E[0].toFixed(1) + ' ' + E[1].toFixed(1) + 'L' + F[0].toFixed(1) + ' ' + F[1].toFixed(1) + '" stroke="#e8774f" stroke-width="' + (1.8 * k).toFixed(2) + '" stroke-dasharray="' + (.5 * k).toFixed(2) + ' ' + (4 * k).toFixed(1) + '"/>' +
           '<circle cx="' + F[0].toFixed(1) + '" cy="' + F[1].toFixed(1) + '" r="' + (3.4 * k).toFixed(2) + '" fill="none" stroke="#e8774f" stroke-width="' + (1.6 * k).toFixed(2) + '"/></g>'; }
     }
-    g.innerHTML = h;
+    markL.play(h);
     // the hands' arrow has done its job once the close-up shows the hands
-    if (MAG[name]) [].forEach.call(arrG.querySelectorAll('g.hands'), function (x) { x.classList.add('fade'); });
+    if (MAG[name]) arrL.dim('hands', .4);
   }
 
   /* ---------- the close-up bubble: the detail that matters, drawn large, seen from where it is clearest ---------- */
@@ -322,12 +334,12 @@
     salamL: { part: 'neck', cam: [6, 24], zoom: 26, dz: 13, turn: 'salamR', num: '2', tags: [['shR', 'R'], ['shL', 'L']] },
     qunut: { part: 'hands', cam: [-150, 30], zoom: 13, tags: [['tagR', 'R'], ['tagL', 'L']] },
   };
-  var magEl = PS.el('div', 'sp-mag'), magLine = document.createElementNS('http://www.w3.org/2000/svg', 'svg'), magCache = {};
-  magLine.setAttribute('class', 'sp-magl'); PS.fig.appendChild(magLine); PS.fig.appendChild(magEl);
-  function hideMag() { magEl.classList.remove('on'); magLine.classList.remove('on'); }
+  var magCache = {};
+  var magNow = null;
+  function hideMag() { magNow = null; magS.show(false, true); magLine.show(false); }
   function insetSVG(name, spec) {
     var key = name + KID.styleKey + KID.look; if (magCache[key]) return magCache[key];
-    var y0 = YAW, p0 = PITCH, k0 = INK_K, out = '';
+    var y0 = YAW, p0 = PITCH, k0 = INK_K, out = null;
     try {
       setCam(spec.cam[0], spec.cam[1]);
       var f = KID.at(name, spec.part), c = P(f[0], f[1], f[2] + (spec.dz || 0)), hw = spec.zoom * CAM_K;
@@ -352,38 +364,45 @@
           '<text x="' + x.toFixed(2) + '" y="' + (y + r * .42).toFixed(2) + '" text-anchor="middle" font-family="ui-rounded,system-ui,sans-serif" font-weight="900" font-size="' + (r * 1.25).toFixed(2) + '" fill="#231e16">' + t[1] + '</text>';
       });
       var flt = filterFor(INK_K).replace('id="hand"', 'id="handMag"').replace('id="wob"', 'id="wobMag"');
-      out = '<svg viewBox="' + [c[0] - hw, c[1] - hw, 2 * hw, 2 * hw].map(function (v) { return v.toFixed(2); }).join(' ') + '" aria-hidden="true"><defs>' + flt + '</defs><g filter="url(#handMag)">' + body + '</g>' + tags + '</svg>';
-    } catch (e) { out = ''; }
+      out = { vb: [c[0] - hw, c[1] - hw, 2 * hw, 2 * hw].map(function (v) { return v.toFixed(2); }).join(' '), inner: '<defs>' + flt + '</defs><g filter="url(#handMag)">' + body + '</g>' + tags };
+    } catch (e) { out = null; }
     INK_K = k0; setCam(y0, p0);
     return (magCache[key] = out);
   }
   function showMag(name, how) {
     var spec = MAG[name]; if (!spec || !prayView) return hideMag();
-    var svg = insetSVG(name, spec); if (!svg) return hideMag();
+    var ins = insetSVG(name, spec); if (!ins) return hideMag();
     // where the part is on the screen (main camera)
-    var main = kidG.ownerSVGElement, ctm = main.getScreenCTM(), w = KID.at(name, spec.part), p = P(w[0], w[1], w[2] + (spec.dz || 0));
+    var ctm = document.getElementById('fig').getScreenCTM(), w = KID.at(name, spec.part), p = P(w[0], w[1], w[2] + (spec.dz || 0));
+    if (!ctm) return hideMag();
     var box = PS.fig.getBoundingClientRect(), tx = ctm.a * p[0] + ctm.c * p[1] + ctm.e - box.left, ty = ctm.b * p[0] + ctm.d * p[1] + ctm.f - box.top;
-    var size = Math.round(Math.max(130, Math.min(box.width * .5, box.height * .5, 230)));
+    var size = Math.round(Math.max(130, Math.min(box.width * .5, box.height * .5, 230))), R = size / 2;
     var right = tx < box.width * .55;
-    magEl.style.setProperty('--mag', size + 'px'); magEl.className = 'sp-mag ' + (right ? 'r' : 'l');
-    if (magEl._svg !== svg) { magEl.innerHTML = svg; magEl._svg = svg; }   // a replay shows the same close-up: no redraw
-    var cx = right ? box.width - 10 - size / 2 : 10 + size / 2, cy = 8 + size / 2, dx = tx - cx, dy = ty - cy, d = Math.hypot(dx, dy) || 1;
-    var ex = cx + dx / d * (size / 2 + 1), ey = cy + dy / d * (size / 2 + 1);
-    magLine.setAttribute('viewBox', '0 0 ' + box.width.toFixed(0) + ' ' + box.height.toFixed(0));
-    magLine.innerHTML = '<path d="M' + ex.toFixed(1) + ' ' + ey.toFixed(1) + 'L' + tx.toFixed(1) + ' ' + ty.toFixed(1) + '" stroke="#231e16" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="1 5"/>' +
-      '<circle cx="' + tx.toFixed(1) + '" cy="' + ty.toFixed(1) + '" r="' + Math.max(12, size * .1).toFixed(1) + '" fill="none" stroke="#231e16" stroke-width="2.5"/>';
-    requestAnimationFrame(function () { magEl.classList.add('on'); magLine.classList.add('on'); });
+    // the bubble: paper, the close-up inside a round window, a cream ring, an ink edge and its hard shadow
+    magS.set('<defs><clipPath id="mc"><circle cx="' + R + '" cy="' + R + '" r="' + (R - 3) + '"/></clipPath></defs>' +
+      '<circle cx="' + R + '" cy="' + (R + 4) + '" r="' + R + '" fill="#231e16"/><circle cx="' + R + '" cy="' + R + '" r="' + R + '" fill="#231e16"/><circle cx="' + R + '" cy="' + R + '" r="' + (R - 3) + '" fill="#fbf6ea"/>' +
+      '<g clip-path="url(#mc)"><svg x="3" y="3" width="' + (size - 6) + '" height="' + (size - 6) + '" viewBox="' + ins.vb + '">' + ins.inner + '</svg></g>' +
+      '<circle cx="' + R + '" cy="' + R + '" r="' + (R - 5.5) + '" fill="none" stroke="#fff6dc" stroke-width="5"/>', size, size + 4);
+    var cx = right ? box.width - 10 - R : 10 + R, cy = 8 + R, dx = tx - cx, dy = ty - cy, d = Math.hypot(dx, dy) || 1;
+    var ex = cx + dx / d * (R + 1), ey = cy + dy / d * (R + 1), bw = Math.round(box.width), bh = Math.round(box.height);
+    magLine.set('<path d="M' + ex.toFixed(1) + ' ' + ey.toFixed(1) + 'L' + tx.toFixed(1) + ' ' + ty.toFixed(1) + '" stroke="#231e16" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="1 5" fill="none"/>' +
+      '<circle cx="' + tx.toFixed(1) + '" cy="' + ty.toFixed(1) + '" r="' + Math.max(12, size * .1).toFixed(1) + '" fill="none" stroke="#231e16" stroke-width="2.5"/>', bw, bh);
+    magLine.at(box.left + bw / 2, box.top + bh / 2); magS.at(box.left + cx, box.top + cy + 2);
+    magLine.show(true); magS.show(true, true); magNow = [name, how];
   }
+  // the screen was turned or resized: the bubble goes back beside the part it shows
+  PX.stage.onLayout(function () { if (magNow) showMag(magNow[0], magNow[1]); });
   // the camera: the mat steps look from high at the foot of the mat; the praying view from the child's front right
   function viewPray(on) {
     if (on === prayView) return;
-    prayView = on; kidCache = {}; kidN = 0; kidShown = '';
+    prayView = on; kidCache = {}; kidN = 0;
     hideMag();
-    if (on) { setCam(FIG.CAM[0], FIG.CAM[1]); kidG.innerHTML = ghostG.innerHTML = arrG.innerHTML = ''; PS.fitBox(FIG.frame(), .02); }
-    else { matCam(); kidG.innerHTML = ghostG.innerHTML = arrG.innerHTML = ''; PS.fit(); }
+    kidL.set(''); ghostL.set(''); arrL.set(''); markL.set('');
+    if (on) { setCam(FIG.CAM[0], FIG.CAM[1]); PS.fitBox(FIG.frame(), .02); }
+    else { matCam(); PS.fit(); }
   }
   // after a re-frame (the ink weight changes with the frame): draw the child again
-  PS.onRefit = function () { kidCache = {}; kidN = 0; kidShown = ''; if (prayView && kidNow.to) setKid(kidSVG(null, kidNow.to, 1)); };
+  PS.onRefit = function () { kidCache = {}; kidN = 0; hideMag(); if (prayView && kidNow.to) setKid(kidSVG(null, kidNow.to, 1)); };
   // in the praying view a tap on the picture plays the move again (and the picture doesn't turn under the finger)
   var tap = null;
   PS.stack.addEventListener('pointerdown', function (e) {
@@ -433,7 +452,7 @@
   // drag the compass round: the finger's angle on the floor turns the dial; it clicks into place near the qibla
   var drag = null, raf = 0;
   PS.stack.addEventListener('pointerdown', function (e) {
-    var c = e.target.closest && e.target.closest('[data-act="compass"]'); if (!c || st.phase !== 'qibla' || st.qibla) return;
+    if (st.phase !== 'qibla' || st.qibla || PX.actAt(e.clientX, e.clientY) !== 'compass') return;
     e.preventDefault(); e.stopPropagation(); turning++;
     drag = { id: e.pointerId, a0: PS.floorAngle(e, FIG.Q), q0: st.qa, x: e.clientX, y: e.clientY, moved: false, tick: Math.round(st.qa / (Math.PI / 8)) };
     try { PS.stack.setPointerCapture(e.pointerId); } catch (er) {}
@@ -488,7 +507,7 @@
       [].forEach.call(PS.card.querySelectorAll('.sp-ch[data-look]'), function (x) { x.classList.toggle('on', x === b); });
       showKid('rise', null, false); }; });
     setBig('play', 'Start', 'ready'); big.onclick = function () { go(0, true); }; ui.render();
-    showKid('rise', null, false);
+    showKid('rise', null, false); warmMove('rise', STEPS[0].pose);
     PS.preload(STEPS[0].lines.concat(STEPS[1].lines).map(function (l) { return l.audio; }));
   }
   // change the unit in place (the mat and the qibla stay), and keep the address in step for a reload
@@ -542,7 +561,8 @@
     st.phase = 'pray'; st.contacts = S.pose; st.rakDone = S.done || S.rak - 1;
     dots();
     // the glow on the mat moves to the new contact points as the body arrives (and the mat redraws in a frame of its own)
-    showKid(S.pose, prev, true, function () { if (cur !== i || st.phase !== 'pray') return; ui.render(); setTimeout(function () { if (cur === i && st.phase === 'pray') { marks(S.pose); showMag(S.pose, S.how); } }, 60); });
+    showKid(S.pose, prev, true, function () { if (cur !== i || st.phase !== 'pray') return; ui.render(); warmMove(S.pose, STEPS[i + 1] ? STEPS[i + 1].pose : 'sit');
+      setTimeout(function () { if (cur === i && st.phase === 'pray') { marks(S.pose); showMag(S.pose, S.how); } }, 60); });
     // the instruction: a sign of the position, one plain line that says right and left, and a small line of detail
     // (by madhab, and for a girl where it differs; the longer hint stays in prayer-text.js for grown-ups)
     var Ln = TXT.line(S.how, M, KID.look === 'scarf'), tag = S.sub && S.sub.length <= 24 ? S.sub : '';

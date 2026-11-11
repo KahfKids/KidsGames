@@ -4,9 +4,9 @@
    What it adds:
    - A layout for a child on a phone or tablet: no header, no zoom, no wobble slider. A big icon step bar at the
      bottom (thumb reach) whose next step glows, plus colour swatches and a See-inside switch at the top.
-   - Fast frames with no quality loss: the drawing is split into three stacked SVG layers (under, moving, over),
-     each with the same hand-drawn filter. While the machine runs, only the small moving layer is redrawn; the
-     other two keep their painted pixels (each is its own GPU layer). The spin shake is a CSS transform.
+   - The figure is drawn by PixiJS (iso/pix.js, started by js/kit/gfx.js: load both before this file on a job
+     page). The drawing is split into pictures (under, moving, over) that keep the hand-drawn look; a picture is
+     made again only when its markup changes.
    - Sounds (natural, no music), Arabic praise, a finish sheet with stars, and the Kahf activity bridge.
    - Pauses its sounds when the app is hidden (the kit does this). */
 (function () {
@@ -30,9 +30,6 @@
     '.stage{max-width:820px!important;width:100%;min-height:100dvh;display:flex;flex-direction:column;justify-content:center;padding:calc(env(safe-area-inset-top) + 64px) 12px calc(env(safe-area-inset-bottom) + 118px)}' +
     '.figstack{position:relative;width:100%;contain:layout}' +
     '.figstack svg{display:block;width:100%;height:auto;max-height:calc(100dvh - 200px - env(safe-area-inset-top) - env(safe-area-inset-bottom));margin:0!important;overflow:visible;touch-action:pan-y}' +
-    '.figstack .lay{position:absolute;left:0;top:0;height:100%;pointer-events:none}' +
-    '.figstack .lay [data-act]{pointer-events:visiblePainted;cursor:pointer}' +
-    '.figstack svg{will-change:transform}' +
     '.toast{top:calc(env(safe-area-inset-top) + 70px)!important;left:50%!important;transform:translateX(-50%)!important;font:700 15px/1.3 ui-rounded,"SF Pro Rounded",system-ui,sans-serif!important;' +
       'letter-spacing:0!important;text-transform:none!important;padding:8px 16px!important;border-radius:999px!important;white-space:nowrap}' +
     /* top bar */
@@ -108,17 +105,20 @@
 
   function el(tag, cls, html){ var e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
 
-  /* ---------- three stacked layers: under / moving / over ---------- */
+  /* ---------- the figure, drawn by PixiJS (iso/pix.js): three pictures (under, moving, over) made from the scene
+     string, split by <!--DYN-->..<!--/DYN-->; only a picture whose markup changed is made again (while the drum
+     turns that is the small moving one, the latest wins). The page's <svg id="fig"> stays as an empty sheet: the
+     frame and the finger. ---------- */
   function layers(ui, sceneFn, acts){
-    var fig = document.getElementById('fig'), art = document.getElementById('art'), NS = 'http://www.w3.org/2000/svg';
+    var fig = document.getElementById('fig'), art = document.getElementById('art');
     var stack = el('div', 'figstack'); fig.parentNode.insertBefore(stack, fig); stack.appendChild(fig);
-    function lay(){ var s = document.createElementNS(NS, 'svg'); s.setAttribute('class', 'lay'); s.setAttribute('viewBox', fig.getAttribute('viewBox'));
-      s.setAttribute('aria-hidden', 'true'); var g = document.createElementNS(NS, 'g'); g.setAttribute('filter', 'url(#hand)'); s.appendChild(g); stack.appendChild(s); return g; }
-    var gD = lay(), gO = lay(), last = ['', '', ''];
-    // zoom by viewBox, not CSS scale: the drawing is re-painted sharp at the new size (a scaled layer would blur).
-    // Only the short zoom animation repaints all layers; once it settles, frames are cheap again.
-    var svgs = [fig].concat([].slice.call(stack.querySelectorAll('.lay'))), vb0 = fig.getAttribute('viewBox').split(' ').map(Number), vb = vb0.slice(), zid = 0;
-    function setVB(b){ var s = b.map(function (v) { return v.toFixed(2); }).join(' '); svgs.forEach(function (x) { x.setAttribute('viewBox', s); }); vb = b; }
+    art.innerHTML = '';
+    var px = HH.px = HHPix.attach({ stack: stack, svg: fig });
+    px.ready.then(null, function (e) { Kit.gfx.sorry(e); });
+    var L0 = px.layer(), L1 = px.layer(), L2 = px.layer();
+    // zoom by the frame (viewBox): the pictures on screen grow with it at once, and sharp ones are made as it goes
+    var vb0 = fig.getAttribute('viewBox').split(' ').map(Number), vb = vb0.slice(), zid = 0;
+    function setVB(b){ fig.setAttribute('viewBox', b.map(function (v) { return v.toFixed(2); }).join(' ')); vb = b; px.sync(); }
     HH.zoom = function (p3, k, ms){
       var to = vb0;
       if (p3 && k > 1){ var q = P(p3[0], p3[1], p3[2]), w = vb0[2]/k, h = vb0[3]/k;
@@ -131,23 +131,27 @@
     var st = ui.st;
     ui.render = function(){
       _clipN = 0;
-      document.documentElement.style.setProperty('--accent', PALS[st.pal].l);
-      var full = inkScale(sceneFn(st, PALS[st.pal])), i = full.indexOf('<!--DYN-->'), j = full.indexOf('<!--/DYN-->');
-      var u = i < 0 ? full : full.slice(0, i), d = i < 0 ? '' : full.slice(i + 10, j), o = i < 0 ? '' : full.slice(j + 11);
-      if (u !== last[0]){ art.innerHTML = u; last[0] = u; }
-      if (d !== last[1]){ gD.innerHTML = d; last[1] = d; }
-      if (o !== last[2]){ gO.innerHTML = o; last[2] = o; }
-      var sh = window.SHAKE || [0, 0];
-      var k = fig.clientWidth / fig.viewBox.baseVal.width;
-      stack.style.transform = sh[0] || sh[1] ? 'translate(' + (sh[0]*k).toFixed(2) + 'px,' + (sh[1]*k).toFixed(2) + 'px)' : '';
+      var accent = PALS[st.pal].l;
+      document.documentElement.style.setProperty('--accent', accent);
+      var full = inkScale(sceneFn(st, PALS[st.pal]));
+      // the labels: hidden with the Labels switch; a working part's pill wears the machine's colour
+      if (full.indexOf('class="tag') >= 0){
+        if (document.documentElement.classList.contains('nolabels')) full = full.replace(/<g class="tag[^>]*>[\s\S]*?<\/g>/g, '');
+        else full = full.split('var(--accent,#f4b829)').join(accent);
+      }
+      var i = full.indexOf('<!--DYN-->'), j = full.indexOf('<!--/DYN-->');
+      L0.set(i < 0 ? full : full.slice(0, i)); L1.set(i < 0 ? '' : full.slice(i + 10, j)); L2.set(i < 0 ? '' : full.slice(j + 11));
+      // the spin shakes the whole machine: the pictures are nudged, not made again
+      var sh = typeof SHAKE !== 'undefined' ? SHAKE : [0, 0];
+      px.shift(sh[0], sh[1]);
       if (HH.after) HH.after(st);
     };
-    // presses on parts drawn in the upper layers (the engine only listens on the bottom one)
+    // presses on a part of the picture (act('name', …) in the scene): found by where the part is drawn
     stack.addEventListener('pointerdown', function(e){
-      if (e.button || fig.contains(e.target)) return;
-      var a = e.target.closest && e.target.closest('[data-act]'); if (!a || !acts[a.dataset.act]) return;
-      e.preventDefault(); e.stopPropagation(); acts[a.dataset.act](st, a, ui); ui.render();
-    });
+      if (e.button) return;
+      var name = px.actAt(e.clientX, e.clientY); if (!name || !acts || !acts[name]) return;
+      e.preventDefault(); e.stopPropagation(); acts[name](st, null, ui); ui.render();
+    }, true);
     return stack;
   }
 

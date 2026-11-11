@@ -163,7 +163,7 @@
   }
   function fx(st) {
     var s = '<defs><radialGradient id="sfGlow"><stop offset="0" stop-color="#fff2b0" stop-opacity=".95"/><stop offset=".55" stop-color="#ffd866" stop-opacity=".55"/><stop offset="1" stop-color="#ffd866" stop-opacity="0"/></radialGradient></defs>';
-    if (st.phase === 'mat') { var R = radius(st.rollE); s += halo(MX0 + R, YC, FT + .1, 30); }
+    if (st.phase === 'mat' && !(st.roll > 0)) { var R = radius(st.rollE); s += halo(MX0 + R, YC, FT + .1, 30); }   // "tap here": gone once it rolls
     if (st.phase === 'qibla' && !st.qibla) s += halo(QX, QY, FT + .1, QR + 7) +
       '<path class="ps-pulse" d="' + pd(on(PZ(QZ + .2), ellUV(QX, QY, QR + 2.2, QR + 2.2, 36))) + '" fill="none" stroke="#e0a21c" stroke-width="2.4" stroke-dasharray="5 4" stroke-linecap="round"/>';
     if (st.qibla && (st.phase === 'qibla' || st.phase === 'ready')) s += halo(MX0 + 22, YC, TOP + .1, 17);

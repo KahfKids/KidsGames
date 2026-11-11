@@ -1,19 +1,18 @@
 /* Helping Home: the page shell shared by the adhan and salah stations (window.PS).
-   Loaded after iso/core.js, the kit, iso/voice.js and iso/flow.js; the station calls mountFigure first, then PS.mount.
+   Loaded after iso/core.js, the kit (with js/kit/gfx.js), iso/pix.js, iso/voice.js and iso/flow.js; the station calls
+   mountFigure first, then PS.mount.
 
    - Layout for a child: a top bar (home, a title pill with progress dots, sound), the figure, a words card and
      big controls at the bottom (side by side on a wide screen). Touch only, safe areas, targets of 48px or more.
-   - Fast frames with no quality loss (same idea as iso/kidpass.js, copied here): the scene string is split by
-     <!--DYN-->..<!--/DYN--> into three stacked SVG layers that keep the hand-drawn filter, and only a layer whose
-     markup changed is rewritten. A fourth layer, <!--FX-->..<!--/FX-->, has no filter: glows and sound rings
-     there are animated by CSS (opacity/transform only), so nothing is redrawn while they pulse.
+   - The figure is drawn by PixiJS (iso/pix.js): the scene string is split by <!--DYN-->..<!--/DYN--> into three
+     pictures that keep the hand-drawn look, and only a picture whose markup changed is made again. A fourth part,
+     <!--FX-->..<!--/FX-->, has no filter: its glows and sound rings are sprites moved by PixiJS.
    - PS.say(lines): plays recorded clips one after another through HHVoice (a missing clip becomes a pause), and
      lights the line being said. Every line is always shown as text too.
    - PS.finish(): KahfBridge.complete(), then HHFlow.done(station) or the kit's finish sheet. */
 (function () {
   'use strict';
   var PS = window.PS = {};
-  var NS = 'http://www.w3.org/2000/svg';
 
   // HHVoice reads Kit.sfx.ctx / Kit.sfx.out, but the kit exposes them on Kit.sfx.lib; bridge them so recorded
   // clips play instead of always falling back to a pause. (Reported to the voice.js owner.)
@@ -38,7 +37,6 @@
     '.ps-fig .stage{max-width:none!important;width:100%;height:100%;padding:0!important;display:flex;align-items:center;justify-content:center}' +
     '.figstack{position:relative;width:100%;height:100%;contain:layout}' +
     '.figstack svg{position:absolute;left:0;top:0;display:block;width:100%!important;height:100%!important;max-width:none!important;margin:0!important;overflow:visible;touch-action:none}' +
-    '.figstack .lay{pointer-events:none}.figstack .lay [data-act]{pointer-events:visiblePainted;cursor:pointer}' +
     '.ps-side{grid-area:side;display:flex;flex-direction:column;gap:10px;min-height:0;padding:4px 14px calc(env(safe-area-inset-bottom) + 14px)}' +
     /* top bar */
     '.ps-round{all:unset;box-sizing:border-box;width:48px;height:48px;flex:none;border-radius:50%;border:2.5px solid var(--ink);background:var(--paper);box-shadow:0 3px 0 var(--ink);display:grid;place-items:center;cursor:pointer}' +
@@ -71,12 +69,7 @@
     '@keyframes psRing{0%{transform:scale(1);opacity:.95}100%{transform:scale(1.12,1.35);opacity:0}}' +
     '.ps-big .ps-two{display:flex;flex-direction:column;align-items:center;gap:1px;min-width:0}' +
     '.ps-big .ps-two .a{direction:rtl;font:500 clamp(22px,5.8vw,28px)/1.6 ' + AR + '}.ps-big .ps-two .t{font:italic 700 14px/1.2 ' + UI + '}' +
-    /* figure overlays: CSS-only motion in the FX layer */
-    '.ps-fx{pointer-events:none}' +
-    '.ps-pulse{animation:psPulse 1.8s ease-in-out infinite}@keyframes psPulse{0%,100%{opacity:.35}50%{opacity:.95}}' +
-    '.ps-wave{animation:psWave 2.1s ease-out infinite;opacity:0}@keyframes psWave{0%{transform:scale(.55);opacity:0}15%{opacity:.95}100%{transform:scale(1.45);opacity:0}}' +
-    '.ps-wave.w2{animation-delay:.7s}.ps-wave.w3{animation-delay:1.4s}' +
-    '@media (prefers-reduced-motion:reduce){.ps-wave,.ps-pulse,.ps-big.ready::after{animation:none}.ps-wave{opacity:.6}}' +
+    '@media (prefers-reduced-motion:reduce){.ps-big.ready::after{animation:none}}' +
     /* the kit sheet in paper and ink */
     '.kit-veil{background:rgba(35,30,22,.35)!important}' +
     '.kit-sheet{background:var(--paper)!important;color:var(--ink)!important;border:2.5px solid var(--ink)!important;box-shadow:0 6px 0 var(--ink)!important}' +
@@ -134,63 +127,33 @@
     return 'dhuhr';
   };
 
-  /* ---------- the same four layers, drawn by PixiJS (iso/pix.js): the pictures are made once per change and shown
-     as sprites; the glows and sound rings of the fx layer are moved by PixiJS. The page's <svg id="fig"> stays as
-     an empty sheet that takes the finger and gives the frame. ---------- */
-  function layersPixi(ui, sceneFn) {
-    var fig = document.getElementById('fig'), art = document.getElementById('art');
-    var stack = el('div', 'figstack'); fig.parentNode.insertBefore(stack, fig); stack.appendChild(fig);
-    art.innerHTML = '';
-    var last = ['', '', '', ''], st = ui.st, L = null;
-    function push() { if (!L) return; L[0].set(last[0]); L[1].set(last[1]); L[2].set(last[2]); L[3].set(last[3]); }
-    ui.render = function () {
-      _clipN = 0;
-      var full = inkScale(sceneFn(st)), a = full.indexOf('<!--FX-->'), fx = '';
-      if (a >= 0) { var b = full.indexOf('<!--/FX-->'); fx = full.slice(a + 9, b); full = full.slice(0, a) + full.slice(b + 10); }
-      var i = full.indexOf('<!--DYN-->'), j = full.indexOf('<!--/DYN-->');
-      last[0] = i < 0 ? full : full.slice(0, i); last[1] = i < 0 ? '' : full.slice(i + 10, j); last[2] = i < 0 ? '' : full.slice(j + 11); last[3] = fx;
-      push();
-      if (PS.after) PS.after(st);
-    };
-    PS.redraw = function () { ui.render(); if (PS.px) PS.px.sync(); if (PS.onRefit) PS.onRefit(); };
-    PS.stack = stack;
-    PS.ready = HHPix.attach({ stack: stack, svg: fig }).then(function (px) {
-      PS.px = px; L = [px.layer(), px.layer(), px.layer(), px.fx()];
-      push(); PS.fit(PS.pad);
-    }, function (e) { Kit.gfx.sorry(e); });
-    return stack;
-  }
-
-  /* ---------- layers: under / moving / over (filtered) + fx (no filter, CSS motion) ---------- */
+  /* ---------- the figure, drawn by PixiJS (iso/pix.js): the scene string is split by <!--DYN-->..<!--/DYN--> into
+     three pictures (under, moving, over) that keep the hand-drawn look, and only a picture whose markup changed is
+     made again. A fourth part, <!--FX-->..<!--/FX-->, has no filter: its glows and sound rings are sprites moved
+     by PixiJS. The page's <svg id="fig"> stays as an empty sheet that takes the finger and gives the frame.
+     A station adds its own layers above these with PS.px (px.layer, px.fx, px.sticker). ---------- */
   function layers(ui, sceneFn) {
     var fig = document.getElementById('fig'), art = document.getElementById('art');
     var stack = el('div', 'figstack'); fig.parentNode.insertBefore(stack, fig); stack.appendChild(fig);
-    function lay(filtered) {
-      var s = document.createElementNS(NS, 'svg'); s.setAttribute('class', 'lay' + (filtered ? '' : ' ps-fx')); s.setAttribute('viewBox', fig.getAttribute('viewBox'));
-      s.setAttribute('aria-hidden', 'true'); var g = document.createElementNS(NS, 'g'); if (filtered) g.setAttribute('filter', 'url(#hand)'); s.appendChild(g); stack.appendChild(s); return g;
-    }
-    var gD = lay(true), gO = lay(true), gF = lay(false), last = ['', '', '', ''], st = ui.st;
+    art.innerHTML = '';
+    var px = PS.px = HHPix.attach({ stack: stack, svg: fig });
+    px.ready.then(null, function (e) { Kit.gfx.sorry(e); });
+    var L = [px.layer(), px.layer(), px.layer(), px.fx()], st = ui.st;
     ui.render = function () {
       _clipN = 0;
       var full = inkScale(sceneFn(st)), a = full.indexOf('<!--FX-->'), fx = '';
       if (a >= 0) { var b = full.indexOf('<!--/FX-->'); fx = full.slice(a + 9, b); full = full.slice(0, a) + full.slice(b + 10); }
       var i = full.indexOf('<!--DYN-->'), j = full.indexOf('<!--/DYN-->');
-      var u = i < 0 ? full : full.slice(0, i), d = i < 0 ? '' : full.slice(i + 10, j), o = i < 0 ? '' : full.slice(j + 11);
-      if (u !== last[0]) { art.innerHTML = u; last[0] = u; }
-      if (d !== last[1]) { gD.innerHTML = d; last[1] = d; }
-      if (o !== last[2]) { gO.innerHTML = o; last[2] = o; }
-      if (fx !== last[3]) { gF.innerHTML = fx; last[3] = fx; }
+      L[0].set(i < 0 ? full : full.slice(0, i)); L[1].set(i < 0 ? '' : full.slice(i + 10, j)); L[2].set(i < 0 ? '' : full.slice(j + 11)); L[3].set(fx);
       if (PS.after) PS.after(st);
     };
-    PS.redraw = function () { last = ['', '', '', '']; ui.render(); if (PS.onRefit) PS.onRefit(); };
-    // an extra layer above the others (a station's own moving part): the returned <g> is written by the station
-    PS.layer = function (filtered, cls) { var g = lay(filtered); if (cls) g.parentNode.setAttribute('class', g.parentNode.getAttribute('class') + ' ' + cls); return g; };
-    // presses on parts drawn in the upper layers (the engine only listens on the bottom one)
+    PS.redraw = function () { ui.render(); px.sync(); if (PS.onRefit) PS.onRefit(); };
+    // presses on a part of the picture (act('name', …) in the scene): found by where the part is drawn
     stack.addEventListener('pointerdown', function (e) {
-      if (e.button || fig.contains(e.target)) return;
-      var t = e.target.closest && e.target.closest('[data-act]'); if (!t || !PS.acts || !PS.acts[t.dataset.act]) return;
-      e.preventDefault(); e.stopPropagation(); PS.acts[t.dataset.act](st, t, ui); ui.render();
-    });
+      if (e.button) return;
+      var name = px.actAt(e.clientX, e.clientY); if (!name || !PS.acts || !PS.acts[name]) return;
+      e.preventDefault(); e.stopPropagation(); PS.acts[name](st, null, ui); ui.render();
+    }, true);
     PS.stack = stack;
     return stack;
   }
@@ -218,8 +181,7 @@
     app.appendChild(top); app.appendChild(figBox); app.appendChild(side);
     document.body.appendChild(app);
     figBox.appendChild(document.querySelector('.stage'));
-    PS.pad = o.pad;
-    if (o.pixi) layersPixi(ui, o.scene); else layers(ui, o.scene);
+    layers(ui, o.scene);
     sounds();
 
     var home = el('button', 'ps-round', PS.icon('home')); home.setAttribute('aria-label', 'Home');
@@ -248,30 +210,17 @@
   /* ---------- frame the drawing on what is really drawn (the engine frames a 4:3 box around the model's size),
      so the figure fills its area on a phone and on a tablet. Line weight and the hand-drawn filter are re-scaled
      for the new frame, exactly as the engine does at mount, so the look stays the same. ---------- */
-  PS.fit = function (pad) {
-    if (PS.px) return fitTo(PS.px.measure(PS.px.last()), pad);
-    if (PS.ready) return;      // PixiJS is still starting: it frames the figure when it is up
-    var svgs = [].slice.call(PS.stack.querySelectorAll('svg')), bb = null;
-    svgs.forEach(function (s) { var g = s.firstElementChild === s.querySelector('defs') ? document.getElementById('art') : s.querySelector('g');
-      try { var b = g.getBBox(); if (b.width && b.height) bb = bb ? { x0: Math.min(bb.x0, b.x), y0: Math.min(bb.y0, b.y), x1: Math.max(bb.x1, b.x + b.width), y1: Math.max(bb.y1, b.y + b.height) }
-        : { x0: b.x, y0: b.y, x1: b.x + b.width, y1: b.y + b.height }; } catch (e) {} });
-    fitTo(bb, pad);
-  };
+  PS.fit = function (pad) { fitTo(PS.px.measure(PS.px.last()), pad); };
   // frame on a set of 3D points for the current camera (a station that wants a steady frame while things move in it)
   PS.fitBox = function (pts3, pad) {
     var q = pts3.map(function (p) { return P(p[0], p[1], p[2]); }), xs = q.map(function (v) { return v[0]; }), ys = q.map(function (v) { return v[1]; });
     fitTo({ x0: Math.min.apply(null, xs), y0: Math.min.apply(null, ys), x1: Math.max.apply(null, xs), y1: Math.max.apply(null, ys) }, pad);
   };
   function fitTo(bb, pad) {
-    var svgs = PS.px ? [document.getElementById('fig')] : [].slice.call(PS.stack.querySelectorAll('svg')), fig = document.getElementById('fig');
     if (!bb) return;
     var p = (pad == null ? .05 : pad) * Math.max(bb.x1 - bb.x0, bb.y1 - bb.y0), w = bb.x1 - bb.x0 + 2 * p, h = bb.y1 - bb.y0 + 2 * p;
-    var vb = [bb.x0 - p, bb.y0 - p, w, h].map(function (v) { return v.toFixed(2); }).join(' ');
-    svgs.forEach(function (s) { s.setAttribute('viewBox', vb); });
-    var old = INK_K; INK_K = Math.max(w, h * .75) / INK_REF_VB;
-    if (Math.abs(old - INK_K) > 1e-3) {
-      document.getElementById('fdefs').innerHTML = filterFor(INK_K); bakeNoise(fig);
-    }
+    document.getElementById('fig').setAttribute('viewBox', [bb.x0 - p, bb.y0 - p, w, h].map(function (v) { return v.toFixed(2); }).join(' '));
+    INK_K = Math.max(w, h * .75) / INK_REF_VB;
     PS.redraw();
   }
 
