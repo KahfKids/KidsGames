@@ -1,0 +1,14 @@
+{
+ "you": {
+  "skins": ["#F0C8A0", "#E0B08A", "#D7A27A", "#C98E62", "#A8714C", "#7E5236"],
+  "hairs": ["#1E1E22", "#33261C", "#5A3A22", "#8A5A3C"],
+  "tops": ["#3E8FD8", "#2E9C97", "#5FA85A", "#EBB23A", "#E58C3A", "#E7835F", "#C96A7A", "#7A5CA8", "#3B4A8F", "#F8F3E8", "#8FB57A", "#F2A7B5"],
+  "legs": ["#2F5E9E", "#3F6E4A", "#5A4636", "#8A6A4A", "#3B4A8F", "#F8F3E8"],
+  "hats": ["#FBF6EA", "#3F7D78", "#3B4A8F", "#7A5236", "#D9A441"],
+  "scarves": ["#F6E3B8", "#FBF6EA", "#F2A7B5", "#BFD3B2", "#CDEBFF", "#F2C6C0", "#DDDDE6"],
+  "kinds": {
+   "boy": [{"set": "boy-kurta", "icon": "shirt"}, {"set": "boy-thobe", "icon": "hanger"}],
+   "girl": [{"set": "girl-hair", "icon": "shirt"}, {"set": "girl-scarf", "icon": "hanger"}]
+  }
+ }
+}

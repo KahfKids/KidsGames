@@ -1,0 +1,38 @@
+{
+ "world": {
+  "size": [37.5, 25.6],
+  "fireflies": ["park", "zoo", "meadow", "yard"],
+  "roads": {
+   "half": 1.1, "lane": 0.55,
+   "segs": {
+    "main":   {"axis": "x", "c": 8.7,  "from": -3,  "to": 40.5},
+    "side":   {"axis": "y", "c": 6.2,  "from": 8.7, "to": 24.3},
+    "front":  {"axis": "x", "c": 24.3, "from": 6.2, "to": 30.8},
+    "avenue": {"axis": "y", "c": 30.8, "from": 8.7, "to": 24.3}
+   },
+   "ring": [[6.2, 8.7], [30.8, 8.7], [30.8, 24.3], [6.2, 24.3]],
+   "ends": [[-6.5, 8.7], [44.5, 8.7]],
+      "out": [{"id": "roadw", "at": [-8.5, 7.3], "size": [8.5, 2.8], "fade": [-7.0, -8.5]}, {"id": "roade", "at": [37.5, 7.3], "size": [8.0, 2.8], "fade": [42.0, 45.5]}],
+   "cross": [
+    {"road": "main", "at": [2.0, 3.6]}, {"road": "main", "at": [11.7, 13.3]}, {"road": "main", "at": [24.7, 26.2]},
+    {"road": "main", "at": [33.5, 35.1]}, {"road": "side", "at": [15.4, 17.0]}, {"road": "avenue", "at": [10.0, 11.0]}
+   ],
+   "stops": [
+    {"zone": "plaza",  "at": [9.0, 8.15],  "wait": [8.6, 6.9]},
+    {"zone": "street", "at": [21.5, 8.15], "wait": [21.1, 6.9]},
+    {"zone": "lane",   "at": [5.65, 17.4], "wait": [4.4, 17.8]}
+   ],
+   "bay": [15.0, 7.2]
+  },
+  "gates": [
+   ["plaza", "FL", 0.6, 1.0, "street", "R", 0.6], ["plaza", "FL", 2.6, 1.0, "street", "R", 2.6],
+   ["plaza", "FL", 4.6, 1.0, "street", "R", 4.6], ["plaza", "FL", 6.4, 1.0, "street", "R", 6.4],
+   ["street", "FL", 0.6, 1.0, "green", "R", 0.6], ["street", "FL", 2.6, 1.0, "green", "R", 2.6],
+   ["street", "FL", 4.6, 1.0, "green", "R", 4.6], ["street", "FL", 6.4, 1.0, "green", "R", 6.4],
+   ["plaza", "FR", 2.0, 1.6, "lane", "L", 2.0], ["street", "FR", 1.2, 1.6, "park", "L", 4.4],
+   ["green", "FR", 0.7, 1.5, "zoo", "L", 7.0], ["green", "FR", 9.5, 1.6, "meadow", "L", 3.8],
+   ["lane", "FL", 5.6, 1.6, "park", "R", 5.6], ["park", "FL", 0.2, 1.0, "zoo", "R", 0.2],
+   ["zoo", "FL", 0.2, 1.0, "meadow", "R", 0.2]
+  ]
+ }
+}

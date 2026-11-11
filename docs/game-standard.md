@@ -1,5 +1,7 @@
 # Game standard
 
+> **Replaced on 2026-11-11 by `docs/phaser-standard.md`: every game and quiz is now built on Phaser 4.** This file still describes the pages that are not rebuilt yet (the Canvas2D kit games and Helping Home's PixiJS pages) and the rule for a 3D game (section 3). Do not port anything to PixiJS any more.
+
 Set by the owner on 2026-11-11. **These are rules, not advice.** Every new game, every rebuilt game and every change to an existing game follows them. `AGENTS.md` has the short list; this file is the full text.
 
 Why one standard: every game used to be built its own way, so a fix in one helped no other and each was slow in its own way. With one renderer and one kit, a fix or a speed-up reaches the whole catalog.

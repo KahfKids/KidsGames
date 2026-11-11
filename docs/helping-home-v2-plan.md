@@ -2,6 +2,38 @@
 
 Written 2026-11-10 after your review of v1.5.x. This replaces the phase lists in `helping-home-plan.md`. Nothing here is built. Same rule as before: one phase at a time, a walkthrough and your OK before each commit.
 
+## Status (2026-11-11): the life game, built on Phaser 4, not committed
+
+The owner rejected the Phaser mini-games and asked for the game below as a Sims-like life sim "in full", and then
+added to it during the build. What follows in this document is still the design; this section says what exists.
+
+- **Where:** `games/helping-home/index.html`, code in `life/` (`world.js` and `rules.js` are the simulation and run in
+  Node; `game.js`, `panels.js`, `guides.js` are Phaser scenes), data in `tools/data/*.json` (format: its README),
+  art tools in `tools/art/` (Blender scripts; `build.py` writes `life/art/` and `life/data.json`).
+- **Built:** 17 places (nine rooms of the home, yard, street, plaza, park, masjid, shop, school, grandparents' house,
+  animal park), 17 people with timetables and needs, prayer at the real times, wishes, friendship, the album,
+  garden, chores, daily cards. Added at the owner's request: coins, buying, paid jobs, school lessons and skills
+  (this overrides "no money" below), cars, a bus and a bicycle, a house cat, hens with eggs, an animal park with a
+  cow (milk), goats, rabbits, a tortoise, a camel, an elephant, a giraffe and a working sheepdog, day and night on
+  the engine's lights with normal maps, AVIF art.
+- **One connected town (2026-11-11, owner's request):** every place sits on one map (`tools/data/world.json`); the
+  camera is dragged, pinched and wheel-zoomed, a map button shows the whole town, a second button returns to the
+  child; people walk from place to place with no fade. A building shows its outside until the child walks in, then
+  its rooms are shown in the same spot and a wall in the way is cut. A ring road and a through road carry cars,
+  scooters and the bus in four directions; the main road leaves the town on both sides. The town lies in an open
+  grass field (no sky colour). Trees in front of a person turn see-through. Congregational prayer is the full fard
+  prayer (2, 4, 4, 3, 4 rak'ahs; Jumu'ah 2). The masjid has no screen. Only what is in view is loaded: ground tiles,
+  place sheets, building pieces, people's sheets. Measured in the headless browser at a phone's size: 88 to 125 MB
+  of pictures out of doors and on a ground floor, 144 MB upstairs at home, 60 fps on a Mac.
+- **Checks:** `python3 tools/check-data.py` (data), `node tools/life-test.js 3 20` (three simulated days: nobody
+  stuck, nobody through furniture). Both pass.
+- **Done 2026-11-11:** it is the main page, `offline.json` lists only what it loads (431 files, 10.1 MB after the one-map change), the old
+  town, the old prayer pages and the rejected mini-games are removed, version files are at 1.8.0.
+- **Not done:** not committed, nothing run in the app or on a phone, `settings.html` is not linked from the game, sound not listened to, Ramadan and Eid
+  not built, adab moments with words left out (no reviewed text).
+- **For a teacher:** every item marked TEACHER REVIEW in `life/world.js` and `life/guides.js`, the Friday talk
+  before dhuhr, and the pictures of the prayer positions in the guides.
+
 ## Phone pass (v1.5.8, 2026-11-10)
 
 Reported from real phones in the Kahf Kids app: the town did not open on iPhone, and play dipped on Android (inside too).

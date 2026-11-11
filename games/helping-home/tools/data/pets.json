@@ -1,0 +1,49 @@
+{
+ "animals": {
+  "cat": {
+   "kind": "cat",
+   "place": "kitchen",
+   "at": [
+    4.6,
+    2.6
+   ],
+   "roam": [
+    "kitchen",
+    "living",
+    "hall",
+    "yard",
+    "myroom",
+    "landing"
+   ],
+   "food": "catbowl",
+   "bed": "catbed"
+  },
+  "hen1": {
+   "kind": "hen",
+   "place": "yard",
+   "at": [
+    5.1,
+    5.4
+   ],
+   "food": "henfeeder"
+  },
+  "hen2": {
+   "kind": "hen",
+   "place": "yard",
+   "at": [
+    6.8,
+    5.7
+   ],
+   "food": "henfeeder"
+  },
+  "hen3": {
+   "kind": "hen",
+   "place": "yard",
+   "at": [
+    5.5,
+    4.3
+   ],
+   "food": "henfeeder"
+  }
+ }
+}

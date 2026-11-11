@@ -1,0 +1,64 @@
+{
+ "decor": {
+  "ball": {
+   "kind": "ball",
+   "price": 4
+  },
+  "plant": {
+   "kind": "plant",
+   "price": 8
+  },
+  "blocks": {
+   "kind": "blocks",
+   "price": 6
+  },
+  "lamp": {
+   "kind": "lamp",
+   "price": 12
+  },
+  "basket": {
+   "kind": "basket",
+   "price": 6
+  },
+  "cushions": {
+   "kind": "cushions",
+   "price": 10
+  },
+  "bench": {
+   "kind": "bench",
+   "price": 14
+  },
+  "globe": {
+   "kind": "globe",
+   "price": 12
+  },
+  "table": {
+   "kind": "table",
+   "price": 16
+  },
+  "shelf": {
+   "kind": "shelf",
+   "price": 20
+  },
+  "armchair": {
+   "kind": "armchair",
+   "price": 24
+  },
+  "rocker": {
+   "kind": "rocker",
+   "price": 24
+  },
+  "dresser": {
+   "kind": "dresser",
+   "price": 18
+  }
+ },
+ "rewards": [
+  "ball",
+  "plant",
+  "basket",
+  "cushions",
+  "lamp",
+  "blocks"
+ ]
+}

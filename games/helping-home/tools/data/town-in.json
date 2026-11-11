@@ -1,0 +1,1463 @@
+{
+ "kinds": {
+  "qshelf": {
+   "size": [
+    1.3,
+    0.42
+   ],
+   "solid": "rect",
+   "pad": 0.1,
+   "gives": {
+    "rest": 0.3,
+    "fun": 0.3
+   },
+   "time": [
+    5,
+    8
+   ],
+   "icon": "book",
+   "pose": "reach",
+   "slots": [
+    {
+     "at": [
+      -0.35,
+      0.72
+     ],
+     "face": "-y"
+    },
+    {
+     "at": [
+      0.35,
+      0.72
+     ],
+     "face": "-y"
+    }
+   ]
+  },
+  "sadaqahbox": {
+   "size": [
+    0.5,
+    0.5
+   ],
+   "solid": "circle",
+   "pad": 0.12,
+   "act": "sadaqah",
+   "time": [
+    1.5,
+    2
+   ],
+   "icon": "coin",
+   "pose": "reach",
+   "slots": [
+    {
+     "at": [
+      0,
+      0.7
+     ],
+     "face": "-y"
+    }
+   ]
+  },
+  "wudutap": {
+   "size": [
+    2.4,
+    0.8
+   ],
+   "solid": "rect",
+   "pad": 0.1,
+   "act": "guide:wudu",
+   "gives": {
+    "clean": 0.7
+   },
+   "time": [
+    4,
+    6
+   ],
+   "icon": "drop",
+   "pose": "reach",
+   "slots": [
+    {
+     "at": [
+      -0.5,
+      0.7
+     ],
+     "face": "-y",
+     "over": true
+    },
+    {
+     "at": [
+      0.5,
+      0.7
+     ],
+     "face": "-y",
+     "over": true
+    }
+   ]
+  },
+  "mlantern": {"glow": [1.25, 1.5], 
+   "size": [
+    0.5,
+    0.5
+   ],
+   "solid": "circle",
+   "pad": 0.1,
+   "slots": []
+  },
+  "wudutiles": {"size": [2.8, 1.5], "solid": "none", "fixed": true},
+  "minbar": {
+   "size": [
+    0.9,
+    1.9
+   ],
+   "solid": "rect",
+   "pad": 0.1,
+   "slots": []
+  },
+  "till": {
+   "size": [
+    1.8,
+    0.7
+   ],
+   "solid": "rect",
+   "pad": 0.1,
+   "act": "shop",
+   "gives": {
+    "fun": 0.3
+   },
+   "time": [
+    3,
+    5
+   ],
+   "icon": "basket",
+   "pose": "reach",
+   "slots": [
+    {
+     "at": [
+      0,
+      -0.62
+     ],
+     "face": "+y",
+     "staff": true,
+     "pose": "idle"
+    },
+    {
+     "at": [
+      -0.45,
+      0.8
+     ],
+     "face": "-y"
+    },
+    {
+     "at": [
+      0.45,
+      0.8
+     ],
+     "face": "-y"
+    }
+   ]
+  },
+  "bakery": {
+   "size": [
+    1.8,
+    0.7
+   ],
+   "solid": "rect",
+   "pad": 0.1,
+   "gives": {
+    "food": 0.3
+   },
+   "source": "bread",
+   "price": 2,
+   "time": [
+    2,
+    4
+   ],
+   "icon": "bread",
+   "pose": "reach",
+   "slots": [
+    {
+     "at": [
+      0,
+      -0.62
+     ],
+     "face": "+y",
+     "staff": true,
+     "pose": "idle"
+    },
+    {
+     "at": [
+      0,
+      0.8
+     ],
+     "face": "-y"
+    }
+   ]
+  },
+  "oven": {
+   "size": [
+    1.7,
+    0.9
+   ],
+   "solid": "rect",
+   "pad": 0.1,
+   "slots": []
+  },
+  "shopshelf": {
+   "size": [
+    1.3,
+    0.42
+   ],
+   "solid": "rect",
+   "pad": 0.1,
+   "gives": {
+    "fun": 0.3
+   },
+   "time": [
+    3,
+    5
+   ],
+   "icon": "basket",
+   "pose": "reach",
+   "slots": [
+    {
+     "at": [
+      0,
+      0.72
+     ],
+     "face": "-y"
+    }
+   ]
+  },
+  "crate": {
+   "size": [
+    1.0,
+    0.7
+   ],
+   "solid": "rect",
+   "pad": 0.1,
+   "gives": {
+    "food": 0.2
+   },
+   "source": "fruit",
+   "price": 2,
+   "time": [
+    2,
+    3
+   ],
+   "icon": "fruit",
+   "pose": "reach",
+   "slots": [
+    {
+     "at": [
+      0,
+      0.8
+     ],
+     "face": "-y"
+    }
+   ]
+  },
+  "seedsack": {
+   "size": [
+    1.3,
+    0.9
+   ],
+   "solid": "rect",
+   "pad": 0.1,
+   "source": "seeds",
+   "price": 2,
+   "time": [
+    2,
+    3
+   ],
+   "icon": "seeds",
+   "pose": "reach",
+   "slots": [
+    {
+     "at": [
+      0,
+      0.85
+     ],
+     "face": "-y"
+    }
+   ]
+  },
+  "toyshelf": {
+   "size": [
+    1.2,
+    0.42
+   ],
+   "solid": "rect",
+   "pad": 0.1,
+   "source": "toy",
+   "price": 6,
+   "time": [
+    2,
+    3
+   ],
+   "icon": "toy",
+   "pose": "reach",
+   "slots": [
+    {
+     "at": [
+      0,
+      0.72
+     ],
+     "face": "-y"
+    }
+   ]
+  },
+  "giftshelf": {
+   "size": [
+    1.1,
+    0.7
+   ],
+   "solid": "rect",
+   "pad": 0.1,
+   "source": "parcel",
+   "price": 5,
+   "time": [
+    2,
+    3
+   ],
+   "icon": "parcel",
+   "pose": "reach",
+   "slots": [
+    {
+     "at": [
+      0,
+      0.8
+     ],
+     "face": "-y"
+    }
+   ]
+  },
+  "bkts": {
+   "size": [
+    0.9,
+    0.6
+   ],
+   "solid": "rect",
+   "pad": 0.08,
+   "slots": []
+  },
+  "tdesk": {
+   "size": [
+    1.5,
+    1.3
+   ],
+   "solid": "rect",
+   "pad": 0.1,
+   "pose": "sit",
+   "slots": [
+    {
+     "at": [
+      0,
+      -0.45
+     ],
+     "from": [
+      1.1,
+      -0.45
+     ],
+     "face": "+y",
+     "staff": true,
+     "over": true,
+     "pose": "sit"
+    }
+   ]
+  },
+  "sdesk": {
+   "size": [
+    1.5,
+    0.95
+   ],
+   "solid": "rect",
+   "pad": 0.1,
+   "who": "kids",
+   "lesson": true,
+   "skill": "write",
+   "gives": {
+    "fun": 0.5
+   },
+   "time": [
+    14,
+    18
+   ],
+   "icon": "pencil",
+   "pose": "sit",
+   "slots": [
+    {
+     "at": [
+      -0.38,
+      0.31
+     ],
+     "from": [
+      -0.38,
+      0.95
+     ],
+     "face": "-y",
+     "over": true
+    },
+    {
+     "at": [
+      0.38,
+      0.31
+     ],
+     "from": [
+      0.38,
+      0.95
+     ],
+     "face": "-y",
+     "over": true
+    }
+   ]
+  },
+  "cushions": {
+   "size": [
+    1.8,
+    1.4
+   ],
+   "solid": "none",
+   "who": "kids",
+   "skill": "read",
+   "gives": {
+    "fun": 0.5,
+    "rest": 0.3
+   },
+   "time": [
+    6,
+    10
+   ],
+   "icon": "book",
+   "pose": "sitlow",
+   "slots": [
+    {
+     "at": [
+      -0.5,
+      0.0
+     ],
+     "face": "+x"
+    },
+    {
+     "at": [
+      0.5,
+      0.0
+     ],
+     "face": "-x"
+    },
+    {
+     "at": [
+      0.0,
+      0.42
+     ],
+     "face": "-y"
+    }
+   ]
+  },
+  "globe": {
+   "size": [
+    0.6,
+    0.6
+   ],
+   "solid": "circle",
+   "pad": 0.1,
+   "who": "kids",
+   "skill": "count",
+   "gives": {
+    "fun": 0.4
+   },
+   "time": [
+    3,
+    5
+   ],
+   "icon": "globe",
+   "pose": "reach",
+   "slots": [
+    {
+     "at": [
+      0,
+      0.65
+     ],
+     "face": "-y"
+    }
+   ]
+  },
+  "divan": {
+   "size": [
+    0.95,
+    2.4
+   ],
+   "solid": "rect",
+   "pad": 0.1,
+   "gives": {
+    "rest": 0.7
+   },
+   "time": [
+    9,
+    15
+   ],
+   "icon": "cushion",
+   "pose": "sitlow",
+   "slots": [
+    {
+     "at": [
+      0.1,
+      -0.78
+     ],
+     "from": [
+      1.0,
+      -0.78
+     ],
+     "face": "+x",
+     "over": true
+    },
+    {
+     "at": [
+      0.1,
+      0.0
+     ],
+     "from": [
+      1.0,
+      0.0
+     ],
+     "face": "+x",
+     "over": true
+    },
+    {
+     "at": [
+      0.1,
+      0.78
+     ],
+     "from": [
+      1.0,
+      0.78
+     ],
+     "face": "+x",
+     "over": true
+    }
+   ]
+  },
+  "rocker": {
+   "size": [
+    0.8,
+    0.9
+   ],
+   "solid": "rect",
+   "pad": 0.1,
+   "gives": {
+    "rest": 0.8
+   },
+   "time": [
+    9,
+    15
+   ],
+   "icon": "cushion",
+   "pose": "sit",
+   "slots": [
+    {
+     "at": [
+      0.0,
+      0.0
+     ],
+     "from": [
+      0.95,
+      0.0
+     ],
+     "face": "+x",
+     "over": true
+    }
+   ]
+  },
+  "sewing": {
+   "size": [
+    1.0,
+    0.7
+   ],
+   "solid": "rect",
+   "pad": 0.1,
+   "skill": "build",
+   "gives": {
+    "fun": 0.5
+   },
+   "time": [
+    5,
+    8
+   ],
+   "icon": "thread",
+   "pose": "reach",
+   "slots": [
+    {
+     "at": [
+      0.0,
+      0.0
+     ],
+     "from": [
+      0.2,
+      0.7
+     ],
+     "face": "-y",
+     "over": true
+    }
+   ]
+  },
+  "stove": {
+   "size": [
+    0.8,
+    0.7
+   ],
+   "solid": "rect",
+   "pad": 0.1,
+   "who": "adults",
+   "skill": "cook",
+   "gives": {
+    "food": 0.3,
+    "fun": 0.3
+   },
+   "time": [
+    6,
+    10
+   ],
+   "icon": "pot",
+   "pose": "reach",
+   "slots": [
+    {
+     "at": [
+      0,
+      0.7
+     ],
+     "face": "-y"
+    }
+   ]
+  }
+ },
+ "places": {
+  "masjid": {
+   "at": [0.5, -9], "lot": "masjid",
+   "size": [
+    9,
+    9
+   ],
+   "h": 3.0,
+   "shell": {
+    "floor": "mcarpet",
+    "wall": "#F6EAD0",
+    "band": "#9CCFC4",
+    "L": [
+     {
+      "t": "frieze",
+      "at": 0
+     },
+     {
+      "t": "window",
+      "style": "arch",
+      "at": 2.45,
+      "w": 0.9,
+      "z": 1.15,
+      "h": 1.35
+     },
+     {
+      "t": "window",
+      "style": "arch",
+      "at": 5.65,
+      "w": 0.9,
+      "z": 1.15,
+      "h": 1.35
+     },
+     {
+      "t": "window",
+      "style": "arch",
+      "at": 7.35,
+      "w": 0.9,
+      "z": 1.15,
+      "h": 1.35
+     },
+     {
+      "t": "mihrab",
+      "at": 4.5,
+      "w": 1.0,
+      "zs": 1.05
+     }
+    ],
+    "R": [
+     {
+      "t": "frieze",
+      "at": 0
+     },
+     {
+      "t": "window",
+      "style": "arch",
+      "at": 0.9,
+      "w": 0.9,
+      "z": 1.15,
+      "h": 1.35
+     },
+     {
+      "t": "window",
+      "style": "arch",
+      "at": 2.8,
+      "w": 0.9,
+      "z": 1.15,
+      "h": 1.35
+     },
+     {
+      "t": "window",
+      "style": "arch",
+      "at": 4.7,
+      "w": 0.9,
+      "z": 1.15,
+      "h": 1.35
+     },
+     {
+      "t": "window",
+      "style": "arch",
+      "at": 6.6,
+      "w": 0.9,
+      "z": 1.15,
+      "h": 1.35
+     },
+     {
+      "t": "sconce",
+      "at": 2.3,
+      "z": 1.55
+     },
+     {
+      "t": "sconce",
+      "at": 4.2,
+      "z": 1.55
+     },
+     {
+      "t": "sconce",
+      "at": 6.1,
+      "z": 1.55
+     }
+    ]
+   },
+   "doors": [
+    {
+     "id": "plaza",
+     "wall": "FR",
+     "pos": 3.8,
+     "w": 1.4,
+     "to": "plaza",
+     "door": "masjid"
+    }
+   ],
+   "things": [
+    {
+     "id": "minbar",
+     "kind": "minbar",
+     "at": [
+      1.8,
+      0.95
+     ]
+    },
+    {
+     "id": "lampL",
+     "kind": "mlantern",
+     "at": [
+      3.0,
+      0.5
+     ]
+    },
+    {
+     "id": "lampR",
+     "kind": "mlantern",
+     "at": [
+      6.0,
+      0.5
+     ]
+    },
+    {
+     "id": "qs1",
+     "kind": "qshelf",
+     "at": [
+      0.21,
+      1.35
+     ],
+     "rot": 270
+    },
+    {
+     "id": "qs2",
+     "kind": "qshelf",
+     "at": [
+      0.21,
+      3.25
+     ],
+     "rot": 270
+    },
+    {
+     "id": "qs3",
+     "kind": "qshelf",
+     "at": [
+      0.21,
+      5.15
+     ],
+     "rot": 270
+    },
+    {
+     "id": "plant1",
+     "kind": "plant",
+     "at": [
+      8.1,
+      0.6
+     ]
+    },
+    {
+     "id": "plant2",
+     "kind": "plant",
+     "at": [
+      8.2,
+      3.2
+     ]
+    },
+    {
+     "id": "sadaqah",
+     "kind": "sadaqahbox",
+     "at": [
+      0.5,
+      7.9
+     ]
+    },
+    {
+     "id": "shoes",
+     "kind": "shoerack",
+     "at": [
+      2.3,
+      8.1
+     ]
+    },
+    {
+     "id": "wudutiles",
+     "kind": "wudutiles",
+     "at": [
+      7.4,
+      8.1
+     ]
+    },
+    {
+     "id": "wudu",
+     "kind": "wudutap",
+     "at": [
+      7.4,
+      7.9
+     ]
+    }
+   ],
+   "pray": [
+    [
+     4.5,
+     1.3
+    ],
+    [
+     1.5,
+     2.5
+    ],
+    [
+     2.5,
+     2.5
+    ],
+    [
+     3.5,
+     2.5
+    ],
+    [
+     4.5,
+     2.5
+    ],
+    [
+     5.5,
+     2.5
+    ],
+    [
+     6.5,
+     2.5
+    ],
+    [
+     7.5,
+     2.5
+    ],
+    [
+     1.5,
+     3.7
+    ],
+    [
+     2.5,
+     3.7
+    ],
+    [
+     3.5,
+     3.7
+    ],
+    [
+     4.5,
+     3.7
+    ],
+    [
+     5.5,
+     3.7
+    ],
+    [
+     6.5,
+     3.7
+    ],
+    [
+     7.5,
+     3.7
+    ]
+   ],
+   "prayW": [
+    [
+     2.5,
+     6.4
+    ],
+    [
+     3.5,
+     6.4
+    ],
+    [
+     4.5,
+     6.4
+    ],
+    [
+     5.5,
+     6.4
+    ],
+    [
+     6.5,
+     6.4
+    ]
+   ]
+  },
+  "shop": {
+   "at": [-7, 10.3], "lot": "shop",
+   "size": [
+    7,
+    7
+   ],
+   "shell": {
+    "floor": "shoptile",
+    "wall": "#FBE9C6",
+    "band": "#EDB08C",
+    "L": [
+     {
+      "t": "awning",
+      "drop": 0.32
+     },
+     {
+      "t": "goodshelf",
+      "at": 3.65,
+      "w": 1.7,
+      "z": 1.25,
+      "rows": 2,
+      "seed": 3
+     },
+     {
+      "t": "hbasket",
+      "at": 3.25,
+      "z": 1.7
+     },
+     {
+      "t": "hbasket",
+      "at": 5.65,
+      "z": 1.7
+     }
+    ],
+    "R": [
+     {
+      "t": "pennants",
+      "at": 0.3,
+      "to": 6.7,
+      "z": 2.35
+     },
+     {
+      "t": "goodshelf",
+      "at": 2.4,
+      "w": 1.6,
+      "z": 1.35,
+      "rows": 2,
+      "seed": 9
+     },
+     {
+      "t": "window",
+      "at": 5.2,
+      "w": 1.3,
+      "z": 1.0,
+      "h": 1.3,
+      "curtains": false
+     },
+     {
+      "t": "hbasket",
+      "at": 4.45,
+      "z": 1.7
+     },
+     {
+      "t": "hbasket",
+      "at": 6.45,
+      "z": 1.7
+     }
+    ]
+   },
+   "doors": [
+    {
+     "id": "lane",
+     "wall": "FL",
+     "pos": 2.9,
+     "w": 1.15,
+     "to": "lane",
+     "door": "shop"
+    }
+   ],
+   "things": [
+    {
+     "id": "oven",
+     "kind": "oven",
+     "at": [
+      0.85,
+      0.45
+     ]
+    },
+    {
+     "id": "shelf1",
+     "kind": "shopshelf",
+     "at": [
+      2.45,
+      0.21
+     ]
+    },
+    {
+     "id": "till",
+     "kind": "till",
+     "at": [
+      4.5,
+      1.3
+     ]
+    },
+    {
+     "id": "toys",
+     "kind": "toyshelf",
+     "at": [
+      6.2,
+      0.21
+     ]
+    },
+    {
+     "id": "bakery",
+     "kind": "bakery",
+     "at": [
+      1.25,
+      3.2
+     ],
+     "rot": 270
+    },
+    {
+     "id": "crate",
+     "kind": "crate",
+     "at": [
+      2.6,
+      5.4
+     ]
+    },
+    {
+     "id": "seedsack",
+     "kind": "seedsack",
+     "at": [
+      4.2,
+      5.5
+     ]
+    },
+    {
+     "id": "gifts",
+     "kind": "giftshelf",
+     "at": [
+      5.9,
+      5.4
+     ]
+    },
+    {
+     "id": "baskets",
+     "kind": "bkts",
+     "at": [
+      6.45,
+      1.9
+     ]
+    },
+    {
+     "id": "baskets2",
+     "kind": "bkts",
+     "at": [
+      0.5,
+      6.4
+     ]
+    }
+   ]
+  },
+  "school": {
+   "at": [-8, 17.8], "lot": "school",
+   "size": [
+    8,
+    7
+   ],
+   "shell": {
+    "floor": "parquet",
+    "wall": "#FFF1D6",
+    "band": "#A9CFE6",
+    "L": [
+     {
+      "t": "board",
+      "at": 2.3,
+      "w": 3.4,
+      "z": 0.85,
+      "h": 1.2
+     },
+     {
+      "t": "frame",
+      "at": 0.7,
+      "z": 1.5,
+      "s": 0.55,
+      "pat": "a"
+     },
+     {
+      "t": "frame",
+      "at": 1.5,
+      "z": 1.55,
+      "s": 0.4,
+      "pat": "d"
+     },
+     {
+      "t": "frame",
+      "at": 6.4,
+      "z": 2.0,
+      "s": 0.4,
+      "pat": "c"
+     }
+    ],
+    "R": [
+     {
+      "t": "window",
+      "at": 1.2,
+      "w": 1.4,
+      "z": 0.95,
+      "h": 1.2,
+      "curtains": false
+     },
+     {
+      "t": "window",
+      "at": 3.0,
+      "w": 1.4,
+      "z": 0.95,
+      "h": 1.2,
+      "curtains": false
+     },
+     {
+      "t": "window",
+      "at": 4.8,
+      "w": 1.4,
+      "z": 0.95,
+      "h": 1.2,
+      "curtains": false
+     },
+     {
+      "t": "hooks",
+      "at": 6.1,
+      "w": 0.8,
+      "z": 1.45
+     },
+     {
+      "t": "pennants",
+      "at": 0.3,
+      "to": 6.7,
+      "z": 2.42,
+      "sag": 0.12
+     }
+    ]
+   },
+   "doors": [
+    {
+     "id": "lane",
+     "wall": "FL",
+     "pos": 3.0,
+     "w": 1.15,
+     "to": "lane",
+     "door": "school"
+    }
+   ],
+   "things": [
+    {
+     "id": "tdesk",
+     "kind": "tdesk",
+     "at": [
+      4.0,
+      0.75
+     ]
+    },
+    {
+     "id": "sdesk1",
+     "kind": "sdesk",
+     "at": [
+      1.6,
+      3.3
+     ]
+    },
+    {
+     "id": "sdesk2",
+     "kind": "sdesk",
+     "at": [
+      4.0,
+      3.3
+     ]
+    },
+    {
+     "id": "sdesk3",
+     "kind": "sdesk",
+     "at": [
+      6.4,
+      3.3
+     ]
+    },
+    {
+     "id": "cushions",
+     "kind": "cushions",
+     "at": [
+      1.4,
+      5.5
+     ]
+    },
+    {
+     "id": "globe",
+     "kind": "globe",
+     "at": [
+      0.65,
+      1.0
+     ]
+    },
+    {
+     "id": "shelf",
+     "kind": "shelf",
+     "at": [
+      7.0,
+      0.21
+     ]
+    },
+    {
+     "id": "plant1",
+     "kind": "plant",
+     "at": [
+      7.2,
+      1.8
+     ]
+    },
+    {
+     "id": "plant2",
+     "kind": "plant",
+     "at": [
+      7.2,
+      5.9
+     ]
+    }
+   ]
+  },
+  "grandhouse": {
+   "at": [-7, 0], "lot": "grandhouse",
+   "size": [
+    7,
+    7
+   ],
+   "shell": {
+    "floor": "planks",
+    "wall": "#EEDBBE",
+    "band": "#CF9A84",
+    "L": [
+     {
+      "t": "indoor",
+      "at": 0.7,
+      "w": 1.0
+     },
+     {
+      "t": "goodshelf",
+      "at": 2.75,
+      "w": 1.35,
+      "z": 1.5,
+      "rows": 2,
+      "seed": 21,
+      "jars": true
+     },
+     {
+      "t": "hbasket",
+      "at": 4.7,
+      "z": 1.65
+     },
+     {
+      "t": "frame",
+      "at": 5.3,
+      "z": 1.5,
+      "s": 0.6,
+      "pat": "b"
+     },
+     {
+      "t": "frame",
+      "at": 6.15,
+      "z": 1.6,
+      "s": 0.4,
+      "pat": "a"
+     }
+    ],
+    "R": [
+     {
+      "t": "window",
+      "at": 2.6,
+      "w": 1.6,
+      "z": 0.9,
+      "h": 1.35,
+      "cloth": "#FFF9EE"
+     },
+     {
+      "t": "frame",
+      "at": 0.6,
+      "z": 1.45,
+      "s": 0.55,
+      "pat": "c"
+     },
+     {
+      "t": "shelf",
+      "at": 5.0,
+      "w": 1.1,
+      "z": 1.4
+     },
+     {
+      "t": "hbasket",
+      "at": 6.4,
+      "z": 1.7
+     }
+    ]
+   },
+   "doors": [
+    {
+     "id": "plaza",
+     "wall": "FL",
+     "pos": 2.9,
+     "w": 1.15,
+     "to": "plaza",
+     "door": "grandhouse"
+    }
+   ],
+   "things": [
+    {
+     "id": "rug",
+     "kind": "rug",
+     "at": [
+      3.3,
+      3.6
+     ]
+    },
+    {
+     "id": "mat0",
+     "kind": "pmat",
+     "at": [
+      5.6,
+      5.0
+     ],
+     "state": "0"
+    },
+    {
+     "id": "mat1",
+     "kind": "pmat",
+     "at": [
+      6.42,
+      5.0
+     ],
+     "state": "1"
+    },
+    {
+     "id": "divan",
+     "kind": "divan",
+     "at": [
+      0.475,
+      3.4
+     ]
+    },
+    {
+     "id": "table",
+     "kind": "table",
+     "at": [
+      3.1,
+      3.6
+     ]
+    },
+    {
+     "id": "rocker",
+     "kind": "rocker",
+     "at": [
+      4.7,
+      0.6
+     ],
+     "rot": 90
+    },
+    {
+     "id": "stove",
+     "kind": "stove",
+     "at": [
+      3.4,
+      0.35
+     ]
+    },
+    {
+     "id": "sewing",
+     "kind": "sewing",
+     "at": [
+      2.0,
+      5.9
+     ]
+    },
+    {
+     "id": "plant1",
+     "kind": "plant",
+     "at": [
+      0.45,
+      5.4
+     ]
+    },
+    {
+     "id": "plant3",
+     "kind": "plant",
+     "at": [
+      6.0,
+      2.0
+     ]
+    },
+    {
+     "id": "plant2",
+     "kind": "plant",
+     "at": [
+      3.8,
+      6.1
+     ]
+    },
+    {
+     "id": "dresser",
+     "kind": "dresser",
+     "at": [
+      6.35,
+      0.25
+     ]
+    },
+    {
+     "id": "lamp",
+     "kind": "lamp",
+     "at": [
+      0.4,
+      1.55
+     ]
+    }
+   ],
+   "pray": [
+    [
+     5.6,
+     5.4
+    ],
+    [
+     6.42,
+     5.4
+    ]
+   ]
+  }
+ }
+}

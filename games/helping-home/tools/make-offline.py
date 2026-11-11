@@ -4,15 +4,20 @@ The house page sends this list to the service worker (CACHE_URLS) so stations ne
 import json, os, re
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))          # games/helping-home
 REPO = os.path.dirname(os.path.dirname(HERE))
-KEEP = ('.html', '.js', '.css', '.json', '.m4a', '.png', '.svg', '.woff2', '.jpg', '.webp')
-files = []
-for root, dirs, names in os.walk(HERE):
-    dirs[:] = [d for d in dirs if d not in ('tools',) and not d.startswith('.')]
-    for n in sorted(names):
-        if n.startswith('_'):          # a scratch page kept on one machine, never published
-            continue
-        if n.endswith(KEEP) and n != 'offline.json':
-            files.append('/KidsGames/' + os.path.relpath(os.path.join(root, n), REPO).replace(os.sep, '/'))
+KEEP = ('.html', '.js', '.css', '.json', '.m4a', '.png', '.svg', '.woff2', '.jpg', '.webp', '.avif')
+# The game is index.html, what it names, everything under life/ (its code, data and AVIF art) and the recorded clips in
+# audio/. Older pages that may still sit in this folder (the old town, classic.html, pray/*.html ...) are not part of it.
+files = ['/KidsGames/games/helping-home/index.html']
+page = open(os.path.join(HERE, 'index.html'), encoding='utf8').read()
+for u in re.findall(r'src="([^"?#]+)"', page):
+    if not u.startswith('/'): files.append('/KidsGames/games/helping-home/' + u)
+for sub in ('life', 'audio'):
+    for root, dirs, names in os.walk(os.path.join(HERE, sub)):
+        for n in sorted(names):
+            if n.startswith('_') or not n.endswith(KEEP): continue
+            if n.endswith('.webp') and os.sep + os.path.join('life', 'art') in root: continue   # only fetched by a WebView too old for AVIF
+            u = '/KidsGames/' + os.path.relpath(os.path.join(root, n), REPO).replace(os.sep, '/')
+            if u not in files: files.append(u)
 # shared files the pages load from outside the game folder
 shared = set()
 for f in files:

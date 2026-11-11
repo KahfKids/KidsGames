@@ -9,16 +9,17 @@ Kahf KidsGames: the games and quizzes of the Kahf Kids app (an Islamic learning 
 
 These are not advice. A change that breaks one is not finished, however well it works.
 
-### Rendering
+### Engine and rendering
 
-1. **Every 2D game is drawn by PixiJS.** No exceptions. Full text: `docs/game-standard.md`.
-2. **Every 3D game is drawn by three.js.** It is not in the repo yet; the first 3D game adds it the way `docs/game-standard.md` section 3 says.
-3. **No fallback and no second drawing path.** Never write a Canvas2D, DOM or SVG version of a game's play area "just in case".
-4. **Canvas2D only makes pictures** that become PixiJS textures. It is never the frame.
-5. **PixiJS is started only by `Kit.gfx.create`** (`js/kit/gfx.js`). After that, use PixiJS as PixiJS and follow `docs/pixi-performance.md`.
-6. **No other engine or drawing library.** No CDN. PixiJS is pinned in `js/vendor/`.
-7. **One line decides what goes where: anything drawn on a canvas goes through PixiJS; text and buttons are DOM.** So sparkles, confetti and every other drawn effect are PixiJS, in quizzes too. Quiz questions and answers, HUD, buttons, sheets and the hub pages are DOM (`js/quiz/`, `js/kit/ui.js`), and their small CSS animations (pop, shake, glow) stay CSS.
-8. **Games not ported yet** (the table in `docs/game-standard.md` section 11) get small fixes only, and no new Canvas2D frame code. A reworked game is ported. A new game starts on PixiJS.
+Decided by the owner on 2026-11-11: **every game and every quiz is built on Phaser 4**, because the catalog is growing into full games. Full text: `docs/phaser-standard.md`.
+
+1. **Phaser 4 is the engine of every game and quiz.** It is pinned in `js/vendor/phaser-4.2.1.min.js`. No CDN.
+2. **Phaser is started only by `Kit.play.start`** (`js/kit/play.js`), so every game gets the same screen fitting, sharpness, Exit and error screen. After that, use Phaser as Phaser: scenes, its input, its tweens and particles.
+3. **WebGL only. No fallback and no second drawing path.** A phone that cannot start it gets `Kit.play.sorry`.
+4. **Art is a picture made once**: an image file, or painted once with Canvas2D into a texture (`Kit.play.tex`). Nothing is painted per frame.
+5. **No other engine or drawing library.** A 3D game is the one exception and uses three.js (`docs/game-standard.md` section 3); none exists yet.
+6. **Pages not rebuilt yet stay as they are**: the kit games on Canvas2D (Helping Home's old town and separate prayer pages were removed on 2026-11-11; the life game replaces them). They get small fixes only. They are not ported to PixiJS any more; a game that is reworked is rebuilt on Phaser. The table is in `docs/phaser-standard.md`.
+7. **Hub pages are DOM** (`index.html`, `quizzes.html`). Inside a game, what the child sees and touches is Phaser.
 
 ### The kit
 
@@ -29,7 +30,7 @@ These are not advice. A change that breaks one is not finished, however well it 
 ### Performance
 
 12. **Target: a steady 60 frames per second on a budget Android phone, inside the app.**
-13. **Pixel density comes from `Kit.gfx.dpr()`** (at most 2).
+13. **Pixel density comes from the kit** (`Kit.play.dpr()`, at most 2). A game does not read `devicePixelRatio`.
 14. **Plays offline after one visit. No request to any other site,** ever: no CDN, no fonts, no analytics, no beacons.
 
 ### Content (kids' app, Islamic)
@@ -50,7 +51,7 @@ These are not advice. A change that breaks one is not finished, however well it 
 ## Always, ask first, never
 
 **Always:** read the file you change and its header comment; keep the diff small; test in a browser at phone, sideways phone and tablet size before committing; say plainly what was not tested.
-**Ask first:** a new library or a PixiJS upgrade; a build step, bundler or `package.json`; removing a game or a folder; changing a saved-progress shape; anything in `js/kahf-bridge.js`.
+**Ask first:** a new library or a Phaser upgrade; a build step, bundler or `package.json`; removing a game or a folder; changing a saved-progress shape; anything in `js/kahf-bridge.js`.
 **Never:** a CDN or other outside request; a second renderer; hand-editing a generated file (quiz pages, `js/kit/praise-clips.js`, `games/helping-home/offline.json`); pushing unasked.
 
 ## Map
@@ -60,8 +61,8 @@ These are not advice. A change that breaks one is not finished, however well it 
 | `index.html` | the games hub |
 | `quizzes.html` | the quiz catalog |
 | `games/<id>/` | one game or one quiz per folder |
-| `js/kit/` | the shared kit: `core.js` (loop, input, saves, app), `gfx.js` (PixiJS), `pen.js` (a game's frame on PixiJS), `fx.js`, `audio.js`, `ui.js`, `kit.css` |
-| `js/vendor/` | pinned libraries: `pixi-8.22.0.min.js` (MIT) |
+| `js/kit/` | the shared kit: `play.js` (starts Phaser), `core.js` (saves, app, and the loop and input of the old kit games), `audio.js` (sound), and for pages not rebuilt yet `gfx.js` (PixiJS), `fx.js`, `ui.js`, `kit.css` |
+| `js/vendor/` | pinned libraries: `phaser-4.2.1.min.js` (MIT), `pixi-8.22.0.min.js` (MIT, old pages only) |
 | `js/quiz/` | the quiz engine and `catalog.js` |
 | `js/board/` | the board-game kit (Checkers, Tic Tac Toe) |
 | `js/kahf-bridge.js` | reports a child's activity to the app |
@@ -76,11 +77,11 @@ Folders under `games/` that no page links to are leftovers, not part of the cata
 
 | When | Read |
 |------|------|
-| Any game work | `docs/game-standard.md` |
-| Anything drawn with PixiJS | `docs/pixi-performance.md`, and the header of `js/kit/gfx.js` |
+| Any game work | `docs/phaser-standard.md` |
+| An old page still on the Canvas2D kit or PixiJS | `docs/game-standard.md`, `docs/pixi-performance.md` |
 | Art, feel, level design of games | `docs/game-quality-plan.md` |
 | Quizzes | `docs/quiz-quality-plan.md` |
-| Helping Home | `docs/helping-home-v2-plan.md` |
+| Helping Home | the header of each file in `games/helping-home/life/`, `games/helping-home/tools/data/README.md` (the data format) and the status section at the top of `docs/helping-home-v2-plan.md` |
 
 ## Commands
 
@@ -127,5 +128,5 @@ Every game page includes the shared bridge so the Kahf Kids app can count real l
 ## The app side
 
 - The app's WebView code: `KahfKids/expo-app/components/pwa-webview/`. Production always loads `https://kahfkids.github.io/KidsGames`.
-- A game with its own Exit button tells the app through `Kit.host` (`js/kit/core.js`).
+- A game with its own Exit button tells the app through `Kit.host` (`js/kit/core.js`). `Kit.play` does this for Phaser games (`Kit.play.exit()`).
 - Games that must open on their side are listed in the app: `KahfKids/expo-app/features/games/shared/landscape-games.ts`. Adding one needs an app release.

@@ -1,0 +1,470 @@
+{
+ "kinds": {
+  "postbox": {
+   "size": [0.5, 0.5],
+   "solid": "circle",
+   "pad": 0.1,
+   "takes": ["letter"],
+   "pose": "reach",
+   "time": [1, 1.5],
+   "icon": "letter",
+   "slots": [
+    {"at": [0.6, 0], "face": "-x"}
+   ]
+  },
+  "busstop": {
+   "size": [0.4, 0.4],
+   "solid": "none",
+   "act": "bus",
+   "pose": "idle",
+   "icon": "bus",
+   "time": [1, 1],
+   "slots": [
+    {"at": [0, -0.45], "face": "+y"}
+   ]
+  },
+  "outbench": {
+   "size": [0.5, 1.5],
+   "solid": "rect",
+   "pad": 0.1,
+   "gives": {"rest": 0.5},
+   "time": [6, 10],
+   "icon": "cushion",
+   "pose": "sit",
+   "slots": [
+    {"at": [0.0, -0.38], "from": [0.75, -0.38], "face": "+x", "over": true},
+    {"at": [0.0, 0.38], "from": [0.75, 0.38], "face": "+x", "over": true}
+   ]
+  },
+  "planter": {
+   "size": [0.9, 0.4],
+   "solid": "rect",
+   "pad": 0.05
+  },
+  "outlamp": {
+   "glow": [2.75, 2.3],
+   "size": [0.34, 0.34],
+   "solid": "circle",
+   "pad": 0.05
+  },
+  "outbin": {
+   "size": [0.5, 0.5],
+   "solid": "circle",
+   "pad": 0.1,
+   "takes": ["litter"],
+   "pose": "reach",
+   "time": [1, 1.5],
+   "icon": "bin",
+   "slots": [
+    {"at": [0.6, 0], "face": "-x"}
+   ]
+  },
+  "outtree": {
+   "size": [0.5, 0.5],
+   "solid": "circle",
+   "pad": 0.15
+  },
+  "poptree": {
+   "size": [0.45, 0.45],
+   "solid": "circle",
+   "pad": 0.15
+  },
+  "plazatree": {
+   "size": [0.9, 0.9],
+   "solid": "circle",
+   "pad": 0.1
+  },
+  "fountain": {
+   "size": [2.4, 2.4],
+   "solid": "circle",
+   "pad": 0.1,
+   "who": "kids",
+   "gives": {"fun": 0.7},
+   "pose": "reach",
+   "time": [5, 8],
+   "icon": "drop",
+   "slots": [
+    {"at": [1.55, 0], "face": "-x"},
+    {"at": [0, 1.55], "face": "-y"},
+    {"at": [0, -1.55], "face": "+y"}
+   ]
+  },
+  "stall": {
+   "takes": ["veg", "eggs", "milk"],
+   "size": [1.0, 2.4],
+   "solid": "rect",
+   "pad": 0.1,
+   "source": "fruit",
+   "gives": {"food": 0.3},
+   "pose": "reach",
+   "time": [2, 4],
+   "icon": "fruit",
+   "slots": [
+    {"at": [0.9, 0], "face": "-x"}
+   ]
+  },
+  "pondside": {
+   "size": [1.8, 0.8],
+   "solid": "none",
+   "takes": ["bread", "seeds"],
+   "pose": "reach",
+   "time": [2, 3],
+   "icon": "bread",
+   "slots": [
+    {"at": [0.5, 0], "from": [-1.3, 0], "face": "+x"}
+   ]
+  },
+  "duck": {
+   "size": [0.4, 0.5],
+   "solid": "none",
+   "slots": []
+  },
+  "parkswing": {
+   "size": [1.0, 1.4],
+   "solid": "rect",
+   "pad": 0.1,
+   "who": "kids",
+   "gives": {"fun": 0.9},
+   "pose": "sit",
+   "time": [6, 10],
+   "icon": "swing",
+   "slots": [
+    {"at": [0, 0], "from": [1.0, 0], "face": "+x", "over": true}
+   ]
+  },
+  "slide": {
+   "size": [2.2, 0.9],
+   "solid": "rect",
+   "pad": 0.1,
+   "who": "kids",
+   "gives": {"fun": 0.9},
+   "pose": "sit",
+   "time": [5, 8],
+   "icon": "swing",
+   "slots": [
+    {"at": [-0.55, 0], "from": [-1.55, 0], "face": "+x", "over": true}
+   ]
+  },
+  "goal": {
+   "size": [0.7, 1.9],
+   "solid": "rect",
+   "pad": 0.1,
+   "slots": []
+  },
+  "picnic": {
+   "size": [2.2, 2.2],
+   "solid": "none",
+   "layer": "floor",
+   "meal": true,
+   "gives": {"food": 0.6, "rest": 0.3},
+   "pose": "sitlow",
+   "time": [8, 12],
+   "icon": "bowl",
+   "slots": [
+    {"at": [0, 0.85], "face": "-y"},
+    {"at": [0.85, 0], "face": "-x"},
+    {"at": [0, -0.85], "face": "+y"},
+    {"at": [-0.85, 0], "face": "+x"}
+   ]
+  },
+  "parkbird": {
+   "size": [0.6, 0.6],
+   "solid": "circle",
+   "pad": 0.1,
+   "takes": ["seeds"],
+   "pose": "reach",
+   "time": [2, 3],
+   "icon": "seeds",
+   "slots": [
+    {"at": [0.65, 0], "face": "-x"}
+   ]
+  },
+  "litter": {
+   "size": [0.2, 0.2],
+   "solid": "none",
+   "act": "pickup",
+   "item": "litter",
+   "icon": "litter",
+   "slots": []
+  },
+  "bigtree": {
+   "size": [1.0, 1.0],
+   "solid": "none",
+   "states": ["a", "b"],
+   "slots": []
+  },
+  "parkgate": {
+   "size": [1.9, 0.3],
+   "solid": "none",
+   "slots": []
+  },
+  "gardengate": {
+   "size": [1.3, 0.2],
+   "solid": "none",
+   "slots": []
+  },
+  "pfence": {
+   "size": [2.0, 0.12],
+   "solid": "rect",
+   "pad": 0.0
+  },
+  "yfence": {
+   "size": [1.0, 0.12],
+   "solid": "rect",
+   "pad": 0.0
+  },
+  "bush": {
+   "size": [0.7, 0.7],
+   "solid": "circle",
+   "pad": 0.05
+  },
+  "reeds": {
+   "size": [0.5, 0.5],
+   "solid": "none",
+   "slots": []
+  },
+  "yardtree": {
+   "size": [0.5, 0.5],
+   "solid": "circle",
+   "pad": 0.15
+  },
+  "bhome": {
+   "size": [19.5, 6.0],
+   "solid": "none",
+   "building": "home",
+   "slots": []
+  },
+  "bmasjid": {
+   "size": [9.0, 9.0],
+   "solid": "none",
+   "building": "masjid",
+   "slots": []
+  },
+  "bgrand": {
+   "size": [7.0, 7.0],
+   "solid": "none",
+   "building": "grandhouse",
+   "slots": []
+  },
+  "bshop": {
+   "size": [7.0, 7.0],
+   "solid": "none",
+   "building": "shop",
+   "slots": []
+  },
+  "bschool": {
+   "size": [8.0, 7.0],
+   "solid": "none",
+   "building": "school",
+   "slots": []
+  },
+  "busstopw": {
+   "size": [0.4, 0.4],
+   "solid": "none",
+   "act": "bus",
+   "pose": "idle",
+   "icon": "bus",
+   "time": [1, 1],
+   "slots": [
+    {"at": [-0.45, 0], "face": "+x"}
+   ]
+  }
+ },
+ "places": {
+  "plaza": {
+   "at": [0, 0],
+   "size": [10.5, 9.8],
+   "outdoor": true,
+   "builder": "plaza",
+   "top": 0.3,
+   "doors": [
+    {"id": "masjid", "wall": "L", "pos": 4.3, "w": 1.4, "to": "masjid", "door": "plaza"},
+    {"id": "grandhouse", "wall": "R", "pos": 2.9, "w": 1.15, "to": "grandhouse", "door": "plaza"}
+   ],
+   "things": [
+    {"id": "b-masjid", "kind": "bmasjid", "at": [5.0, -4.5]},
+    {"id": "b-grandhouse", "kind": "bgrand", "at": [-3.5, 3.5]},
+    {"id": "back1", "kind": "bigtree", "at": [-3.2, -3.0], "state": "a"},
+    {"id": "back2", "kind": "bigtree", "at": [-2.8, -8.2], "state": "b"},
+    {"id": "back3", "kind": "bigtree", "at": [-9.5, 3.5], "state": "a"},
+    {"id": "back11", "kind": "bigtree", "at": [3.0, -10.6], "state": "a"},
+    {"id": "fountain", "kind": "fountain", "at": [5.0, 4.4]},
+    {"id": "stall", "kind": "stall", "at": [8.6, 3.4]},
+    {"id": "bench1", "kind": "outbench", "at": [2.3, 4.4]},
+    {"id": "bench2", "kind": "outbench", "at": [1.1, 6.0]},
+    {"id": "tree1", "kind": "plazatree", "at": [1.5, 1.3]},
+    {"id": "tree2", "kind": "plazatree", "at": [9.5, 1.3]},
+    {"id": "bin", "kind": "outbin", "at": [9.7, 5.4]},
+    {"id": "busstop", "kind": "busstop", "at": [9.0, 7.2]},
+    {"id": "edge1", "kind": "planter", "at": [10.25, 2.1], "rot": 90},
+    {"id": "edge2", "kind": "planter", "at": [10.25, 4.1], "rot": 90},
+    {"id": "edge3", "kind": "outlamp", "at": [10.3, 6.0]},
+    {"id": "lamp1", "kind": "outlamp", "at": [0.9, 7.05]},
+    {"id": "lamp2", "kind": "outlamp", "at": [6.3, 7.05]}
+   ]
+  },
+  "street": {
+   "at": [10.5, 0],
+   "size": [13.5, 9.8],
+   "outdoor": true,
+   "builder": "street",
+   "top": 0.3,
+   "blocks": [
+    [1.9, 2.0, 4.0, 3.9],
+    [10.5, 2.15, 12.0, 3.65]
+   ],
+   "doors": [
+    {"id": "home", "wall": "L", "pos": 7.4, "w": 1.15, "to": "hall", "door": "street"}
+   ],
+   "things": [
+    {"id": "b-home", "kind": "bhome", "at": [9.25, -3.0]},
+    {"id": "back4", "kind": "bigtree", "at": [1.5, -10.8], "state": "b"},
+    {"id": "back5", "kind": "bigtree", "at": [10.5, -11.0], "state": "a"},
+    {"id": "postbox", "kind": "postbox", "at": [10.9, 1.05]},
+    {"id": "planter1", "kind": "planter", "at": [6.4, 0.65]},
+    {"id": "planter2", "kind": "planter", "at": [9.5, 0.65]},
+    {"id": "planter3", "kind": "planter", "at": [2.7, 0.7]},
+    {"id": "bench", "kind": "outbench", "at": [3.7, 5.45], "rot": 90},
+    {"id": "tree1", "kind": "poptree", "at": [6.5, 6.0]},
+    {"id": "tree2", "kind": "poptree", "at": [12.45, 4.2]},
+    {"id": "bin", "kind": "outbin", "at": [1.5, 5.5]},
+    {"id": "busstop", "kind": "busstop", "at": [11.0, 7.2]},
+    {"id": "edge1", "kind": "planter", "at": [13.25, 2.1], "rot": 90},
+    {"id": "edge2", "kind": "planter", "at": [13.25, 4.1], "rot": 90},
+    {"id": "edge3", "kind": "outlamp", "at": [13.3, 6.0]},
+    {"id": "bush1", "kind": "bush", "at": [0.7, 1.1]},
+    {"id": "bush2", "kind": "bush", "at": [4.7, 5.5]},
+    {"id": "lamp1", "kind": "outlamp", "at": [0.4, 7.05]},
+    {"id": "lamp2", "kind": "outlamp", "at": [7.5, 7.05]}
+   ]
+  },
+  "green": {
+   "at": [24, 0],
+   "size": [13.5, 9.8],
+   "outdoor": true,
+   "builder": "green",
+   "top": 0.3,
+   "blocks": [
+    [2.2, 2.0, 5.0, 4.2],
+    [10.2, 2.7, 11.8, 4.3]
+   ],
+   "doors": [
+    {"id": "yard", "wall": "L", "pos": 7.0, "w": 1.2, "to": "yard", "door": "green", "icon": "house"}
+   ],
+   "things": [
+    {"id": "bench1", "kind": "outbench", "at": [3.6, 5.55], "rot": 90},
+    {"id": "bench2", "kind": "outbench", "at": [11.2, 5.55], "rot": 90},
+    {"id": "tree1", "kind": "poptree", "at": [1.4, 5.4]},
+    {"id": "tree2", "kind": "poptree", "at": [5.0, 6.1]},
+    {"id": "tree3", "kind": "outtree", "at": [12.4, 2.4]},
+    {"id": "bin", "kind": "outbin", "at": [9.2, 5.9]},
+    {"id": "bush1", "kind": "bush", "at": [1.1, 1.0]},
+    {"id": "bush2", "kind": "bush", "at": [6.5, 5.5]},
+    {"id": "bush3", "kind": "bush", "at": [12.9, 6.3]},
+    {"id": "lamp1", "kind": "outlamp", "at": [4.0, 7.05]},
+    {"id": "lamp2", "kind": "outlamp", "at": [8.8, 7.05]},
+    {"id": "lamp3", "kind": "outlamp", "at": [12.9, 7.05]}
+   ]
+  },
+  "lane": {
+   "at": [0, 9.8],
+   "size": [7.3, 15.8],
+   "outdoor": true,
+   "builder": "lane",
+   "top": 0.3,
+   "doors": [
+    {"id": "shop", "wall": "R", "pos": 3.4, "w": 1.15, "to": "shop", "door": "lane"},
+    {"id": "school", "wall": "R", "pos": 11.0, "w": 1.15, "to": "school", "door": "lane"}
+   ],
+   "things": [
+    {"id": "b-shop", "kind": "bshop", "at": [-3.5, 4.0]},
+    {"id": "b-school", "kind": "bschool", "at": [-4.0, 11.5]},
+    {"id": "back6", "kind": "bigtree", "at": [-9.6, 4.2], "state": "b"},
+    {"id": "back7", "kind": "bigtree", "at": [-10.4, 12.2], "state": "a"},
+    {"id": "busstop", "kind": "busstopw", "at": [4.6, 7.6]},
+    {"id": "tree1", "kind": "poptree", "at": [2.6, 2.0]},
+    {"id": "tree2", "kind": "poptree", "at": [2.6, 13.4]},
+    {"id": "bench1", "kind": "outbench", "at": [3.6, 4.0]},
+    {"id": "bench2", "kind": "outbench", "at": [3.6, 11.7]},
+    {"id": "bin1", "kind": "outbin", "at": [4.7, 1.4], "rot": 180},
+    {"id": "bin2", "kind": "outbin", "at": [4.7, 13.4], "rot": 180},
+    {"id": "lamp1", "kind": "outlamp", "at": [4.6, 2.6]},
+    {"id": "lamp2", "kind": "outlamp", "at": [4.6, 10.6]},
+    {"id": "lamp3", "kind": "outlamp", "at": [4.6, 12.4]}
+   ]
+  },
+  "park": {
+   "at": [7.3, 9.8],
+   "size": [10.4, 15.8],
+   "outdoor": true,
+   "builder": "park",
+   "top": 0.3,
+   "blocks": [
+    [6.5, 2.5, 9.7, 5.9],
+    [3.4, 2.35, 4.25, 4.55],
+    [1.4, 9.6, 3.1, 10.8]
+   ],
+   "doors": [],
+   "things": [
+    {"id": "swing1", "kind": "parkswing", "at": [1.15, 2.9]},
+    {"id": "swing2", "kind": "parkswing", "at": [1.15, 4.6]},
+    {"id": "slide", "kind": "slide", "at": [2.5, 7.6]},
+    {"id": "goal", "kind": "goal", "at": [0.75, 9.9]},
+    {"id": "ball", "kind": "ball", "at": [2.8, 9.6]},
+    {"id": "picnic", "kind": "picnic", "at": [4.8, 8.7]},
+    {"id": "bench1", "kind": "outbench", "at": [9.3, 6.8]},
+    {"id": "bench2", "kind": "outbench", "at": [6.1, 7.2]},
+    {"id": "bird", "kind": "parkbird", "at": [7.4, 7.8]},
+    {"id": "bin", "kind": "outbin", "at": [3.9, 2.0]},
+    {"id": "tree1", "kind": "poptree", "at": [9.6, 2.3]},
+    {"id": "tree2", "kind": "poptree", "at": [9.5, 9.8]},
+    {"id": "jetty", "kind": "pondside", "at": [7.5, 4.2]},
+    {"id": "duck1", "kind": "duck", "at": [8.9, 3.4]},
+    {"id": "duck2", "kind": "duck", "at": [8.6, 4.9], "rot": 90},
+    {"id": "litter1", "kind": "litter", "at": [7.1, 7.0]},
+    {"id": "litter2", "kind": "litter", "at": [3.9, 4.4]},
+    {"id": "reeds1", "kind": "reeds", "at": [6.948, 3.278]},
+    {"id": "reeds2", "kind": "reeds", "at": [7.477, 3.052]},
+    {"id": "reeds3", "kind": "reeds", "at": [7.959, 2.909]},
+    {"id": "reeds4", "kind": "reeds", "at": [8.799, 2.837]},
+    {"id": "reeds5", "kind": "reeds", "at": [6.636, 3.8]},
+    {"id": "tree3", "kind": "poptree", "at": [3.5, 12.6]},
+    {"id": "tree4", "kind": "outtree", "at": [8.0, 12.6]},
+    {"id": "gate", "kind": "parkgate", "at": [5.2, 1.4]},
+    {"id": "fence1", "kind": "pfence", "at": [1.3, 1.4]},
+    {"id": "fence2", "kind": "pfence", "at": [3.3, 1.4]},
+    {"id": "fence3", "kind": "pfence", "at": [7.1, 1.4]},
+    {"id": "fence4", "kind": "pfence", "at": [9.1, 1.4]},
+    {"id": "bush1", "kind": "bush", "at": [0.6, 12.0]},
+    {"id": "bush2", "kind": "bush", "at": [8.6, 7.6]},
+    {"id": "lamp1", "kind": "outlamp", "at": [2.1, 0.75]},
+    {"id": "lamp2", "kind": "outlamp", "at": [7.7, 0.75]},
+    {"id": "lamp3", "kind": "outlamp", "at": [1.9, 12.9]},
+    {"id": "lamp4", "kind": "outlamp", "at": [7.3, 12.9]}
+   ]
+  },
+  "meadow": {
+   "at": [29.7, 9.8],
+   "size": [7.8, 15.8],
+   "outdoor": true,
+   "builder": "meadow",
+   "top": 0.3,
+   "doors": [],
+   "things": [
+    {"id": "bench1", "kind": "outbench", "at": [6.6, 10.1], "rot": 180},
+    {"id": "bench2", "kind": "outbench", "at": [3.2, 5.4]},
+    {"id": "tree1", "kind": "outtree", "at": [3.6, 12.1]},
+    {"id": "tree2", "kind": "poptree", "at": [6.9, 3.4]},
+    {"id": "tree3", "kind": "outtree", "at": [7.2, 8.2]},
+    {"id": "bin", "kind": "outbin", "at": [3.3, 2.5]},
+    {"id": "bush1", "kind": "bush", "at": [3.2, 8.0]},
+    {"id": "bush2", "kind": "bush", "at": [7.2, 5.4]},
+    {"id": "bush3", "kind": "bush", "at": [4.3, 14.5]},
+    {"id": "bush4", "kind": "bush", "at": [6.9, 12.0]},
+    {"id": "lamp1", "kind": "outlamp", "at": [4.7, 0.75]},
+    {"id": "lamp2", "kind": "outlamp", "at": [2.8, 4.2]},
+    {"id": "lamp3", "kind": "outlamp", "at": [2.8, 10.0]}
+   ]
+  }
+ }
+}

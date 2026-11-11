@@ -1,0 +1,357 @@
+{
+ "kinds": {
+  "penfence": {
+   "size": [1.2, 0.14],
+   "solid": "rect",
+   "pad": 0.0
+  },
+  "trough": {
+   "size": [0.5, 1.3],
+   "solid": "none",
+   "act": "feed",
+   "pose": "reach",
+   "time": [2, 3],
+   "icon": "feedbag",
+   "takes": ["feed"],
+   "eat": [-0.85, 0],
+   "states": ["empty", "full"],
+   "slots": [
+    {"at": [0.95, 0], "from": [0.95, 0], "face": "-x"}
+   ]
+  },
+  "hightrough": {
+   "size": [0.6, 0.6],
+   "solid": "none",
+   "act": "feed",
+   "pose": "reach",
+   "time": [2, 3],
+   "icon": "feedbag",
+   "takes": ["feed"],
+   "eat": [-0.85, 0],
+   "states": ["empty", "full"],
+   "slots": [
+    {"at": [0.95, 0], "from": [0.95, 0], "face": "-x"}
+   ]
+  },
+  "milkcan": {
+   "size": [0.45, 0.45],
+   "solid": "circle",
+   "pad": 0.1,
+   "act": "collect",
+   "pose": "reach",
+   "time": [2, 3],
+   "icon": "milk",
+   "states": ["empty", "full"],
+   "slots": [
+    {"at": [0.6, 0], "face": "-x"}
+   ],
+   "item": "milk",
+   "from": "cow"
+  },
+  "zookiosk": {
+   "size": [0.9, 1.45],
+   "solid": "rect",
+   "pad": 0.1,
+   "source": "feed",
+   "price": 1,
+   "pose": "reach",
+   "time": [2, 4],
+   "icon": "feedbag",
+   "slots": [
+    {"at": [0.82, 0], "face": "-x"}
+   ]
+  },
+  "keeperhut": {
+   "size": [1.62, 1.8],
+   "solid": "rect",
+   "pad": 0.1
+  },
+  "kennel": {
+   "size": [1.0, 1.0],
+   "solid": "rect",
+   "pad": 0.05
+  },
+  "aviary": {
+   "size": [2.2, 2.2],
+   "solid": "circle",
+   "pad": 0.1,
+   "states": ["a", "b"]
+  },
+  "catbowl": {
+   "size": [0.4, 0.4],
+   "solid": "none",
+   "act": "feed",
+   "pose": "reach",
+   "time": [2, 3],
+   "icon": "fish",
+   "eat": [0, 0.45],
+   "states": ["empty", "full"],
+   "slots": [
+    {"at": [0.6, 0], "face": "-x"}
+   ]
+  },
+  "catbed": {
+   "size": [0.6, 0.6],
+   "solid": "none"
+  },
+  "coop": {
+   "size": [1.2, 1.0],
+   "solid": "rect",
+   "pad": 0.1,
+   "states": ["empty", "eggs"],
+   "act": "collect",
+   "icon": "egg",
+   "pose": "reach",
+   "time": [2, 3],
+   "slots": [
+    {"at": [0.85, 0], "face": "-x"}
+   ],
+   "item": "eggs",
+   "from": "hen"
+  },
+  "henfeeder": {
+   "size": [0.4, 0.4],
+   "solid": "none",
+   "act": "feed",
+   "pose": "reach",
+   "time": [2, 3],
+   "icon": "seeds",
+   "eat": [0, 0.4],
+   "states": ["empty", "full"],
+   "slots": [
+    {"at": [0.55, 0], "face": "-x"}
+   ]
+  },
+  "penfence2": {
+   "size": [2.0, 0.14],
+   "solid": "rect",
+   "pad": 0.0
+  },
+  "zoogate": {
+   "size": [2.0, 0.4],
+   "solid": "none",
+   "slots": []
+  },
+  "zboulder": {
+   "size": [1.1, 0.9],
+   "solid": "none",
+   "slots": []
+  },
+  "acacia": {
+   "size": [0.5, 0.5],
+   "solid": "circle",
+   "pad": 0.15
+  },
+  "palm": {
+   "size": [0.4, 0.4],
+   "solid": "circle",
+   "pad": 0.15
+  },
+  "blossom": {
+   "size": [0.5, 0.5],
+   "solid": "circle",
+   "pad": 0.15
+  }
+ },
+ "items": {
+  "feed": {
+   "icon": "feedbag"
+  },
+  "eggs": {
+   "icon": "egg"
+  },
+  "milk": {
+   "icon": "milk"
+  }
+ },
+ "places": {
+  "zoo": {
+   "size": [12, 15.8],
+   "outdoor": true,
+   "builder": "zoo",
+   "top": 0.3,
+   "pens": [
+    {"id": "elephant", "rect": [0, 1.3, 4.4, 5.7], "floor": "mud"},
+    {"id": "rabbit", "rect": [4.4, 1.3, 6.6, 4.3], "floor": "grass"},
+    {"id": "camel", "rect": [8.8, 1.3, 11.9, 4.8], "floor": "sand"},
+    {"id": "farm", "rect": [0, 5.7, 4.2, 9.9], "floor": "straw"},
+    {"id": "giraffe", "rect": [0, 9.9, 3.6, 13.2], "floor": "savanna"}
+   ],
+   "beds": [
+    [6.6, 12.55, 8.6, 13.15]
+   ],
+   "blocks": [
+    [2.85, 1.5, 4.15, 2.7],
+    [4.5, 1.35, 5.4, 2.25],
+    [5.75, 1.45, 6.5, 2.05],
+    [10.95, 1.9, 11.4, 2.5],
+    [10.4, 1.6, 10.8, 2.0],
+    [11.35, 2.45, 11.75, 2.85],
+    [0.05, 5.85, 0.6, 7.0],
+    [0.05, 8.7, 0.6, 9.85],
+    [1.33, 5.85, 1.57, 6.05],
+    [1.33, 7.75, 1.57, 8.0],
+    [1.33, 9.6, 1.57, 9.85],
+    [0.45, 12.3, 0.9, 12.75],
+    [0.4, 10.05, 0.85, 10.5],
+    [6.6, 12.55, 8.6, 13.15]
+   ],
+   "things": [
+    {"id": "f1", "kind": "penfence", "at": [0.6, 5.7]},
+    {"id": "f2", "kind": "penfence", "at": [1.667, 5.7]},
+    {"id": "f3", "kind": "penfence", "at": [2.733, 5.7]},
+    {"id": "f4", "kind": "penfence", "at": [3.8, 5.7]},
+    {"id": "f5", "kind": "penfence", "at": [5.0, 4.3]},
+    {"id": "f6", "kind": "penfence", "at": [6.0, 4.3]},
+    {"id": "f7", "kind": "penfence", "at": [9.4, 4.8]},
+    {"id": "f8", "kind": "penfence", "at": [10.35, 4.8]},
+    {"id": "f9", "kind": "penfence", "at": [11.3, 4.8]},
+    {"id": "f10", "kind": "penfence", "at": [0.6, 9.9]},
+    {"id": "f11", "kind": "penfence", "at": [1.6, 9.9]},
+    {"id": "f12", "kind": "penfence", "at": [2.6, 9.9]},
+    {"id": "f13", "kind": "penfence", "at": [3.6, 9.9]},
+    {"id": "f14", "kind": "penfence", "at": [0.6, 13.18]},
+    {"id": "f15", "kind": "penfence", "at": [1.8, 13.18]},
+    {"id": "f16", "kind": "penfence", "at": [3.0, 13.18]},
+    {"id": "f17", "kind": "penfence", "at": [4.4, 1.9], "rot": 90},
+    {"id": "f18", "kind": "penfence", "at": [4.4, 2.967], "rot": 90},
+    {"id": "f19", "kind": "penfence", "at": [4.4, 4.033], "rot": 90},
+    {"id": "f20", "kind": "penfence", "at": [4.4, 5.1], "rot": 90},
+    {"id": "f21", "kind": "penfence", "at": [6.6, 1.9], "rot": 90},
+    {"id": "f22", "kind": "penfence", "at": [6.6, 2.8], "rot": 90},
+    {"id": "f23", "kind": "penfence", "at": [6.6, 3.7], "rot": 90},
+    {"id": "f24", "kind": "penfence", "at": [8.8, 1.9], "rot": 90},
+    {"id": "f25", "kind": "penfence", "at": [8.8, 3.05], "rot": 90},
+    {"id": "f26", "kind": "penfence", "at": [8.8, 4.2], "rot": 90},
+    {"id": "f27", "kind": "penfence", "at": [11.9, 1.9], "rot": 90},
+    {"id": "f28", "kind": "penfence", "at": [11.9, 3.05], "rot": 90},
+    {"id": "f29", "kind": "penfence", "at": [11.9, 4.2], "rot": 90},
+    {"id": "f30", "kind": "penfence", "at": [4.2, 6.3], "rot": 90},
+    {"id": "f31", "kind": "penfence", "at": [4.2, 7.3], "rot": 90},
+    {"id": "f32", "kind": "penfence", "at": [4.2, 8.3], "rot": 90},
+    {"id": "f33", "kind": "penfence", "at": [4.2, 9.3], "rot": 90},
+    {"id": "f34", "kind": "penfence", "at": [3.6, 10.5], "rot": 90},
+    {"id": "f35", "kind": "penfence", "at": [3.6, 11.54], "rot": 90},
+    {"id": "f36", "kind": "penfence", "at": [3.6, 12.58], "rot": 90},
+    {"id": "trough_elephant", "kind": "trough", "at": [4.0, 4.8], "state": "empty"},
+    {"id": "trough_farm", "kind": "trough", "at": [3.8, 7.8], "state": "empty"},
+    {"id": "trough_giraffe", "kind": "hightrough", "at": [3.2, 11.5], "state": "empty"},
+    {"id": "trough_rabbit", "kind": "trough", "at": [5.5, 3.9], "rot": 90, "state": "empty"},
+    {"id": "trough_camel", "kind": "trough", "at": [10.35, 4.4], "rot": 90, "state": "empty"},
+    {"id": "milkcan", "kind": "milkcan", "at": [4.65, 9.4], "state": "full"},
+    {"id": "aviary", "kind": "aviary", "at": [6.9, 8.1], "state": "a"},
+    {"id": "kiosk", "kind": "zookiosk", "at": [9.6, 7.1]},
+    {"id": "hut", "kind": "keeperhut", "at": [9.8, 11.6]},
+    {"id": "kennel", "kind": "kennel", "at": [6.0, 11.6]},
+    {"id": "bench1", "kind": "outbench", "at": [10.9, 10.7]},
+    {"id": "bench2", "kind": "outbench", "at": [10.9, 8.4]},
+    {"id": "bin", "kind": "outbin", "at": [9.9, 8.7], "rot": 180},
+    {"id": "lamp1", "kind": "outlamp", "at": [6.7, 6.0]},
+    {"id": "lamp2", "kind": "outlamp", "at": [9.1, 5.85]},
+    {"id": "tree2", "kind": "blossom", "at": [5.8, 12.8]},
+    {"id": "gate", "kind": "zoogate", "at": [7.75, 1.3]},
+    {"id": "pf1", "kind": "penfence2", "at": [1.0, 1.3]},
+    {"id": "pf2", "kind": "penfence2", "at": [3.0, 1.3]},
+    {"id": "pf3", "kind": "penfence2", "at": [5.0, 1.3]},
+    {"id": "pf4", "kind": "penfence", "at": [6.45, 1.3]},
+    {"id": "pf5", "kind": "penfence2", "at": [9.5, 1.3]},
+    {"id": "pf6", "kind": "penfence2", "at": [11.0, 1.3]},
+    {"id": "pf7", "kind": "penfence2", "at": [0.07, 2.3], "rot": 90},
+    {"id": "pf8", "kind": "penfence2", "at": [0.07, 4.3], "rot": 90},
+    {"id": "pf9", "kind": "penfence2", "at": [0.07, 6.3], "rot": 90},
+    {"id": "pf10", "kind": "penfence2", "at": [0.07, 8.3], "rot": 90},
+    {"id": "pf11", "kind": "penfence2", "at": [0.07, 10.3], "rot": 90},
+    {"id": "pf12", "kind": "penfence2", "at": [0.07, 12.3], "rot": 90},
+    {"id": "pf13", "kind": "penfence2", "at": [11.93, 5.8], "rot": 90},
+    {"id": "pf14", "kind": "penfence2", "at": [11.93, 7.8], "rot": 90},
+    {"id": "pf15", "kind": "penfence2", "at": [11.93, 9.8], "rot": 90},
+    {"id": "pf16", "kind": "penfence2", "at": [11.93, 11.8], "rot": 90},
+    {"id": "pf17", "kind": "penfence", "at": [11.93, 12.8], "rot": 90},
+    {"id": "pf18", "kind": "penfence2", "at": [4.6, 13.36]},
+    {"id": "pf19", "kind": "penfence2", "at": [6.6, 13.36]},
+    {"id": "pf20", "kind": "penfence2", "at": [8.6, 13.36]},
+    {"id": "pf21", "kind": "penfence2", "at": [10.6, 13.36]},
+    {"id": "pf22", "kind": "penfence", "at": [11.35, 13.36]},
+    {"id": "zboulder", "kind": "zboulder", "at": [3.5, 1.9]},
+    {"id": "acacia1", "kind": "acacia", "at": [0.65, 12.5]},
+    {"id": "palm1", "kind": "palm", "at": [9.4, 2.4]},
+    {"id": "lamp3", "kind": "outlamp", "at": [4.9, 0.75]},
+    {"id": "lamp4", "kind": "outlamp", "at": [10.7, 0.75]}
+   ],
+   "at": [17.7, 9.8],
+   "doors": []
+  }
+ },
+ "animals": {
+  "cow": {
+   "kind": "cow",
+   "place": "zoo",
+   "at": [2.6, 8.4],
+   "zone": [1.9, 7.7, 3.4, 9.3],
+   "food": "trough_farm"
+  },
+  "goat1": {
+   "kind": "goat",
+   "place": "zoo",
+   "at": [2.4, 6.8],
+   "zone": [1.9, 6.4, 3.4, 7.6],
+   "food": "trough_farm"
+  },
+  "goat2": {
+   "kind": "goat",
+   "place": "zoo",
+   "at": [2.9, 7.2],
+   "zone": [1.9, 6.4, 3.4, 7.6],
+   "food": "trough_farm"
+  },
+  "rabbit1": {
+   "kind": "rabbit",
+   "place": "zoo",
+   "at": [5.0, 3.0],
+   "zone": [4.6, 2.3, 5.7, 3.5],
+   "food": "trough_rabbit"
+  },
+  "rabbit2": {
+   "kind": "rabbit",
+   "place": "zoo",
+   "at": [6.0, 3.2],
+   "zone": [5.3, 2.3, 6.4, 3.5],
+   "food": "trough_rabbit"
+  },
+  "tortoise": {
+   "kind": "tortoise",
+   "place": "zoo",
+   "at": [5.5, 3.2],
+   "zone": [4.6, 2.8, 6.4, 3.5],
+   "food": "trough_rabbit"
+  },
+  "camel": {
+   "kind": "camel",
+   "place": "zoo",
+   "at": [10.0, 3.1],
+   "zone": [9.3, 2.5, 10.7, 3.7],
+   "food": "trough_camel"
+  },
+  "elephant": {
+   "kind": "elephant",
+   "place": "zoo",
+   "at": [2.0, 4.2],
+   "zone": [0.9, 3.2, 3.3, 5.2],
+   "food": "trough_elephant"
+  },
+  "giraffe": {
+   "kind": "giraffe",
+   "place": "zoo",
+   "at": [1.9, 11.5],
+   "zone": [1.1, 10.7, 2.7, 12.3],
+   "food": "trough_giraffe"
+  },
+  "dog": {
+   "kind": "dog",
+   "place": "zoo",
+   "at": [7.8, 11.5],
+   "zone": [7.0, 10.7, 8.6, 12.3],
+   "bed": "kennel"
+  }
+ }
+}

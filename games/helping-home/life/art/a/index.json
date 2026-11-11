@@ -1,0 +1,214 @@
+{
+ "cat": {
+  "h": 0.3,
+  "fw": 160,
+  "fh": 160,
+  "ax": 80.0,
+  "ay": 96.46057107150295,
+  "frames": [
+   "idle",
+   "walk0",
+   "walk1",
+   "walk2",
+   "walk3",
+   "idleB",
+   "walkB0",
+   "walkB1",
+   "walkB2",
+   "walkB3",
+   "eat",
+   "sit",
+   "sleep"
+  ]
+ },
+ "hen": {
+  "h": 0.35,
+  "fw": 160,
+  "fh": 160,
+  "ax": 80.0,
+  "ay": 102.33934645418259,
+  "frames": [
+   "idle",
+   "walk0",
+   "walk1",
+   "walk2",
+   "walk3",
+   "idleB",
+   "walkB0",
+   "walkB1",
+   "walkB2",
+   "walkB3",
+   "eat",
+   "sit"
+  ]
+ },
+ "dog": {
+  "h": 0.55,
+  "fw": 224,
+  "fh": 224,
+  "ax": 112.0,
+  "ay": 142.56963198993407,
+  "frames": [
+   "idle",
+   "walk0",
+   "walk1",
+   "walk2",
+   "walk3",
+   "idleB",
+   "walkB0",
+   "walkB1",
+   "walkB2",
+   "walkB3",
+   "eat",
+   "sit",
+   "sleep"
+  ]
+ },
+ "cow": {
+  "h": 1.35,
+  "fw": 352,
+  "fh": 352,
+  "ax": 176.0,
+  "ay": 253.5998350513711,
+  "frames": [
+   "idle",
+   "walk0",
+   "walk1",
+   "walk2",
+   "walk3",
+   "idleB",
+   "walkB0",
+   "walkB1",
+   "walkB2",
+   "walkB3",
+   "eat",
+   "sit"
+  ]
+ },
+ "goat": {
+  "h": 0.75,
+  "fw": 288,
+  "fh": 288,
+  "ax": 144.0,
+  "ay": 186.3271827552933,
+  "frames": [
+   "idle",
+   "walk0",
+   "walk1",
+   "walk2",
+   "walk3",
+   "idleB",
+   "walkB0",
+   "walkB1",
+   "walkB2",
+   "walkB3",
+   "eat",
+   "sit"
+  ]
+ },
+ "rabbit": {
+  "h": 0.25,
+  "fw": 160,
+  "fh": 160,
+  "ax": 80.0,
+  "ay": 94.10906091843111,
+  "frames": [
+   "idle",
+   "walk0",
+   "walk1",
+   "walk2",
+   "walk3",
+   "idleB",
+   "walkB0",
+   "walkB1",
+   "walkB2",
+   "walkB3",
+   "eat",
+   "sit"
+  ]
+ },
+ "tortoise": {
+  "h": 0.3,
+  "fw": 192,
+  "fh": 192,
+  "ax": 96.0,
+  "ay": 112.46057107150295,
+  "frames": [
+   "idle",
+   "walk0",
+   "walk1",
+   "walk2",
+   "walk3",
+   "idleB",
+   "walkB0",
+   "walkB1",
+   "walkB2",
+   "walkB3",
+   "eat",
+   "sit"
+  ]
+ },
+ "camel": {
+  "h": 2.0,
+  "fw": 448,
+  "fh": 480,
+  "ax": 224.0,
+  "ay": 357.5755076535925,
+  "frames": [
+   "idle",
+   "walk0",
+   "walk1",
+   "walk2",
+   "walk3",
+   "idleB",
+   "walkB0",
+   "walkB1",
+   "walkB2",
+   "walkB3",
+   "eat",
+   "sit"
+  ]
+ },
+ "elephant": {
+  "h": 2.2,
+  "fw": 512,
+  "fh": 480,
+  "ax": 256.0,
+  "ay": 363.45428303627216,
+  "frames": [
+   "idle",
+   "walk0",
+   "walk1",
+   "walk2",
+   "walk3",
+   "idleB",
+   "walkB0",
+   "walkB1",
+   "walkB2",
+   "walkB3",
+   "eat",
+   "sit"
+  ]
+ },
+ "giraffe": {
+  "h": 3.2,
+  "fw": 448,
+  "fh": 592,
+  "ax": 224.0,
+  "ay": 486.4723223988199,
+  "frames": [
+   "idle",
+   "walk0",
+   "walk1",
+   "walk2",
+   "walk3",
+   "idleB",
+   "walkB0",
+   "walkB1",
+   "walkB2",
+   "walkB3",
+   "eat",
+   "sit"
+  ]
+ }
+}

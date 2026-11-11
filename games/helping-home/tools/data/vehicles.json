@@ -1,0 +1,17 @@
+{
+ "kinds": {
+  "car":     {"size": [2.0, 1.05], "solid": "none", "slots": [], "states": ["fam", "a", "b", "c"]},
+  "bus":     {"size": [3.4, 1.25], "solid": "none", "slots": []},
+  "scooter": {"size": [1.5, 0.6], "solid": "none", "slots": []},
+  "bike":    {"size": [1.15, 0.45], "solid": "none", "act": "ride", "icon": "bike", "slots": []}
+ },
+ "packs": {
+  "road": ["car@0#fam", "car@90#fam", "car@180#fam", "car@270#fam",
+           "car@0#a", "car@90#a", "car@180#a", "car@270#a",
+           "car@0#b", "car@90#b", "car@180#b", "car@270#b",
+           "car@0#c", "car@90#c", "car@180#c", "car@270#c",
+           "bus@0", "bus@90", "bus@180", "bus@270",
+           "scooter@0", "scooter@90", "scooter@180", "scooter@270"],
+  "ui": ["bike@0"]
+ }
+}
