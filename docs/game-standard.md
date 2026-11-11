@@ -133,8 +133,7 @@ Rule for this table: **it only moves forward.** A game marked "PixiJS" never goe
 | Game (folder) | Frame drawn by | Status |
 |---------------|----------------|--------|
 | `helping-home` (the world) | PixiJS | **done** (1.7.0). Its loop, input and saves are its own code: to move to the kit. |
-| `helping-home` adhan station | PixiJS | **done.** The minaret is made into pictures with the hand-drawn filter and shown by PixiJS; the glow and the sound rings are moved by PixiJS (`games/helping-home/iso/pix.js`). |
-| `helping-home` salah, wudu and washing-machine stations | live SVG in the page, with CSS animation | to port, one at a time, on `iso/pix.js`. Each is a rebuild, not a swap: salah has a ghost layer, a drawn-on arrow and a close-up bubble; wudu has about twenty hand and water animations; the washing machine zooms. Until salah is ported, `pray/salah-shell.js` keeps both layer paths (`pixi: true` in `PS.mount` chooses PixiJS). |
+| `helping-home` stations: adhan, salah, wudu, washing machine | PixiJS | **done.** One stage for all four, `games/helping-home/iso/pix.js`: the Colorfigures code still describes each figure as markup, every picture is made once with the hand-drawn filter, and PixiJS shows and moves it. Salah: the child's move is a flipbook of pictures made ahead; the ghost, the drawn-on arrow, the numbers and the close-up bubble are sprites. Wudu: the stream, its streaks, the pool, the ripples, the close-up actors and the body map are sprites. Washing machine: three pictures (under, drum, over); the zoom moves the pictures at once and sharp ones follow. No station paints SVG in the page any more; each keeps one empty `<svg>` sheet that gives the frame and takes the finger. Words, buttons and counters are DOM. |
 | `2048` | Canvas2D on the kit | to port |
 | `30-seconds-challenge` | Canvas2D on the kit | to port |
 | `animal-memory-match` | Canvas2D on the kit | to port |

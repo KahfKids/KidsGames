@@ -36,7 +36,7 @@
    While a picture changes on every frame it is made a little less sharp if the phone cannot keep up, and sharp
    again as soon as it rests.
 
-   HHPix.effects[name] = { delay(el), frames(el), state(t, part, T), still, origin }
+   HHPix.effects[name] = { delay(el), frames(el), state(t, part, T), still (a state, or a function giving one), origin }
      state -> { alpha, scale, dx, dy, frame, done }   t: seconds since the effect began (after its delay)
      frames: several pictures of the element (a line being drawn); state.frame picks one
      origin: 'center' scales about the element's middle (else about the figure's 0, 0, as CSS does for SVG) */
@@ -370,7 +370,7 @@
         var moving = false, T = now - F.t0;
         for (var i = 0; i < F.parts.length; i++) {
           var p = F.parts[i]; if (!p.at) continue;
-          var s = S.RM ? (p.fx.still || { alpha: 1 }) : p.fx.state(T - p.delay, p, T);
+          var s = S.RM ? (typeof p.fx.still === 'function' ? p.fx.still(p) : p.fx.still || { alpha: 1 }) : p.fx.state(T - p.delay, p, T);
           if (!s.done && !S.RM) moving = true;
           var fi = s.frame == null ? 0 : s.frame, t = p.texs[fi], alpha = s.alpha == null ? 1 : s.alpha;
           if (p.dimS) { var d = Math.min(1, (now - p.dimAt) / p.dimS); alpha *= 1 - ease(d); if (d < 1) moving = true; }

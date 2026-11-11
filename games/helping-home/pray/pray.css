@@ -8,7 +8,6 @@ body.hh-pray {
   font: 700 16px/1.3 ui-rounded, "SF Pro Rounded", Nunito, system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 .hh-pray button { font-family: inherit; color: var(--ink); -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
-.wd-defs { position: absolute; width: 0; height: 0; overflow: hidden; }
 .ic { display: block; }
 
 .wd { position: fixed; inset: 0; display: flex; flex-direction: column;
@@ -46,82 +45,11 @@ body.hh-pray {
 .wd-stage { flex: 1 1 0; min-height: 150px; display: flex; justify-content: center; align-items: center; padding: 0 10px; position: relative; container-type: size; }
 .wd-fig { position: relative; width: min(100cqw, 100cqh * var(--ar, 1)); aspect-ratio: var(--ar, 1); max-width: 100%; max-height: 100%;
   border: 2.5px solid var(--ink); border-radius: 22px; overflow: hidden; background: #e8e0cf; box-shadow: 0 4px 0 var(--ink); isolation: isolate; }
-.wd-lay { position: absolute; inset: 0; width: 100%; height: 100%; display: block; overflow: hidden; }
-.wd-dyn, .wd-fx { pointer-events: none; }
-
-/* water: the stream drops from the aerator when the tap opens, and its tail falls away when it closes */
-.wd-fig .wd-stream { transform-box: fill-box; transform-origin: 50% 0; transform: scaleY(0); transition: transform .3s ease-in; }
-.wd-fig.won .wd-stream { transform: scaleY(1); }
-.wd-fig.woff .wd-stream { transform-origin: 50% 100%; transition: transform .28s ease-in; }
-.wd-fig.won .wd-flow { animation: wdFlow .45s linear infinite; }
-.wd-fig.won .wd-flow2 { animation-duration: .38s; }
-@keyframes wdFlow { to { stroke-dashoffset: -5.6; } }
-.wd-pool { opacity: 0; transition: opacity .9s; }
-.wd-fig.won .wd-pool { opacity: .5; }
-.wd-rip, .wd-splash { opacity: 0; transform-box: fill-box; transform-origin: 50% 50%; }
-.wd-fig.won .wd-rip { animation: wdRip 1.3s ease-out infinite; }
-.wd-fig.won .wd-rip2 { animation-delay: .65s; }
-.wd-fig.won .wd-splash { animation: wdSplash .6s ease-in-out infinite alternate; }
-@keyframes wdRip { 0% { transform: scale(.3); opacity: .95; } 100% { transform: scale(1.3); opacity: 0; } }
-@keyframes wdSplash { from { opacity: .4; transform: translateY(0); } to { opacity: 1; transform: translateY(-.6px); } }
-
-/* the stream is drawn over the hands and stops where it meets them */
-.wd-fxs { clip-path: inset(0 0 calc(100% - var(--imp, 100%)) 0); z-index: 2; }
-.wd-splash2 { position: absolute; left: var(--sx); top: var(--imp); width: 9%; margin: -2.6% 0 0 -4.5%; z-index: 2; opacity: 0; pointer-events: none; transition: opacity .2s; }
-.wd-splash2 svg { display: block; width: 100%; }
-.wd-fig.won.has-imp .wd-splash2 { opacity: 1; animation: wdSpl .5s ease-in-out infinite alternate; }
-@keyframes wdSpl { to { transform: translateY(-8%) scaleX(1.08); } }
-
-/* first-person hands: each one a small SVG moved by CSS transforms only */
-.wd-hands { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 1; }
-.hd { position: absolute; transform-origin: 50% 100%; will-change: transform; }
-.hd-r { position: absolute; inset: 0; transform-origin: 50% 100%; }
-.hd-art, .hd-wet { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
-.hd-wet { opacity: 0; will-change: opacity; }
-.hd-a-rest { animation: wdRest 4.2s ease-in-out infinite; }
-.hd-a-rubR { animation: wdRubR 1.5s ease-in-out infinite; }
-.hd-a-rubL { animation: wdRubL 1.5s ease-in-out infinite; }
-.hd-a-cup { animation: wdCup 2.9s ease-in-out infinite; }
-.hd-a-cup .hd-wet { animation: wdWet 2.9s ease-in-out infinite; }
-.hd-a-noseL { animation: wdNoseL 2.9s ease-in-out infinite; }
-.hd-a-alongR { animation: wdAlongR 2.2s ease-in-out infinite; }
-.hd-a-alongL { animation: wdAlongL 2.2s ease-in-out infinite; }
-.hd-a-head { animation: wdHead 3.4s ease-in-out infinite; }
-.hd-a-earL { animation: wdEarL 1.4s ease-in-out infinite; }
-.hd-a-earR { animation: wdEarR 1.4s ease-in-out infinite; }
-.hd-a-toes { animation: wdToes 1.2s ease-in-out infinite; }
-@keyframes wdRest { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-1.4%); } }
-@keyframes wdRubR { 0%, 100% { transform: translate(5%, 0) rotate(-4deg); z-index: 3; } 30% { transform: translate(-12%, -4%) rotate(5deg); z-index: 3; }
-  50% { transform: translate(-22%, -2%) rotate(9deg); z-index: 1; } 75% { transform: translate(-8%, -5%) rotate(3deg); z-index: 1; } }
-@keyframes wdRubL { 0%, 100% { transform: translate(-5%, 0) rotate(4deg); } 30% { transform: translate(12%, -4%) rotate(-5deg); }
-  50% { transform: translate(22%, -2%) rotate(-9deg); } 75% { transform: translate(8%, -5%) rotate(-3deg); } }
-@keyframes wdCup { 0% { transform: translateY(36%); opacity: 1; } 22%, 46% { transform: translateY(0); } 72% { transform: translateY(46%) scale(1.22); opacity: 1; }
-  84% { transform: translateY(66%) scale(1.36); opacity: 0; } 86% { transform: translateY(36%); opacity: 0; } 100% { transform: translateY(36%); opacity: 1; } }
-@keyframes wdWet { 0%, 20% { opacity: 0; } 30%, 72% { opacity: 1; } 84%, 100% { opacity: 0; } }
-@keyframes wdNoseL { 0%, 60% { transform: translateY(0); } 74%, 86% { transform: translateY(-30%) rotate(8deg); } 100% { transform: translateY(0); } }
-@keyframes wdAlongR { 0%, 100% { transform: translate(-4%, -6%); } 50% { transform: translate(44%, 60%); } }
-@keyframes wdAlongL { 0%, 100% { transform: translate(4%, -6%); } 50% { transform: translate(-44%, 60%); } }
-@keyframes wdHead { 0% { transform: translateY(42%); } 18% { transform: translateY(2%); } 28% { transform: translate(-2%, 2%); } 34% { transform: translate(2%, 2%); }
-  40% { transform: translateY(2%); } 62% { transform: translateY(-16%); } 82% { transform: translateY(6%); } 100% { transform: translateY(42%); } }
-@keyframes wdEarL { 0%, 100% { transform: rotate(-6deg); } 50% { transform: rotate(7deg) translateY(-3%); } }
-@keyframes wdEarR { 0%, 100% { transform: rotate(6deg); } 50% { transform: rotate(-7deg) translateY(-3%); } }
-@keyframes wdToes { 0%, 100% { transform: translate(-6%, -6%); } 50% { transform: translate(6%, 6%); } }
-
-/* the close-ups: a static drawing, actors moved by CSS keyframes only (each one its own GPU layer), water streams */
-.wd-scene { position: absolute; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
-.wd-scene.mir { transform: scaleX(-1); }
-.wd-fig.sc-2d .wd-lay, .wd-fig.sc-2d .wd-hands, .wd-fig.sc-2d .wd-splash2, .wd-fig.sc-2d .wd-tapbtn { display: none; }
+/* the figure is drawn by PixiJS (iso/pix.js) on a canvas inside .wd-fig; this empty sheet gives it its frame */
+.wd-frame { position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; }
+/* a close-up covers the basin: the lever's button goes with it */
+.wd-fig.sc-2d .wd-tapbtn { display: none; }
 .wd-fig.sc-2d { background: #dcefe8; }
-.sc-lay { position: absolute; inset: 0; width: 100%; height: 100%; display: block; overflow: visible; }
-.ac { position: absolute; will-change: transform, opacity; }
-.ac > svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; overflow: visible; }
-.ac.wet { visibility: hidden; }
-.wd-fig.won .ac.wet { visibility: visible; }
-.wst { position: absolute; border-radius: 4px 4px 7px 7px; overflow: hidden; transform-origin: 50% 0; transform: scaleY(0); transition: transform .3s ease-in;
-  background: linear-gradient(90deg, #68b2db, #b6e3f5 42%, #7fc4e8 70%, #68b2db); box-shadow: 0 0 0 1.5px rgba(35, 30, 22, .55); }
-.wd-fig.won .wst { transform: scaleY(1); }
-.wst i, .wst i { left: 22%; width: 26%; top: -24px; bottom: 0; background: repeating-linear-gradient(transparent 0 14px, rgba(255, 255, 255, .9) 14px 24px); animation: wstF .16s linear infinite; }
-@keyframes wstF { to { transform: translateY(24px); } }
 
 /* the tap button, always top right on the stage */
 .wd-tapfab { all: unset; box-sizing: border-box; position: absolute; right: 3%; top: 3%; z-index: 4; width: 56px; height: 56px; border-radius: 50%; border: 2.5px solid var(--ink);
@@ -162,11 +90,6 @@ body.hh-pray {
 .wd-bmap { position: relative; height: clamp(150px, 24dvh, 236px); aspect-ratio: 120 / 232; }
 .wd-body.bump .wd-bmap { animation: wdBump .35s ease-out; }
 @keyframes wdBump { 40% { transform: scale(1.06); } }
-.bm { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
-.bm-tint, .bm-glow { mix-blend-mode: multiply; pointer-events: none; }
-.bm-glow { animation: wdGlow 1.4s ease-in-out infinite; will-change: opacity; }
-.wd-body.all .bm-glow { animation-duration: 3.4s; }
-@keyframes wdGlow { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
 .wd-info { min-width: 0; min-height: 0; display: flex; flex-direction: column; gap: 10px; align-self: center; }
 .wd-head { display: flex; gap: 12px; align-items: center; }
 .wd-sicon { all: unset; flex: none; box-sizing: border-box; width: 66px; height: 66px; border-radius: 50%; border: 2.5px solid var(--ink); background: var(--soft);
@@ -289,5 +212,5 @@ body.hh-pray {
   .mode-with.is-dua .wd-meter { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .hd, .hd-wet, .bm-glow, .wd-dot.cur::after, .wd-tapbtn.pulse::before, .wd-tapbtn.pulse::after, .wd-drops.go .wd-drop.next, .wd-btn::after, .wd-tapfab::after, .ac, .wst i,   .hd-wet { opacity: .8; }
+  .wd-dot.cur::after, .wd-tapbtn.pulse::before, .wd-tapbtn.pulse::after, .wd-drops.go .wd-drop.next, .wd-btn::after, .wd-tapfab::after { animation: none; }
 }

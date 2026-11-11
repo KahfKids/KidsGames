@@ -98,12 +98,24 @@ When PixiJS is upgraded, read these pages again and update this file in the same
 - Uploading a big texture hitches. Upload at load time; upload tiles, not one giant picture.
 - First load under about 250 KB of the game's own files. PixiJS itself is shared and saved after the first game.
 
-## 13. Input
+## 13. Pictures that change (what the Helping Home stations do)
+
+A figure described as markup (SVG) is turned into a texture each time it changes. That is processor work, so:
+
+- **Split the figure.** What never changes is one picture; the small part that moves is another. Only the part whose markup changed is made again (`px.layer()` in `games/helping-home/iso/pix.js`).
+- **The latest wins.** While a picture changes on every frame, a new one is started only when the last one is done, always from the newest markup. Frames are skipped, never queued.
+- **Less sharp while it moves, sharp when it rests.** The layer times a picture; if a full one costs more than a frame or two, the quick ones are made at 75% or 50% and a sharp one follows 140 ms after the change stops.
+- **A known move is a flipbook.** The salah child moves between two positions the page knows in advance. Its 31 pictures are made ahead, one at a time, while the child listens (`layer.warm`), kept in a budget (36 MB, 18 MB on a 2 GB phone), and the move only swaps textures: no picture is made during it. Measured on a laptop: one picture made during the move instead of 31, no frame over 10 ms.
+- **Move, do not remake.** Fades, pulses, a line being drawn, water running, a hand rubbing: sprites whose alpha, place, turn or texture frame change. A zoom or a shake moves the container at once; sharp pictures for the new size follow.
+- **Swap when ready.** A new scene's pictures are made off screen and shown together, so a half-built scene is never seen.
+- **Taps without live SVG.** A part that can be pressed is found by where it was drawn (its box, read when its picture is made), not by an element in the page.
+
+## 14. Input
 
 - If a game uses PixiJS events: set `interactiveChildren = false` on containers with nothing to tap, and give tappable things a `hitArea`, so PixiJS does not search the whole scene *(PixiJS)*.
 - Our games take touches on the canvas through `Kit.pointer` and find the target themselves.
 
-## 14. Before a game ships
+## 15. Before a game ships
 
 - [ ] 60 frames per second on the budget phone, in the app, in the busiest scene.
 - [ ] No frame rebuilds Graphics or text.

@@ -7,11 +7,15 @@
    The tap is real: water runs only while it is on, and the water meter fills while it runs. Turning it off after
    washing saves water and grows a new leaf on the plant by the basin ("use a little water, even at a river").
 
-   How the drawing stays fast (no quality loss):
-   - the tap and basin are drawn once, with the hand-drawn filter, into a static SVG layer;
-   - the tap's lever and the plant's leaves are a small second layer, redrawn only while the lever turns or a leaf grows;
-   - the water (stream, pool, ripples) is a third, unfiltered layer moved only by CSS;
-   - the hands and the body-map glow are their own small SVGs, moved by CSS transforms and opacity (GPU layers).
+   How it is drawn: everything in the figure and the body map goes through PixiJS (iso/pix.js). The Colorfigures code
+   and the flat hand drawings still describe the pictures as SVG markup; each one is made into a texture once, with
+   the hand-drawn filter, and PixiJS shows and moves it:
+   - the tap and basin: one picture; the lever and the plant's leaves: a small second picture, made again only while
+     the lever turns or a leaf grows;
+   - the water (stream, flowing streaks, pool, ripples, splash): sprites moved on every frame while the tap runs;
+   - the close-ups: a still background and "actors" (a hand, a drop, an arrow), each a sprite that follows its keyframes;
+   - the body map: an ink picture with the washed parts tinted and the part being washed glowing over it.
+   Words, buttons, the water meter and the counting drops are the page's own (DOM).
 
    Coordinates of the basin figure: x = depth (0 = the wall, 60 = the counter's front edge, toward the child),
    y = width (+y = the child's left), z = up (0 = the counter top), 1 unit = 1 cm. The camera looks from the front
@@ -202,23 +206,25 @@
     }
     return byDepth(parts);
   }
-  /* ---------- the water layer (no filter; CSS moves it): the stream, the pool by the drain, ripples ---------- */
+  /* ---------- the water (no filter): the pool by the drain, ripples and a splash (effects, below), and the stream
+     under the tap with its flowing streaks (sprites, in the stage below) ---------- */
   function water(){
     const o = P(OUTL[0], 0, OUTL[2] - .2), b = P(OUTL[0], 0, -12.6), w0 = 1.05*CAM_K, w1 = .85*CAM_K;
     const poly = `M${f(o[0] - w0)} ${f(o[1])}L${f(b[0] - w1)} ${f(b[1])}L${f(b[0] + w1)} ${f(b[1])}L${f(o[0] + w0)} ${f(o[1])}Z`;
-    let s = `<g class="wd-stream"><path d="${poly}" fill="${WATER}" opacity=".9" stroke="${mix(WATER, INK, .45)}" stroke-width=".5"/>`;
-    s += `<path class="wd-flow" d="M${f(o[0] - w0*.35)} ${f(o[1] + 1)}L${f(b[0] - w1*.35)} ${f(b[1] - .5)}" stroke="#ffffff" stroke-width=".55" stroke-dasharray="2.2 3.4" stroke-linecap="round" opacity=".9"/>`;
-    s += `<path class="wd-flow wd-flow2" d="M${f(o[0] + w0*.4)} ${f(o[1] + 2)}L${f(b[0] + w1*.4)} ${f(b[1] - .5)}" stroke="#e8f6fc" stroke-width=".4" stroke-dasharray="1.4 4.2" stroke-linecap="round" opacity=".8"/></g>`;
-    const stream = s; s = '';
+    const body = `<path d="${poly}" fill="${WATER}" opacity=".9" stroke="${mix(WATER, INK, .45)}" stroke-width=".5"/>`;
+    // two lines of white streaks running down the stream: dash and gap (units), seconds for one dash-and-gap
+    const flows = [
+      { a: [o[0] - w0*.35, o[1] + 1], b: [b[0] - w1*.35, b[1] - .5], w: .55, dash: 2.2, gap: 3.4, per: .45, col: 0xffffff, op: .9 },
+      { a: [o[0] + w0*.4, o[1] + 2], b: [b[0] + w1*.4, b[1] - .5], w: .4, dash: 1.4, gap: 4.2, per: .38, col: 0xe8f6fc, op: .8 }];
     const pool = on(PZ(-12.85), ellUV(BX - .5, 0, BRX*.45 - .5, BRY*.45 - .6, 30));
-    s += `<path class="wd-pool" d="${pd(pool)}" fill="${WATER}" opacity=".45"/>`;
+    let s = `<path class="wd-pool" d="${pd(pool)}" fill="${WATER}"/>`;
     const rip = r => pd(on(PZ(-12.8), ellUV(OUTL[0] + .5, 0, r, r*1.15, 24)));
     s += `<path class="wd-rip" d="${rip(3.2)}" fill="none" stroke="#ffffff" stroke-width=".7"/><path class="wd-rip wd-rip2" d="${rip(3.2)}" fill="none" stroke="#ffffff" stroke-width=".6"/>`;
     s += `<path class="wd-splash" d="M${f(b[0] - 1.6)} ${f(b[1] - .6)}l-1.3 -1.2M${f(b[0] + 1.6)} ${f(b[1] - .6)}l1.3 -1.2M${f(b[0] - .6)} ${f(b[1] - 1.2)}l-.4 -1.5M${f(b[0] + .7)} ${f(b[1] - 1.1)}l.5 -1.5" stroke="#ffffff" stroke-width=".7" stroke-linecap="round" fill="none"/>`;
-    return { stream, pool: s };
+    return { body, flows, top: o[1], bot: b[1], x: o[0], box: [o[0] - w0 - 1, o[1] - 1, 2*w0 + 2, b[1] - o[1] + 2], pool: s };
   }
 
-  /* ---------- mounting the figure: three stacked SVGs with one shared viewBox ---------- */
+  /* ---------- mounting the figure: an empty sheet that gives the frame, and the pictures PixiJS shows in it ---------- */
   let VB = null;
   function svgEl(cls){ const s = document.createElementNS(NS, 'svg'); s.setAttribute('class', cls); s.setAttribute('aria-hidden', 'true'); return s; }
   function mountBasin(host){
@@ -228,22 +234,19 @@
     const x0 = Math.min(...pts.map(p => p[0])), x1 = Math.max(...pts.map(p => p[0])), y0 = Math.min(...pts.map(p => p[1])), y1 = Math.max(...pts.map(p => p[1]));
     OX = -x0; OY = -y0; VB = [0, 0, x1 - x0, y1 - y0];
     INK_K = VB[2]/INK_REF_VB;
-    const vb = VB.map(v => v.toFixed(2)).join(' ');
-    const fig = svgEl('wd-lay wd-static'); fig.id = 'fig'; fig.setAttribute('viewBox', vb); fig.setAttribute('role', 'img'); fig.setAttribute('aria-label', 'A tap and a basin');
-    fig.innerHTML = `<defs>${filterFor(INK_K)}</defs><g id="art" filter="url(#hand)">${inkScale(staticScene())}</g>`;
-    const dyn = svgEl('wd-lay wd-dyn'); dyn.setAttribute('viewBox', vb); dyn.innerHTML = '<g filter="url(#hand)"></g>';
-    const wt = water();
-    const fx = svgEl('wd-lay wd-fx'); fx.setAttribute('viewBox', vb); fx.innerHTML = inkScale(wt.pool);
-    const fxs = svgEl('wd-lay wd-fx wd-fxs'); fxs.setAttribute('viewBox', vb); fxs.innerHTML = inkScale(wt.stream);   // over the hands
-    host.appendChild(fig); host.appendChild(fx); host.appendChild(dyn);
+    const fig = svgEl('wd-frame'); fig.id = 'fig'; fig.setAttribute('viewBox', VB.map(v => v.toFixed(2)).join(' '));
+    fig.removeAttribute('aria-hidden'); fig.setAttribute('role', 'img'); fig.setAttribute('aria-label', 'A tap and a basin');
+    host.appendChild(fig);
     host.style.setProperty('--ar', (VB[2]/VB[3]).toFixed(4));
-    bakeNoise(fig);
-    // screen anchors (in % of the figure) for the hands, the stream and the lever
-    const pc = p => { const q = P(...p); return [q[0]/VB[2]*100, q[1]/VB[3]*100]; };
-    const o = pc(OUTL), b = pc([OUTL[0], 0, -12.6]), h = pc([TPX - 2, -2, TPH + 2.5]);
-    host.style.setProperty('--sx', o[0].toFixed(2) + '%'); host.style.setProperty('--oy', o[1].toFixed(2) + '%'); host.style.setProperty('--by', b[1].toFixed(2) + '%');
-    host.style.setProperty('--hx', h[0].toFixed(2) + '%'); host.style.setProperty('--hy', h[1].toFixed(2) + '%');
-    return { fig, dyn: dyn.firstChild, fx, fxs };
+    // where the lever is (in % of the figure), for the big button over it
+    const h = P(TPX - 2, -2, TPH + 2.5);
+    host.style.setProperty('--hx', (h[0]/VB[2]*100).toFixed(2) + '%'); host.style.setProperty('--hy', (h[1]/VB[3]*100).toFixed(2) + '%');
+    const px = HHPix.attach({ stack: host, svg: fig, cover: 'host' });
+    px.ready.then(null, e => Kit.gfx.sorry(e));
+    // the basin, the water in it, then the lever and the leaves
+    const still = px.layer(), pool = px.fx(), dyn = px.layer(), wt = water();
+    _clipN = 0; still.set(inkScale(staticScene())); pool.set(inkScale(wt.pool));
+    return { fig, px, dyn, pool, wt };
   }
 
   /* =====================================================================================================
@@ -342,33 +345,142 @@
       if (G.roll || o.cuffY) s += `<path d="M${x0 + 3} ${y + 21}Q${x0 + w/2} ${y + 25} ${x0 + w - 3} ${y + 21}" fill="none" stroke="${INK}" stroke-width="1.2" opacity=".6"/>`; }
     return { s, h: G.h };
   }
-  function limbSVG(pose, side, wet){
-    const G = POSES[pose], A = limbArt(pose, side);
-    let html = `<svg class="hd-art" viewBox="0 0 100 ${G.h}" aria-hidden="true"><g filter="url(#hfx)">${A.s}</g></svg>`;
-    if (wet){ const cx = side === 'L' ? 48 : 52, cy = 104;   // water held in the cupped palm (fades in and out with the motion)
-      html += `<svg class="hd-wet" viewBox="0 0 100 ${G.h}" aria-hidden="true"><ellipse cx="${cx}" cy="${cy}" rx="19" ry="14" fill="${WATER}" opacity=".78" stroke="${mix(WATER, INK, .4)}" stroke-width=".8"/>`
-        + `<path d="M${cx - 10} ${cy - 5}Q${cx - 2} ${cy - 10} ${cx + 8} ${cy - 7}" fill="none" stroke="#fff" stroke-width="2" opacity=".7" stroke-linecap="round"/></svg>`; }
-    return html;
-  }
-
   // the steps shown at the basin (the hands seen from your own eyes): pose, side, centre x (% of the figure),
-  // bottom (%), width (%), base rotation, CSS animation, z order
+  // bottom (%), width (%)
   const CHOREO = {
-    intention: [{ p: 'back', s: 'L', x: 30, b: -42, w: 36, a: 'rest' }, { p: 'back', s: 'R', x: 70, b: -42, w: 36, a: 'rest' }],
-    dua: [{ p: 'back', s: 'L', x: 30, b: -46, w: 36, a: 'rest' }, { p: 'back', s: 'R', x: 70, b: -46, w: 36, a: 'rest' }],
+    intention: [{ p: 'back', s: 'L', x: 30, b: -42, w: 36 }, { p: 'back', s: 'R', x: 70, b: -42, w: 36 }],
+    dua: [{ p: 'back', s: 'L', x: 30, b: -46, w: 36 }, { p: 'back', s: 'R', x: 70, b: -46, w: 36 }],
   };
   // where the stream lands on the hands (% from the top of the figure); none = it falls all the way to the drain
   const IMPACT = { hands: 62 };
+
+  /* =====================================================================================================
+     THE STAGE: what PixiJS shows in the figure above the basin: the two resting hands, the stream with its streaks
+     and splash, and the close-up of the step. One loop moves all of it, and stops when nothing moves.
+     ===================================================================================================== */
+  const EZ = HHPix.ease, nowS = () => performance.now()/1000;
+  const Stage = { S: null, PX: null, k: 0, tap: false, tapAt: -9, ticking: false, imp: 100, basin: true,
+    handsId: null, handsSeq: 0, hands: [], sceneId: null, sceneSeq: 0, scene: null, stream: null, poolG: { from: 0, to: 0, at: -9 } };
+  // the water in the basin (effects of the pool picture): they run while the tap is open
+  const poolU = () => { const g = Stage.poolG; return g.from + (g.to - g.from)*EZ.ease(Math.min(1, (nowS() - g.at)/.9)); };
+  HHPix.effects['wd-pool'] = { state: () => { const u = poolU(); return { alpha: .5*u, done: u === Stage.poolG.to }; }, still: () => ({ alpha: Stage.tap ? .5 : 0 }) };
+  HHPix.effects['wd-rip'] = { origin: 'center', delay: el => el.classList.contains('wd-rip2') ? .65 : 0,
+    state: (t, p) => { if (!Stage.tap) return { alpha: 0, done: true }; const T = nowS() - Stage.tapAt - p.delay; if (T < 0) return { alpha: 0 };
+      const u = EZ.out((T % 1.3)/1.3); return { alpha: .95*(1 - u), scale: .3 + u }; }, still: () => ({ alpha: 0 }) };
+  HHPix.effects['wd-splash'] = { state: () => { if (!Stage.tap) return { alpha: 0, done: true }; const w = EZ.swing(((nowS() - Stage.tapAt) % 1.2)/1.2); return { alpha: .4 + .6*w, dy: -.6*w }; },
+    still: () => ({ alpha: Stage.tap ? 1 : 0 }) };
+
+  function kick(){ if (!Stage.S) return; if (Stage.ticking){ Stage.S.ask(); return; } Stage.ticking = true; Stage.S.tick(stageTick); }
+  function stageTick(t){
+    let busy = false;
+    if (Stage.hands.length && Stage.basin && !RM){ busy = true; const w = EZ.swing((t % 4.2)/4.2); Stage.hands.forEach(h => { h.sp.y = h.y - .014*h.hU*w; }); }
+    if (streamStep(t)) busy = true;
+    if (sceneStep(t)) busy = true;
+    if (!busy){ Stage.ticking = false; return false; }
+  }
+  // PixiJS is up: build what sits above the basin, and show what was asked for meanwhile
+  function stageUp(){
+    const S = UI.basin.px.stage, PX = S.P;
+    Stage.S = S; Stage.PX = PX;
+    // from the back: the basin (the figure's own pictures), the resting hands, the close-up or the overlays of the
+    // step, then the stream, which falls onto the hands
+    Stage.handsC = new PX.Container(); S.root.addChild(Stage.handsC);
+    Stage.sceneC = new PX.Container(); S.SF.stage.addChild(Stage.sceneC);
+    Stage.streamC = new PX.Container(); S.SF.stage.addChild(Stage.streamC);
+    buildStream();
+    S.onLayout(relayout);
+    // the graphics chip dropped every picture: make them again
+    S.SF.onLost(() => { Stage.hands.forEach(h => h.sp.destroy()); Stage.hands = []; if (Stage.scene){ Stage.scene.box.destroy({ children: true }); Stage.scene = null; }
+      const R = Stage.stream; R.t = R.spT = null; R.body.visible = R.splash.visible = false; Stage.k = 0; relayout(); });
+    relayout();
+  }
+  // the figure's size on screen changed: the pictures above the basin are made again for it
+  function relayout(){
+    const v = UI.basin.px.view(); if (!v || !Stage.S) return;
+    Stage.streamC.scale.copyFrom(Stage.S.root.scale); Stage.streamC.position.copyFrom(Stage.S.root.position);   // in the figure's units
+    if (Math.abs(v.a - Stage.k) <= Stage.k*.01){ placeScene(); return; }
+    Stage.k = v.a;
+    bakeStream(); showHands(Stage.handsId); showScene(Stage.sceneId);
+  }
+
+  /* ---------- the resting hands (the intention, the du'a): two pictures that breathe ---------- */
   function showHands(id){
-    const host = UI.hands; host.innerHTML = '';
-    const imp = IMPACT[id]; UI.fig.style.setProperty('--imp', imp ? imp + '%' : '100%'); UI.fig.classList.toggle('has-imp', !!imp);
-    (CHOREO[id] || []).forEach(c => {
-      const G = POSES[c.p], d = $('div', 'hd hd-a-' + c.a);
-      d.style.cssText = `left:${c.x - c.w/2}%;bottom:${c.b}%;width:${c.w}%;aspect-ratio:100/${G.h};z-index:${c.z || 1}`;
-      const r = $('div', 'hd-r', limbSVG(c.p, c.s, c.wet));
-      if (c.r) r.style.transform = `rotate(${c.r}deg)`;
-      d.appendChild(r); host.appendChild(d);
+    Stage.handsId = id;
+    Stage.imp = IMPACT[id] || 100;
+    if (!Stage.S || !Stage.k) return;
+    const S = Stage.S, seq = ++Stage.handsSeq, list = CHOREO[id] || [], next = [];
+    let left = list.length;
+    const swap = () => { if (seq !== Stage.handsSeq){ next.forEach(h => { h.sp.destroy(); S.SF.free(h.t); }); return; }
+      Stage.hands.forEach(h => { h.sp.destroy(); S.SF.free(h.t); }); Stage.hands = next; next.forEach(h => Stage.handsC.addChild(h.sp)); kick(); };
+    if (!left) return swap();
+    list.forEach(c => {
+      // the hand is drawn in its own 100-wide box, with the sleeve running on below it
+      const G = POSES[c.p], wU = c.w/100*VB[2], sc = wU/100, hU = wU*G.h/100, x0 = (c.x - c.w/2)/100*VB[2], y0 = VB[3] - c.b/100*VB[3] - hU;
+      S.bake(limbArt(c.p, c.s).s, [-6, -6, 112, G.h + 52], Stage.k*sc, Stage.k*sc, .62, (t, at) => {
+        if (t){ const sp = new Stage.PX.Sprite(t.tex); sp.position.set(x0 + at.x*sc, y0 + at.y*sc); sp.scale.set(at.w*sc/t.w, at.h*sc/t.h); next.push({ sp, t, y: y0 + at.y*sc, hU }); }
+        if (!--left) swap();
+      });
     });
+  }
+
+  /* ---------- the stream under the tap: it drops from the aerator when the tap opens, and its tail falls away when
+     it closes; white streaks run down it; it stops where it meets the hands, with a little splash ---------- */
+  function buildStream(){
+    const PX = Stage.PX, C = Stage.streamC, wt = UI.basin.wt;
+    const body = new PX.Sprite(PX.Texture.EMPTY); body.visible = false; C.addChild(body);
+    const dashes = [];
+    wt.flows.forEach(fl => { const len = Math.hypot(fl.b[0] - fl.a[0], fl.b[1] - fl.a[1]), per = fl.dash + fl.gap, n = Math.ceil(len/per) + 1;
+      for (let i = 0; i < n; i++){ const sp = new PX.Sprite(PX.Texture.WHITE); sp.anchor.set(.5, 0); sp.tint = fl.col; sp.alpha = fl.op;
+        sp.rotation = Math.atan2(fl.b[1] - fl.a[1], fl.b[0] - fl.a[0]) - Math.PI/2; sp.visible = false; C.addChild(sp); dashes.push({ sp, fl, i, len, per }); } });
+    const splash = new PX.Sprite(PX.Texture.EMPTY); splash.anchor.set(.5); splash.visible = false; C.addChild(splash);
+    // top, bot: how far down the stream its upper and lower ends are (0..1); f -> g over dur seconds from at0
+    const run = Stage.tap ? [0, 1] : [0, 0];      // the tap may have been opened before PixiJS was up
+    Stage.stream = { body, dashes, splash, t: null, at: null, crop: null, spT: null, top: 0, bot: run[1], f: run, g: run, at0: -9, dur: .3, spA: 0, last: 0, seq: 0 };
+  }
+  function bakeStream(){
+    const S = Stage.S, R = Stage.stream, wt = UI.basin.wt, id = ++R.seq;
+    S.bake(inkScale(wt.body), wt.box, Stage.k, Stage.k, 0, (t, at) => {
+      if (!t) return; if (id !== R.seq){ S.SF.free(t); return; }
+      if (R.crop) R.crop.destroy(false); if (R.t) S.SF.free(R.t);
+      R.t = t; R.at = at; R.crop = new Stage.PX.Texture({ source: t.tex.source, frame: new Stage.PX.Rectangle(0, 0, t.w, t.h), dynamic: true }); R.body.texture = R.crop; kick();
+    });
+    const pw = Math.max(8, Math.round(.09*VB[2]*Stage.k)), ph = Math.round(pw*.4);
+    S.bakeSvg(`<svg xmlns="${NS}" width="${pw}" height="${ph}" viewBox="0 0 40 16"><path d="M6 12Q20 4 34 12" fill="none" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round" opacity=".9"/><path d="M9 9l-4-5M31 9l4-5M15 7l-1-6M25 7l1-6" stroke="#bfe6f7" stroke-width="2.2" stroke-linecap="round"/></svg>`, pw, ph, t => {
+      if (!t) return; if (id !== R.seq){ S.SF.free(t); return; }
+      if (R.spT) S.SF.free(R.spT); R.spT = t; R.splash.texture = t.tex; kick();
+    });
+  }
+  function streamStep(t){
+    const R = Stage.stream; if (!R || !R.t || !R.t.tex) return false;
+    const wt = UI.basin.wt, u = Math.min(1, (t - R.at0)/R.dur), e = RM ? 1 : EZ.in(u), dt = Math.min(.1, Math.max(0, t - R.last)); R.last = t;
+    R.top = R.f[0] + (R.g[0] - R.f[0])*e; R.bot = R.f[1] + (R.g[1] - R.f[1])*e;
+    const L = wt.bot - wt.top, impY = VB[3]*Stage.imp/100;
+    const yT = R.top <= 0 ? R.at.y : wt.top + L*R.top, yB = Math.min(R.bot >= 1 ? R.at.y + R.at.h : wt.top + L*R.bot, impY), show = Stage.basin && yB - yT > .05;
+    R.body.visible = show;
+    if (show){ const ky = R.t.h/R.at.h; R.crop.frame.y = (yT - R.at.y)*ky; R.crop.frame.height = (yB - yT)*ky; R.crop.update();
+      R.body.position.set(R.at.x, yT); R.body.scale.set(R.at.w/R.t.w, 1/ky); }
+    // the streaks: each one a dash that runs down its line and comes round again
+    R.dashes.forEach(d => { const fl = d.fl, dy = fl.b[1] - fl.a[1];
+      let s0 = ((t/fl.per) % 1)*d.per + (d.i - 1)*d.per, s1 = s0 + fl.dash;
+      s0 = Math.max(s0, 0, (yT - fl.a[1])/dy*d.len); s1 = Math.min(s1, d.len, (yB - fl.a[1])/dy*d.len);
+      if (!show || !Stage.tap || RM || s1 - s0 < .05){ d.sp.visible = false; return; }
+      d.sp.position.set(fl.a[0] + (fl.b[0] - fl.a[0])*s0/d.len, fl.a[1] + dy*s0/d.len); d.sp.width = Math.max(fl.w*INK_K, 1/Stage.k); d.sp.height = s1 - s0; d.sp.visible = true; });
+    // the splash where the stream meets the hands
+    const want = Stage.tap && Stage.imp < 100 && Stage.basin && R.bot >= Stage.imp/100 ? 1 : 0;
+    R.spA += Math.sign(want - R.spA)*Math.min(Math.abs(want - R.spA), dt/.2);
+    R.splash.visible = R.spA > 0 && !!R.spT;
+    if (R.splash.visible){ const w = RM ? 0 : EZ.swing((t % 1)/1), W = .09*VB[2], Hh = W*.4;
+      R.splash.alpha = R.spA; R.splash.position.set(wt.x, impY - .008*VB[2] - .08*Hh*w); R.splash.width = W*(1 + .08*w); R.splash.height = Hh; }
+    return Stage.tap || u < 1 || R.spA !== want;
+  }
+  // the tap was turned: the pool, the ripples, the stream and the wet parts of a close-up follow
+  function tapStage(on){
+    const t = nowS(), R = Stage.stream;
+    Stage.poolG = { from: poolU(), to: on ? 1 : 0, at: t };
+    Stage.tap = on; Stage.tapAt = t;
+    if (R){ R.f = on ? [0, 0] : [R.top, R.bot]; R.g = on ? [0, 1] : [1, R.bot]; R.at0 = t; R.dur = on ? .3 : .28; }
+    if (Stage.scene) Stage.scene.streams.forEach(x => { x.from = x.s; x.at = t; });
+    UI.basin.pool.wake(); kick();
   }
 
   /* =====================================================================================================
@@ -384,7 +496,7 @@
   const HAIR = { l: '#8b6b55', m: '#6b5444', d: '#4b3a2f' };
   const ORANGE = '#f39a1e';
   const n1 = v => Math.round(v*10)/10;
-  let CID = 0, KF = [];
+  let CID = 0;
   // a flat shape lit from the right: the dark tone, the mid tone shifted right (clipped to the shape), the ink line
   function solid(d, M, dx = 7, w = 2.4, lite){ const id = 'sc' + (++CID);
     return `<clipPath id="${id}"><path d="${d}"/></clipPath><g clip-path="url(#${id})"><path d="${d}" fill="${M.d}"/><path d="${d}" fill="${M.m}" transform="translate(${dx} 0)"/>` +
@@ -413,17 +525,12 @@
   }
   const bbox = pts => [Math.min(...pts.map(p => p[0])), Math.min(...pts.map(p => p[1])), Math.max(...pts.map(p => p[0])), Math.max(...pts.map(p => p[1]))];
   /* an actor: svg markup in scene units, its box [x0, y0, x1, y1], keyframes [[%, dx, dy, deg, opacity]] (offsets in
-     scene units from where it is drawn), o.dur, o.delay, o.origin [x, y] (the turning point), o.raw (no filter) */
+     scene units from where it is drawn), o.dur, o.delay, o.origin [x, y] (the turning point), o.raw (no filter).
+     It comes back as a description; the stage makes it a sprite that follows the keyframes. */
   function actor(svg, box, frames, o = {}){
-    const id = 'k' + (++CID), pad = o.pad == null ? 8 : o.pad, x0 = box[0] - pad, y0 = box[1] - pad, w = box[2] - box[0] + 2*pad, h = box[3] - box[1] + 2*pad;
-    let anim = '';
-    if (frames){
-      KF.push(`@keyframes ${id}{${frames.map(([p, x = 0, y = 0, r = 0, op = 1]) => `${p}%{transform:translate(${(x/w*100).toFixed(2)}%,${(y/h*100).toFixed(2)}%) rotate(${r}deg);opacity:${op}}`).join('')}}`);
-      anim = `animation:${id} ${o.dur || 3}s ${o.ease || 'ease-in-out'} ${-(o.delay || 0)}s infinite;`;
-    }
-    const org = o.origin ? `transform-origin:${((o.origin[0] - x0)/w*100).toFixed(1)}% ${((o.origin[1] - y0)/h*100).toFixed(1)}%;` : '';
-    return `<div class="ac${o.cls ? ' ' + o.cls : ''}" style="left:${(x0/3).toFixed(2)}%;top:${(y0/3).toFixed(2)}%;width:${(w/3).toFixed(2)}%;height:${(h/3).toFixed(2)}%;${org}${anim}">` +
-      `<svg viewBox="${n1(x0)} ${n1(y0)} ${n1(w)} ${n1(h)}" preserveAspectRatio="none" aria-hidden="true">${o.raw ? svg : `<g filter="url(#hfx)">${svg}</g>`}</svg></div>`;
+    const pad = o.pad == null ? 8 : o.pad;
+    return { svg, box: [box[0] - pad, box[1] - pad, box[2] - box[0] + 2*pad, box[3] - box[1] + 2*pad], frames: frames || null, dur: o.dur || 3, delay: o.delay || 0,
+      ease: o.ease || 'ease-in-out', origin: o.origin || null, raw: !!o.raw, cls: o.cls || '' };
   }
   const hand = (pose, side, x, y, k, rot, frames, o = {}) => { const P = place(pose, side, x, y, k, rot, o); return actor(P.svg, P.box, frames, Object.assign({ origin: [x, y] }, o)); };
   // an arrow: a path (absolute M/L/Q/C only) and its heads [x, y, angle in degrees]; it pulses with its motion
@@ -452,7 +559,6 @@
     return actor(dropPath(x, y, r), [x - r, y - r*2, x + r, y + r*1.4], [[0, 0, 0, 0, 0], [Math.max(0, t0 - 3), 0, 0, 0, 0], [t0, 0, 0, 0, 1], [o.t1 || 70, 0, dist, 0, 1], [(o.t1 || 70) + 6, 0, dist, 0, 0], [100, 0, dist, 0, 0]],
       { dur, delay, ease: 'ease-in', raw: true, pad: 3, cls: o.cls });
   }
-  const stream = (x, y0, y1, w = 9) => `<div class="wst" style="left:${((x - w/2)/3).toFixed(2)}%;top:${(y0/3).toFixed(2)}%;width:${(w/3).toFixed(2)}%;height:${((y1 - y0)/3).toFixed(2)}%"><i></i></div>`;
   // beads of water running along a limb, from (x0, y0) to (x1, y1): shown while the tap runs
   function runners(x0, y0, x1, y1, n, dur){
     const bead = `<ellipse cx="${x0}" cy="${y0}" rx="5" ry="3.6" fill="#bfe6f7" stroke="${mix(WATER, INK, .5)}" stroke-width="1"/><ellipse cx="${x0 + 1.4}" cy="${y0 - 1.2}" rx="1.6" ry="1" fill="#fff"/>`;
@@ -460,8 +566,6 @@
       [[0, 0, 0, 0, 0], [10, (x1 - x0)*.1, (y1 - y0)*.1, 0, 1], [86, (x1 - x0)*.86, (y1 - y0)*.86, 0, 1], [100, x1 - x0, y1 - y0, 0, 0]],
       { dur, delay: dur*i/n, ease: 'linear', raw: true, pad: 2, cls: 'wet' }));
   }
-  const svgLayer = (inner, cls) => `<svg class="sc-lay${cls ? ' ' + cls : ''}" viewBox="0 0 300 300" preserveAspectRatio="none" aria-hidden="true"><g filter="url(#hfx)">${inner}</g></svg>`;
-
   /* ---------- the person seen as in a mirror (mouth, nose, face): shoulders, neck, ears, a plain oval head, hair ---------- */
   const FACE = { cx: 150, cy: 118, rx: 59, ry: 72 };
   function mirrorBG(){
@@ -740,25 +844,79 @@
   };
   SCENES.dua = () => ({ basin: true, actors: [] });
 
-  // mount the scene for a step into the figure
+  /* ---------- the close-up of a step, on the stage: its still pictures and its actors are made (off screen) and
+     swapped in together, so a half-built scene is never seen ---------- */
+  const isArrow = a => a.cls.indexOf('arw') === 0;
+  function killScene(N){ if (!N) return; N.box.destroy({ children: true }); N.texs.forEach(t => Stage.S.SF.free(t)); }
+  function placeScene(){
+    const S = Stage.S, N = Stage.scene, kx = S.cw/300, ky = S.ch/300, mir = N && N.mirror;
+    Stage.sceneC.scale.set(mir ? -kx : kx, ky); Stage.sceneC.position.set(mir ? S.cw : 0, 0); S.ask();
+  }
+  // a stream of water from a spout: a bar in the colours of water with an ink edge, and highlights running down it
+  function waterBar(N, x, y0, y1, w = 9){
+    const S = Stage.S, PX = Stage.PX, kx = S.cw/300, ky = S.ch/300, d = S.dpr, pw = Math.max(2, Math.round(w*kx)), ph = Math.max(2, Math.round((y1 - y0)*ky)), e = Math.ceil(1.5*d);
+    const rr = (g, x0, y0b, ww, hh, rt, rb) => { g.beginPath(); g.moveTo(x0 + rt, y0b); g.arcTo(x0 + ww, y0b, x0 + ww, y0b + hh, rt); g.arcTo(x0 + ww, y0b + hh, x0, y0b + hh, rb); g.arcTo(x0, y0b + hh, x0, y0b, rb); g.arcTo(x0, y0b, x0 + ww, y0b, rt); g.closePath(); };
+    const t = S.SF.paint(pw + 2*e, ph + 2*e, g => {
+      g.fillStyle = 'rgba(35,30,22,.55)'; rr(g, 0, 0, pw + 2*e, ph + 2*e, Math.min(4*d + e, pw/2), Math.min(7*d + e, pw/2)); g.fill();
+      const gr = g.createLinearGradient(e, 0, e + pw, 0); gr.addColorStop(0, '#68b2db'); gr.addColorStop(.42, '#b6e3f5'); gr.addColorStop(.7, '#7fc4e8'); gr.addColorStop(1, '#68b2db');
+      g.fillStyle = gr; rr(g, e, e, pw, ph, Math.min(4*d, pw/2), Math.min(7*d, pw/2)); g.fill();
+    });
+    N.texs.push(t);
+    const c = new PX.Container(); c.position.set(x - w/2, y0); N.box.addChild(c);
+    const bar = new PX.Sprite(t.tex); bar.position.set(-e/kx, -e/ky); bar.scale.set(1/kx, 1/ky); c.addChild(bar);
+    const per = 24*d/ky, len = 10*d/ky, H = y1 - y0, glints = [];
+    for (let i = 0; i < Math.ceil(H/per) + 1; i++){ const sp = new PX.Sprite(PX.Texture.WHITE); sp.alpha = .9; sp.position.x = w*.22; sp.width = w*.26; sp.visible = false; c.addChild(sp); glints.push(sp); }
+    const s = Stage.tap ? 1 : 0; c.scale.y = s;
+    return { c, glints, per, len, H, s, from: s, at: -9 };
+  }
   function showScene(id){
-    const make = SCENES[id]; KF = [];
-    const S = make ? make() : { basin: true, actors: [] };
-    const has2d = !S.basin;
-    UI.fig.classList.toggle('sc-2d', has2d); UI.fig.classList.toggle('sc-basin', !has2d);
-    let h = '';
-    if (S.bg) h += svgLayer(S.bg, 'sc-bg');
-    (S.under || []).forEach(a => { h += a; });
-    if (S.mid) h += svgLayer(S.mid, 'sc-mid');
-    (S.water || []).forEach(([x, y0, y1, w]) => { h += stream(x, y0, y1, w); });
-    const arrows = S.actors.filter(a => a.indexOf('class="ac arw') >= 0), rest = S.actors.filter(a => a.indexOf('class="ac arw') < 0);
-    rest.forEach(a => { h += a; });
-    if (S.fg) h += svgLayer(S.fg, 'sc-fg');
-    arrows.forEach(a => { h += a; });
-    UI.scene.className = 'wd-scene' + (S.mirror ? ' mir' : '');
-    UI.scene.innerHTML = h;
-    UI.kf.textContent = KF.join('\n');
-    UI.stats = { nodes: UI.scene.querySelectorAll('*').length };
+    Stage.sceneId = id;
+    if (!Stage.S || !Stage.k) return;
+    const S = Stage.S, PX = Stage.PX, make = SCENES[id], D = make ? make() : { basin: true, actors: [] };
+    const seq = ++Stage.sceneSeq, kx = S.cw/300, ky = S.ch/300;
+    const N = { box: new PX.Container(), acts: [], streams: [], texs: [], t0: 0, mirror: !!D.mirror, basin: !!D.basin };
+    let left = 1;
+    const done = () => { if (--left) return;
+      if (seq !== Stage.sceneSeq){ killScene(N); return; }
+      killScene(Stage.scene); Stage.scene = N; Stage.sceneC.addChild(N.box); N.t0 = nowS();
+      // a close-up covers the basin; the steps at the basin keep it, with small overlays
+      Stage.basin = N.basin; S.root.visible = N.basin;
+      UI.fig.classList.toggle('sc-2d', !N.basin); UI.fig.classList.toggle('sc-basin', N.basin);
+      placeScene(); sceneStep(N.t0); kick(); };
+    const pic = (parent, ox, oy, markup, box, ink) => { const sp = new PX.Sprite(PX.Texture.EMPTY); sp.visible = false; parent.addChild(sp); left++;
+      S.bake(markup, box, kx, ky, ink, (t, at) => { if (t){ N.texs.push(t); sp.texture = t.tex; sp.position.set(at.x - ox, at.y - oy); sp.scale.set(at.w/t.w, at.h/t.h); sp.visible = true; } done(); }); };
+    const still = m => pic(N.box, 0, 0, m, [0, 0, 300, 300], .62);
+    const act = a => { const o = a.origin || [a.box[0] + a.box[2]/2, a.box[1] + a.box[3]/2], c = new PX.Container(); c.position.set(o[0], o[1]); N.box.addChild(c);
+      pic(c, o[0], o[1], a.svg, a.box, a.raw ? 0 : .62);
+      N.acts.push({ c, o, key: a.frames ? HHPix.keys(a.frames, a.ease) : null, dur: a.dur, delay: a.delay, wet: /\bwet\b/.test(a.cls) }); };
+    if (D.bg) still(D.bg);
+    (D.under || []).forEach(act);
+    if (D.mid) still(D.mid);
+    (D.water || []).forEach(([x, y0, y1, w]) => N.streams.push(waterBar(N, x, y0, y1, w)));
+    D.actors.filter(a => !isArrow(a)).forEach(act);
+    if (D.fg) still(D.fg);
+    D.actors.filter(isArrow).forEach(act);          // arrows and R / L badges over everything
+    done();
+  }
+  function sceneStep(t){
+    const N = Stage.scene; if (!N) return false;
+    let busy = false;
+    N.acts.forEach(a => {
+      if (a.wet) a.c.visible = Stage.tap;            // beads and drips show while the tap runs
+      if (!a.key) return;
+      if (!RM) busy = true;
+      const k = a.key(RM ? 0 : ((t - N.t0 + a.delay) % a.dur)/a.dur*100);
+      a.c.position.set(a.o[0] + (k[1] || 0), a.o[1] + (k[2] || 0)); a.c.rotation = (k[3] || 0)*Math.PI/180; a.c.alpha = k[4] == null ? 1 : k[4];
+    });
+    N.streams.forEach(x => {
+      const u = Math.min(1, (t - x.at)/.3), to = Stage.tap ? 1 : 0;
+      x.s = RM ? to : x.from + (to - x.from)*EZ.in(u); x.c.scale.y = x.s; x.c.visible = x.s > 0;
+      if (u < 1 || Stage.tap) busy = true;
+      const ph = ((t/.32) % 1)*x.per;
+      x.glints.forEach((sp, i) => { const y0 = Math.max(0, ph + (i - 1)*x.per), y1 = Math.min(x.H, ph + (i - 1)*x.per + x.len);
+        sp.visible = Stage.tap && !RM && y1 - y0 > .2; if (sp.visible){ sp.y = y0; sp.height = y1 - y0; } });
+    });
+    return busy;
   }
 
   /* =====================================================================================================
@@ -802,20 +960,22 @@
     { a: 'footL', x: 46, y: 208, r: 12.5 }, { a: 'footR', x: 74, y: 208, r: 12.5 }, { a: 'face', x: 60, y: 33, r: 16.5 },
   ];
   function mountBody(host){
-    const VBB = '0 0 120 232', mk = (cls, inner) => { const s = svgEl('bm ' + cls); s.setAttribute('viewBox', VBB); s.innerHTML = inner; host.appendChild(s); return s; };
+    const frame = svgEl('wd-frame'); frame.setAttribute('viewBox', '0 0 120 232'); host.appendChild(frame);
+    const px = HHPix.attach({ stack: host, svg: frame, cover: 'host', ink: .62 });
+    px.ready.then(null, e => Kit.gfx.sorry(e));
+    px.backdrop('#fffaf0');                     // the card's own colour: the tint and the glow multiply over it
     const B = BODY;
-    let base = `<g filter="url(#hfx)"><g fill="${INK}" stroke="${INK}" stroke-width="3.4" stroke-linejoin="round">${B.skin}<path d="${B.tunic}"/>${B.legs.map(d => `<path d="${d}"/>`).join('')}${B.sleeves.map(d => `<path d="${d}"/>`).join('')}</g>`;
+    let base = `<g fill="${INK}" stroke="${INK}" stroke-width="3.4" stroke-linejoin="round">${B.skin}<path d="${B.tunic}"/>${B.legs.map(d => `<path d="${d}"/>`).join('')}${B.sleeves.map(d => `<path d="${d}"/>`).join('')}</g>`;
     base += `<g fill="#fbf4e6">${B.skin}</g>`;
     base += B.legs.map(d => `<path d="${d}" fill="#e2d6bf" stroke="${INK}" stroke-width="1.3"/>`).join('');
     base += `<path d="${B.tunic}" fill="#efe5d0" stroke="${INK}" stroke-width="1.5" stroke-linejoin="round"/>`;
     base += B.sleeves.map(d => `<path d="${d}" fill="#efe5d0" stroke="${INK}" stroke-width="1.3"/>`).join('');
     base += `<path d="M42 72Q47 75 52 72M68 72Q73 75 78 72" fill="none" stroke="${INK}" stroke-width=".8" opacity=".35"/>`;
     base += `<path d="M54.5 58Q60 62 65.5 58" fill="none" stroke="${INK}" stroke-width="1" opacity=".6"/>`;
-    base += `<path d="${B.hair}" fill="#6b5444" stroke="${INK}" stroke-width="1.2"/></g>`;
-    const tint = mk('bm-tint', ''), glow = mk('bm-glow', '');
-    const ink = mk('bm-base', base);
-    host.insertBefore(ink, tint);
-    return { ink, tint, glow };
+    base += `<path d="${B.hair}" fill="#6b5444" stroke="${INK}" stroke-width="1.2"/>`;
+    const ink = px.layer(), tint = px.layer({ filter: false, blend: 'multiply' }), glow = px.layer({ filter: false, blend: 'multiply' });
+    ink.set(base);
+    return { ink: frame, tint, glow, beat: 0 };
   }
   function areaShapes(list){
     const keys = list.indexOf('all') >= 0 ? ['handL', 'handR', 'armL', 'armR', 'face', 'head', 'ears', 'footL', 'footR', 'heart'] : list;
@@ -827,9 +987,11 @@
     const cur = st.mode === 'practice' && s.id !== 'dua' ? (st.flash || []) : s.area;
     const glowing = cur.indexOf('all') >= 0 ? Object.keys(BODY.areas) : cur.concat(cur.indexOf('armR') >= 0 ? ['handR'] : [], cur.indexOf('armL') >= 0 ? ['handL'] : []);
     // washed parts stay blue, except the part glowing now (yellow over blue would turn green)
-    UI.body.tint.innerHTML = `<g fill="#9fd3ee" stroke="#9fd3ee" stroke-width="1.2">${areaShapes(washed.filter(a => a !== 'mouth' && a !== 'nose' && glowing.indexOf(a) < 0))}</g>`;
-    UI.body.glow.innerHTML = cur.length ? `<g fill="#f6c453" stroke="#f6c453" stroke-width="5" stroke-linejoin="round" stroke-opacity=".35">${areaShapes(cur)}</g>` : '';
-    UI.bodyWrap.classList.toggle('all', cur.indexOf('all') >= 0);
+    UI.body.tint.set(`<g fill="#9fd3ee" stroke="#9fd3ee" stroke-width="1.2">${areaShapes(washed.filter(a => a !== 'mouth' && a !== 'nose' && glowing.indexOf(a) < 0))}</g>`);
+    UI.body.glow.set(cur.length ? `<g fill="#f6c453" stroke="#f6c453" stroke-width="5" stroke-linejoin="round" stroke-opacity=".35">${areaShapes(cur)}</g>` : '');
+    // the glow breathes: slowly when it is the whole body (the intention, the du'a)
+    const beat = cur.indexOf('all') >= 0 ? 3.4 : 1.4;
+    if (UI.body.beat !== beat){ UI.body.beat = beat; UI.body.glow.pulse(.55, 1, beat); }
   }
 
   /* =====================================================================================================
@@ -931,14 +1093,12 @@
      ===================================================================================================== */
   const st = { mode: Q.get('mode') === 'practice' ? 'practice' : 'with', i: 0, washed: {}, counts: {}, tap: false, tapA: 0, water: 0, run: {}, leafAt: {}, leaves: 0, grow: 1,
     p: 0, flash: [], misses: 0, finished: false };
-  window.__wudu = st;
+  window.__wudu = st; st.stage = Stage;      // for checks
   const UI = {};
   const CAP = 70;            // seconds of running water that fill the meter
 
   function build(){
     document.body.innerHTML = '';
-    const defs = svgEl('wd-defs'); defs.innerHTML = filterFor(.62).replace('id="hand"', 'id="hfx"').replace('id="wob"', 'id="wobh"'); document.body.appendChild(defs);
-    UI.kf = document.createElement('style'); document.head.appendChild(UI.kf);
     const root = $('div', 'wd'); UI.root = root;
     // top: home (from the house), the two modes, sound
     const top = $('div', 'wd-top');
@@ -962,10 +1122,6 @@
     const main = $('div', 'wd-main');
     const stage = $('div', 'wd-stage'), fig = $('div', 'wd-fig');
     UI.basin = mountBasin(fig);
-    UI.hands = $('div', 'wd-hands'); fig.appendChild(UI.hands);
-    fig.appendChild(UI.basin.fxs);                 // the stream falls onto the hands, so it is drawn over them
-    UI.splash = $('div', 'wd-splash2', '<svg viewBox="0 0 40 16" aria-hidden="true"><path d="M6 12Q20 4 34 12" fill="none" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round" opacity=".9"/><path d="M9 9l-4-5M31 9l4-5M15 7l-1-6M25 7l1-6" stroke="#bfe6f7" stroke-width="2.2" stroke-linecap="round"/></svg>'); fig.appendChild(UI.splash);
-    UI.scene = $('div', 'wd-scene'); fig.appendChild(UI.scene);      // the close-ups and the overlays (arrows, the heart)
     UI.tapBtn = $('button', 'wd-tapbtn'); UI.tapBtn.setAttribute('aria-label', 'Tap'); UI.tapBtn.onpointerdown = e => { e.preventDefault(); toggleTap(); }; fig.appendChild(UI.tapBtn);
     UI.bubble = $('div', 'wd-bubble'); fig.appendChild(UI.bubble);
     // water meter: fills while the tap runs; the leaves earned sit under it
@@ -1001,18 +1157,19 @@
     root.appendChild(main);
     document.body.appendChild(root);
     UI.seg = seg;
+    UI.basin.px.ready.then(stageUp, () => {});
   }
 
   /* ---------- the tap ---------- */
   let leverAnim = 0;
-  function drawDyn(){ _clipN = 0; UI.basin.dyn.innerHTML = inkScale(leaves(Math.min(14, 5 + st.leaves), st.grow) + lever(st.tapA)); }
+  function drawDyn(){ _clipN = 0; UI.basin.dyn.set(inkScale(leaves(Math.min(14, 5 + st.leaves), st.grow) + lever(st.tapA))); }
   function animate(fn){ let t0 = performance.now(); const step = now => { const dt = Math.min(.05, (now - t0)/1000); t0 = now; if (fn(dt) !== false) requestAnimationFrame(step); }; requestAnimationFrame(step); }
   function toggleTap(force){
     if (st.finished && force == null) return;
     const on = force == null ? !st.tap : !!force;
     if (on === st.tap) return;
     st.tap = on; play('turn');
-    UI.fig.classList.toggle('won', on); UI.fig.classList.toggle('woff', !on);
+    tapStage(on);
     UI.root.classList.toggle('tap-on', on);
     waterSound(on);
     const id = ++leverAnim;
@@ -1148,7 +1305,7 @@
     if (st.p >= PRACT.length){ st.i = LAST; setStep(LAST); return; }
     st.i = st.p; st.flash = [];
     practicePrompt(false);
-    UI.hands.innerHTML = ''; UI.scene.innerHTML = '';
+    showHands(null); showScene(null);
     progress(); drawBody(); suggest();
   }
   function bodyPoint(e){
