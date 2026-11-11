@@ -1,6 +1,6 @@
 {
  "version": "kidsgames-games-v1.7.2",
- "bytes": 4293215,
+ "bytes": 4311745,
  "files": [
   "/KidsGames/games/helping-home/classic.html",
   "/KidsGames/games/helping-home/index.html",
@@ -9,6 +9,7 @@
   "/KidsGames/games/helping-home/iso/core.js",
   "/KidsGames/games/helping-home/iso/flow.js",
   "/KidsGames/games/helping-home/iso/kidpass.js",
+  "/KidsGames/games/helping-home/iso/pix.js",
   "/KidsGames/games/helping-home/iso/prayer.js",
   "/KidsGames/games/helping-home/iso/voice.js",
   "/KidsGames/games/helping-home/iso/vendor/adhan.js",

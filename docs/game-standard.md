@@ -133,7 +133,8 @@ Rule for this table: **it only moves forward.** A game marked "PixiJS" never goe
 | Game (folder) | Frame drawn by | Status |
 |---------------|----------------|--------|
 | `helping-home` (the world) | PixiJS | **done** (1.7.0). Its loop, input and saves are its own code: to move to the kit. |
-| `helping-home` stations (wudu, salah, adhan, washing machine) | live SVG in the page (Colorfigures `mountFigure`, `iso/core.js`) | to port. They are figures the child turns by dragging, redrawn as SVG on every change, so this is a rebuild of how they are drawn, not a swap. The owner chooses the look first (pictures made once like the world, or shapes drawn by PixiJS). |
+| `helping-home` adhan station | PixiJS | **done.** The minaret is made into pictures with the hand-drawn filter and shown by PixiJS; the glow and the sound rings are moved by PixiJS (`games/helping-home/iso/pix.js`). |
+| `helping-home` salah, wudu and washing-machine stations | live SVG in the page, with CSS animation | to port, one at a time, on `iso/pix.js`. Each is a rebuild, not a swap: salah has a ghost layer, a drawn-on arrow and a close-up bubble; wudu has about twenty hand and water animations; the washing machine zooms. Until salah is ported, `pray/salah-shell.js` keeps both layer paths (`pixi: true` in `PS.mount` chooses PixiJS). |
 | `2048` | Canvas2D on the kit | to port |
 | `30-seconds-challenge` | Canvas2D on the kit | to port |
 | `animal-memory-match` | Canvas2D on the kit | to port |

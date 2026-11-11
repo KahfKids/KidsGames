@@ -134,6 +134,33 @@
     return 'dhuhr';
   };
 
+  /* ---------- the same four layers, drawn by PixiJS (iso/pix.js): the pictures are made once per change and shown
+     as sprites; the glows and sound rings of the fx layer are moved by PixiJS. The page's <svg id="fig"> stays as
+     an empty sheet that takes the finger and gives the frame. ---------- */
+  function layersPixi(ui, sceneFn) {
+    var fig = document.getElementById('fig'), art = document.getElementById('art');
+    var stack = el('div', 'figstack'); fig.parentNode.insertBefore(stack, fig); stack.appendChild(fig);
+    art.innerHTML = '';
+    var last = ['', '', '', ''], st = ui.st, L = null;
+    function push() { if (!L) return; L[0].set(last[0]); L[1].set(last[1]); L[2].set(last[2]); L[3].set(last[3]); }
+    ui.render = function () {
+      _clipN = 0;
+      var full = inkScale(sceneFn(st)), a = full.indexOf('<!--FX-->'), fx = '';
+      if (a >= 0) { var b = full.indexOf('<!--/FX-->'); fx = full.slice(a + 9, b); full = full.slice(0, a) + full.slice(b + 10); }
+      var i = full.indexOf('<!--DYN-->'), j = full.indexOf('<!--/DYN-->');
+      last[0] = i < 0 ? full : full.slice(0, i); last[1] = i < 0 ? '' : full.slice(i + 10, j); last[2] = i < 0 ? '' : full.slice(j + 11); last[3] = fx;
+      push();
+      if (PS.after) PS.after(st);
+    };
+    PS.redraw = function () { ui.render(); if (PS.px) PS.px.sync(); if (PS.onRefit) PS.onRefit(); };
+    PS.stack = stack;
+    PS.ready = HHPix.attach({ stack: stack, svg: fig }).then(function (px) {
+      PS.px = px; L = [px.layer(), px.layer(), px.layer(), px.fx()];
+      push(); PS.fit(PS.pad);
+    }, function (e) { Kit.gfx.sorry(e); });
+    return stack;
+  }
+
   /* ---------- layers: under / moving / over (filtered) + fx (no filter, CSS motion) ---------- */
   function layers(ui, sceneFn) {
     var fig = document.getElementById('fig'), art = document.getElementById('art');
@@ -191,7 +218,8 @@
     app.appendChild(top); app.appendChild(figBox); app.appendChild(side);
     document.body.appendChild(app);
     figBox.appendChild(document.querySelector('.stage'));
-    layers(ui, o.scene);
+    PS.pad = o.pad;
+    if (o.pixi) layersPixi(ui, o.scene); else layers(ui, o.scene);
     sounds();
 
     var home = el('button', 'ps-round', PS.icon('home')); home.setAttribute('aria-label', 'Home');
@@ -221,6 +249,8 @@
      so the figure fills its area on a phone and on a tablet. Line weight and the hand-drawn filter are re-scaled
      for the new frame, exactly as the engine does at mount, so the look stays the same. ---------- */
   PS.fit = function (pad) {
+    if (PS.px) return fitTo(PS.px.measure(PS.px.last()), pad);
+    if (PS.ready) return;      // PixiJS is still starting: it frames the figure when it is up
     var svgs = [].slice.call(PS.stack.querySelectorAll('svg')), bb = null;
     svgs.forEach(function (s) { var g = s.firstElementChild === s.querySelector('defs') ? document.getElementById('art') : s.querySelector('g');
       try { var b = g.getBBox(); if (b.width && b.height) bb = bb ? { x0: Math.min(bb.x0, b.x), y0: Math.min(bb.y0, b.y), x1: Math.max(bb.x1, b.x + b.width), y1: Math.max(bb.y1, b.y + b.height) }
@@ -233,7 +263,7 @@
     fitTo({ x0: Math.min.apply(null, xs), y0: Math.min.apply(null, ys), x1: Math.max.apply(null, xs), y1: Math.max.apply(null, ys) }, pad);
   };
   function fitTo(bb, pad) {
-    var svgs = [].slice.call(PS.stack.querySelectorAll('svg')), fig = document.getElementById('fig');
+    var svgs = PS.px ? [document.getElementById('fig')] : [].slice.call(PS.stack.querySelectorAll('svg')), fig = document.getElementById('fig');
     if (!bb) return;
     var p = (pad == null ? .05 : pad) * Math.max(bb.x1 - bb.x0, bb.y1 - bb.y0), w = bb.x1 - bb.x0 + 2 * p, h = bb.y1 - bb.y0 + 2 * p;
     var vb = [bb.x0 - p, bb.y0 - p, w, h].map(function (v) { return v.toFixed(2); }).join(' ');

@@ -140,7 +140,7 @@
   var st0 = { k: 0, phase: 'intro', calling: false };
   var ui = mountFigure({ fig: 'P', turn: 'full', title: 'Adhan', palette: 'mustard', credit: false,
     size: [70, 70, 118], center: [35, 35], state: st0, scene: scene });
-  PS.mount({ ui: ui, scene: scene });
+  PS.mount({ ui: ui, scene: scene, pixi: true });      // the minaret is drawn by PixiJS (iso/pix.js)
   var st = ui.st;
   PS.title(PS.icon(PS.prayerIcon[PRAYER]) + '<span>' + PNAME + ' adhan</span>');
   PS.preload(PH.map(function (p) { return p.text.audio; }).concat(['resp/hawqala']));

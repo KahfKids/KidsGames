@@ -5,8 +5,10 @@
    Rules and the performance guide: docs/game-standard.md, docs/pixi-performance.md.
 
    Kit.gfx.dpr()                 pixel density to draw at: at most 2, and 1.5 on low-memory phones
-   Kit.gfx.create(canvas)        -> Promise of a surface. Rejects with an Error whose .code is 'no-pixi' (PixiJS did not
-                                    arrive), 'no-webgl' (this phone has no WebGL) or 'gl-failed' (WebGL did not start)
+   Kit.gfx.create(canvas, opts)  -> Promise of a surface. Rejects with an Error whose .code is 'no-pixi' (PixiJS did not
+                                    arrive), 'no-webgl' (this phone has no WebGL) or 'gl-failed' (WebGL did not start).
+                                    opts.transparent: the page shows through where nothing is drawn (a figure on a
+                                    page of words and buttons). A full-screen game leaves it off: opaque is faster.
    Kit.gfx.sorry(error)          a plain "could not start" screen with a try-again button, for that rejection
 
    surface.PIXI                  the PixiJS namespace          surface.renderer   the PIXI.WebGLRenderer
@@ -71,12 +73,13 @@
 
   function fail(code, cause) { var e = new Error('gfx: ' + code); e.code = code; e.cause = cause; return e; }
 
-  function make(canvas, P) {
+  function make(canvas, P, opts) {
     var r = new P.WebGLRenderer();
     // antialias off and an opaque canvas: PixiJS's own advice for phones (sprites do not need it)
     return r.init({
       canvas: canvas, width: canvas.width || 1, height: canvas.height || 1, resolution: 1, autoDensity: false,
-      antialias: false, backgroundAlpha: 1, backgroundColor: 0xf2efe7, clearBeforeRender: true, hello: false
+      // a see-through canvas is cleared to black at alpha 0: any colour there would be added to the page behind
+      antialias: false, backgroundAlpha: opts.transparent ? 0 : 1, backgroundColor: opts.transparent ? 0x000000 : 0xf2efe7, clearBeforeRender: true, hello: false
     }).then(function () {
       var stage = new P.Container(), pool = [], n = 0, shown = 0, live = new Set(), lostFns = [], lost = false;
       var bg = null, colors = {}, imgs = new WeakMap(), M = new P.Matrix(), WHITE = P.Texture.WHITE, EMPTY = P.Texture.EMPTY;
@@ -168,13 +171,14 @@
     });
   }
 
-  G.create = function (canvas) {
+  G.create = function (canvas, opts) {
+    opts = opts || {};
     return loadPixi().then(function (P) {
       if (!P) throw fail('no-pixi');
       var ok = false;
       try { ok = P.isWebGLSupported(false); } catch (e) {}
       if (!ok) throw fail('no-webgl');
-      return make(canvas, P).catch(function (e) { throw fail('gl-failed', e); });
+      return make(canvas, P, opts).catch(function (e) { throw fail('gl-failed', e); });
     });
   };
 
