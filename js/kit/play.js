@@ -5,6 +5,13 @@
    What it decides for every game:
    - WebGL only, no Canvas fallback. A device without WebGL gets the sorry screen (Kit.play.sorry).
    - Sharpness: the canvas has screen pixels x Kit.play.dpr() (at most 2; 1.5 on phones with 2 GB or less).
+     A game with a full picture to draw can ask for less: start({ pixels: 1.6e6 }) keeps the canvas under that many
+     pixels (a tablet then draws softer, never under 1), start({ sharp: 1.5 }) or Kit.play.sharp(1.5) lowers the
+     most it may be (the game does this when the frame rate is low), and start({ msaa: false }) turns off the
+     multisampling of the canvas (pictures need none; drawn shapes do).
+   - On a phone the engine draws one texture per batch, so every change of texture is a draw call. A game whose
+     pictures come from many sheets asks for more: start({ textures: 4 }) lets a batch hold four (on every device,
+     so a desktop test counts the same draw calls as a phone).
    - One design space: 1920 x 1080 units, always fully visible and centred. Wider or taller screens see more
      around it (scene.view says how much), so paint backgrounds past the design space: 300 units left and right,
      200 above and below cover every phone and tablet.
@@ -22,13 +29,16 @@
 (function () {
   'use strict';
   var Kit = window.Kit = window.Kit || {};
-  var W = 1920, H = 1080, game = null;
+  var W = 1920, H = 1080, game = null, most = 2, budget = 0, apply = null;
 
   function dpr() {
-    var d = Math.min(window.devicePixelRatio || 1, 2);
+    var d = Math.min(window.devicePixelRatio || 1, most);
     if (navigator.deviceMemory && navigator.deviceMemory <= 2) d = Math.min(d, 1.5);
+    if (budget) d = Math.min(d, Math.max(1, Math.sqrt(budget / Math.max(1, window.innerWidth * window.innerHeight))));
     return d;
   }
+  // the most canvas pixels per screen pixel from now on (1 to 2); the canvas is resized at once. Returns what is used.
+  function sharp(d) { most = Math.min(2, Math.max(1, +d || 2)); if (apply) apply(); return dpr(); }
   function size() {
     var d = dpr();
     return { w: Math.max(2, Math.round(window.innerWidth * d)), h: Math.max(2, Math.round(window.innerHeight * d)), d: d };
@@ -73,6 +83,8 @@
       document.body.appendChild(parent);
     }
     parent.style.cssText = 'position:fixed;inset:0;overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none;background:' + (o.color || '#000');
+    if (o.pixels) budget = o.pixels;
+    if (o.sharp) most = Math.min(2, Math.max(1, +o.sharp));
     var s = size();
     var cfg = {
       type: Phaser.WEBGL,
@@ -81,12 +93,13 @@
       banner: false,
       disableContextMenu: true,
       scale: { mode: Phaser.Scale.NONE, width: s.w, height: s.h, zoom: 1 / s.d, autoRound: false },
-      render: { antialias: true, powerPreference: 'default', failIfMajorPerformanceCaveat: false },
+      render: { antialias: true, antialiasGL: o.msaa !== false, powerPreference: 'default', failIfMajorPerformanceCaveat: false },
       input: { activePointers: 3, touch: { capture: true } },
       audio: { noAudio: true },
       fps: { smoothStep: true },
       scene: o.scenes
     };
+    if (o.textures) { cfg.render.autoMobileTextures = false; cfg.render.maxTextures = o.textures; }
     if (o.physics) cfg.physics = o.physics;
     try { game = new Phaser.Game(cfg); } catch (e) { sorry(e); return null; }
 
@@ -95,8 +108,13 @@
       var n = size();
       if (n.w === last.w && n.h === last.h) return;
       last = n;
-      try { game.scale.setZoom(1 / n.d); game.scale.resize(n.w, n.h); } catch (e) { /* the next resize tries again */ }
+      try {
+        game.scale.resize(n.w, n.h); game.scale.setZoom(1 / n.d);
+        // (at exactly one canvas pixel to a screen pixel the engine leaves the old size on the canvas's style)
+        game.canvas.style.width = (n.w / n.d) + 'px'; game.canvas.style.height = (n.h / n.d) + 'px';
+      } catch (e) { /* the next resize tries again */ }
     }
+    apply = onResize;
     window.addEventListener('resize', onResize);
     window.addEventListener('orientationchange', function () { setTimeout(onResize, 250); });
     if (window.visualViewport) window.visualViewport.addEventListener('resize', onResize);
@@ -146,5 +164,5 @@
     return key;
   }
 
-  Kit.play = { W: W, H: H, start: start, fit: fit, tex: tex, exit: exit, sorry: sorry, dpr: dpr, game: null };
+  Kit.play = { W: W, H: H, start: start, fit: fit, tex: tex, exit: exit, sorry: sorry, dpr: dpr, sharp: sharp, game: null };
 })();

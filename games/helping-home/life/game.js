@@ -8,7 +8,7 @@
    Scenes: Boot (loads the data, makes the world) -> Place (the world) + Hud (needs, prayer, what you carry, exit).
    Other files add scenes by pushing classes onto window.LifeScenes before this file runs (panels, guides).
    Taps: the ground anywhere = walk there; a thing = go and use it; a person = a ring of things to do together; a
-   building or its badge = go in. Drag = move the camera; pinch or the wheel = zoom; the map button = the whole town. ?debug exposes window.LT; ?perf shows frames per second; ?fast runs a whole day in 20 minutes. */
+   building or its badge = go in. Drag = move the camera; pinch or the wheel = zoom; the map button = the whole town. ?debug exposes window.LT; ?perf shows frames per second, draw calls, the game's own time per frame, the canvas size, the longest and the total time spent handing new pictures to the chip, and the memory held in pictures; ?fast runs a whole day in 20 minutes; ?img decodes pictures the engine's way (see offThread). */
 (function () {
   'use strict';
   const L = window.LifeWorld, RU = window.LifeRules, BASE = '/KidsGames/games/helping-home/';
@@ -68,7 +68,10 @@
     return w;
   }
 
-  const nmap = name => (D.art.normals || []).indexOf(name) >= 0 ? ART + name + '.n' + EXT : undefined;
+  // a colour between two (t: 0 the first, 1 the second)
+  const mix = (a, b, t) => { const f = s => { const x = (a >> s) & 255; return Math.round(x + (((b >> s) & 255) - x) * t); }; return (f(16) << 16) | (f(8) << 8) | f(0); };
+  const SHARP = 'helping-home-sharp';           // how sharp this phone can draw and stay smooth (see watch)
+  const ROOM = 0xfff0d8, WARM = 0xffe2b0;       // the light of a room's own lamp, and of a lamp out of doors
 
   /* ---------- the child's own character: tinted layers stacked once into one sheet ---------- */
   // The layers are rendered in a light grey (#F2F2F2), not pure white, so a chosen colour is lifted by that much first
@@ -106,9 +109,39 @@
     if (scene.textures.get(key).has('ride0')) ['ride', 'rideB'].forEach(n => { if (!scene.anims.exists(key + '-' + n)) scene.anims.create({ key: key + '-' + n, frames: [0, 1].map(i => ({ key: key, frame: n + i })), frameRate: 6, repeat: -1 }); });
   }
 
+  /* Pictures are decoded off the main thread. The engine hands a downloaded picture to the graphics chip as an <img>, and
+     the browser decodes it at that moment, on the main thread: on a phone the game stops for a tenth of a second or more
+     each time a new part of the town loads. So each picture is also decoded in the background (createImageBitmap) while
+     the engine makes its <img>, and the decoded copy is what goes to the chip, once; then it is let go, so nothing is
+     held twice. The <img> stays as the engine's source (a restored WebGL context reads it again). The first picture goes
+     the engine's own way: that shows which way up the engine wants pictures and how it wants their alpha (`how`).
+     `?img` leaves the engine's way on, to compare. */
+  function offThread(game) {
+    const gl = game.renderer.gl, IF = Phaser.Loader.FileTypes.ImageFile.prototype; if (!window.createImageBitmap || IF.lifeDecode) return; IF.lifeDecode = true;
+    const tex = gl.texImage2D, own = IF.onProcess; let how = null;
+    gl.texImage2D = function () {
+      const a = arguments, im = a[a.length - 1], b = im && im._bmp;
+      if (!b) { if (!how && im instanceof HTMLImageElement) how = { imageOrientation: gl.getParameter(gl.UNPACK_FLIP_Y_WEBGL) ? 'flipY' : 'none', premultiplyAlpha: gl.getParameter(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL) ? 'premultiply' : 'none' }; return tex.apply(gl, a); }
+      im._bmp = null; a[a.length - 1] = b;
+      const flip = gl.getParameter(gl.UNPACK_FLIP_Y_WEBGL); if (flip) gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);      // (the copy is already the right way up; some browsers would turn it again)
+      try { tex.apply(gl, a); } catch (e) { a[a.length - 1] = im; if (flip) gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true); b.close(); return tex.apply(gl, a); }
+      if (flip) gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true); b.close();
+    };
+    IF.onProcess = function () {
+      const blob = this.xhrLoader && this.xhrLoader.response;
+      if (how && blob instanceof Blob) {                                           // the file is ready when both the <img> and the decoded copy are
+        const done = this.onProcessComplete; let n = 2, bmp = null;
+        this.onProcessComplete = () => { if (--n) return; if (bmp) this.data._bmp = bmp; this.onProcessComplete = done; done.call(this); };
+        createImageBitmap(blob, how).then(b => { bmp = b; this.onProcessComplete(); }, () => this.onProcessComplete());
+      }
+      own.call(this);
+    };
+  }
+
   class Boot extends Phaser.Scene {
     constructor() { super('Boot'); }
     preload() {
+      if (!Q.has('img')) offThread(this.game);
       const w = this.scale.width, h = this.scale.height;
       this.add.rectangle(w / 2, h / 2, w * 0.3, h * 0.022, 0xffffff, 0.35);
       const bar = this.add.rectangle(w * 0.35, h / 2, 1, h * 0.022, 0xffffff).setOrigin(0, 0.5);
@@ -121,6 +154,7 @@
       for (const k in (D.art.animals || {})) D.art.people[k] = Object.assign({ animal: true }, D.art.animals[k]);   // animals are drawn as people are
       Kit.play.tex(this, 'ui-plate', 160, 160, c => { c.shadowColor = 'rgba(30,20,60,.3)'; c.shadowBlur = 14; c.shadowOffsetY = 6; c.fillStyle = '#fff'; c.beginPath(); c.arc(80, 76, 62, 0, 7); c.fill(); }, 4);
       Kit.play.tex(this, 'ui-glow', 128, 128, c => { const g = c.createRadialGradient(64, 64, 0, 64, 64, 64); g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(1, 'rgba(255,255,255,0)'); c.fillStyle = g; c.fillRect(0, 0, 128, 128); });
+      Kit.play.tex(this, 'ui-pool', 128, 128, c => { const g = c.createRadialGradient(64, 64, 0, 64, 64, 64); [[0, 1], [0.25, 0.62], [0.5, 0.3], [0.75, 0.09], [1, 0]].forEach(q => g.addColorStop(q[0], 'rgba(255,255,255,' + q[1] + ')')); c.fillStyle = g; c.fillRect(0, 0, 128, 128); });      // lamplight on the ground: bright under the lamp, soon faint
       Kit.play.tex(this, 'ui-ring', 128, 128, c => { c.strokeStyle = '#fff'; c.lineWidth = 9; c.beginPath(); c.arc(64, 64, 54, 0, 7); c.stroke(); });
       Kit.play.tex(this, 'ui-card', 520, 360, c => { c.shadowColor = 'rgba(30,20,60,.28)'; c.shadowBlur = 22; c.shadowOffsetY = 8; c.fillStyle = '#fffaf0'; c.beginPath(); c.roundRect(0, 0, 520, 360, 44); c.fill(); }, 30);
       Life.state = loadState();
@@ -158,19 +192,19 @@
       let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
       for (const id in w.places) { const z = this.zv(id); x0 = Math.min(x0, z.bx0); x1 = Math.max(x1, z.bx1); y0 = Math.min(y0, z.by0); y1 = Math.max(y1, z.by1); }
       this.map = { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
-      /* Light, all of it the engine's (nothing is painted over the picture): one ambient colour that follows the clock;
-         a point light at every lamp (kinds with `glow`), at every house door and under the ceiling of every room; the
-         moon, one wide light that stays over the middle of the view; a cone light through each window when the sun is
-         low. Sprites carry normal maps (art.normals). A PointLight object glows round each lamp head; particles make
-         the fireflies; the Vignette and bloom filters come on after dark when the frame rate allows.
-         Ambient plus the strongest light never passes 1, so nothing is washed out. By day nothing is lit. */
-      this.lights.enable(); this.isLit = false;
-      this.moon = this.lights.addLight(0, 0, 4200, 0xbfd0ff, 0, 900);
+      { const B = this.town = { x0: 1e9, y0: 1e9, x1: -1e9, y1: -1e9 }; for (const id in w.places) { const pl = w.places[id]; if (!pl.outdoor) continue; B.x0 = Math.min(B.x0, pl.at[0]); B.y0 = Math.min(B.y0, pl.at[1]); B.x1 = Math.max(B.x1, pl.at[0] + pl.w); B.y1 = Math.max(B.y1, pl.at[1] + pl.d); } }      // the town's ground, on the map
+      /* Light costs nothing to draw: it is each picture's own tint. One colour over the whole town follows the clock; a
+         room with its lamp on keeps a warm colour of its own; whatever stands near a lamp out of doors is tinted
+         lighter. Round every lamp a soft pool lies on the ground and a glow sits at its head (pictures drawn with the
+         engine's ADD blend); particles make the fireflies. There are no per-pixel lights and no full-screen filters:
+         on a phone those cost more than the whole rest of the picture. By day every tint is white. */
+      this.amb = 0xffffff; this.isLit = false;
       this.wireInput(); this.wire();
       this.scale.on('resize', this.fitCam, this); this.events.once('shutdown', () => this.scale.off('resize', this.fitCam, this));
       this.scene.launch('Hud');
       this.time.addEvent({ delay: 9000, loop: true, callback: () => this.remind() });
       this.time.addEvent({ delay: 220, loop: true, callback: () => this.stream() });
+      this.time.addEvent({ delay: 1000, loop: true, callback: () => this.watch() });
       if (Q.has('debug')) window.LT = { game: this.game, world: w, rules: Life.rules, place: this, life: Life };
       // the first view: where the child is, loaded before anything is shown
       const cam = this.cameras.main, sky = cam.backgroundColor;
@@ -179,12 +213,12 @@
         const O = D.art.overview; if (O && this.textures.exists('overview.s')) this.under = this.lit(this.add.image(-O.ox, -O.oy, 'overview.s').setOrigin(0).setDisplaySize(O.w / O.scale, O.h / O.scale).setDepth(-50));
         // the open grass round the town, without end: one picture repeated (the engine's TileSprite), under everything
         if (D.art.field && this.textures.exists('field')) { const m = this.map, pad = Math.max(m.w, m.h) * 1.1; this.field = this.lit(this.add.tileSprite(m.x - pad, m.y - pad, m.w + pad * 2, m.h + pad * 2, 'field').setOrigin(0).setDepth(-60)); }
-        this.makeBuildings(); this.stream(); this.busy = false; this.sync(0, 0); this.centre(true); this.fading = true; cam.once('camerafadeincomplete', () => { this.fading = false; this.light(); }); cam.fadeIn(320, sky.red, sky.green, sky.blue); };
+        this.makeBuildings(); this.stream(); this.busy = false; this.sync(0, 0); this.centre(true); cam.fadeIn(320, sky.red, sky.green, sky.blue); };
       if (D.art.overview && D.art.overview.small && !this.textures.exists('overview.s')) this.load.image('overview.s', ART + 'overview.s' + EXT);
       if (D.art.field && !this.textures.exists('field')) this.load.image('field', ART + 'field' + EXT);
       { const t = this.target(); cam.centerOn(t.x, t.y); }                          // (before anything is asked for: only what is round the child is loaded)
       for (const lot in (D.art.buildings || {})) if (!this.textures.exists('b-' + lot + '.s')) this.load.image('b-' + lot + '.s', ART + 'b-' + lot + '.s' + EXT);
-      if ((D.art.packs || []).indexOf('road') >= 0 && !this.textures.exists('t-road')) this.load.atlas({ key: 't-road', textureURL: ART + 't-road' + EXT, atlasURL: ART + 't-road.json', normalMap: nmap('t-road') });
+      if ((D.art.packs || []).indexOf('road') >= 0 && !this.textures.exists('t-road')) this.load.atlas({ key: 't-road', textureURL: ART + 't-road' + EXT, atlasURL: ART + 't-road.json' });
       this.stream();
       if (this.load.list.size || this.load.isLoading()) { this.load.once('complete', go); this.load.start(); } else go();
     }
@@ -210,7 +244,7 @@
       let z = this.Z[pid];
       if (!z) {
         const pl = this.w.places[pid], a = pl.at, tall = 420;
-        z = this.Z[pid] = { id: pid, pl: pl, state: 'off', things: {}, objs: [], lamps: [], sunny: [], lit: [], badges: [], glow: [], walls: {}, layer: null, seen: 0, px: 0,
+        z = this.Z[pid] = { id: pid, pl: pl, state: 'off', things: {}, objs: [], lamps: [], lit: [], badges: [], glow: [], walls: {}, layer: null, seen: 0, px: 0,
           bx0: this.iso(a[0] + pl.w, a[1]).x - 40, bx1: this.iso(a[0], a[1] + pl.d).x + 40, by0: this.iso(a[0], a[1]).y - tall, by1: this.iso(a[0] + pl.w, a[1] + pl.d).y + 60 };
         // out of doors the ground is tiles of its own, so the place is wanted only while one of its things is in view
         // (tx0 .. ty1: the box round their pictures; a big tree behind the houses is one of them)
@@ -241,8 +275,8 @@
       let ok = true;
       this.keys(pid).forEach(k => {
         if (this.textures.exists(k[0])) return; ok = false; if (this.loading[k[0]]) return; this.loading[k[0]] = 1;
-        if (k[1] === 'image') this.load.image({ key: k[0], url: ART + k[0] + EXT, normalMap: nmap(k[0]) });
-        else this.load.atlas({ key: k[0], textureURL: ART + k[0] + EXT, atlasURL: ART + k[0] + '.json', normalMap: nmap(k[0]) });
+        if (k[1] === 'image') this.load.image(k[0], ART + k[0] + EXT);
+        else this.load.atlas(k[0], ART + k[0] + EXT, ART + k[0] + '.json');
       });
       return ok;
     }
@@ -254,7 +288,7 @@
       return true;
     }
     stream() {
-      const cam = this.cameras.main, v = cam.worldView, mx = v.width * 0.1, my = v.height * 0.1, near = cam.zoom >= LOD, P = this.w.places, now = this.time.now;
+      const cam = this.cameras.main, v = cam.worldView, mx = v.width * 0.1, my = v.height * 0.1, near = cam.zoom >= LOD * this.zs, P = this.w.places, now = this.time.now;
       const lot = this.openLot, fl = this.openFloor, dest = this.you.dest && P[this.you.dest], want = {}, pre = {};
       // the view measured along the map's two axes (its corners: least x top right, most x bottom left, least y top left, most y bottom right)
       const g0 = this.floorAt(v.right + mx, v.y - my), g1 = this.floorAt(v.x - mx, v.bottom + my), g2 = this.floorAt(v.x - mx, v.y - my), g3 = this.floorAt(v.right + mx, v.bottom + my);
@@ -265,10 +299,11 @@
         else if (dest && !dest.outdoor && pl.lot === dest.lot && pl.floor === dest.floor) pre[id] = 1;      // the child is on the way there
       }
       this.tiles(v, near);
+      if (this.field) { const B = this.town, m = 0.25, f = [[v.x - v.width * m, v.y - v.height * m], [v.right + v.width * m, v.y - v.height * m], [v.x - v.width * m, v.bottom + v.height * m], [v.right + v.width * m, v.bottom + v.height * m]]; this.field.setVisible(!near || f.some(c => { const g = this.floorAt(c[0], c[1]); return g.x < B.x0 || g.x > B.x1 || g.y < B.y0 || g.y > B.y1; })); }      // (the open grass is drawn only when the view reaches past the town)
       // the small picture of the whole town: fetched as the camera draws back, let go when it has been near for a while
       const O = D.art.overview;
       if (O) {
-        if (cam.zoom < LOD * 1.25) {
+        if (cam.zoom < LOD * 1.25 * this.zs) {
           this.ovSeen = now;
           if (!this.overview) { if (this.textures.exists('overview')) { delete this.loading.overview; this.overview = this.lit(this.add.image(-O.ox, -O.oy, 'overview').setOrigin(0).setScale(1 / O.scale).setDepth(-49)); } else if (!this.loading.overview) { this.loading.overview = 1; this.load.image('overview', ART + 'overview' + EXT); } }
         } else if (now - (this.ovSeen || 0) > 5000) { if (this.overview) { this.overview.destroy(); this.overview = null; } if (this.textures.exists('overview')) { this.textures.remove('overview'); delete this.loading.overview; } }
@@ -295,10 +330,11 @@
        the ones seen longest ago go when there are too many. */
     tiles(v, near) {
       const G = D.art.ground; if (!G) return; const T = G.tile, now = this.time.now; if (!this.gt) { this.gt = new Map(); this.gset = {}; G.tiles.forEach(n => { this.gset[n] = 1; }); }
-      let n = 0, live = 0;
+      let n = 0, live = 0, miss = 0;
       if (near) for (let c = Math.floor((v.x - T * 0.25) / T); c <= Math.floor((v.right + T * 0.25) / T); c++) for (let r = Math.floor((v.y - T * 0.25) / T); r <= Math.floor((v.bottom + T * 0.25) / T); r++) {
         const name = c + '_' + r; if (!this.gset[name]) continue; const key = 'w-' + name; let e = this.gt.get(name); if (!e) this.gt.set(name, e = { img: null, seen: 0 }); e.seen = now; live++;
         if (e.img) continue;
+        miss++;
         if (this.textures.exists(key)) { delete this.loading[key]; e.img = this.lit(this.add.image(c * T, r * T, key).setOrigin(0).setDepth(-40)); }      // (its picture is a little bigger than the tile and overlaps its neighbours: no hairline)
         else if (!this.loading[key]) { this.loading[key] = 1; this.load.image(key, ART + 'w/' + name + EXT); }
       }
@@ -306,11 +342,12 @@
       const cap = live + (LOWMEM ? 2 : 6);
       while (n > cap) { let old = null, on = null; this.gt.forEach((e, name) => { if (e.img && e.seen < now && (!old || e.seen < old.seen)) { old = e; on = name; } }); if (!old) break; old.img.destroy(); old.img = null; this.textures.remove('w-' + on); n--; }
       this.tpx = n * T * T;
+      if (this.under) this.under.setVisible(!near || miss > 0);                     // (the small picture of the town lies under the tiles only until they are all there)
     }
     // people's and animals' sheets: held to a budget of pixels; the one of whoever has been out of sight longest goes first
     sheets() {
       const now = this.time.now, seen = this.sseen || (this.sseen = {}), v = this.cameras.main.worldView; let keys = [];
-      if (this.cameras.main.zoom >= LOD) this.spr.forEach((s, p) => { if (p.you) return; if (s.visible && s._L.visible && s.x > v.x - 200 && s.x < v.right + 200 && s.y > v.y - 100 && s.y < v.bottom + 400) seen[s.texture.key] = now; });
+      if (this.cameras.main.zoom >= LOD * this.zs) this.spr.forEach((s, p) => { if (p.you) return; if (s.visible && s._L.visible && s.x > v.x - 200 && s.x < v.right + 200 && s.y > v.y - 100 && s.y < v.bottom + 400) seen[s.texture.key] = now; });
       let px = 0; const size = {};
       this.textures.getTextureKeys().forEach(k => { if (k.indexOf('p-') === 0) { const im = this.textures.get(k).getSourceImage(); keys.push(k); px += size[k] = im.width * im.height; if (!seen[k]) seen[k] = now; } });
       const cap = LOWMEM ? 3e6 : 5e6;
@@ -326,11 +363,11 @@
       this.spr.forEach((s, p) => { if (s._L === z.layer) { out.add(s); s._L = out; } });
       this.veh.forEach(s => { if (s._L === z.layer) { out.add(s); s._L = out; } });
       if (this.carryImg._L === z.layer) { out.add(this.carryImg); this.carryImg._L = out; }
-      z.lamps.forEach(l => { this.lights.removeLight(l.light); if (l.halo) l.halo.destroy(); }); z.sunny.forEach(x => this.lights.removeLight(x.light));
+      z.lamps.forEach(l => { if (l.halo) l.halo.destroy(); });
       z.objs.forEach(o => o.destroy()); z.layer.destroy();
       for (const k in this.marks) if (this.marks[k]._pid === pid) delete this.marks[k];
       this.keys(pid).forEach(k => { if (KEPT[k[0]]) return; if (this.textures.exists(k[0])) this.textures.remove(k[0]); delete this.loading[k[0]]; });
-      Object.assign(z, { state: 'off', things: {}, objs: [], lamps: [], sunny: [], lit: [], badges: [], glow: [], walls: {}, layer: null, px: 0 });
+      Object.assign(z, { state: 'off', things: {}, objs: [], lamps: [], lit: [], badges: [], glow: [], walls: {}, layer: null, px: 0, sig: null, tint: null });
     }
 
     /* ---------- one place: its ground, its things, its doors, its lights ---------- */
@@ -358,23 +395,23 @@
       }
       // where people pray here: a soft light on each spot during the call to prayer
       z.glow = pl.pray.concat(pl.prayW).map(s => { const p = this.at(pl, s.x, s.y - 0.35); const g = keep(this.add.image(p.x, p.y, 'ui-glow').setScale(2.3, 1.15).setTint(0xfff0b0).setAlpha(0).setDepth(-8.5e5).setBlendMode('ADD')); g._spot = s; return g; });
-      // lights
+      // lamps: a pool of light on the ground under each (r: how far it reaches across the screen), and a glow at its head
       const M = D.art.px / 1.414;                                                  // screen pixels per metre along the ground
-      const lamp = (x, y, h, reach, color, power, o) => { const q = this.at(pl, x, y, h); const l = Object.assign({ light: this.lights.addLight(q.x, q.y, reach * M, color, 0, reach * M * 0.35), power: power }, o || {}); z.lamps.push(l); return l; };
+      const lamp = (x, y, reach, color, power, o) => {
+        const q = this.at(pl, x, y), r = reach * M, l = Object.assign({ x: q.x, y: q.y, r: r, power: power, on: 0 }, o || {});
+        if (!l.room) l.pool = keep(this.add.image(q.x, q.y, 'ui-pool').setDisplaySize(r * 2, r).setTint(color).setAlpha(0).setDepth(-6e5).setBlendMode('SCREEN'));
+        z.lamps.push(l); return l;
+      };
       for (const id in pl.things) {
         const th = pl.things[id], gl = th.k.glow; if (!gl) continue;
         const q = this.at(pl, th.at[0], th.at[1], gl[0]);
-        lamp(th.at[0], th.at[1], gl[0] * 0.5, gl[1] * 2, 0xffd08a, pl.outdoor ? 0.38 : 0.42, { id: pid + '/' + id, halo: this.add.pointlight(q.x, q.y, 0xffd9a0, gl[1] * M * 0.36, 0, 0.08).setDepth(OVER - 3) });
+        lamp(th.at[0], th.at[1], gl[1] * 2, 0xffd08a, pl.outdoor ? 0.5 : 0.25, { id: pid + '/' + id, halo: this.add.pointlight(q.x, q.y, 0xffd9a0, gl[1] * M * 0.36, 0, 0.08).setDepth(OVER - 3) });
       }
-      if (pl.outdoor) { for (const id in pl.doors) { const d = pl.doors[id], to = this.w.places[d.to]; if (!d.open && d.wall[0] !== 'F' && to && !to.outdoor) lamp(d.x, d.y, 0.8, 2.2, 0xffc070, 0.4); } }   // light from a house
-      else {
-        lamp(pl.w / 2, pl.d / 2, 2.2, Math.max(pl.w, pl.d) * 1.25, 0xffe6c0, 0.45, { room: true });                    // the room's own light
-        const sh = pl.sp.shell || {};
-        ['L', 'R'].forEach(wall => (sh[wall] || []).forEach(f => {                                                     // the low sun through a window
-          if (f.t !== 'window') return; const m = f.at + (f.w || 1) / 2, q = this.at(pl, wall === 'L' ? m : 0.15, wall === 'L' ? 0.15 : m, 1.1);
-          z.sunny.push({ light: this.lights.addConeLight(q.x, q.y, 6.5 * M, 0xfff0c8, 0, wall === 'L' ? -0.4636 : Math.PI + 0.4636, 0.42, 0.8, 2.6 * M) });
-        }));
+      if (pl.outdoor) {
+        for (const id in pl.doors) { const d = pl.doors[id], to = this.w.places[d.to]; if (!d.open && d.wall[0] !== 'F' && to && !to.outdoor) lamp(d.x, d.y, 2.2, 0xffc070, 0.5); }   // light from a house
+        for (const id in z.things) { const s = z.things[id].s; s._lw = this.lampAt(z, s.x, s.y); }                    // how much of the lamps' light falls on each thing
       }
+      else lamp(pl.w / 2, pl.d / 2, 0, 0, 0, { room: true });                                                          // the room's own light: the whole room's colour
       if (((D.world || {}).fireflies || []).indexOf(pid) >= 0) { const c = this.at(pl, pl.w / 2, pl.d / 2); z.flies = keep(this.add.particles(c.x, c.y, 'ui-glow', { x: { min: -pl.w * 60, max: pl.w * 60 }, y: { min: -pl.d * 30, max: pl.d * 30 }, lifespan: 6000, speedX: { min: -14, max: 14 }, speedY: { min: -10, max: 10 }, scale: { min: 0.05, max: 0.1 }, tint: 0xe8ff9a, alpha: { start: 0, end: 0.9, ease: 'Sine.easeInOut', yoyo: true }, frequency: 700, blendMode: 'ADD', emitting: false }).setDepth(9e5)); }
       // which of this room's walls stand in front of another room of the same floor (to be cut when the child is in it)
       if (pl.lot) {
@@ -451,7 +488,7 @@
       } }
     }
     exteriors() {
-      const open = this.openLot, cam = this.cameras.main, v = cam.worldView, big = cam.zoom >= BLOD; let box = null;
+      const open = this.openLot, cam = this.cameras.main, v = cam.worldView, big = cam.zoom >= BLOD * this.zs; let box = null;
       if (open) for (const id in this.w.places) { const pl = this.w.places[id]; if (pl.lot !== open || pl.floor !== this.openFloor) continue; const z = this.zv(id), k = pl.at[0] + pl.at[1]; box = box ? { x0: Math.min(box.x0, z.bx0), x1: Math.max(box.x1, z.bx1), y0: Math.min(box.y0, z.by0 + 200), y1: Math.max(box.y1, z.by1), k: Math.min(box.k, k) } : { x0: z.bx0, x1: z.bx1, y0: z.by0 + 200, y1: z.by1, k: k }; }
       this.bpx = 0;
       for (const lot in this.bld) {
@@ -464,7 +501,7 @@
         for (const q of b.parts) {
           const x = b.x0 + q.q.x, y = b.y0 + q.q.y, want = a === 1 && big && x + q.q.w > v.x - 60 && x < v.right + 60 && y + q.q.h > v.y - 60 && y < v.bottom + 60;
           if (want && !q.s) {
-            if (!this.textures.exists(q.key)) { if (!this.loading[q.key]) { this.loading[q.key] = 1; this.load.image({ key: q.key, url: ART + q.key + EXT, normalMap: nmap(q.key) }); } }
+            if (!this.textures.exists(q.key)) { if (!this.loading[q.key]) { this.loading[q.key] = 1; this.load.image(q.key, ART + q.key + EXT); } }
             else { delete this.loading[q.key]; q.s = this.lit(this.add.image(x, y, q.key).setOrigin(0).setAlpha(b.v)); b.L.add(q.s); }
           } else if (!want && q.s && (b.v < 0.02 || a === 1)) { q.s.destroy(); q.s = null; if (this.textures.exists(q.key)) this.textures.remove(q.key); }
           else if (!want && !q.s && this.textures.exists(q.key)) { this.textures.remove(q.key); delete this.loading[q.key]; }
@@ -514,7 +551,7 @@
     }
     settleThing(th) {
       const t = this.T(th), pl = this.w.places[th.place], q = this.at(pl, th.at[0], th.at[1]); pl.slotsOf(th); pl.regrid(); if (!t) return;
-      t.f = pl.foot(th); t.depth = th.k.layer === 'floor' ? -7e5 + q.y : q.y; t.s.setPosition(q.x, q.y).setDepth(t.depth).clearTint();
+      t.f = pl.foot(th); t.depth = th.k.layer === 'floor' ? -7e5 + q.y : q.y; t.s.setPosition(q.x, q.y).setDepth(t.depth); { const z = this.Z[th.place]; t.s.setTint(z && z.tint != null ? z.tint : this.amb); }
     }
     // add something the child has won to this room, or put it away again
     addDecor(id) {
@@ -534,8 +571,12 @@
     /* ---------- the camera: dragged with one finger, pinched with two (or the wheel); it goes with the child until moved ---------- */
     fitCam(first) {
       const cam = this.cameras.main, gw = this.scale.width, gh = this.scale.height, m = this.map; if (!m) return;
-      this.z0 = Phaser.Math.Clamp(Math.min(gh / 980, gw / 900), 0.5, 1); this.zMin = Math.min(this.z0, Math.max(0.1, Math.min(gw / m.w, gh / m.h) * 0.96)); this.zMax = Math.max(1.3, this.z0 * 1.6);
-      if (first === true) cam.setZoom(this.z0); else cam.setZoom(Phaser.Math.Clamp(cam.zoom, this.zMin, this.zMax));
+      // zs: how sharp the canvas is against the sharpest (2 canvas pixels to a screen pixel). Every zoom is measured against
+      // it, so a softer canvas shows the same part of the town at the same size (and the same detail is loaded).
+      const d = Kit.play.dpr(), zs = d / 2, was = this.zs, cx = cam.scrollX + (this.cw || cam.width) / 2, cy = cam.scrollY + (this.ch || cam.height) / 2; this.zs = zs;
+      this.z0 = Phaser.Math.Clamp(Math.min(gh / d / 490, gw / d / 450), 0.5, 1) * zs; this.zMin = Math.min(this.z0, Math.max(0.1 * zs, Math.min(gw / m.w, gh / m.h) * 0.96)); this.zMax = Math.max(1.3 * zs, this.z0 * 1.6);
+      if (first === true) cam.setZoom(this.z0); else { cam.setZoom(Phaser.Math.Clamp(cam.zoom * zs / (was || zs), this.zMin, this.zMax)); cam.scrollX = cx - cam.width / 2; cam.scrollY = cy - cam.height / 2; }      // (the middle of the view stays where it was)
+      this.cw = cam.width; this.ch = cam.height;
       this.bound();
     }
     // the whole town at once (the map button), and back to the child
@@ -581,49 +622,63 @@
 
     // day and night, and a lamp switched off
     light() {
-      if (!this.moon) return; const c = this.w.clock, pt = this.w.prayTimes || { fajr: 300, maghrib: 1110 }, C = Phaser.Display.Color;
+      const c = this.w.clock, pt = this.w.prayTimes || { fajr: 300, maghrib: 1110 };
       // k: how far into the night (0 day, 1 night), from the real prayer times
       const k = c < pt.fajr - 30 || c > pt.maghrib + 70 ? 1 : c < pt.fajr + 40 ? 1 - (c - pt.fajr + 30) / 70 : c > pt.maghrib ? (c - pt.maghrib) / 70 : 0;
-      const fx = this.fxOk !== false, d = Math.min(1, k + (this.w.calling ? 0.06 : 0));
-      const col = (a, b, t) => { const o = C.Interpolate.ColorWithColor(C.ValueToColor(a), C.ValueToColor(b), 100, Math.round(t * 100)); return C.GetColor(o.r, o.g, o.b); };
-      const amb = d < 0.5 ? col(0xffffff, 0xe6bfb0, d * 2) : col(0xe6bfb0, 0x6474b0, (d - 0.5) * 2);
-      this.lights.setAmbientColor(amb);
-      const lit = d > 0.01;
-      if (lit !== this.isLit) {
-        this.isLit = lit;
-        for (const id in this.Z) { const z = this.Z[id]; z.lit = z.lit.filter(o => o.active); z.lit.forEach(o => o.setLighting(lit)); }
-        this.spr.forEach(s => s.setLighting(lit)); this.veh.forEach(s => s.setLighting(lit)); if (this.overview) this.overview.setLighting(lit); if (this.under) this.under.setLighting(lit); if (this.field) this.field.setLighting(lit);
-        for (const lot in this.bld) { const b = this.bld[lot]; b.far.setLighting(lit); b.parts.forEach(q => { if (q.s) q.s.setLighting(lit); }); } if (this.gt) this.gt.forEach(e => { if (e.img) e.img.setLighting(lit); });
+      const d = Math.min(1, k + (this.w.calling ? 0.06 : 0));
+      const amb = d < 0.5 ? mix(0xffffff, 0xe6bfb0, d * 2) : mix(0xe6bfb0, 0x6474b0, (d - 0.5) * 2), out = this.lampsOn = Math.min(1, Math.max(0, (k - 0.1) * 1.6));
+      this.isLit = d > 0.01;
+      if (amb !== this.amb) {                                                      // what belongs to no place: the field, the ground, the outsides of buildings, what is on the road
+        this.amb = amb;
+        [this.field, this.under, this.overview].forEach(o => { if (o) o.setTint(amb); }); if (this.gt) this.gt.forEach(e => { if (e.img) e.img.setTint(amb); });
+        for (const lot in this.bld) { const b = this.bld[lot]; b.far.setTint(amb); b.parts.forEach(q => { if (q.s) q.s.setTint(amb); }); }
+        this.veh.forEach(s => s.setTint(amb));
+        this.cameras.main.setBackgroundColor(((0xa1 * (amb >> 16 & 255) / 255) << 16) | ((0xde * (amb >> 8 & 255) / 255) << 8) | (0x75 * (amb & 255) / 255));     // (the colour of the field, in this light, for the moment before its picture is there)
       }
-      // a light may add only what the ambient leaves below full brightness
-      const room = 1 - Math.max((amb >> 16) & 255, (amb >> 8) & 255, amb & 255) / 255;
       for (const id in this.Z) {
-        const z = this.Z[id]; if (z.state !== 'on') continue; const vis = z.layer.visible;
+        const z = this.Z[id]; if (z.state !== 'on') continue; const vis = z.layer.visible; let room = 0, sig = '';
         const off = Object.keys(this.w.lamps).some(i => i.indexOf(id + '/') === 0 && this.w.lamps[i]);
         z.lamps.forEach(l => {
-          const on = !vis || (l.id && this.w.lamps[l.id]) ? 0 : l.room ? (off ? 0 : Math.min(1, k * 1.5)) : Math.min(1, Math.max(0, (k - 0.1) * 1.6));
-          l.light.setIntensity(lit ? on * Math.min(l.power, room) : 0); if (l.halo) l.halo.intensity = on * 0.2;
+          const on = !vis || (l.id && this.w.lamps[l.id]) ? 0 : l.room ? (off ? 0 : Math.min(1, k * 1.5)) : out;
+          l.on = on; if (l.room) room = on; else sig += (on * 50 | 0) + ',';
+          if (l.pool) l.pool.setAlpha(on * l.power); if (l.halo) l.halo.intensity = on * 0.2;
         });
-        const sun = lit && vis && fx && k < 0.5 ? Math.min(1, k * 4) * 0.3 : 0;      // through the windows at dawn and dusk
-        z.sunny.forEach(x => { x.light.setIntensity(Math.min(sun, room + 0.1)); });
-        if (z.flies) { if (k > 0.7 && fx && vis) z.flies.start(); else z.flies.stop(); }
+        const tint = z.pl.outdoor ? amb : mix(amb, ROOM, room * 0.62); sig = tint + ':' + sig;
+        if (sig !== z.sig) {
+          z.sig = sig; z.tint = tint; z.lit = z.lit.filter(o => o.active);
+          z.lit.forEach(o => o.setTint(o._lw && out ? mix(tint, WARM, Math.min(0.6, o._lw * out)) : tint));
+        }
+        if (z.flies) { if (k > 0.7 && vis) z.flies.start(); else z.flies.stop(); }
       }
-      this.moon.setIntensity(lit ? Math.min(0.22, room) * Math.min(1, k * 1.5) : 0);
-      this.cameras.main.setBackgroundColor(C.GetColor(0xa1 * ((amb >> 16) & 255) / 255, 0xde * ((amb >> 8) & 255) / 255, 0x75 * (amb & 255) / 255));     // (the colour of the field, in this light, for the moment before its picture is there)
-      // after dark: the corners fall away (Vignette) and bright lamps bleed a little (the engine's bloom)
-      const cam = this.cameras.main, want = fx && k > 0.5 && !this.fading;         // (never during a fade: bloom on a fading picture flashes white)
-      if (want && !this.night) { const f = cam.filters.external; this.night = { v: f.addVignette(0.5, 0.5, 0.9, 0.24), b: Phaser.Actions.AddEffectBloom(cam, { threshold: 0.9, blurRadius: 3, blurSteps: 3, blendAmount: 0.4 })[0] }; }
-      else if (!want && this.night) { const f = cam.filters.external; f.remove(this.night.v); f.remove(this.night.b.parallelFilters); this.night = null; }
+      this.shade();
     }
-    // the extra effects are dropped on a phone that cannot hold the frame rate with them, and stay dropped
-    watchFx() { if (this.fxOk === false || !(this.isLit || this.night)) return; const f = this.game.loop.actualFps; this.slow = f < 42 ? (this.slow || 0) + 1 : 0; if (this.slow >= 3) { this.fxOk = false; this.light(); } }
-    // something the lights fall on (ground, walls, furniture, people, vehicles): lit only while it is dark
-    lit(o, z) { if (z) z.lit.push(o); if (o.setLighting) o.setLighting(this.isLit); return o; }
+    // how much of a place's lamps' light falls at a point on the ground (0 none, 1 right under one)
+    lampAt(z, x, y) { let m = 0; for (const l of z.lamps) { if (!l.pool) continue; const dx = (x - l.x) / l.r, dy = (y - l.y) / (l.r * 0.5), q = 1 - Math.sqrt(dx * dx + dy * dy); if (q > m) m = q; } return m; }
+    // people take the light of where they stand
+    shade() {
+      const out = this.lampsOn || 0;
+      this.spr.forEach((s, p) => {
+        const z = this.Z[p.place]; let t = this.amb;
+        if (z && z.state === 'on' && z.tint != null) { t = z.tint; if (out && z.pl.outdoor) { const lw = this.lampAt(z, s.x, s.y); if (lw > 0) t = mix(t, WARM, Math.min(0.6, lw * out)); } }
+        if (s._tint !== t) { s._tint = t; s.setTint(t); }
+      });
+    }
+    /* A phone that cannot hold the frame rate draws fewer pixels: after four slow seconds one step softer, and it is kept
+       for next time. If the step did not help (the phone is slow at something else) it is taken back and no more are tried. */
+    watch() {
+      const W = this.fps || (this.fps = { slow: 0 }), f = this.game.loop.actualFps;
+      if (W.done || this.busy || this.load.isLoading()) { W.slow = 0; return; }
+      if (W.t) { if (++W.t.n < 4) return; if (f < W.t.f * 1.15) { Kit.play.sharp(W.t.d); W.done = true; } else { try { localStorage.setItem(SHARP, String(Kit.play.dpr())); } catch (e) { /* private mode */ } } W.t = null; W.slow = 0; return; }
+      W.slow = f < 45 ? W.slow + 1 : 0;
+      if (W.slow >= 4) { const d = Kit.play.dpr(); if (d > 1) { W.t = { f: f, n: 0, d: d }; Kit.play.sharp(Math.max(1, d - 0.25)); } else W.done = true; }
+    }
+    // something the light falls on (ground, walls, furniture, people, vehicles): it carries the colour of its place
+    lit(o, z) { if (z) z.lit.push(o); if (o.setTint) o.setTint(z && z.tint != null ? z.tint : this.amb); return o; }
 
     /* ---------- the child's taps: a person first, then a thing that can be used, then the ground ---------- */
     tap(wx, wy) {
       if (this.you.praying || this.you.riding === 'bus') return;
-      const zoom = this.cameras.main.zoom, reach = Math.max(46, 34 / zoom);
+      const zoom = this.cameras.main.zoom, reach = Math.max(46, 34 * this.zs / zoom);
       // someone (their whole height, and a finger's width either side)
       let who = null, best = 1e9;
       this.spr.forEach((s, p) => {
@@ -704,7 +759,7 @@
         const c = this.add.container(s.x, top + 60).setDepth(OVER).setScale(0);
         c.add([this.add.image(0, 0, 'ui-plate').setScale(0.62), this.add.image(0, -3, 'ui', Life.ico(it[0])).setScale(0.5)]);
         c.setSize(112, 112).setInteractive(); c.on('pointerup', () => { sfx('pop'); this.closeRing(); it[1](); });
-        this.tweens.add({ targets: c, x: s.x + (i - (items.length - 1) / 2) * 112, y: top, scale: Math.max(1, 0.8 / this.cameras.main.zoom), duration: 240, ease: 'Back.easeOut', delay: i * 45 });
+        this.tweens.add({ targets: c, x: s.x + (i - (items.length - 1) / 2) * 112, y: top, scale: Math.max(1, 0.8 * this.zs / this.cameras.main.zoom), duration: 240, ease: 'Back.easeOut', delay: i * 45 });
         return c;
       });
       // their friendship flower, above the ring
@@ -750,7 +805,6 @@
     unmark(j) { const c = this.marks[j.k]; if (c) { delete this.marks[j.k]; this.tweens.add({ targets: c, scale: 0, duration: 200, onComplete: () => c.destroy() }); } }
     // people who wish for something show it now and then
     remind() {
-      this.watchFx();
       this.w.people.forEach(a => { if (!a.animal || a.away || !this.shown(a.place) || a.needs.food > 0.4 || !a.food) return; const th = this.w.places[a.home].things[a.food]; if (th && th.k.states && th.state === th.k.states[0]) this.bubble(a, th.k.icon || 'seeds', 2600); });   // a hungry animal asks
       Life.rules.wishes.forEach(x => { const q = this.w.by[x.who]; if (q && !q.away && !q.hidden) this.bubble(q, x.icon, 2600); }); this.light();
     }
@@ -848,12 +902,11 @@
     /* ---------- every frame: step the world, then put each sprite where its person is ---------- */
     update(time, delta) {
       const dt = Math.min(0.05, delta / 1000); this.w.step(dt); if (this.busy) return;
-      this.sync(time, dt); if ((this.tick = (this.tick || 0) + 1) % 6 === 0) this.seeThrough();
+      this.sync(time, dt); if ((this.tick = (this.tick || 0) + 1) % 6 === 0) { this.seeThrough(); this.shade(); }
       // the camera goes with the child (or looks, for a moment, at a place being pointed out) unless it has been moved by hand
       const cam = this.cameras.main, pk = this.peek && this.time.now < this.peek.until ? this.peek : (this.peek = null);
       if (pk || this.follow) { const t = pk || this.target(), k = Math.min(1, dt * (pk ? 3 : 5)), cx = cam.scrollX + cam.width / 2, cy = cam.scrollY + cam.height / 2; cam.scrollX += (t.x - cx) * k; cam.scrollY += (t.y - cy) * k; }
       else if (!this.input.activePointer.isDown && this.you.path.length) this.centreIfSeen();
-      this.moon.setPosition(cam.scrollX + cam.width / 2, cam.scrollY + cam.height / 2);
     }
     layerOf(pid) { const z = this.Z[pid]; return z && z.state === 'on' ? z.layer : null; }
     sync(time, dt) {
@@ -864,7 +917,7 @@
         const L = pl && (this.layerOf(p.place) || (pl.outdoor ? this.propLayer(this.rank[p.place]) : null)), vis = !!L && (L.visible || pl.outdoor);
         if (!vis) { if (s) { this.dropSprite(s); this.spr.delete(p); } continue; }
         if (!s) {
-          if (!this.textures.exists(key)) { if (this.cameras.main.zoom >= LOD && !(this.gone && this.time.now - (this.gone[key] || -1e9) < 3000) && this.wantSheet(p) && !this.load.isLoading()) this.load.start(); continue; }
+          if (!this.textures.exists(key)) { if (this.cameras.main.zoom >= LOD * this.zs && !(this.gone && this.time.now - (this.gone[key] || -1e9) < 3000) && this.wantSheet(p) && !this.load.isLoading()) this.load.start(); continue; }
           delete this.loading[key]; walkAnims(this, key);
           const d = D.art.people[p.sprite];
           s = this.lit(this.add.sprite(0, 0, key, 'idle').setOrigin(d.ax / d.fw, d.ay / d.fh)); s._h = d.h * Zp; s._key = '';
@@ -969,7 +1022,12 @@
       if (Q.has('perf')) {
         const el = document.createElement('div'); el.style.cssText = 'position:fixed;left:8px;bottom:8px;z-index:9;font:600 12px/1.3 ui-monospace,monospace;color:#fff;background:rgba(0,0,0,.55);padding:4px 8px;border-radius:8px;pointer-events:none';
         document.body.appendChild(el);
-        this.time.addEvent({ delay: 500, loop: true, callback: () => { const c = Math.floor(w.clock); el.textContent = Math.round(this.game.loop.actualFps) + ' fps · ' + (P() ? Object.keys(P().Z).filter(k => P().Z[k].state === 'on').length + ' places · ' + Math.round(this.textures.getTextureKeys().reduce((n, k) => { const t = this.textures.get(k), im = t.getSourceImage(); return n + (im ? im.width * im.height : 0) * (t.dataSource && t.dataSource.length ? 1.25 : 1); }, 0) * 4 / 1e6) + ' MB · z' + P().cameras.main.zoom.toFixed(2) + ' · ' + P().pid : '') + ' · ' + Math.floor(c / 60) + ':' + ('0' + c % 60).slice(-2); } });
+        // (how many times a frame the renderer hands pictures to the graphics chip, and how long the game's own work takes)
+        const gl = this.game.renderer.gl, st = window.LTP = { dc: 0, fr: 0, ms: 0, t: 0, up: 0, ups: 0 };
+        ['drawArrays', 'drawElements'].forEach(n => { const f = gl[n]; gl[n] = function () { st.dc++; return f.apply(gl, arguments); }; });
+        { const f = gl.texImage2D; gl.texImage2D = function () { const t = Date.now(), r = f.apply(gl, arguments), d = Date.now() - t; st.ups += d; if (d > st.up) st.up = d; return r; }; }      // (handing a new picture to the chip: the longest one is how long the game stops when something loads)
+        this.game.events.on('prestep', () => { st.t = performance.now(); }); this.game.events.on('postrender', () => { st.ms += performance.now() - st.t; st.fr++; });
+        this.time.addEvent({ delay: 500, loop: true, callback: () => { const c = Math.floor(w.clock), fr = st.fr || 1, cv = this.game.canvas; el.textContent = Math.round(this.game.loop.actualFps) + ' fps · ' + Math.round(st.dc / fr) + ' draws · ' + (st.ms / fr).toFixed(1) + ' ms · ' + cv.width + 'x' + cv.height + ' · load ' + st.up + '/' + st.ups + ' ms · ' + (P() ? Object.keys(P().Z).filter(k => P().Z[k].state === 'on').length + ' places · ' + Math.round(this.textures.getTextureKeys().reduce((n, k) => { const t = this.textures.get(k), im = t.getSourceImage(); return n + (im ? im.width * im.height : 0) * (t.dataSource && t.dataSource.length ? 1.25 : 1); }, 0) * 4 / 1e6) + ' MB · z' + P().cameras.main.zoom.toFixed(2) + ' · ' + P().pid : '') + ' · ' + Math.floor(c / 60) + ':' + ('0' + c % 60).slice(-2); st.dc = st.fr = st.ms = 0; } });
       }
     }
     open(name) { if (!this.scene.get(name) || this.scene.isActive(name)) return; sfx('pop'); this.scene.launch(name); }
@@ -1043,7 +1101,9 @@
      picture decoded before anything loads tells us which. `?webp` forces the old files, for testing. */
   const start = ok => {
     EXT = window.LifeExt = ok ? '.avif' : '.webp';
-    const game = Kit.play.start({ scenes: [Boot, PlaceScene, Hud].concat(window.LifeScenes || []), color: '#8fc7d6' });
+    // (drawn for a phone: a canvas of at most 1.6 million pixels, no multisampling, four textures to a batch: see js/kit/play.js)
+    let sharp = 0; try { sharp = +localStorage.getItem(SHARP) || 0; } catch (e) { /* private mode */ }
+    const game = Kit.play.start({ scenes: [Boot, PlaceScene, Hud].concat(window.LifeScenes || []), color: '#8fc7d6', pixels: 1.6e6, sharp: sharp, msaa: false, textures: 4 });
     if (Q.has('debug')) window.LTG = game;
   };
   if (Q.has('webp')) start(false);

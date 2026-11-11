@@ -7,7 +7,7 @@
      [row*TILE, (row+1)*TILE) (its picture is BLEED pixels bigger, to overlap its neighbours) where map point (x, y) is at screen ((y - x) * 96, (x + y) * 48). Empty tiles are not
      written, so no memory goes on the empty corners of a diamond, and the game loads only the tiles in view.
      art.ground = {tile, tiles: ["col_row", ...]}. The outdoor bg-<place> files are no longer shipped.
-   - a building's outside: square pieces life/art/b-<lot>-<i>.avif (+ .n.avif), each loaded only while it is in view,
+   - a building's outside: square pieces life/art/b-<lot>-<i>.avif, each loaded only while it is in view,
      the building is closed and the camera is near; and a small copy b-<lot>.s.avif (FAR of the size) that is always
      there for the far view. art.buildings[<lot>] = {w, h, ax, ay, far, parts: [{x, y, w, h}]} (w, h: the whole
      picture; ax, ay: the pixel of the footprint's middle on the ground; a part's x, y: its corner in the whole).
@@ -70,7 +70,6 @@ def ground(data, art, BAKE, ART):
         for ext in ('.avif', '.webp', '.n.avif', '.n.webp'):
             f = os.path.join(ART, 'bg-%s%s' % (p, ext))
             if os.path.exists(f): os.remove(f)
-        if 'bg-' + p in art['normals']: art['normals'].remove('bg-' + p)
     art['ground'] = dict(tile=TILE, tiles=tiles)
 
 def road_ends(data, BAKE):
@@ -108,7 +107,7 @@ def buildings(data, art, BAKE, ART):
         enc.save(small, os.path.join(ART, 'b-%s.s' % lot)); keep.add('b-%s.s' % lot)
         # the full picture, in square pieces, each cut to what it holds: a long building is a slanting band, mostly
         # empty as one rectangle, and the game loads only the pieces that are in view
-        nsrc = os.path.join(BAKE, 'n-k-%s.png' % n); parts = []; cut = os.path.join(BAKE, 'b-%s.cut' % lot); how = 'pieces %d bleed %d' % (PIECE, BLEED)
+        parts = []; cut = os.path.join(BAKE, 'b-%s.cut' % lot); how = 'pieces %d bleed %d' % (PIECE, BLEED)
         if not (os.path.exists(cut) and open(cut).read() == how): fresh = True
         if fresh:
             for f in glob.glob(os.path.join(BAKE, 'b-%s-*' % lot)): os.remove(f)
@@ -123,14 +122,10 @@ def buildings(data, art, BAKE, ART):
                     bx = int(bx) // 2 * 2; by = int(by) // 2 * 2; bw = min(cw - bx, (int(bw) + 3) // 2 * 2); bh = min(ch - by, (int(bh) + 3) // 2 * 2)      # even, for the half-size surface map
                     X = i * PIECE + bx; Y = j * PIECE + by
                     sh('magick', dst, '-crop', '%dx%d+%d+%d' % (bw, bh, X, Y), '+repage', 'PNG32:' + piece); json.dump([X, Y, bw, bh, q], open(box, 'w'))
-                    if os.path.exists(nsrc): sh('magick', nsrc, '-crop', '%dx%d+%d+%d' % (bw, bh, x + X, y + Y), '+repage', '-filter', 'Box', '-resize', '%dx%d!' % (round(bw / 2), round(bh / 2)), 'PNG24:' + piece[:-4] + '.n.png')
                 got = json.load(open(box))
                 if not got: continue
                 px, py, pw, ph, q = got; piece = os.path.join(BAKE, 'b-%s-%d.png' % (lot, q)); name = 'b-%s-%d' % (lot, q); q += 1
                 enc.save(piece, os.path.join(ART, name)); keep.add(name); parts.append(dict(x=px, y=py, w=pw, h=ph))
-                if os.path.exists(piece[:-4] + '.n.png'):
-                    enc.save_data(piece[:-4] + '.n.png', os.path.join(ART, name + '.n')); keep.add(name + '.n')
-                    if name not in art['normals']: art['normals'].append(name)
         open(cut, 'w').write(how)
         art['buildings'][lot] = dict(w=w, h=h, ax=round(m['ax'] - x, 1), ay=round(m['ay'] - y, 1), far=round(FAR, 6), parts=parts)
     for f in os.listdir(ART):                                           # pictures of an earlier cut

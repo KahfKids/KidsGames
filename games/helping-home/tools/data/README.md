@@ -128,12 +128,10 @@ into the album's animals page once.
 `"packs": {"road": ["car@0#a", "car@180#a", "bus@0", ...]}`: sprites that are not furniture of one place (vehicles).
 Each list is baked and packed into its own sheet `life/art/t-<name>.avif`; the list called `ui` goes onto the icon sheet.
 
-## normal maps
+## light
 
-`n-bg-<place>.png` / `n-wall-<place>-<L|R>.png` / `n-k-<sprite>.png` in the bake folder are the surface maps Phaser's lights shade by: the same frame as the picture, each pixel the camera-space normal * 0.5 + 0.5 (x right, y up, z toward the viewer; flat is 128,128,255; a level floor is about 127,238,191).
-Make them with `blender -b -P tools/art/bake.py -- <bake_dir> places kinds --normals` (add `--force` to redo; only the maps are rendered, beauty frames must already exist and are not touched).
-`build.py` packs them at half size into `life/art/<sheet>.n.avif` (same layout as the sheet) and lists the sheets in `data.json` `art.normals`.
-Frames without a map stay flat and are printed after `NO NORMAL MAP YET:`; people, animals and icons have none.
+The game does not use the engine's lights: night is each picture's tint (see `light` in `life/game.js`), so no normal maps are built or shipped.
+`bake.py --normals` can still render them into the bake folder; `build.py` ignores them and removes any `.n.avif` / `.n.webp` left in `life/art/`.
 
 ## TEACHER REVIEW
 

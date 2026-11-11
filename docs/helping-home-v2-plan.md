@@ -14,8 +14,17 @@ added to it during the build. What follows in this document is still the design;
   animal park), 17 people with timetables and needs, prayer at the real times, wishes, friendship, the album,
   garden, chores, daily cards. Added at the owner's request: coins, buying, paid jobs, school lessons and skills
   (this overrides "no money" below), cars, a bus and a bicycle, a house cat, hens with eggs, an animal park with a
-  cow (milk), goats, rabbits, a tortoise, a camel, an elephant, a giraffe and a working sheepdog, day and night on
-  the engine's lights with normal maps, AVIF art.
+  cow (milk), goats, rabbits, a tortoise, a camel, an elephant, a giraffe and a working sheepdog, day and night,
+  AVIF art.
+- **Light that costs nothing on a phone (2026-11-11, after the owner found the first live build very laggy on
+  Android):** night is each picture's own tint plus soft glow pictures at the lamps; there are no per-pixel lights,
+  no normal maps and no full-screen filters (bloom, vignette). They cost six times the draw calls of daytime. The
+  engine also draws one texture per batch on any phone (`autoMobileTextures`), which made about 130 draw calls a
+  frame where a desktop made 20: the game now asks for four textures a batch on every device (about 30). The
+  canvas is held under 1.6 million pixels, has no multisampling, and steps down in sharpness by itself on a phone
+  that cannot hold the frame rate (`watch` in `life/game.js`, `Kit.play.sharp`). Pictures are decoded off the main
+  thread. `?perf` shows frames per second, draw calls, the game's own milliseconds per frame and the canvas size:
+  the numbers to read on a real phone. Do not bring the engine's lights or camera filters back.
 - **One connected town (2026-11-11, owner's request):** every place sits on one map (`tools/data/world.json`); the
   camera is dragged, pinched and wheel-zoomed, a map button shows the whole town, a second button returns to the
   child; people walk from place to place with no fade. A building shows its outside until the child walks in, then
@@ -27,7 +36,7 @@ added to it during the build. What follows in this document is still the design;
   of pictures out of doors and on a ground floor, 144 MB upstairs at home, 60 fps on a Mac.
 - **Checks:** `python3 tools/check-data.py` (data), `node tools/life-test.js 3 20` (three simulated days: nobody
   stuck, nobody through furniture). Both pass.
-- **Done 2026-11-11:** it is the main page, `offline.json` lists only what it loads (431 files, 10.1 MB after the one-map change), the old
+- **Done 2026-11-11:** it is the main page, `offline.json` lists only what it loads (345 files, 9.6 MB), the old
   town, the old prayer pages and the rejected mini-games are removed, version files are at 1.8.0.
 - **Not done:** not committed, nothing run in the app or on a phone, `settings.html` is not linked from the game, sound not listened to, Ramadan and Eid
   not built, adab moments with words left out (no reviewed text).

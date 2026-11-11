@@ -7,9 +7,6 @@
                                        the frame and the pixel (ax, ay) in it of the room's local ground point (0, 0, 0), the far corner
          life/art/ui.avif/.json        icons
          (each picture also as .webp, for a WebView too old for AVIF: see enc.py)
-         life/art/<sheet>.n.avif       the surface (normal) map of every background and furniture sheet (bake.py --normals):
-                                       the identical layout at HALF size, flat (128,128,255) where nothing is; the sheet names
-                                       are listed in data.json art.normals. Not for ui or people.
          life/data.json                everything in tools/data/*.json plus the size and anchor of every sprite
    Needs ImageMagick (`magick`), `avifenc` and `cwebp`. Nothing here draws or retouches: it only trims, places and converts."""
 import json, os, subprocess, sys, glob
@@ -23,17 +20,12 @@ def sh(*a):
     if r.returncode: sys.exit('FAILED: ' + ' '.join(a)[:300] + '\n' + r.stderr[:400])
     return r.stdout.strip()
 def newer(src, dst): return not os.path.exists(dst) or os.path.getmtime(src) > os.path.getmtime(dst)
-data = D.load(); art = dict(px=192, zpx=192 * 0.8660254 / 1.41421356, places={}, kinds={}, walls={}, floors={}, icons=[], people={}, you={}, animals={}, normals=[])
-missing = []; nonorm = []; NSCALE = 0.5
+data = D.load(); art = dict(px=192, zpx=192 * 0.8660254 / 1.41421356, places={}, kinds={}, walls={}, floors={}, icons=[], people={}, you={}, animals={})
+missing = []
 
 def png_size(f):
     with open(f, 'rb') as fh: h = fh.read(24)
     return int.from_bytes(h[16:20], 'big'), int.from_bytes(h[20:24], 'big')
-def has_normal(f, m):
-    """Is there a baked normal map of the size of its beauty frame (m['w'] x m['h'])? One of another size is out of date."""
-    if not os.path.exists(f): return False
-    if png_size(f) != (int(m['w']), int(m['h'])): print('OUT OF DATE normal map (re-bake with --normals --force):', os.path.basename(f)); return False
-    return True
 
 for pid in data['places']:
     src = os.path.join(BAKE, 'bg-%s.png' % pid)
@@ -45,12 +37,6 @@ for pid in data['places']:
             if os.path.exists(f): os.remove(f)
         continue
     enc.save(src, os.path.join(ART, 'bg-%s' % pid))
-    nsrc = os.path.join(BAKE, 'n-bg-%s.png' % pid)
-    if not has_normal(nsrc, art['places'][pid]): nonorm.append('bg-' + pid)
-    else:
-        half = os.path.join(BAKE, 'n-bg-%s.half.png' % pid)
-        if newer(nsrc, half): sh('magick', nsrc, '-filter', 'Box', '-resize', '%dx%d!' % (round(art['places'][pid]['w'] * NSCALE), round(art['places'][pid]['h'] * NSCALE)), 'PNG24:' + half)
-        enc.save_data(half, os.path.join(ART, 'bg-%s.n' % pid)); art['normals'].append('bg-' + pid)
 
 def clean(fn):
     """Clear the faint haze the shadow catcher leaves, and find the box that holds the picture."""
@@ -78,20 +64,7 @@ def floor_pieces(pid):
         got = [how, boxes]; json.dump(got, open(idx, 'w'))
     return [dict(fn=fn, w=b[2], h=b[3], tx=b[0], ty=b[1], m=dict(m, ax=m['ox'], ay=m['oy']), name='floor-%d' % k) for k, b in enumerate(got[1])]
 
-def normal_sheet(sheet, boxes, maxw, H):
-    """The surface map of a sheet: the same layout, flat where a frame has no baked normal map, then halved (Box filter: the
-    average of each 2x2, so no ringing). Written as life/art/<sheet>.n.avif when at least one frame has a map."""
-    args = ['magick', '-size', '%dx%d' % (maxw, H), 'xc:rgb(128,128,255)']; n = 0
-    for b in boxes:
-        f = os.path.join(BAKE, 'n-' + b['fn'] + '.png')
-        if not has_normal(f, b['m']): nonorm.append(b['fn']); continue
-        args += ['(', f, '-crop', '%dx%d+%d+%d' % (b['w'], b['h'], b['tx'], b['ty']), '+repage', ')', '-geometry', '+%d+%d' % (b['x'], b['y']), '-composite']; n += 1
-    if not n: return
-    png = os.path.join(BAKE, 'sheet-n-%s.png' % sheet)
-    sh(*args, '-filter', 'Box', '-resize', '%dx%d!' % (round(maxw * NSCALE), round(H * NSCALE)), '-depth', '8', 'PNG24:' + png)
-    enc.save_data(png, os.path.join(ART, sheet + '.n')); art['normals'].append(sheet)
-
-def pack(sheet, entries, normals=True):
+def pack(sheet, entries):
     """Row-pack trimmed frames into one sheet; returns {name: {w, h, ax, ay}}."""
     boxes = sorted(entries, key=lambda b: -b['h']); PAD = 2
     def rows(maxw):
@@ -120,7 +93,6 @@ def pack(sheet, entries, normals=True):
         out[b['name']] = dict(w=b['w'], h=b['h'], ax=round(b['m']['ax'] - b['tx'], 1), ay=round(b['m']['ay'] - b['ty'], 1))
     png = os.path.join(BAKE, 'sheet-%s.png' % sheet); sh(*args, 'PNG32:' + png); enc.save(png, os.path.join(ART, sheet))
     json.dump({'frames': frames, 'meta': {'image': sheet + '.avif', 'size': {'w': maxw, 'h': H}, 'scale': '1'}}, open(os.path.join(ART, sheet + '.json'), 'w'), separators=(',', ':'))
-    if normals: normal_sheet(sheet, boxes, maxw, H)
     return out
 
 # A thing that stands in two or more outdoor places (the big trees, a lamp, a bench, a bin) is packed ONCE, into the
@@ -179,7 +151,7 @@ for k, kd in data['kinds'].items():
     if kd.get('act') in ('pickup', 'kick', 'ride') and n not in [e['name'] for e in ent] and os.path.exists(os.path.join(BAKE, 'k-%s.png' % n)):
         e = clean('k-' + n); e['name'] = n; ent.append(e)
 if ent:
-    m = pack('ui', ent, normals=False); art['icons'] = sorted(icons)
+    m = pack('ui', ent); art['icons'] = sorted(icons)
     for n in m:
         if n not in icons: art['kinds'].setdefault(n, m[n])
 # people and the player's layers are packed by their own tool, which leaves an index beside its sheets
@@ -191,17 +163,14 @@ for pid in data['places']:                # the sheet of a place that has none a
         for ext in ('.avif', '.webp', '.json', '.n.avif', '.n.webp'):
             f = os.path.join(ART, 't-%s%s' % (pid, ext))
             if os.path.exists(f): os.remove(f)
-        if 't-' + pid in art['normals']: art['normals'].remove('t-' + pid)
 import town; town.finish(data, art, BAKE, ART)      # the one map: ground tiles, the outsides of buildings, the far picture
 data['art'] = art
 json.dump(data, open(os.path.join(GAME, 'life', 'data.json'), 'w'), separators=(',', ':'))
-tot = old = nrm = 0
+tot = old = 0
 for root, _, files in os.walk(ART):
     for f in files:
-        if f.endswith('.n.avif'): nrm += os.path.getsize(os.path.join(root, f))
+        if f.endswith(('.n.avif', '.n.webp')): os.remove(os.path.join(root, f)); continue      # surface maps of an earlier build: the game lights with tints, and loads none
         if f.endswith('.webp'): old += os.path.getsize(os.path.join(root, f))
         else: tot += os.path.getsize(os.path.join(root, f))
 print('art the game downloads %.0f KB (the WebP copies for old WebViews, not downloaded: %.0f KB); data.json %.1f KB' % (tot / 1024, old / 1024, os.path.getsize(os.path.join(GAME, 'life', 'data.json')) / 1024))
-print('normal maps (the .n.avif files, included above): %.0f KB in %d sheets' % (nrm / 1024, len(art['normals'])))
 if missing: print('NOT BAKED YET:', ' '.join(missing))
-if nonorm: print('NO NORMAL MAP YET:', ' '.join(nonorm))
