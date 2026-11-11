@@ -1,6 +1,8 @@
 /* Mosaic Breaker: art.js
    All art is drawn in code (crisp at any size, no image downloads): layered world backgrounds,
-   glazed zellige tiles, the flying carpet, the star ball, lantern power-ups and the palace pillars. */
+   glazed zellige tiles, the flying carpet, the star ball, lantern power-ups and the palace pillars.
+   Canvas2D only paints pictures here. Functions that take p (the kit's pen, js/kit/pen.js) put those pictures
+   in the frame; PixiJS draws the frame. */
 (function () {
   'use strict';
   var A = window.MosaicArt = {};
@@ -248,71 +250,95 @@
   };
 
   // ---------- carpet ----------
-  A.carpet = function (ctx, x, y, w, h, t, glow) {
-    var n = 14, wave = function (i) { var u = i / n; return Math.sin(t * 7 + u * 6) * 3.2 * (0.4 + Math.abs(u - 0.5)); };
-    // shadow
-    ctx.fillStyle = 'rgba(5,3,20,.32)'; ctx.beginPath(); ctx.ellipse(x, y + h + 18, w * 0.5, 8, 0, 0, 6.283); ctx.fill();
-    if (glow) { ctx.save(); ctx.shadowColor = glow; ctx.shadowBlur = 26; }
-    function edge(off, sgn) { var pts = []; for (var i = 0; i <= n; i++) pts.push([x - w / 2 + (w * i) / n, y + off + wave(i)]); if (sgn < 0) pts.reverse(); return pts; }
-    var top = edge(0, 1), bot = edge(h, -1);
-    ctx.beginPath(); top.concat(bot).forEach(function (p, i) { i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]); }); ctx.closePath();
-    var gr = ctx.createLinearGradient(0, y, 0, y + h); gr.addColorStop(0, '#e2453c'); gr.addColorStop(1, '#9d1f2f');
-    ctx.fillStyle = gr; ctx.fill();
-    if (glow) ctx.restore();
-    // gold border and inner band
+  // The carpet lying flat, painted once per width: body, gold border, medallions. The frame cuts it into
+  // strips and tilts each one along the wave, so it ripples without being painted again.
+  function flatCarpet(ctx, w, h) {
+    var gr = ctx.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, '#e2453c'); gr.addColorStop(1, '#9d1f2f');
+    ctx.fillStyle = gr; ctx.fillRect(0, 0, w, h);
     ctx.strokeStyle = '#ffd36b'; ctx.lineWidth = 3;
-    ctx.beginPath(); edge(4, 1).forEach(function (p, i) { i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0] + 6, p[1]); }); ctx.stroke();
-    ctx.beginPath(); edge(h - 4, 1).forEach(function (p, i) { i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0] + 6, p[1]); }); ctx.stroke();
-    // diamond medallions along the middle
+    ctx.beginPath(); ctx.moveTo(6, 4); ctx.lineTo(w, 4); ctx.moveTo(6, h - 4); ctx.lineTo(w, h - 4); ctx.stroke();
     var cnt = Math.max(3, Math.round(w / 46));
     for (var k = 0; k < cnt; k++) {
-      var u = (k + 0.5) / cnt, i2 = u * n, mx = x - w / 2 + w * u, my = y + h / 2 + wave(i2);
+      var mx = w * (k + 0.5) / cnt, my = h / 2;
       ctx.fillStyle = k % 2 ? '#2b3a8f' : '#ffd36b';
       ctx.beginPath(); ctx.moveTo(mx, my - 7); ctx.lineTo(mx + 9, my); ctx.lineTo(mx, my + 7); ctx.lineTo(mx - 9, my); ctx.closePath(); ctx.fill();
     }
+  }
+  var CARPET_N = 14, CARPET_H0 = 38;
+  // p: the pen. w0: the width the carpet is resting at or growing to (its picture is painted for that width).
+  A.carpet = function (p, x, y, w, h, t, glow, w0) {
+    var n = CARPET_N, wave = function (i) { var u = i / n; return Math.sin(t * 7 + u * 6) * 3.2 * (0.4 + Math.abs(u - 0.5)); };
+    w0 = Math.round(w0 || w);
+    // shadow
+    p.ellipse(x, y + h + 18, w * 0.5, 8, 'rgba(5,3,20,.32)');
+    if (glow) {                                   // a soft light around it while a power-up lasts
+      var gp = 40 / p.k, far = 4000;
+      var gl = p.pic('carpet-glow|' + glow + '|' + w0, w0, CARPET_H0, function (ctx, cw, ch) {
+        ctx.shadowColor = glow; ctx.shadowBlur = 26; ctx.shadowOffsetX = far; ctx.fillStyle = '#000';
+        ctx.fillRect(-far / p.k, 0, cw, ch);      // only the shadow lands on the picture
+      }, gp);
+      p.img(gl, x - w / 2, y, w, h);
+    }
+    var flat = p.pic('carpet|' + w0, w0, CARPET_H0, flatCarpet), seg = w0 / n, sw = w / n, sy = h / CARPET_H0;
+    for (var i = 0; i < n; i++) {
+      var y0 = wave(i), y1 = wave(i + 1);
+      p.save();
+      p.transform(1, (y1 - y0) / sw, 0, sy, x - w / 2 + sw * i, y + y0);
+      p.img(p.part(flat, seg * i, 0, seg, CARPET_H0), 0, 0, sw + 0.02, CARPET_H0);
+      p.restore();
+    }
     // tassels
-    ctx.strokeStyle = '#ffd36b'; ctx.lineWidth = 2.4; ctx.lineCap = 'round';
     [[-1, 0], [1, n]].forEach(function (s) {
       var ex = x + s[0] * w / 2, ey = y + wave(s[1]);
       for (var q = 0; q < 4; q++) { var yy = ey + 4 + q * (h - 8) / 3, sway = Math.sin(t * 9 + q) * 3;
-        ctx.beginPath(); ctx.moveTo(ex, yy); ctx.lineTo(ex + s[0] * 12, yy + sway); ctx.stroke();
-        ctx.fillStyle = '#ffd36b'; ctx.beginPath(); ctx.arc(ex + s[0] * 13, yy + sway, 2.6, 0, 6.283); ctx.fill(); }
+        p.line(ex, yy, ex + s[0] * 12, yy + sway, 2.4, '#ffd36b', true);
+        p.circle(ex + s[0] * 13, yy + sway, 2.6, '#ffd36b'); }
     });
   };
 
   // ---------- star ball ----------
-  A.ball = function (ctx, x, y, r, t, trail) {
+  A.ball = function (p, x, y, r, t, trail) {
+    var keep = p.alpha;
     for (var i = 0; i < trail.length; i++) {
-      var p = trail[i], k = (i + 1) / (trail.length + 1);
-      ctx.globalAlpha = k * 0.35; ctx.fillStyle = '#ffe6a3';
-      ctx.beginPath(); ctx.arc(p[0], p[1], r * (0.4 + k * 0.6), 0, 6.283); ctx.fill();
+      var q = trail[i], k = (i + 1) / (trail.length + 1);
+      p.alpha = keep * k * 0.35;
+      p.circle(q[0], q[1], r * (0.4 + k * 0.6), '#ffe6a3');
     }
-    ctx.globalAlpha = 1;
-    var halo = ctx.createRadialGradient(x, y, r * 0.4, x, y, r * 2.6);
-    halo.addColorStop(0, 'rgba(255,236,170,.55)'); halo.addColorStop(1, 'rgba(255,236,170,0)');
-    ctx.fillStyle = halo; ctx.beginPath(); ctx.arc(x, y, r * 2.6, 0, 6.283); ctx.fill();
-    var body = ctx.createRadialGradient(x - r * 0.35, y - r * 0.35, r * 0.1, x, y, r);
-    body.addColorStop(0, '#ffffff'); body.addColorStop(0.5, '#fff1b8'); body.addColorStop(1, '#f2b23a');
-    ctx.fillStyle = body; ctx.beginPath(); ctx.arc(x, y, r, 0, 6.283); ctx.fill();
-    ctx.save(); ctx.translate(x, y); ctx.rotate(t * 2.2);
-    ctx.fillStyle = 'rgba(214,128,20,.55)'; star8(ctx, 0, 0, r * 0.62, 0.55); ctx.fill(); ctx.restore();
+    p.alpha = keep;
+    p.glow(x, y, r * 2.6, 'rgba(255,236,170,.55)', r * 0.4);
+    p.img(p.pic('ball|' + r, r * 2, r * 2, function (ctx) {
+      var body = ctx.createRadialGradient(r * 0.65, r * 0.65, r * 0.1, r, r, r);
+      body.addColorStop(0, '#ffffff'); body.addColorStop(0.5, '#fff1b8'); body.addColorStop(1, '#f2b23a');
+      ctx.fillStyle = body; ctx.beginPath(); ctx.arc(r, r, r, 0, 6.283); ctx.fill();
+    }, 1), x - r, y - r);
+    var sr = r * 0.62;
+    p.save(); p.translate(x, y); p.rotate(t * 2.2);
+    p.img(p.pic('ball-star|' + r, sr * 2, sr * 2, function (ctx) {
+      ctx.fillStyle = 'rgba(214,128,20,.55)'; star8(ctx, sr, sr, sr, 0.55); ctx.fill();
+    }, 1), -sr, -sr);
+    p.restore();
   };
 
   // ---------- lantern power-up ----------
   var PU = { wide: { c: '#ff9f43', g: '↔' }, multi: { c: '#4dd4ff', g: '✦' }, slow: { c: '#a78bfa', g: '☾' }, life: { c: '#ff5d73', g: '♥' } };
-  A.lantern = function (ctx, x, y, type, t) {
-    var p = PU[type], sw = Math.sin(t * 4) * 0.12;
-    ctx.save(); ctx.translate(x, y); ctx.rotate(sw);
-    var glow = ctx.createRadialGradient(0, 0, 4, 0, 0, 46); glow.addColorStop(0, p.c + 'aa'); glow.addColorStop(1, p.c + '00');
+  function lanternPic(ctx, type) {
+    var q = PU[type];
+    ctx.translate(46, 46);
+    var glow = ctx.createRadialGradient(0, 0, 4, 0, 0, 46); glow.addColorStop(0, q.c + 'aa'); glow.addColorStop(1, q.c + '00');
     ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(0, 0, 46, 0, 6.283); ctx.fill();
     ctx.strokeStyle = '#ffd36b'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(0, -38); ctx.lineTo(0, -28); ctx.stroke();
     ctx.fillStyle = '#c98a2b'; ctx.beginPath(); ctx.moveTo(-14, -24); ctx.lineTo(14, -24); ctx.lineTo(8, -30); ctx.lineTo(-8, -30); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = p.c; ctx.beginPath(); ctx.moveTo(-14, -24); ctx.bezierCurveTo(-26, -8, -26, 10, -12, 22); ctx.lineTo(12, 22); ctx.bezierCurveTo(26, 10, 26, -8, 14, -24); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = q.c; ctx.beginPath(); ctx.moveTo(-14, -24); ctx.bezierCurveTo(-26, -8, -26, 10, -12, 22); ctx.lineTo(12, 22); ctx.bezierCurveTo(26, 10, 26, -8, 14, -24); ctx.closePath(); ctx.fill();
     ctx.strokeStyle = 'rgba(255,240,200,.8)'; ctx.lineWidth = 2; ctx.stroke();
     ctx.fillStyle = '#c98a2b'; ctx.fillRect(-12, 22, 24, 6);
     ctx.fillStyle = '#fff'; ctx.font = '900 22px Nunito, system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText(p.g, 0, 0);
-    ctx.restore();
+    ctx.fillText(q.g, 0, 0);
+  }
+  // One picture per kind of lantern; the frame only swings it.
+  A.lantern = function (p, x, y, type, t) {
+    p.save(); p.translate(x, y); p.rotate(Math.sin(t * 4) * 0.12);
+    p.img(p.pic('lantern|' + type, 92, 92, function (ctx) { lanternPic(ctx, type); }), -46, -46);
+    p.restore();
   };
   A.PU_COLORS = PU;
 
@@ -329,16 +355,20 @@
     for (var y2 = 100; y2 < h; y2 += 120) g.fillRect(0, y2, w, 6);
     return c;
   };
-  A.frieze = function (ctx, x0, x1, y, stone, t) {
-    var h = 34, gr = ctx.createLinearGradient(0, y - h, 0, y + 10);
-    gr.addColorStop(0, shade(stone, -0.5)); gr.addColorStop(1, shade(stone, 0.05));
-    ctx.fillStyle = gr; ctx.fillRect(x0, y - h - 400, x1 - x0, h + 400);
-    // hanging scalloped arches (muqarnas hint)
-    var step = 46;
-    ctx.fillStyle = shade(stone, -0.15);
-    for (var x = x0; x < x1; x += step) { ctx.beginPath(); ctx.moveTo(x, y); ctx.arc(x + step / 2, y, step / 2, Math.PI, 0, true); ctx.closePath(); ctx.fill(); }
-    ctx.fillStyle = 'rgba(255,240,200,.35)';
-    for (var x2 = x0 + step / 2; x2 < x1; x2 += step) { star8(ctx, x2, y - h * 0.55, 7); ctx.fill(); }
-    ctx.fillStyle = shade(stone, 0.25); ctx.fillRect(x0, y - 3, x1 - x0, 3);
+  // The frieze never changes, so it is one picture per world and width. key: what tells one world from another.
+  A.frieze = function (p, x0, x1, y, stone, key) {
+    var h = 34, step = 46, w = x1 - x0;
+    p.rect(x0, y - h - 400, w, 401, shade(stone, -0.5));
+    p.img(p.pic('frieze|' + key + '|' + Math.round(w), w, h + step / 2 + 1, function (ctx) {
+      var gr = ctx.createLinearGradient(0, 0, 0, h + 10);
+      gr.addColorStop(0, shade(stone, -0.5)); gr.addColorStop(1, shade(stone, 0.05));
+      ctx.fillStyle = gr; ctx.fillRect(0, 0, w, h);
+      // hanging scalloped arches (muqarnas hint)
+      ctx.fillStyle = shade(stone, -0.15);
+      for (var x = 0; x < w; x += step) { ctx.beginPath(); ctx.moveTo(x, h); ctx.arc(x + step / 2, h, step / 2, Math.PI, 0, true); ctx.closePath(); ctx.fill(); }
+      ctx.fillStyle = 'rgba(255,240,200,.35)';
+      for (var x2 = step / 2; x2 < w; x2 += step) { star8(ctx, x2, h - h * 0.55, 7); ctx.fill(); }
+      ctx.fillStyle = shade(stone, 0.25); ctx.fillRect(0, h - 3, w, 3);
+    }), x0, y - h);
   };
 })();

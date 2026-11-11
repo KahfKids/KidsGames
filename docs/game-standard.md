@@ -23,7 +23,7 @@ A page is one kind. A game never mixes two renderers on one page.
 1. **PixiJS is the renderer of every 2D game.** We use its WebGL renderer (`PIXI.WebGLRenderer`), the one PixiJS recommends for production. Not its WebGPU renderer (PixiJS calls it experimental) and not its canvas renderer (not released).
 2. **No fallback and no second drawing path.** A game is never also written for Canvas2D. A phone that cannot start WebGL gets the kit's try-again screen (`Kit.gfx.sorry`), nothing else.
 3. **PixiJS is started only by `Kit.gfx.create(canvas)`**, so every game gets the same settings: antialias off, an opaque canvas, the pixel density from `Kit.gfx.dpr()`, a lost context handled, the pinned PixiJS file. A game does not create its own `Application` or renderer.
-4. **After that, use PixiJS as PixiJS.** Build the scene on `surface.stage` with `Container`, `Sprite`, `Texture`, `Graphics`, `BitmapText`, `ParticleContainer`. Follow the PixiJS guides and `docs/pixi-performance.md`. Do not wrap PixiJS in a home-made layer and do not re-invent what it has.
+4. **After that, use PixiJS as PixiJS**, in one of two ways, both on `surface.stage`. **The pen** (`js/kit/pen.js`): `draw()` says what is on screen this frame, back to front, and the pen shows it with pooled sprites. Every game that decides its picture frame by frame uses it; it is the kit's one shared way, and its sprites, textures, pooling and tinting are PixiJS's own. **A scene you keep**: `Container`, `Sprite`, `Texture`, `BitmapText`, `ParticleContainer`, for things that stay (a rope, a mesh, a mask); `pen.add(obj)` puts one inside a pen frame. Follow the PixiJS guides and `docs/pixi-performance.md`. A game does not write its own drawing layer and does not re-invent what PixiJS or the kit has.
 5. **Nothing else draws the play area.** Not `canvas.getContext('2d')` for the frame, not moving DOM or SVG elements, not CSS animation as the game, not another engine or library (Phaser, Kaboom, Konva, p5, GSAP and the like).
 6. **Canvas2D only makes pictures**: art drawn in code, an SVG turned into pixels. The result becomes a texture (`surface.paint`, `surface.texture`, `surface.image`). It is never what the child watches frame by frame. A picture that changes (a page being coloured in) is still a texture shown by a PixiJS sprite.
 7. **Pixel density comes from `Kit.gfx.dpr()`** (at most 2, and 1.5 on phones with 2 GB of memory or less). A game does not read `devicePixelRatio` for its canvas.
@@ -68,7 +68,7 @@ Games use the kit for everything shared and never go around it:
 
 | Need | Use | Not |
 |------|-----|-----|
-| Drawing | PixiJS, started by `Kit.gfx.create` (`js/kit/gfx.js`) | a 2D canvas context for the frame, your own `Application`, another library |
+| Drawing | PixiJS: `Kit.gfx.stage` gives a full-screen game its surface and its pen (`js/kit/gfx.js`, `js/kit/pen.js`); `Kit.gfx.create` for a figure on a page | a 2D canvas context for the frame, your own `Application`, another library |
 | Loop, pause when hidden | `Kit.loop` (`js/kit/core.js`) | `setInterval`, a bare `requestAnimationFrame` loop |
 | Touch, mouse, keys | `Kit.pointer`, `Kit.keys` | raw listeners per game, on-screen arrow pads, swipe strips |
 | Saved progress, stars | `Kit.store`, `Kit.progress` | loose `localStorage` keys |
@@ -77,7 +77,7 @@ Games use the kit for everything shared and never go around it:
 | HUD, sheets | `js/kit/ui.js` | per-game menus |
 | Talking to the app | `Kit.host`, `Kit.bridge`, `js/kahf-bridge.js` | `ReactNativeWebView.postMessage` by hand |
 
-`Kit.stage` hands out a Canvas2D context and belongs to the games not ported yet. New and ported games use `Kit.gfx.create` instead.
+`Kit.stage` hands out a Canvas2D context and belongs to the games not ported yet; it is deleted with the last of them. New and ported games use `Kit.gfx.stage`.
 The loop is `Kit.loop`, not `PIXI.Ticker`, so pausing and game speed are the same in every game.
 
 A fix that would help more than one game goes into the kit, not into the game.
@@ -93,7 +93,7 @@ games/<id>/
   js/sounds.js    this game's own sound effects
 ```
 
-`index.html` loads, in this order: `js/kit/kit.css`, `js/kahf-bridge.js` (defer), one `<canvas>`, then `js/kit/core.js`, `js/kit/gfx.js`, `js/kit/fx.js`, `js/kit/audio.js`, `js/kit/ui.js`, then the game's own files. Paths to shared files are absolute (`/KidsGames/js/...`). Copy the head of an existing kit game (`games/breakout-game/index.html`) for the meta tags and the service worker lines.
+`index.html` loads, in this order: `js/kit/kit.css`, `js/kahf-bridge.js` (defer), one `<canvas>`, then `js/kit/core.js`, `js/kit/gfx.js`, `js/kit/pen.js`, `js/kit/fx.js`, `js/kit/audio.js`, `js/kit/ui.js`, then the game's own files. Paths to shared files are absolute (`/KidsGames/js/...`). Copy the head of an existing kit game (`games/breakout-game/index.html`) for the meta tags and the service worker lines.
 
 No inline game code in the page. No script, style, font or image from another site.
 
@@ -138,7 +138,7 @@ Rule for this table: **it only moves forward.** A game marked "PixiJS" never goe
 | `30-seconds-challenge` | Canvas2D on the kit | to port |
 | `animal-memory-match` | Canvas2D on the kit | to port |
 | `balloon-pop-adventure` | Canvas2D on the kit | to port |
-| `breakout-game` | Canvas2D on the kit | to port |
+| `breakout-game` | PixiJS (the pen) | **done.** The worked example for section 12. |
 | `follow-the-light` | Canvas2D on the kit | to port |
 | `hextris` | Canvas2D on the kit | to port |
 | `jannah-garden` | Canvas2D on the kit | to port |
@@ -155,12 +155,45 @@ Rule for this table: **it only moves forward.** A game marked "PixiJS" never goe
 
 The other folders under `games/` that no page links to are leftovers. They are not part of the catalog, are not linked again as they are, and get no new work: a game that comes back is rebuilt on the standard.
 
-## 12. Porting a game (what Helping Home did)
+## 12. Porting a kit game to PixiJS (the recipe)
 
-1. Keep the code that makes the art. Point it at small canvases instead of the screen.
-2. Turn each finished canvas into a texture: `t = surface.texture(canvas)`. The canvas memory is handed back at once, so never draw from that canvas again.
-3. Show the textures with PixiJS sprites on `surface.stage`. A game that works out its drawing order every frame can use the kit's frame list (`surface.begin`, `draw`, `end`), which is a pool of sprites reused in order.
-4. Small shapes that were drawn by hand every frame (bubbles, hearts, arrows) become textures made once.
-5. Register `surface.onLost` and make the pictures again there.
-6. Compare screenshots with the live version at phone, sideways phone and tablet size before the old drawing code is deleted. Then delete it: no second path stays behind.
-7. Read `docs/pixi-performance.md` and check the game against its list.
+Breakout is the worked example. Read the header of `js/kit/pen.js` (it is the whole API), then read `games/breakout-game/js/game.js` and `js/art.js` next to what they were before: `git show ea4f2aa:games/breakout-game/js/game.js`.
+
+**What changes and what does not.** The rules of the game do not change: `step()`, input, levels, sounds, saves and the HUD stay as they are, line for line. Only how the frame gets on screen changes. Same picture, same sizes, same colours, same timing.
+
+1. **Page.** Load `/KidsGames/js/kit/gfx.js` and `/KidsGames/js/kit/pen.js` right after `core.js`.
+2. **Stage.** `K.stage(canvas, fit)` becomes `K.gfx.stage(canvas, fit).then(...)`. It is no longer ready at once:
+   - keep `var pen = null` and set it when the promise resolves; `draw()` starts with `if (!pen) return;`
+   - whatever starts the game (the first `startLevel`) waits for that promise; a failure goes to `K.gfx.sorry`
+   - inside `fit`, tell the pen how sharp to make pictures: `st.pen.unit(<device pixels per game unit>)`, the same scale `draw()` uses for the play field. A new value throws the kept pictures away, so code that emptied its own sprite lists on resize goes.
+3. **The frame.** `draw()` starts with `p.begin()` and ends with `p.end()`. In between, translate line by line:
+
+   | Canvas2D | Pen |
+   |----------|-----|
+   | `setTransform` `save` `restore` `translate` `rotate` `scale` | the same calls on the pen |
+   | `ctx.globalAlpha = v` | `p.alpha = v` |
+   | `globalCompositeOperation = 'lighter'` | `p.blend = 'add'`, and back to `'normal'` after |
+   | `drawImage(canvas, x, y, w, h)` | `p.img(t, x, y, w, h)`; a picture's padding is taken off for you |
+   | `fillRect` | `p.rect` |
+   | `arc` + `fill` | `p.circle` |
+   | `arc` + `stroke` | `p.ring` (whole circle), `p.arc` (part of one) |
+   | `ellipse` + `fill` | `p.ellipse` |
+   | a radial gradient fading to nothing | `p.glow` |
+   | `moveTo` `lineTo` + `stroke` | `p.line`, `p.path`, `p.dash`, `p.curve` |
+   | a rounded rectangle | `p.rr` |
+   | `fillText` `strokeText` | `p.text` (one call does both) |
+   | `measureText` | `p.measure` |
+   | anything else: gradients, clips, shadows, filled polygons, bezier shapes | paint it once in a `p.pic` |
+
+4. **Pictures.** Art comes in three kinds:
+   - **It returned a canvas** (tiles, sprites, pillars): `p.wrap(key, function (k) { return A.tile(..., k); })`. The pen keeps it and makes it again after a resize. A background as large as the screen is the exception: `S.texture(canvas)`, freed by you on resize (`S.free`) and forgotten in `S.onLost` (Breakout's `dropBg`).
+   - **It was drawn into the frame every time but never changes shape** (a lantern, a ball, a frieze): one `p.pic(key, w, h, paint, pad)`. The frame only moves, turns, scales and fades it.
+   - **It changes shape over time** (a rippling carpet, a trail, a swaying tassel): take it apart. The parts that keep their shape are pictures that move (Breakout's carpet is one flat picture cut into strips that tilt along the wave); the rest are shared shapes (`p.circle`, `p.line`, `p.glow`). A motion that repeats can be a few pictures, `p.pic(key + '|' + i, ...)` with `i` the step of the cycle.
+   - A key holds everything the picture depends on: kind, colour, size, state, world. Two different pictures under one key is the usual bug.
+   - **Never paint a new picture every frame.** If a key changes every frame (a size that eases, a colour that fades), the picture is being remade every frame: scale, fade or tint one picture instead.
+5. **Effects.** `K.fx.draw(ctx)` becomes `K.fx.draw(p)`.
+6. **Lost pictures.** The pen makes its own again. For textures you made with `S.texture`, set them to null in `S.onLost`.
+7. **Delete the old path.** No `getContext('2d')` for the frame, no `ctx` in `draw()`. Canvas2D stays only inside functions that paint a picture.
+8. **Check** at phone, sideways phone and tablet size, in every state the game has (start, play, effects, power-ups, each world, win, lose): the picture next to the old one, no errors in the console. Then read `docs/pixi-performance.md` section 15 and check the game against it.
+
+Something the pen cannot do goes into the pen (`js/kit/pen.js`), for every game. It is not worked around inside one game.

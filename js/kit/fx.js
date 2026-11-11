@@ -109,7 +109,33 @@
   }
   Kit.starPath = star;
 
+  // The effects on a pen (js/kit/pen.js): every particle is a shared white picture, tinted.
+  function shard(ctx) { ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(32, 4.8); ctx.lineTo(19.2, 24); ctx.closePath(); ctx.fill(); }
+  function drawPen(p) {
+    var keep = p.alpha;
+    for (var i = 0; i < parts.length; i++) {
+      var q = parts[i], k = 1 - q.age / q.life, s = q.size * (q.shape === 'spark' ? k : 1);
+      p.alpha = keep * Math.min(1, k * 1.6);
+      if (q.shape === 'dot' || q.shape === 'spark') p.circle(q.x, q.y, s * 0.5, q.color);
+      else if (q.shape === 'star') p.star(q.x, q.y, s * 0.6, q.color, q.rot);
+      else {
+        var sh = p.pic('kit-fx-shard', 32, 24, shard, 1);
+        p.save(); p.translate(q.x, q.y); p.rotate(q.rot); p.img(sh, -s * 0.5, -s * 0.3, s, s * 0.75, q.color); p.restore();
+      }
+    }
+    for (var m = 0; m < texts.length; m++) {
+      var t = texts[m], u = t.age / t.life, pop = u < 0.15 ? E.outBack(u / 0.15) : 1;
+      p.alpha = keep * (u > 0.65 ? 1 - (u - 0.65) / 0.35 : 1);
+      p.save(); p.translate(t.x, t.y - t.rise * E.outCubic(u)); p.scale(pop, pop);
+      p.text(t.s, 0, 0, { font: (t.font || '800 ') + Math.round(t.size) + 'px Nunito, system-ui, sans-serif', fill: t.color, stroke: t.stroke, lw: t.size * 0.16 });
+      p.restore();
+    }
+    p.alpha = keep;
+  }
+
+  // Kit.fx.draw(pen). A game not ported yet still passes a Canvas2D context: that branch goes when the last one is ported.
   function draw(ctx) {
+    if (ctx.img) { drawPen(ctx); return; }
     for (var i = 0; i < parts.length; i++) {
       var q = parts[i], k = 1 - q.age / q.life;
       ctx.globalAlpha = Math.min(1, k * 1.6);

@@ -60,7 +60,7 @@ These are not advice. A change that breaks one is not finished, however well it 
 | `index.html` | the games hub |
 | `quizzes.html` | the quiz catalog |
 | `games/<id>/` | one game or one quiz per folder |
-| `js/kit/` | the shared kit: `core.js` (loop, input, saves, app), `gfx.js` (PixiJS), `fx.js`, `audio.js`, `ui.js`, `kit.css` |
+| `js/kit/` | the shared kit: `core.js` (loop, input, saves, app), `gfx.js` (PixiJS), `pen.js` (a game's frame on PixiJS), `fx.js`, `audio.js`, `ui.js`, `kit.css` |
 | `js/vendor/` | pinned libraries: `pixi-8.22.0.min.js` (MIT) |
 | `js/quiz/` | the quiz engine and `catalog.js` |
 | `js/board/` | the board-game kit (Checkers, Tic Tac Toe) |

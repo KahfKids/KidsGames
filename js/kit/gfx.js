@@ -10,6 +10,8 @@
                                     opts.transparent: the page shows through where nothing is drawn (a figure on a
                                     page of words and buttons). A full-screen game leaves it off: opaque is faster.
    Kit.gfx.sorry(error)          a plain "could not start" screen with a try-again button, for that rejection
+   Kit.gfx.stage(canvas, onResize) -> Promise of st { surface, pen, canvas, w, h, dpr, safe, fit }: a full-screen
+                                    game. The canvas follows the screen; st.pen draws the frame (js/kit/pen.js).
 
    surface.PIXI                  the PixiJS namespace          surface.renderer   the PIXI.WebGLRenderer
    surface.stage                 the root PIXI.Container: add your scene here
@@ -179,6 +181,31 @@
       try { ok = P.isWebGLSupported(false); } catch (e) {}
       if (!ok) throw fail('no-webgl');
       return make(canvas, P, opts).catch(function (e) { throw fail('gl-failed', e); });
+    });
+  };
+
+  // ---------- a full-screen game ----------
+  // Keeps the canvas the size of the screen and gives the game its pen. onResize(st) runs once at the start and
+  // again on every size change; st.w and st.h are CSS pixels, st.dpr is the pixel density the game draws at.
+  G.stage = function (canvas, onResize) {
+    return G.create(canvas).then(function (S) {
+      var st = { canvas: canvas, surface: S, pen: Kit.pen ? Kit.pen(S) : null, w: 0, h: 0, dpr: 1, safe: Kit.safe() };
+      function fit() {
+        var w = Math.max(1, Math.round(window.innerWidth)), h = Math.max(1, Math.round(window.innerHeight));
+        // a picture as large as the screen (a background) must fit in one texture
+        var dpr = Math.min(G.dpr(), (S.maxTex - 128) / Math.max(w, h));
+        if (w === st.w && h === st.h && dpr === st.dpr) return;
+        st.w = w; st.h = h; st.dpr = dpr; st.safe = Kit.safe();
+        S.resize(Math.round(w * dpr), Math.round(h * dpr));
+        canvas.style.width = w + 'px'; canvas.style.height = h + 'px';
+        if (onResize) onResize(st);
+      }
+      var t = null;
+      addEventListener('resize', function () { clearTimeout(t); t = setTimeout(fit, 60); fit(); });
+      if (window.visualViewport) visualViewport.addEventListener('resize', fit);
+      fit();
+      st.fit = fit;
+      return st;
     });
   };
 

@@ -1,6 +1,7 @@
 /* Mosaic Breaker: game.js
    Fly the magic carpet, bounce the star and break the glazed tiles. 30 levels in 3 worlds.
-   Built on the shared kit (js/kit): full-screen stage, fixed-step loop, pointer input, fx, sfx, ui, progress. */
+   Built on the shared kit (js/kit): full-screen stage and pen (PixiJS), fixed-step loop, pointer input, fx, sfx, ui,
+   progress. */
 (function () {
   'use strict';
   var A = window.MosaicArt, LV = window.MOSAIC_LEVELS, K = window.Kit;
@@ -25,8 +26,9 @@
 
   // ---------- layout (game units: the field is 1000-1500 wide, height follows the screen) ----------
   var G = { s: 1, ox: 0, FH: 1600, ceil: 120, top: 160, padY: 1400, dpr: 1, w: 0, h: 0 };
-  var bg = null, bgWorld = -1, pillarImg = null, sprites = {};
-  var stage = K.stage(canvas, function (st) {
+  var bg = null, bgWorld = -1, pen = null, S = null;
+  function dropBg() { if (bg && S) ['sky', 'far', 'mid', 'near'].forEach(function (k) { S.free(bg[k]); }); bg = null; }
+  var stageP = K.gfx.stage(canvas, function (st) {
     G.w = st.w; G.h = st.h; G.dpr = st.dpr;
     G.s = Math.min(st.w / FW_MIN, st.h / FH_MIN);
     setFieldWidth(Math.min(st.w / G.s, FW_MAX));
@@ -35,11 +37,14 @@
     G.top = G.ceil + 50 + Math.max(0, (G.FH - 1500) * 0.3);
     G.speedMul = K.clamp(G.FH / 1500, 1, 1.25);
     G.padY = G.FH - (st.safe.bottom + 64) / G.s - CARPET_H;
-    sprites = {}; bg = null; pillarImg = null;
+    S = st.surface; dropBg();
+    st.pen.unit(G.s * G.dpr);                // pictures are made this sharp; a new size makes them again
     layoutBricks();
     if (carpet) { carpet.y = G.padY; carpet.base = carpetWidth(); if (!(carpet.wideT > 0)) carpet.w = carpet.base; }
+  }).then(function (st) {
+    pen = st.pen;
+    S.onLost(function () { bg = null; });    // the chip dropped the pictures: the next frame makes them again
   });
-  var ctx = stage.ctx;
 
   // ---------- HUD ----------
   var pLevel = K.ui.pill(''), pHearts = K.ui.hearts(3);
@@ -317,83 +322,88 @@
   }
 
   // ---------- drawing ----------
+  // Every picture is made once and kept by the pen (js/kit/pen.js); a frame only places pictures.
+  var FONT = 'px Nunito, system-ui, sans-serif';
   function ensureArt() {
-    if (!bg || bgWorld !== world) { bg = A.paintWorld(world, G.w, G.h, G.dpr); bgWorld = world; sprites = {}; pillarImg = null; }
-    if (!pillarImg) pillarImg = A.pillar(WALL, Math.ceil(G.FH), G.s * G.dpr, A.WORLDS[world].stone);
+    if (bg && bgWorld === world) return;
+    dropBg();
+    var c = A.paintWorld(world, G.w, G.h, G.dpr);
+    bg = { sky: S.texture(c.sky), far: S.texture(c.far), mid: S.texture(c.mid), near: S.texture(c.near), margin: c.margin };
+    bgWorld = world;
   }
   function tileSprite(t) {
-    var key = t.kind + '|' + t.color + '|' + t.hp + '|' + t.maxHp;
-    if (!sprites[key]) sprites[key] = A.tile(BW, BH, G.s * G.dpr, A.WORLDS[world].tiles[t.color], t.kind, t.hp, t.maxHp);
-    return sprites[key];
+    var W = A.WORLDS[world];
+    return pen.wrap('tile|' + world + '|' + BW + '|' + t.kind + '|' + t.color + '|' + t.hp + '|' + t.maxHp, function (k) {
+      return A.tile(BW, BH, k, W.tiles[t.color], t.kind, t.hp, t.maxHp);
+    });
   }
 
   function draw(alpha, frameDt) {
+    if (!pen) return;
     ensureArt();
-    var d = G.dpr, W = A.WORLDS[world], px = carpet ? (carpet.x - FW / 2) / (FW / 2) : 0;
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    // background layers with parallax depth
+    var p = pen, d = G.dpr, W = A.WORLDS[world], px = carpet ? (carpet.x - FW / 2) / (FW / 2) : 0;
+    p.begin();
+    // background layers with parallax depth (device pixels)
     var m = bg.margin;
-    ctx.drawImage(bg.sky, Math.round(-m - px * 4 * d), Math.round(0));
-    ctx.drawImage(bg.far, Math.round(-m - px * 9 * d), Math.round(0));
-    ctx.drawImage(bg.mid, Math.round(-m - px * 16 * d), Math.round(0));
+    p.img(bg.sky, Math.round(-m - px * 4 * d), 0);
+    p.img(bg.far, Math.round(-m - px * 9 * d), 0);
+    p.img(bg.mid, Math.round(-m - px * 16 * d), 0);
     // ambient: gold motes at night, petals at dawn, rising lanterns at sea
-    ctx.setTransform(d, 0, 0, d, 0, 0);
+    p.setTransform(d, 0, 0, d, 0, 0);
     ambient.forEach(function (a, i) {
       var x = a.x * G.w, y = a.y * G.h;
-      if (world === 0) { ctx.globalAlpha = 0.35 + 0.35 * Math.sin(a.ph * 2 + i); ctx.fillStyle = '#ffe2a0'; ctx.beginPath(); ctx.arc(x, y, 1.6 * a.s, 0, 6.283); ctx.fill(); }
-      else if (world === 1) { ctx.globalAlpha = 0.7; ctx.fillStyle = i % 3 ? '#ffb3c6' : '#ffffff'; ctx.save(); ctx.translate(x, y); ctx.rotate(a.ph); ctx.beginPath(); ctx.ellipse(0, 0, 5 * a.s, 2.6 * a.s, 0, 0, 6.283); ctx.fill(); ctx.restore(); }
-      else if (i < 12) { var gl = ctx.createRadialGradient(x, y, 0, x, y, 12 * a.s); gl.addColorStop(0, 'rgba(255,200,110,.9)'); gl.addColorStop(1, 'rgba(255,200,110,0)'); ctx.globalAlpha = 0.8; ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(x, y, 12 * a.s, 0, 6.283); ctx.fill(); ctx.fillStyle = '#ffcf7a'; ctx.fillRect(x - 2.5 * a.s, y - 3 * a.s, 5 * a.s, 6 * a.s); }
+      if (world === 0) { p.alpha = 0.35 + 0.35 * Math.sin(a.ph * 2 + i); p.circle(x, y, 1.6 * a.s, '#ffe2a0'); }
+      else if (world === 1) { p.alpha = 0.7; p.ellipse(x, y, 5 * a.s, 2.6 * a.s, i % 3 ? '#ffb3c6' : '#ffffff', a.ph); }
+      else if (i < 12) { p.alpha = 0.8; p.glow(x, y, 12 * a.s, 'rgba(255,200,110,.9)'); p.rect(x - 2.5 * a.s, y - 3 * a.s, 5 * a.s, 6 * a.s, '#ffcf7a'); }
     });
-    ctx.globalAlpha = 1;
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.drawImage(bg.near, Math.round(-m - px * 26 * d), Math.round(0));
+    p.alpha = 1;
+    p.setTransform(1, 0, 0, 1, 0, 0);
+    p.img(bg.near, Math.round(-m - px * 26 * d), 0);
 
     // field (game units)
     var sh = K.fx.offset(), s = G.s * d;
-    ctx.setTransform(s, 0, 0, s, (G.ox + sh.x * G.s) * d, sh.y * G.s * d);
+    p.setTransform(s, 0, 0, s, (G.ox + sh.x * G.s) * d, sh.y * G.s * d);
     // pillars frame the play area (scenery continues around them: no box)
-    ctx.drawImage(pillarImg, -6, 0, WALL + 6, G.FH);
-    ctx.drawImage(pillarImg, FW - WALL, 0, WALL + 6, G.FH);
-    A.frieze(ctx, -6, FW + 6, G.ceil, W.stone, time);
+    var pillar = p.wrap('pillar|' + world + '|' + Math.ceil(G.FH), function (k) { return A.pillar(WALL, Math.ceil(G.FH), k, W.stone); });
+    p.img(pillar, -6, 0, WALL + 6, G.FH);
+    p.img(pillar, FW - WALL, 0, WALL + 6, G.FH);
+    A.frieze(p, -6, FW + 6, G.ceil, W.stone, world);
 
     // tiles
     for (var i = 0; i < bricks.length; i++) {
       var t = bricks[i]; if (!t.alive) continue;
-      var sp = tileSprite(t), pad = sp.pad, e = t.enter > 0 ? 0 : Math.min(1, -t.enter / 0.45);
+      var e = t.enter > 0 ? 0 : Math.min(1, -t.enter / 0.45);
       if (t.enter > 0) continue;
       var drop = (1 - K.ease.outBack(e)) * -70, sc = 1 + t.wob * 0.12 * Math.sin(t.wob * 12);
-      ctx.save();
-      ctx.globalAlpha = Math.min(1, e * 2);
-      ctx.translate(t.x + t.w / 2, t.y + t.h / 2 + drop); ctx.scale(sc, sc);
-      ctx.drawImage(sp, -t.w / 2 - pad, -t.h / 2 - pad, t.w + pad * 2, t.h + pad * 2);
-      if (t.flash > 0) { ctx.globalAlpha = t.flash * 0.6; ctx.fillStyle = '#fff'; A.rr(ctx, -t.w / 2, -t.h / 2, t.w, t.h, 9); ctx.fill(); }
-      ctx.restore();
+      p.save();
+      p.alpha = Math.min(1, e * 2);
+      p.translate(t.x + t.w / 2, t.y + t.h / 2 + drop); p.scale(sc, sc);
+      p.img(tileSprite(t), -t.w / 2, -t.h / 2, t.w, t.h);
+      if (t.flash > 0) { p.alpha = t.flash * 0.6; p.rr(-t.w / 2, -t.h / 2, t.w, t.h, 9, '#fff'); }
+      p.restore();
     }
     // lanterns
-    drops.forEach(function (dp) { A.lantern(ctx, dp.x, dp.y, dp.type, time + dp.x); });
+    drops.forEach(function (dp) { A.lantern(p, dp.x, dp.y, dp.type, time + dp.x); });
     // carpet
     if (carpet) {
       var sq = carpet.squash;
-      A.carpet(ctx, carpet.x, carpet.y + sq * 4, carpet.w * (1 + sq * 0.06), CARPET_H * (1 - sq * 0.2), time,
-        carpet.wideT > 0 ? '#ffb347' : slowT > 0 ? '#b79cff' : null);
+      A.carpet(p, carpet.x, carpet.y + sq * 4, carpet.w * (1 + sq * 0.06), CARPET_H * (1 - sq * 0.2), time,
+        carpet.wideT > 0 ? '#ffb347' : slowT > 0 ? '#b79cff' : null, carpet.wideT > 0 ? carpet.base * 1.5 : carpet.base);
     }
     // stars (balls)
-    balls.forEach(function (b) { A.ball(ctx, b.x, b.y, BALL_R, time, b.trail); });
-    K.fx.draw(ctx);
+    balls.forEach(function (b) { A.ball(p, b.x, b.y, BALL_R, time, b.trail); });
+    K.fx.draw(p);
 
     // level banner
     if (bannerT > 0) {
       var k = Math.min(1, bannerT / 0.4, (1.8 - bannerT) / 0.3), cy = G.top + 380;
-      ctx.globalAlpha = Math.max(0, k);
-      ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
-      ctx.font = '800 34px Nunito, system-ui, sans-serif'; ctx.lineWidth = 8; ctx.strokeStyle = 'rgba(10,6,30,.55)';
-      ctx.strokeText(W.name.toUpperCase(), FW / 2, cy - 54); ctx.fillStyle = W.color; ctx.fillText(W.name.toUpperCase(), FW / 2, cy - 54);
-      ctx.font = '900 92px Nunito, system-ui, sans-serif'; ctx.lineWidth = 14;
-      ctx.strokeText('Level ' + level, FW / 2, cy + 14); ctx.fillStyle = '#fffaf0'; ctx.fillText('Level ' + level, FW / 2, cy + 14);
-      ctx.font = '800 38px Nunito, system-ui, sans-serif'; ctx.lineWidth = 8;
-      ctx.strokeText(LV.list[level - 1].name, FW / 2, cy + 84); ctx.fillStyle = 'rgba(255,250,240,.9)'; ctx.fillText(LV.list[level - 1].name, FW / 2, cy + 84);
-      ctx.globalAlpha = 1;
+      p.alpha = Math.max(0, k);
+      p.text(W.name.toUpperCase(), FW / 2, cy - 54, { font: '800 34' + FONT, fill: W.color, stroke: 'rgba(10,6,30,.55)', lw: 8 });
+      p.text('Level ' + level, FW / 2, cy + 14, { font: '900 92' + FONT, fill: '#fffaf0', stroke: 'rgba(10,6,30,.55)', lw: 14 });
+      p.text(LV.list[level - 1].name, FW / 2, cy + 84, { font: '800 38' + FONT, fill: 'rgba(255,250,240,.9)', stroke: 'rgba(10,6,30,.55)', lw: 8 });
+      p.alpha = 1;
     }
+    p.end();
   }
 
   K.loop({ step: step, draw: draw, hz: 120, onHidden: function () { if (state === 'play' && !window.MB) pause(); } });
@@ -412,7 +422,6 @@
 
   // Fonts load quickly from the local cache; start once they are ready so the banner text is crisp.
   var fontsReady = document.fonts && document.fonts.load ? document.fonts.load('900 40px Nunito') : Promise.resolve();
-  Promise.race([fontsReady, new Promise(function (r) { setTimeout(r, 700); })]).catch(function () {}).then(function () {
-    startLevel(progress.current());
-  });
+  var fontsP = Promise.race([fontsReady, new Promise(function (r) { setTimeout(r, 700); })]).catch(function () {});
+  stageP.then(function () { return fontsP; }).then(function () { startLevel(progress.current()); }, K.gfx.sorry);
 })();
