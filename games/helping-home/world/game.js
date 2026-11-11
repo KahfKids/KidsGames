@@ -571,7 +571,7 @@
   const _arr = () => { if (auto){ const f = auto; setTimeout(f, 350); } };
   const oldEnter = enter; enter = function (pl){ oldEnter(pl); _arr(); };
   window.HHWorld = { G, save, get me(){ return me; }, get PL(){ return PL; }, callPrayer: n => S.callPrayer(n || 'dhuhr'), use: id => useObj(PL[me.place].objs.find(o => o.id === id || o.type === id)), carry: k => k === undefined ? carry : setCarry(k), stats: () => Object.assign(WE.stats(), { people: S.people.filter(p => p.place === me.place).length }) };
-  // the drawing surface first (the kit brings PixiJS, or settles for Canvas2D), then the game
-  const go = () => WE.prepare(document.getElementById('cv')).then(boot, boot);
+  // PixiJS first (the kit starts it), then the game; if it cannot start, a try-again screen
+  const go = () => WE.prepare(document.getElementById('cv')).then(boot, e => Kit.gfx.sorry(e));
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go();
 })();

@@ -1,34 +1,38 @@
 /* Kahf KidsGames kit: gfx.js
-   The drawing surface for 2D games (window.Kit.gfx). The standard way a game puts pictures on the screen:
+   PixiJS for every 2D game (window.Kit.gfx). PixiJS is the renderer: there is no second drawing path and no
+   Canvas2D fallback. This file starts PixiJS the same way for every game (WebGL renderer, pixel density, lost
+   context, loading) and adds a few helpers. A game then uses PixiJS itself: Container, Sprite, Texture, Graphics.
+   Rules and the performance guide: docs/game-standard.md, docs/pixi-performance.md.
 
-   1. Make each picture once (Canvas2D, an <img>, or surface.paint) and hand it to the surface as a texture.
-   2. Every frame, list what to draw: begin(), draw() ..., end().
+   Kit.gfx.dpr()                 pixel density to draw at: at most 2, and 1.5 on low-memory phones
+   Kit.gfx.create(canvas)        -> Promise of a surface. Rejects with an Error whose .code is 'no-pixi' (PixiJS did not
+                                    arrive), 'no-webgl' (this phone has no WebGL) or 'gl-failed' (WebGL did not start)
+   Kit.gfx.sorry(error)          a plain "could not start" screen with a try-again button, for that rejection
 
-   The surface draws that list with PixiJS on the graphics chip (WebGL): a whole frame goes out in a few calls,
-   whatever the phone does with Canvas2D. Where WebGL is missing, software-only, or PixiJS did not arrive, the very
-   same list is drawn with Canvas2D, so a game has one code path and still runs everywhere.
+   surface.PIXI                  the PixiJS namespace          surface.renderer   the PIXI.WebGLRenderer
+   surface.stage                 the root PIXI.Container: add your scene here
+   surface.canvas                the canvas on the page        surface.note       'webgl2' | 'webgl1'
+   surface.maxTex                the longest side a texture may have, in pixels
+   surface.resize(pxW, pxH)      size of the drawing buffer in device pixels (the stage is in device pixels;
+                                    CSS size is the page's business)
+   surface.render()              draw the stage now. Call it only when something changed.
+   surface.texture(canvas)       -> t { w, h, tex }: a PIXI.Texture made from a canvas, sent to the graphics chip NOW;
+                                    the canvas memory is handed back (its width and height become 0), so never draw
+                                    from that canvas again
+   surface.image(img, pxW)       -> t for a loaded <img>, made once per image (pxW: how wide it will be shown)
+   surface.paint(pxW, pxH, draw) -> t painted once with Canvas2D: draw(ctx). Canvas2D only ever makes pictures.
+   surface.free(t)               destroy a texture made here
+   surface.onLost(fn)            the graphics chip dropped every texture (the app was in the background, memory was
+                                    short). Textures made here are already freed: fn() makes the pictures again.
 
-   Kit.gfx.dpr()                       pixel density to draw at: at most 2, and 1.5 on low-memory phones
-   Kit.gfx.create(canvas, opts)        -> Promise of a surface. opts.force: '2d' | 'gl'. The page can add ?gfx=2d or ?gfx=gl
-   Kit.gfx.canvas2d(canvas)            -> a Canvas2D surface, at once (no PixiJS)
-
-   surface.kind                        'gl' | '2d'            surface.note   why ('gl', '2d:no-webgl', ...)
-   surface.canvas                      the canvas on the page (use this one: a failed WebGL start swaps the element)
-   surface.maxTex                      the longest side a texture may have, in pixels
-   surface.resize(pxW, pxH)            size of the drawing buffer in device pixels (CSS size is the page's business)
-   surface.texture(canvas)             -> t { w, h }. On WebGL the picture is sent to the chip NOW and the canvas memory
-                                          is handed back (its width and height become 0): do not draw from it again
-   surface.image(img, pxW)             -> t for a loaded <img>, made once per image (pxW: how wide it will be shown)
-   surface.paint(pxW, pxH, draw)       -> t painted with Canvas2D: draw(ctx)
-   surface.free(t)
-   surface.begin(color)                start a frame on a background colour
-   surface.draw(t, x, y, w, h, alpha)  a picture; device pixels, whole numbers keep it sharp
-   surface.drawM(t, a, b, c, d, e, f, alpha)   a picture at its own pixel size through a matrix (skewed, turned)
+   The frame list, for a game that decides its drawing order every frame (Helping Home): a pool of PIXI.Sprite on
+   the stage, reused in order, so the order of the calls is the order on screen.
+   surface.begin(color)                         start a frame on a background colour
+   surface.draw(t, x, y, w, h, alpha)           a picture; device pixels, whole numbers keep it sharp
+   surface.drawM(t, a, b, c, d, e, f, alpha)    a picture at its own pixel size through a matrix (skewed, turned)
    surface.rect(x, y, w, h, color, alpha)
-   surface.multiply(color)             tint everything drawn so far in this frame (night, dusk)
-   surface.end()                       show the frame
-   surface.onLost(fn)                  WebGL only: the chip dropped every texture (app was in the background, memory was
-                                          short). fn() must make the pictures again; old textures are already freed.
+   surface.multiply(color)                      tint everything drawn so far in this frame (night, dusk)
+   surface.end()                                hide what is left of the pool and render
 
    PixiJS is pinned (js/vendor/pixi-8.22.0.min.js, MIT) and loaded from our own site only. */
 (function () {
@@ -49,9 +53,8 @@
   };
 
   // ---------- PixiJS, loaded once ----------
-  // Asked for as soon as this file runs, so it comes down while the page reads the rest of its scripts. A game that
-  // waits longer than WAIT for it (a very slow first visit) starts on Canvas2D instead; later visits have it saved.
-  var WAIT = 8000, pixiP = null;
+  // Asked for as soon as this file runs, so it comes down while the page reads the rest of its scripts.
+  var WAIT = 20000, pixiP = null;
   function loadPixi() {
     if (window.PIXI) return Promise.resolve(window.PIXI);
     if (!pixiP) pixiP = new Promise(function (done) {
@@ -64,90 +67,55 @@
     });
     return pixiP;
   }
+  loadPixi();
 
-  // ---------- shared by both surfaces ----------
-  function paint(s, pxW, pxH, draw) {
-    var c = document.createElement('canvas'); c.width = Math.max(1, Math.ceil(pxW)); c.height = Math.max(1, Math.ceil(pxH));
-    draw(c.getContext('2d'));
-    return s.texture(c);
-  }
-  // an <img> (often an SVG) is turned into pixels once, at the size it is shown, instead of on every frame
-  function imageOf(s, cache, img, pxW) {
-    var t = cache.get(img), iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height;
-    if (!iw || !ih) return null;
-    var w = Math.max(1, Math.ceil(pxW || iw));
-    if (t && t.w >= w / 1.15) return t;
-    if (t) s.free(t);
-    t = paint(s, w, Math.max(1, Math.round(w * ih / iw)), function (ctx) { ctx.drawImage(img, 0, 0, w, Math.max(1, Math.round(w * ih / iw))); });
-    cache.set(img, t);
-    return t;
-  }
+  function fail(code, cause) { var e = new Error('gfx: ' + code); e.code = code; e.cause = cause; return e; }
 
-  // ---------- Canvas2D ----------
-  function make2d(canvas, note) {
-    var ctx = canvas.getContext('2d', { alpha: false });
-    if (!ctx) throw new Error('gfx: no 2d context');
-    var s = { kind: '2d', note: note || '2d', canvas: canvas, maxTex: 4096 }, imgs = new WeakMap();
-    s.resize = function (w, h) { canvas.width = w; canvas.height = h; };
-    s.texture = function (c) { return { w: c.width, h: c.height, src: c }; };
-    s.image = function (img, pxW) { return imageOf(s, imgs, img, pxW); };
-    s.paint = function (w, h, draw) { return paint(s, w, h, draw); };
-    s.free = function (t) { if (t) t.src = null; };
-    s.begin = function (color) {
-      ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
-      ctx.fillStyle = color; ctx.fillRect(0, 0, canvas.width, canvas.height);
-    };
-    s.draw = function (t, x, y, w, h, alpha) {
-      if (!t || !t.src) return;
-      if (alpha != null && alpha !== 1) { ctx.globalAlpha = alpha; ctx.drawImage(t.src, x, y, w, h); ctx.globalAlpha = 1; }
-      else ctx.drawImage(t.src, x, y, w, h);
-    };
-    s.drawM = function (t, a, b, c, d, e, f, alpha) {
-      if (!t || !t.src) return;
-      ctx.setTransform(a, b, c, d, e, f); if (alpha != null) ctx.globalAlpha = alpha;
-      ctx.drawImage(t.src, 0, 0);
-      ctx.globalAlpha = 1; ctx.setTransform(1, 0, 0, 1, 0, 0);
-    };
-    s.rect = function (x, y, w, h, color, alpha) {
-      ctx.globalAlpha = alpha == null ? 1 : alpha; ctx.fillStyle = color; ctx.fillRect(x, y, w, h); ctx.globalAlpha = 1;
-    };
-    s.multiply = function (color) {
-      ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = color; ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.globalCompositeOperation = 'source-over';
-    };
-    s.end = function () {};
-    s.onLost = function () {};
-    return s;
-  }
-
-  // ---------- WebGL through PixiJS ----------
-  // One list of sprites, reused frame after frame in drawing order, so the order of draw() calls is the order on screen
-  // and PixiJS can send neighbours to the chip together.
-  function makeGl(canvas, P) {
+  function make(canvas, P) {
     var r = new P.WebGLRenderer();
+    // antialias off and an opaque canvas: PixiJS's own advice for phones (sprites do not need it)
     return r.init({
       canvas: canvas, width: canvas.width || 1, height: canvas.height || 1, resolution: 1, autoDensity: false,
       antialias: false, backgroundAlpha: 1, backgroundColor: 0xf2efe7, clearBeforeRender: true, hello: false
     }).then(function () {
-      var gl = r.gl, stage = new P.Container(), pool = [], n = 0, shown = 0, live = new Set(), lostFns = [], lost = false;
+      var stage = new P.Container(), pool = [], n = 0, shown = 0, live = new Set(), lostFns = [], lost = false;
       var bg = null, colors = {}, imgs = new WeakMap(), M = new P.Matrix(), WHITE = P.Texture.WHITE, EMPTY = P.Texture.EMPTY;
-      var s = { kind: 'gl', note: 'gl', canvas: canvas, maxTex: 4096 };
-      try { s.maxTex = Math.min(4096, gl.getParameter(gl.MAX_TEXTURE_SIZE) || 4096); } catch (e) {}
+      var s = { PIXI: P, renderer: r, stage: stage, canvas: canvas, maxTex: 4096, note: 'webgl' + ((r.context && r.context.webGLVersion) || '') };
+      try { s.maxTex = Math.min(4096, r.gl.getParameter(r.gl.MAX_TEXTURE_SIZE) || 4096); } catch (e) {}
       var num = function (c) { var v = colors[c]; if (v == null) v = colors[c] = P.Color.shared.setValue(c).toNumber(); return v; };
 
       s.resize = function (w, h) { r.resize(w, h, 1); };
+      s.render = function () { if (!lost) r.render(stage); };
+
+      // ----- textures -----
       s.texture = function (c) {
-        var source = new P.CanvasSource({ resource: c, width: c.width, height: c.height, resolution: 1 });
+        // never collected behind our back: the canvas is handed back below, so PixiJS could not upload it again
+        var source = new P.CanvasSource({ resource: c, width: c.width, height: c.height, resolution: 1, autoGarbageCollect: false });
         var t = { w: c.width, h: c.height, tex: new P.Texture({ source: source }) };
         try { r.texture.initSource(source); } catch (e) { console.warn('gfx: upload', e); }
         live.add(t);
         try { c.width = c.height = 0; } catch (e) {}      // the chip has the picture: hand the canvas memory back
         return t;
       };
-      s.image = function (img, pxW) { return imageOf(s, imgs, img, pxW); };
-      s.paint = function (w, h, draw) { return paint(s, w, h, draw); };
+      s.paint = function (pxW, pxH, draw) {
+        var c = document.createElement('canvas'); c.width = Math.max(1, Math.ceil(pxW)); c.height = Math.max(1, Math.ceil(pxH));
+        draw(c.getContext('2d'));
+        return s.texture(c);
+      };
+      // an <img> (often an SVG) is turned into pixels once, at the size it is shown, instead of on every frame
+      s.image = function (img, pxW) {
+        var t = imgs.get(img), iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height;
+        if (!iw || !ih) return null;
+        var w = Math.max(1, Math.ceil(pxW || iw)), h = Math.max(1, Math.round(w * ih / iw));
+        if (t && t.tex && t.w >= w / 1.15) return t;
+        if (t) s.free(t);
+        t = s.paint(w, h, function (ctx) { ctx.drawImage(img, 0, 0, w, h); });
+        imgs.set(img, t);
+        return t;
+      };
       s.free = function (t) { if (t && t.tex) { live.delete(t); try { t.tex.destroy(true); } catch (e) {} t.tex = null; } };
 
+      // ----- the frame list -----
       function next(tex) {
         var sp = pool[n];
         if (!sp) { sp = new P.Sprite(tex); pool.push(sp); stage.addChild(sp); }
@@ -180,11 +148,13 @@
       s.end = function () {
         for (var i = n; i < shown; i++) { var sp = pool[i]; sp.visible = false; sp.texture = EMPTY; }
         shown = n;
-        if (!lost) r.render(stage);
+        s.render();
       };
-      s.onLost = function (fn) { lostFns.push(fn); };
+
+      // ----- a lost context -----
       // The chip can drop everything (app sent to the background, memory short). PixiJS brings the context back;
       // the pictures were handed over and are gone, so the game makes them again.
+      s.onLost = function (fn) { lostFns.push(fn); };
       canvas.addEventListener('webglcontextlost', function () { lost = true; });
       canvas.addEventListener('webglcontextrestored', function () {
         lost = false;
@@ -194,35 +164,32 @@
         shown = 0;
         lostFns.forEach(function (fn) { try { fn(); } catch (e) { console.warn('gfx: onLost', e); } });
       });
-      s._pixi = { renderer: r, stage: stage };            // for debugging in the console
       return s;
     });
   }
 
-  // a canvas that was asked for WebGL cannot give a 2D context any more: swap in a clean copy of the element
-  function fresh(canvas) {
-    var c = canvas.cloneNode(false);
-    if (canvas.parentNode) canvas.parentNode.replaceChild(c, canvas);
-    return c;
-  }
-
-  var asked2d = /[?&]gfx=2d\b/.test(location.search);
-  if (!asked2d) loadPixi();
-  G.canvas2d = function (canvas) { return make2d(canvas, '2d'); };
-  G.create = function (canvas, opts) {
-    opts = opts || {};
-    var want = opts.force || (asked2d ? '2d' : (/[?&]gfx=gl\b/.test(location.search) ? 'gl' : ''));
-    if (want === '2d') return Promise.resolve(make2d(canvas, '2d:asked'));
+  G.create = function (canvas) {
     return loadPixi().then(function (P) {
-      if (!P) return make2d(canvas, '2d:no-pixi');
+      if (!P) throw fail('no-pixi');
       var ok = false;
-      // a software WebGL (no real graphics chip behind it) is slower than Canvas2D: only take it when asked to
-      try { ok = P.isWebGLSupported(want !== 'gl'); } catch (e) {}
-      if (!ok) return make2d(canvas, '2d:no-webgl');
-      return makeGl(canvas, P).catch(function (e) {
-        console.warn('gfx: WebGL did not start, drawing with Canvas2D', e);
-        return make2d(fresh(canvas), '2d:gl-failed');
-      });
+      try { ok = P.isWebGLSupported(false); } catch (e) {}
+      if (!ok) throw fail('no-webgl');
+      return make(canvas, P).catch(function (e) { throw fail('gl-failed', e); });
     });
+  };
+
+  // The game could not start. No words to read: a picture and one big button that tries again.
+  // Inside the Kahf Kids app the app's own back button stays on screen, so there is always a way out.
+  G.sorry = function (error) {
+    var code = (error && error.code) || 'gl-failed';
+    console.warn('gfx: could not start (' + code + ')', error && error.cause);
+    if (document.getElementById('kit-gfx-sorry')) return;
+    var d = document.createElement('div'); d.id = 'kit-gfx-sorry'; d.setAttribute('data-code', code);
+    d.style.cssText = 'position:fixed;inset:0;z-index:999;display:flex;align-items:center;justify-content:center;background:#f2efe7';
+    var b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-label', 'Try again');
+    b.style.cssText = 'width:112px;height:112px;border-radius:56px;border:3px solid #231e16;background:#fffdf6;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 5px 0 #231e16';
+    b.innerHTML = '<svg viewBox="0 0 24 24" width="60" height="60" fill="none" stroke="#231e16" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20 4v5h-5"/></svg>';
+    b.onclick = function () { location.reload(); };
+    d.appendChild(b); document.body.appendChild(d);
   };
 })();

@@ -1,9 +1,9 @@
 /* Helping Home world: the canvas engine (window.WE).
    Every drawing is still made by the Colorfigures code (iso/core.js) with the same hand-drawn filter, but only ONCE:
-   it is rendered to a bitmap at the screen's sharpness, handed to the kit's drawing surface (js/kit/gfx.js) as a
-   texture, and afterwards shown by the graphics chip (PixiJS, WebGL), or by Canvas2D where there is no WebGL.
+   it is rendered to a bitmap at the screen's sharpness, handed to PixiJS as a texture (js/kit/gfx.js), and afterwards
+   shown by the graphics chip. PixiJS is the only renderer: there is no Canvas2D drawing path.
    One fixed camera.
-   - WE.prepare(canvas)          -> Promise: gets the drawing surface ready (call before WE.init)
+   - WE.prepare(canvas)          -> Promise: starts PixiJS (call before WE.init; it rejects when PixiJS cannot start)
    - WE.bake(key, make)          a cached sprite, or null while it is being made. make() -> { svg, box:[x0,y0,x1,y1] }
    - WE.setPlace(place)          ground + props of one place; WE.ready() when all are baked
    - WE.frame(actors, fx)        draw one frame (ground, then props and people sorted back to front, then overlays:
@@ -198,7 +198,7 @@
   }
   /* ---------- small pictures over the world (speech bubbles, hearts, arrows, rain) ---------- */
   /* Each shape is painted once with Canvas2D at the screen's sharpness, then shown like every other picture, so the
-     whole frame is one list of pictures. Sizes and places are CSS pixels. */
+     whole frame is one list of sprites. Sizes and places are CSS pixels. */
   const STAMPS = new Map();
   const FX = W.fx = {
     // a picture w x h painted once: draw(ctx), with 0,0 at its centre. k: pixels per CSS pixel (the screen's, unless a
@@ -330,10 +330,9 @@
   };
 
   /* ---------- canvas ---------- */
-  // the drawing surface is made first (PixiJS has to arrive); without it WE.init falls back to Canvas2D at once
-  W.prepare = canvas => Kit.gfx.create(canvas).then(s => { SF = s; }, () => {});
-  W.init = canvas => {
-    if (!SF) SF = Kit.gfx.canvas2d(canvas);
+  // PixiJS is started first (it has to arrive); WE.init needs it
+  W.prepare = canvas => Kit.gfx.create(canvas).then(s => { SF = s; });
+  W.init = () => {
     cv = SF.canvas; MAXT = SF.maxTex; W.gfx = SF.note;
     // every picture is made again: the size of the screen changed, or the graphics chip dropped its textures
     const wipe = () => { for (const [k, sp] of SPR){ free(sp); SPR.delete(k); } Q.length = Q2.length = RUN.length = 0;
