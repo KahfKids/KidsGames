@@ -68,7 +68,7 @@
   // a thing passed from one person to another, so you can see what is going on
   const flies = [], toss = (kind, from, to, delay, d) => flies.push({ kind, a: [from.x, from.y], b: [to.x, to.y], t0: S.t + (delay || 0), d: d || .7 });
   let ride = null, prevPlace = '';
-  let rainbow = 0, lessonT = 0, readT = 0, visitT = 50;
+  let lessonT = 0, readT = 0, visitT = 50;
   const fxs = [];           // floating hearts and sparkles: { x, y, z, t0, kind }
   function applyAv(){
     const a = G.av, base = a.girl ? B.sister : B.friendb;
@@ -86,7 +86,7 @@
     for (const k in PL) WE.makeGrid(PL[k]);
     S.reset(PL, { newFamily: G.days.length >= 3 }); S.cal = CAL;
     X.init(PL); if (q.get('rain')) X.forceRain = q.get('rain') === '1';
-    X.onRain = w => { if (w){ const t = dkey(S.now()); for (const id in G.garden){ const b = G.garden[id]; if (b.stage > 0 && b.stage < 3) b.w = t; } syncBeds(); save(); } else rainbow = S.t + 50; WE.dirty = true; };
+    X.onRain = w => { if (w){ const t = dkey(S.now()); for (const id in G.garden){ const b = G.garden[id]; if (b.stage > 0 && b.stage < 3) b.w = t; } syncBeds(); save(); } WE.dirty = true; };
     X.onRider = (p, on) => { if (me.place === 'street'){ const bus = X.cars.find(v => v.id === 'bus'); burst(on ? bus : p, 'star', 2); } };
     X.onDrink = (c, bowl) => { bowl.prop.o.full = 0; rekey(bowl.prop); burst(c, 'heart', 3); c.follow = S.t + 60; petCare(c.id); };
     S.friend = id => G.friends[id] || 0;
@@ -176,7 +176,7 @@
     if (von && (ready || t - veilT > 8000)){ veil.classList.remove('on'); veilT = 0; }
     WE.calm = !(von && !ready && t - veilT <= 8000); WE.tick();
     if (perf) perfTick(t);
-    const out = !PL[here].wallH, live = fxs.length || flies.length || tapMark || guide || decorating || (out && (X.wet || rainbow > S.t)) || lessonT > 0 || S.people.some(p => (p.want || (p.say && p.say.until > S.t)) && p.place === here) || X.pets.some(c => c.say && c.say.until > S.t && c.place === here);
+    const out = !PL[here].wallH, live = fxs.length || flies.length || tapMark || guide || decorating || (out && X.wet) || lessonT > 0 || S.people.some(p => (p.want || (p.say && p.say.until > S.t)) && p.place === here) || X.pets.some(c => c.say && c.say.until > S.t && c.place === here);
     if ((sig !== lastSig || WE.dirty || live) && t - lastDraw > 15){ lastDraw = t; lastSig = sig; WE.dirty = false; WE.frame(acts, overlays); }
   }
   function slow(){
@@ -281,10 +281,7 @@
     if (decorating && decorating.type) fx.rect(0, 0, vw, vh, '#5cae6a', .18);
     if (!PL[me.place].wallH){ const t = performance.now()/1000;
       if (X.wet){ const drop = ST.rain(fx); for (let i = 0; i < 54; i++){ const x = (i*97.3 + t*150) % (vw + 40) - 20, y = (i*61.7 + t*560 + i*i*7) % (vh + 30) - 15; fx.put(drop, x - 2.5, y + 7.5, .55); }
-        fx.rect(0, 0, vw, vh, '#788caa', .10); }
-      else if (rainbow > S.t){ const hh = Math.min(vh*.5, vw*.62 + 5);
-        fx.put(fx.stamp('rb' + vw + 'x' + vh, vw, hh, c => { c.lineWidth = 9; ['#e8574a', '#f2a23c', '#f2c230', '#5cae6a', '#5b8fd6', '#8a63ad'].forEach((col, i) => { c.strokeStyle = col; c.beginPath(); c.arc(0, hh/2, vw*.62 - i*9, Math.PI*1.08, Math.PI*1.92); c.stroke(); }); }, 1),
-          vw/2, vh*.5 - hh/2, .34*Math.min(1, (rainbow - S.t)/6)); } }
+        fx.rect(0, 0, vw, vh, '#788caa', .10); } }
   }
   // the picture over each door in town: whose house it is, or what the place is for
   const BADGE = { home0: () => pic('bh' + ver, () => WE.figUrl('me', 'stand', 45, 64)), gran: () => pic('bg', () => WE.figUrl('dadi', 'stand', 45, 64)), masjid: () => pic('icmosque', () => icUrl(IC.mosque)), shop: () => pic('item:bread', () => itemUrl('bread', 64)),
