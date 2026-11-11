@@ -138,7 +138,7 @@
   // ?perf=1 : a small readout to check a real phone (frames per second, the longest frame of the last second, pictures being made, memory)
   let perf = null;
   function perfTick(t){ const d = t - perf.last; perf.last = t; perf.n++; if (d > perf.worst) perf.worst = d;
-    if (t - perf.t0 >= 1000){ const st = WE.stats(); perf.el.textContent = Math.round(perf.n*1000/(t - perf.t0)) + ' fps  worst ' + Math.round(perf.worst) + ' ms  q ' + st.queue + '  ' + st.mb + ' MB  x' + (window.devicePixelRatio || 1).toFixed(2) + ' ' + (WE.noise || ''); perf.t0 = t; perf.n = 0; perf.worst = 0; } }
+    if (t - perf.t0 >= 1000){ const st = WE.stats(); perf.el.textContent = Math.round(perf.n*1000/(t - perf.t0)) + ' fps  worst ' + Math.round(perf.worst) + ' ms  q ' + st.queue + '  ' + st.mb + ' MB  x' + (window.devicePixelRatio || 1).toFixed(2) + ' ' + (WE.noise || '') + ' ' + (st.gfx || ''); perf.t0 = t; perf.n = 0; perf.worst = 0; } }
   function loop(t){
     requestAnimationFrame(loop);
     const dt = Math.min(.1, (t - lastT)/1000 || 0); lastT = t; if (document.hidden) return;
@@ -237,40 +237,54 @@
 
   /* ---------- what is drawn over the world ---------- */
   const headY = p => { const s = p._spr, q = WE.toScreen(p.x, p.y, p.z); return [q[0], q[1] + (s ? s.y*WE.scale() : -90)]; };
-  function bubble(ctx, x, y, draw){ ctx.save(); ctx.translate(x, y - 30);
-    ctx.fillStyle = '#fffdf6'; ctx.strokeStyle = '#231e16'; ctx.lineWidth = 2; ctx.beginPath(); ctx.roundRect(-21, -21, 42, 40, 10); ctx.fill(); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(-5, 18); ctx.lineTo(0, 27); ctx.lineTo(6, 18); ctx.fillStyle = '#fffdf6'; ctx.fill(); ctx.stroke(); ctx.fillRect(-5, 16, 11, 3);
-    draw(ctx); ctx.restore(); }
-  function heartPath(ctx, s){ ctx.beginPath(); ctx.moveTo(0, 6*s); ctx.bezierCurveTo(-11*s, -2*s, -6*s, -10*s, 0, -4*s); ctx.bezierCurveTo(6*s, -10*s, 11*s, -2*s, 0, 6*s); ctx.closePath(); }
-  function starPath(ctx, s){ ctx.beginPath(); for (let i = 0; i < 10; i++){ const a = i*Math.PI/5 - Math.PI/2, r = i % 2 ? 3.4*s : 8*s; ctx.lineTo(Math.cos(a)*r, Math.sin(a)*r); } ctx.closePath(); }
-  function arrow(ctx, x, y){ const b = Math.sin(performance.now()/180)*5; ctx.save(); ctx.translate(x, y - 16 + b); ctx.beginPath(); ctx.moveTo(-11, -16); ctx.lineTo(11, -16); ctx.lineTo(0, 0); ctx.closePath();
-    ctx.fillStyle = '#f4b829'; ctx.strokeStyle = '#231e16'; ctx.lineWidth = 2.2; ctx.lineJoin = 'round'; ctx.fill(); ctx.stroke(); ctx.restore(); }
-  function overlays(ctx){
-    const now = S.t;
-    if (tapMark){ const u = (now - tapMark.t)/.5; if (u > 1) tapMark = null; else { const s = WE.toScreen(tapMark.x, tapMark.y, 0); ctx.strokeStyle = 'rgba(35,30,22,' + (1 - u) + ')'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.ellipse(s[0], s[1], 8 + u*14, 4 + u*7, 0, 0, 7); ctx.stroke(); } }
-    if (me.place === 'street') for (const ob of PL.street.objs){ if (!ob.to || !BADGE[ob.to[0]]) continue; const sl = ob.slots[0], q = WE.toScreen(sl.x, sl.y, ob.prop && !ob.prop.flat ? 104 : 46), [vw, vh] = WE.size();
+  /* Every shape over the world is painted once (WE.fx.stamp, Canvas2D) and then shown like any other picture, so the
+     graphics chip gets the whole frame as one list. Sizes and places are CSS pixels. */
+  const INKC = '#231e16', PAPER = '#fffdf6';
+  const fitPic = m => { const k = Math.min(30/m.width, 30/m.height); return [m.width*k, m.height*k]; };
+  const ST = {
+    bubble: fx => fx.stamp('bubble', 48, 60, c => { c.fillStyle = PAPER; c.strokeStyle = INKC; c.lineWidth = 2; c.beginPath(); c.roundRect(-21, -21, 42, 40, 10); c.fill(); c.stroke();
+      c.beginPath(); c.moveTo(-5, 18); c.lineTo(0, 27); c.lineTo(6, 18); c.fill(); c.stroke(); c.fillRect(-5, 16, 11, 3); }),
+    ring: fx => fx.stamp('ring', 44, 44, c => { c.fillStyle = PAPER; c.strokeStyle = INKC; c.lineWidth = 2.2; c.beginPath(); c.arc(0, 0, 19, 0, 7); c.fill(); c.stroke(); }),
+    badge: fx => fx.stamp('badge', 44, 58, c => { c.fillStyle = PAPER; c.strokeStyle = INKC; c.lineWidth = 2.2; c.beginPath(); c.moveTo(-7, 15); c.lineTo(0, 26); c.lineTo(7, 15); c.fill(); c.stroke();
+      c.beginPath(); c.arc(0, 0, 19, 0, 7); c.fill(); c.stroke(); }),
+    heart: fx => fx.stamp('heart', 32, 30, c => { const s = 1.3; c.beginPath(); c.moveTo(0, 6*s); c.bezierCurveTo(-11*s, -2*s, -6*s, -10*s, 0, -4*s); c.bezierCurveTo(6*s, -10*s, 11*s, -2*s, 0, 6*s); c.closePath();
+      c.fillStyle = '#e8574a'; c.strokeStyle = INKC; c.lineWidth = 1.8; c.fill(); c.stroke(); }),
+    drop: fx => fx.stamp('drop', 14, 14, c => { c.beginPath(); c.arc(0, 0, 5, 0, 7); c.fillStyle = '#94cbe2'; c.strokeStyle = INKC; c.lineWidth = 1.8; c.fill(); c.stroke(); }),
+    star: fx => fx.stamp('star', 26, 26, c => { const s = 1.1; c.beginPath(); for (let i = 0; i < 10; i++){ const a = i*Math.PI/5 - Math.PI/2, r = i % 2 ? 3.4*s : 8*s; c.lineTo(Math.cos(a)*r, Math.sin(a)*r); } c.closePath();
+      c.fillStyle = '#f4b829'; c.strokeStyle = INKC; c.lineWidth = 1.8; c.fill(); c.stroke(); }),
+    arrow: fx => fx.stamp('arrow', 28, 40, c => { c.beginPath(); c.moveTo(-11, -16); c.lineTo(11, -16); c.lineTo(0, 0); c.closePath();
+      c.fillStyle = '#f4b829'; c.strokeStyle = INKC; c.lineWidth = 2.2; c.lineJoin = 'round'; c.fill(); c.stroke(); }),
+    rain: fx => fx.stamp('rain', 10, 20, c => { c.strokeStyle = 'rgb(70,105,150)'; c.lineWidth = 1.6; c.beginPath(); c.moveTo(2.5, -7.5); c.lineTo(-2.5, 7.5); c.stroke(); })
+  };
+  // a speech bubble over a head, with a picture in it: a loaded <img> (m) or a baked item (sp)
+  function bubble(fx, x, y, m, sp){
+    fx.put(ST.bubble(fx), x, y - 30);
+    if (m){ const [w, h] = fitPic(m); fx.img(m, x - w/2, y - 31 - h/2, w, h); } else if (sp) fx.img(sp, x - 15, y - 47, 30, 30*sp.h/sp.w); }
+  function overlays(fx){
+    const now = S.t, [vw, vh] = WE.size();
+    if (tapMark){ const u = (now - tapMark.t)/.5; if (u > 1) tapMark = null; else { const s = WE.toScreen(tapMark.x, tapMark.y, 0), i = Math.min(7, u*8 | 0), v = (i + .5)/8, rx = 8 + v*14, ry = 4 + v*7;
+      fx.put(fx.stamp('tap' + i, 2*rx + 6, 2*ry + 6, c => { c.strokeStyle = INKC; c.lineWidth = 2.5; c.beginPath(); c.ellipse(0, 0, rx, ry, 0, 0, 7); c.stroke(); }), s[0], s[1], 1 - u); } }
+    if (me.place === 'street') for (const ob of PL.street.objs){ if (!ob.to || !BADGE[ob.to[0]]) continue; const sl = ob.slots[0], q = WE.toScreen(sl.x, sl.y, ob.prop && !ob.prop.flat ? 104 : 46);
       if (q[0] < -30 || q[0] > vw + 30 || q[1] < -30 || q[1] > vh + 30) continue; const m = BADGE[ob.to[0]]();
-      ctx.save(); ctx.translate(q[0], q[1]); ctx.beginPath(); ctx.moveTo(-7, 15); ctx.lineTo(0, 26); ctx.lineTo(7, 15); ctx.fillStyle = '#fffdf6'; ctx.strokeStyle = '#231e16'; ctx.lineWidth = 2.2; ctx.fill(); ctx.stroke();
-      ctx.beginPath(); ctx.arc(0, 0, 19, 0, 7); ctx.fill(); ctx.stroke(); if (m){ const k = Math.min(30/m.width, 30/m.height); ctx.drawImage(m, -m.width*k/2, -m.height*k/2, m.width*k, m.height*k); } ctx.restore(); }
+      fx.put(ST.badge(fx), q[0], q[1]); if (m){ const [w, h] = fitPic(m); fx.img(m, q[0] - w/2, q[1] - h/2, w, h); } }
     for (const p of S.people.concat(X.pets)){ if (p.place !== me.place) continue; const sy = p.say && p.say.until > now ? p.say : null; if (!sy && (!p.want || p === me)) continue;
       const h = headY(p), m = sy ? sayPic(sy.k) : null, sp = sy ? null : itemSprite(p.want.item);
-      bubble(ctx, h[0], h[1], c => { if (m){ const k = Math.min(30/m.width, 30/m.height); c.drawImage(m, -m.width*k/2, -1 - m.height*k/2, m.width*k, m.height*k); } else if (sp) c.drawImage(sp.img, -15, -17, 30, 30*sp.h/sp.w); }); }
+      bubble(fx, h[0], h[1], m, sp); }
     if (lessonT > 0 && me.place === 'school'){ const q = WE.toScreen(0, 150, 42), sc = WE.scale(), AB = 'ابتثجحخدذرزسشصضطظعغفقكلمنهوي', L = AB[Math.floor(lessonT/3) % AB.length];
-      ctx.save(); ctx.transform(.78*sc, -.36*sc, 0, sc, q[0], q[1]); ctx.fillStyle = '#fbf6ea'; ctx.font = '700 44px system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(L, 0, 0); ctx.restore(); }
+      fx.put(fx.stamp('ab' + L, 84*sc, 84*sc, c => { c.scale(sc, sc); c.fillStyle = '#fbf6ea'; c.font = '700 44px system-ui, sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(L, 0, 0); }), q[0], q[1], 1, [.78, -.36, 0, 1]); }
     for (let i = fxs.length - 1; i >= 0; i--){ const f = fxs[i], u = (now - f.t0)/1.3; if (u > 1){ fxs.splice(i, 1); continue; } if (u < 0) continue;
-      const s = WE.toScreen(f.x, f.y, f.z + u*46); ctx.save(); ctx.translate(s[0] + Math.sin(u*6 + f.x)*5, s[1]); ctx.globalAlpha = 1 - u*u; ctx.strokeStyle = '#231e16'; ctx.lineWidth = 1.8;
-      if (f.kind === 'heart'){ heartPath(ctx, 1.3); ctx.fillStyle = '#e8574a'; } else if (f.kind === 'drop'){ ctx.beginPath(); ctx.arc(0, 0, 5, 0, 7); ctx.fillStyle = '#94cbe2'; } else { starPath(ctx, 1.1); ctx.fillStyle = '#f4b829'; }
-      ctx.fill(); ctx.stroke(); ctx.restore(); }
-    if (ride){ const q = WE.toScreen(ride.x, ride.y, 74), m = BADGE.home0(); ctx.save(); ctx.translate(q[0], q[1]); ctx.beginPath(); ctx.arc(0, 0, 19, 0, 7); ctx.fillStyle = '#fffdf6'; ctx.strokeStyle = '#231e16'; ctx.lineWidth = 2.2; ctx.fill(); ctx.stroke();
-      if (m){ const k = Math.min(30/m.width, 30/m.height); ctx.drawImage(m, -m.width*k/2, -m.height*k/2, m.width*k, m.height*k); } ctx.restore(); }
+      const s = WE.toScreen(f.x, f.y, f.z + u*46); fx.put((ST[f.kind === 'heart' ? 'heart' : f.kind === 'drop' ? 'drop' : 'star'])(fx), s[0] + Math.sin(u*6 + f.x)*5, s[1], 1 - u*u); }
+    if (ride){ const q = WE.toScreen(ride.x, ride.y, 74), m = BADGE.home0(); fx.put(ST.ring(fx), q[0], q[1]); if (m){ const [w, h] = fitPic(m); fx.img(m, q[0] - w/2, q[1] - h/2, w, h); } }
     for (let i = flies.length - 1; i >= 0; i--){ const f = flies[i], u = (now - f.t0)/f.d; if (u < 0) continue; if (u > 1){ flies.splice(i, 1); continue; }
-      const q = WE.toScreen(f.a[0] + (f.b[0] - f.a[0])*u, f.a[1] + (f.b[1] - f.a[1])*u, 34 + Math.sin(u*Math.PI)*24), m = sayPic('item:' + f.kind); if (m) ctx.drawImage(m, q[0] - 14, q[1] - 14, 28, 28*m.height/m.width); }
-    const g = guideTarget(); if (g){ const s = WE.toScreen(g.x, g.y, g.z); arrow(ctx, s[0], s[1]); }
-    if (decorating && decorating.type){ ctx.fillStyle = 'rgba(92,174,106,.18)'; ctx.fillRect(0, 0, ...WE.size()); }
-    if (!PL[me.place].wallH){ const [vw, vh] = WE.size(), t = performance.now()/1000;
-      if (X.wet){ ctx.strokeStyle = 'rgba(70,105,150,.55)'; ctx.lineWidth = 1.6; ctx.beginPath(); for (let i = 0; i < 54; i++){ const x = (i*97.3 + t*150) % (vw + 40) - 20, y = (i*61.7 + t*560 + i*i*7) % (vh + 30) - 15; ctx.moveTo(x, y); ctx.lineTo(x - 5, y + 15); } ctx.stroke();
-        ctx.fillStyle = 'rgba(120,140,170,.10)'; ctx.fillRect(0, 0, vw, vh); }
-      else if (rainbow > S.t){ ctx.save(); ctx.globalAlpha = .34*Math.min(1, (rainbow - S.t)/6); ctx.lineWidth = 9; ['#e8574a', '#f2a23c', '#f2c230', '#5cae6a', '#5b8fd6', '#8a63ad'].forEach((c, i) => { ctx.strokeStyle = c; ctx.beginPath(); ctx.arc(vw/2, vh*.5, vw*.62 - i*9, Math.PI*1.08, Math.PI*1.92); ctx.stroke(); }); ctx.restore(); } }
+      const q = WE.toScreen(f.a[0] + (f.b[0] - f.a[0])*u, f.a[1] + (f.b[1] - f.a[1])*u, 34 + Math.sin(u*Math.PI)*24), m = sayPic('item:' + f.kind); if (m) fx.img(m, q[0] - 14, q[1] - 14, 28, 28*m.height/m.width); }
+    const g = guideTarget(); if (g){ const s = WE.toScreen(g.x, g.y, g.z); fx.put(ST.arrow(fx), s[0], s[1] - 16 + Math.sin(performance.now()/180)*5); }
+    if (decorating && decorating.type) fx.rect(0, 0, vw, vh, '#5cae6a', .18);
+    if (!PL[me.place].wallH){ const t = performance.now()/1000;
+      if (X.wet){ const drop = ST.rain(fx); for (let i = 0; i < 54; i++){ const x = (i*97.3 + t*150) % (vw + 40) - 20, y = (i*61.7 + t*560 + i*i*7) % (vh + 30) - 15; fx.put(drop, x - 2.5, y + 7.5, .55); }
+        fx.rect(0, 0, vw, vh, '#788caa', .10); }
+      else if (rainbow > S.t){ const hh = Math.min(vh*.5, vw*.62 + 5);
+        fx.put(fx.stamp('rb' + vw + 'x' + vh, vw, hh, c => { c.lineWidth = 9; ['#e8574a', '#f2a23c', '#f2c230', '#5cae6a', '#5b8fd6', '#8a63ad'].forEach((col, i) => { c.strokeStyle = col; c.beginPath(); c.arc(0, hh/2, vw*.62 - i*9, Math.PI*1.08, Math.PI*1.92); c.stroke(); }); }, 1),
+          vw/2, vh*.5 - hh/2, .34*Math.min(1, (rainbow - S.t)/6)); } }
   }
   // the picture over each door in town: whose house it is, or what the place is for
   const BADGE = { home0: () => pic('bh' + ver, () => WE.figUrl('me', 'stand', 45, 64)), gran: () => pic('bg', () => WE.figUrl('dadi', 'stand', 45, 64)), masjid: () => pic('icmosque', () => icUrl(IC.mosque)), shop: () => pic('item:bread', () => itemUrl('bread', 64)),
@@ -560,5 +574,7 @@
   const _arr = () => { if (auto){ const f = auto; setTimeout(f, 350); } };
   const oldEnter = enter; enter = function (pl){ oldEnter(pl); _arr(); };
   window.HHWorld = { G, save, get me(){ return me; }, get PL(){ return PL; }, callPrayer: n => S.callPrayer(n || 'dhuhr'), use: id => useObj(PL[me.place].objs.find(o => o.id === id || o.type === id)), carry: k => k === undefined ? carry : setCarry(k), stats: () => Object.assign(WE.stats(), { people: S.people.filter(p => p.place === me.place).length }) };
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
+  // the drawing surface first (the kit brings PixiJS, or settles for Canvas2D), then the game
+  const go = () => WE.prepare(document.getElementById('cv')).then(boot, boot);
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go();
 })();

@@ -1,16 +1,20 @@
 /* Helping Home world: the canvas engine (window.WE).
    Every drawing is still made by the Colorfigures code (iso/core.js) with the same hand-drawn filter, but only ONCE:
-   it is rendered to a bitmap at full device sharpness and afterwards shown with a plain image copy. One fixed camera.
+   it is rendered to a bitmap at the screen's sharpness, handed to the kit's drawing surface (js/kit/gfx.js) as a
+   texture, and afterwards shown by the graphics chip (PixiJS, WebGL), or by Canvas2D where there is no WebGL.
+   One fixed camera.
+   - WE.prepare(canvas)          -> Promise: gets the drawing surface ready (call before WE.init)
    - WE.bake(key, make)          a cached sprite, or null while it is being made. make() -> { svg, box:[x0,y0,x1,y1] }
    - WE.setPlace(place)          ground + props of one place; WE.ready() when all are baked
-   - WE.frame(actors, fx)        draw one frame (ground, then props and people sorted back to front, then overlays)
+   - WE.frame(actors, fx)        draw one frame (ground, then props and people sorted back to front, then overlays:
+                                 fx(WE.fx) lists the small pictures over the world, see WE.fx below)
    - WE.pick(px, py)             what is under a screen point: { actor } | { prop } | { ground:[x,y] }
    - WE.path(place, a, b)        A* over the place's 10-unit grid; WE.freeNear(place, x, y, taken)
    World axes: +x toward the viewer's right, +y toward the viewer's left, z up. Nearer = larger x + y. */
 (function () {
   'use strict';
   const W = window.WE = {};
-  let cv, ctx, DPR = 1, S = 1, vw = 0, vh = 0, FILT = '', tickN = 0;
+  let cv, SF = null, MAXT = 4096, DPR = 1, S = 1, vw = 0, vh = 0, FILT = '', tickN = 0;      // SF: the kit drawing surface
   setCam(45, 27); INK_K = 1;
   const A = P(1, 0, 0)[0], B = P(1, 0, 0)[1], ZK = -P(0, 0, 1)[1];
   const cam = W.cam = { x: 0, y: 0 };
@@ -32,10 +36,10 @@
   const STR = 400, PADPX = 24;
   const cap = () => Math.min(150e6, 52e6*Math.max(1, Math.pow(S*DPR/2.2, 2)));
   W.calm = false;             // true while playing: one piece per frame. false while a place is loading: as fast as it goes
-  W.stats = () => ({ sprites: SPR.size, mb: +(bytes/1e6).toFixed(1), queue: Q.length + Q2.length + RUN.length + busy, made: W.made, ms: W.bakeMs });
+  W.stats = () => ({ sprites: SPR.size, mb: +(bytes/1e6).toFixed(1), queue: Q.length + Q2.length + RUN.length + busy, made: W.made, ms: W.bakeMs, gfx: W.gfx || '' });
   W.made = 0; W.bakeMs = 0;
   W.top = n => [...SPR.values()].filter(s => s.img).sort((a, b) => b.bytes - a.bytes).slice(0, n || 12).map(s => s.key.slice(0, 40) + ' ' + (s.bytes/1e6).toFixed(1) + (s.pin ? ' pin' : '') + ' age ' + (tickN - s.t));
-  function free(s){ if (s.img){ bytes -= s.bytes; try { s.img.width = s.img.height = 0; } catch (e) {} s.img = null; } s.job = null; }
+  function free(s){ if (s.img){ bytes -= s.bytes; if (s.tex){ SF.free(s.tex); s.tex = null; } try { s.img.width = s.img.height = 0; } catch (e) {} s.img = null; } s.job = null; }
   function bake(key, make, pin, low){
     let s = SPR.get(key);
     if (s){ s.t = tickN; if (!low && s.q === 2){ const i = Q2.indexOf(s); if (i >= 0){ Q2.splice(i, 1); Q.push(s); } s.q = 1; } return s.img ? s : null; }
@@ -73,7 +77,7 @@
     let x0, y0, w, h, K, pw, ph, pad = PADPX;
     if (m.px){ x0 = m.box[0]; y0 = m.box[1]; w = m.box[2] - x0; h = m.box[3] - y0; pw = ph = m.px; K = pw/w; }   // a ground tile: exact pixels, its own margin
     else { x0 = Math.floor(m.box[0]); y0 = Math.floor(m.box[1]); w = Math.ceil(m.box[2]) - x0; h = Math.ceil(m.box[3]) - y0;
-      K = S*DPR; if (w*K > 4096) K = 4096/w; if (w*K*h*K > 8e6) K = Math.sqrt(8e6/(w*h)); pw = Math.max(1, Math.ceil(w*K - .01)); ph = Math.max(1, Math.ceil(h*K - .01)); }
+      K = S*DPR; if (w*K > MAXT) K = MAXT/w; if (h*K > MAXT) K = MAXT/h; if (w*K*h*K > 8e6) K = Math.sqrt(8e6/(w*h)); pw = Math.max(1, Math.ceil(w*K - .01)); ph = Math.max(1, Math.ceil(h*K - .01)); }
     let c, cx; try { c = document.createElement('canvas'); c.width = pw; c.height = ph; cx = c.getContext('2d'); } catch (e) { cx = null; }
     if (!cx){ fail(s); return; }
     const j = s.job = { c, cx, svg: m.svg, x0, y0, K, pw, ph, pad, n: 0, of: 0, nx: m.nx || 0, ny: m.ny || 0 };
@@ -94,7 +98,9 @@
           if (NOISE){ const k = K/noiseK, np = NOISE.width*k, ox = ((j.nx % np) + np) % np, oy = ((j.ny % np) + np) % np;
             cx.save(); cx.globalCompositeOperation = 'source-atop'; cx.fillStyle = j.pat || (j.pat = cx.createPattern(NOISE, 'repeat'));
             cx.beginPath(); cx.rect(px, py, cw, ch); cx.clip(); cx.translate(-ox, -oy); cx.scale(k, k); cx.fillRect((px + ox)/k - 1, (py + oy)/k - 1, cw/k + 2, ch/k + 2); cx.restore(); }
-          if (++j.n === j.of){ s.img = j.c; s.x = j.x0; s.y = j.y0; s.w = j.pw/K; s.h = j.ph/K; s.bytes = j.pw*j.ph*4; bytes += s.bytes; s.job = null; s.make = null; W.dirty = true; trim(); }
+          if (++j.n === j.of){ s.img = j.c; s.x = j.x0; s.y = j.y0; s.w = j.pw/K; s.h = j.ph/K; s.bytes = j.pw*j.ph*4; bytes += s.bytes; s.job = null; s.make = null;
+            s.tex = SF.texture(j.c);      // on WebGL the picture now lives on the graphics chip and the canvas memory is handed back
+            W.dirty = true; trim(); }
         }
       } catch (e) { fail(s); }
       W.made++; W.bakeMs = Math.max(W.bakeMs*.9, performance.now() - t0);
@@ -157,7 +163,7 @@
   const TPX = 360;
   function ground(pin){
     const p = place, b = p.gbox, K = S*DPR, gk = 'g|' + p.id + '|' + (p.ver || 0);
-    if ((b[2] - b[0])*K <= 4096 && (b[2] - b[0])*(b[3] - b[1])*K*K <= 8e6){ const g = bake(gk, () => ({ svg: W.world(p.ground()), box: p.gbox }), pin); return g ? [g] : null; }
+    if ((b[2] - b[0])*K <= MAXT && (b[3] - b[1])*K <= MAXT && (b[2] - b[0])*(b[3] - b[1])*K*K <= 8e6){ const g = bake(gk, () => ({ svg: W.world(p.ground()), box: p.gbox }), pin); return g ? [g] : null; }
     if (p._gk !== gk){ p._gk = gk; p._gsvg = W.world(p.ground()); }
     const T = TPX/K, gx = Math.floor(b[0]), gy = Math.floor(b[1]), l = cam.x - vw/2/S - 24, t = cam.y - vh/2/S - 24, out = []; let all = true;
     const nI = Math.ceil((b[2] - gx)/T) - 1, nJ = Math.ceil((b[3] - gy)/T) - 1, e = W.calm ? T*.4 : 0;      // while playing, the tiles just past the edge are made ahead
@@ -188,16 +194,36 @@
   function blit(s, ox, oy){
     if (!s.img) return;
     const k = S*DPR, x = Math.round(((s.x - cam.x)*S + vw/2 + ox)*DPR), y = Math.round(((s.y - cam.y)*S + vh/2 + oy)*DPR);
-    ctx.drawImage(s.img, x, y, Math.round(s.w*k), Math.round(s.h*k));
+    SF.draw(s.tex, x, y, Math.round(s.w*k), Math.round(s.h*k));
   }
+  /* ---------- small pictures over the world (speech bubbles, hearts, arrows, rain) ---------- */
+  /* Each shape is painted once with Canvas2D at the screen's sharpness, then shown like every other picture, so the
+     whole frame is one list of pictures. Sizes and places are CSS pixels. */
+  const STAMPS = new Map();
+  const FX = W.fx = {
+    // a picture w x h painted once: draw(ctx), with 0,0 at its centre. k: pixels per CSS pixel (the screen's, unless a
+    // big soft picture can do with less)
+    stamp(key, w, h, draw, k){ let t = STAMPS.get(key);
+      if (!t){ k = k || DPR; t = SF.paint(Math.ceil(w*k), Math.ceil(h*k), c => { c.scale(k, k); c.translate(w/2, h/2); draw(c); }); t.cw = w; t.ch = h; t.k = k; STAMPS.set(key, t); }
+      return t; },
+    // show a stamp centred on x, y; m = [a, b, c, d] turns or skews it
+    put(t, x, y, alpha, m){ const f = DPR/t.k;
+      if (m) SF.drawM(t, m[0]*f, m[1]*f, m[2]*f, m[3]*f, DPR*(x - (m[0]*t.cw + m[2]*t.ch)/2), DPR*(y - (m[1]*t.cw + m[3]*t.ch)/2), alpha);
+      else if (f === 1) SF.draw(t, Math.round((x - t.cw/2)*DPR), Math.round((y - t.ch/2)*DPR), t.w, t.h, alpha);
+      else SF.draw(t, Math.round((x - t.cw/2)*DPR), Math.round((y - t.ch/2)*DPR), Math.round(t.cw*DPR), Math.round(t.ch*DPR), alpha); },
+    // a loaded <img>, or a baked sprite (from WE.bake), with its top left corner at x, y
+    img(src, x, y, w, h, alpha){ const t = !src ? null : src.tex ? src.tex : src.key ? null : SF.image(src, Math.ceil(w*DPR));
+      if (t) SF.draw(t, Math.round(x*DPR), Math.round(y*DPR), Math.round(w*DPR), Math.round(h*DPR), alpha); },
+    rect(x, y, w, h, color, alpha){ SF.rect(Math.round(x*DPR), Math.round(y*DPR), Math.round(w*DPR), Math.round(h*DPR), color, alpha); }
+  };
   const slotsA = [], firstA = [];
   const drawn = [];           // what was drawn this frame, for picking: { x0, y0, x1, y1, actor | prop }
   W.frame = (actors, fx) => {
     tickN++; if (!place) return;
-    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = place.sky || '#f2efe7'; ctx.fillRect(0, 0, cv.width, cv.height);
+    SF.begin(place.sky || '#f2efe7');
     const g = ground(true);
     if (g && g.tiles){ if (!g.all) W.dirty = true; for (const s of g){ if (!s.img) continue; const bx = Math.round(((s.gx - cam.x)*S + vw/2)*DPR), by = Math.round(((s.gy - cam.y)*S + vh/2)*DPR);
-      ctx.drawImage(s.img, bx + s.ti*TPX, by + s.tj*TPX); } }
+      SF.draw(s.tex, bx + s.ti*TPX, by + s.tj*TPX, s.tex.w, s.tex.h); } }
     else if (g) blit(g[0], 0, 0);
     // people go after the nearest prop they stand in front of (exact box rule), else by depth
     while (slotsA.length < order.length) slotsA.push([]); const slots = slotsA, first = firstA; first.length = 0; for (let i = 0; i < order.length; i++) slots[i].length = 0;
@@ -227,9 +253,9 @@
       if (!s && W.calm && (tickN + i) % 20 === 0 && vis(o, 190)) propSprite(o, true);
       if (s){ blit(s, o._px*S, o._py*S); if (o.hit) drawn.push({ x0: (s.x + o._px - cam.x)*S + vw/2, y0: (s.y + o._py - cam.y)*S + vh/2, w: s.w*S, h: s.h*S, prop: o }); }
       put(slots[i]); }
-    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-    if (fx) fx(ctx);
-    if (place.tint){ ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = place.tint; ctx.fillRect(0, 0, vw, vh); ctx.globalCompositeOperation = 'source-over'; }
+    if (fx) fx(FX);
+    if (place.tint) SF.multiply(place.tint);
+    SF.end();
   };
   W.pick = (px, py) => {
     for (let i = drawn.length - 1; i >= 0; i--){ const d = drawn[i]; if (!d.actor || d.actor.me || d.actor.veh) continue;
@@ -304,13 +330,20 @@
   };
 
   /* ---------- canvas ---------- */
+  // the drawing surface is made first (PixiJS has to arrive); without it WE.init falls back to Canvas2D at once
+  W.prepare = canvas => Kit.gfx.create(canvas).then(s => { SF = s; }, () => {});
   W.init = canvas => {
-    cv = canvas; ctx = cv.getContext('2d', { alpha: false });
-    const fit = () => { const d0 = DPR; DPR = Math.min(3, window.devicePixelRatio || 1); if (d0 !== DPR) S = 0; vw = cv.clientWidth || innerWidth; vh = cv.clientHeight || innerHeight;
-      cv.width = Math.round(vw*DPR); cv.height = Math.round(vh*DPR);
+    if (!SF) SF = Kit.gfx.canvas2d(canvas);
+    cv = SF.canvas; MAXT = SF.maxTex; W.gfx = SF.note;
+    // every picture is made again: the size of the screen changed, or the graphics chip dropped its textures
+    const wipe = () => { for (const [k, sp] of SPR){ free(sp); SPR.delete(k); } Q.length = Q2.length = RUN.length = 0;
+      for (const t of STAMPS.values()) SF.free(t); STAMPS.clear(); makeNoise(); if (place) W.setPlace(place); };
+    const fit = () => { const d0 = DPR; DPR = Kit.gfx.dpr(); if (d0 !== DPR) S = 0; vw = cv.clientWidth || innerWidth; vh = cv.clientHeight || innerHeight;
+      SF.resize(Math.round(vw*DPR), Math.round(vh*DPR));
       const s = Math.max(.9, Math.min(1.5, Math.min(vw/340, vh/460)));
-      if (Math.abs(s - S) > .02){ S = s; for (const [k, sp] of SPR){ free(sp); SPR.delete(k); } Q.length = Q2.length = RUN.length = 0; makeNoise(); if (place) W.setPlace(place); }
+      if (Math.abs(s - S) > .02){ S = s; wipe(); }
       W.dirty = true; };
+    SF.onLost(() => { wipe(); W.dirty = true; });
     S = 0; FILT = filterFor(1); fit(); addEventListener('resize', fit);
   };
 })();

@@ -15,6 +15,8 @@
   <!-- Drawing engine: Colorfigures by April Zhu (MIT), see iso/LICENSE-colorfigures. Made with Colorfigures. -->
   <script src="/KidsGames/games/helping-home/iso/core.js"></script>
   <script src="/KidsGames/js/kit/core.js"></script>
+  <!-- the drawing surface: PixiJS on the graphics chip (it fetches js/vendor/pixi-*.min.js itself), Canvas2D without WebGL -->
+  <script src="/KidsGames/js/kit/gfx.js"></script>
   <script src="/KidsGames/js/kit/audio.js"></script>
   <script src="/KidsGames/games/helping-home/iso/flow.js"></script>
   <!-- prayer times on the device (adhan-js, MIT). Without them the world uses fixed times. -->
@@ -24,7 +26,7 @@
   <script>try { if (window.HHPrayer && !window.adhan) window.HHPrayer = undefined; } catch (e) {}</script>
   <script src="/KidsGames/games/helping-home/house/kit3d.js"></script>
   <script src="/KidsGames/games/helping-home/house/family.js"></script>
-  <!-- the world: canvas engine, places, people, game -->
+  <!-- the world: engine (pictures made once, drawn through the kit surface), places, people, game -->
   <script src="/KidsGames/games/helping-home/world/engine.js"></script>
   <script src="/KidsGames/games/helping-home/world/places.js"></script>
   <script src="/KidsGames/games/helping-home/world/sim.js"></script>

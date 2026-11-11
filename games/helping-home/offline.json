@@ -1,6 +1,6 @@
 {
- "version": "kidsgames-games-v1.5.8",
- "bytes": 3433867,
+ "version": "kidsgames-games-v1.7.0",
+ "bytes": 4294733,
  "files": [
   "/KidsGames/games/helping-home/classic.html",
   "/KidsGames/games/helping-home/index.html",
@@ -113,9 +113,11 @@
   "/KidsGames/js/kit/audio.js",
   "/KidsGames/js/kit/core.js",
   "/KidsGames/js/kit/fx.js",
+  "/KidsGames/js/kit/gfx.js",
   "/KidsGames/js/kit/kit.css",
   "/KidsGames/js/kit/praise-clips.js",
   "/KidsGames/js/kit/ui.js",
+  "/KidsGames/js/vendor/pixi-8.22.0.min.js",
   "/KidsGames/manifest.json"
  ]
 }

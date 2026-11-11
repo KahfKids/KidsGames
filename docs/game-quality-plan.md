@@ -67,6 +67,7 @@ One small set of plain-JS modules (no framework, no CDN) that every reworked gam
 | `progress.js` | Namespaced `localStorage` (`kahf-<game>`), levels and 1–3 stars, chapters/worlds, unlocks, and a level-select sheet (opened from a button; **launch goes straight into play**, like Spider IK now does). Calls `KahfBridge.complete()` per level and `KahfBridge.answer()` for quiz-type taps. |
 | `audio.js` | WebAudio, unlocked on the first tap (fixes silence on iOS). Small local SFX sprite (pop, tap, correct, wrong, win, star), mute toggle that is remembered, and a hook for voice prompts so pre-readers get spoken instructions. |
 | `fx.js` | Tweens and easing, squash-and-stretch, particles on canvas (not 100 DOM nodes), screen shake, hit flash, star-burst level-complete card. Respects `prefers-reduced-motion`. |
+| `gfx.js` | **The drawing surface (2026-11-11).** Pictures are made once and handed over as textures; each frame is a list of draws. PixiJS on WebGL (pinned in `js/vendor/`), Canvas2D where WebGL is missing. Pixel density capped at 2 (1.5 on low-memory phones). Helping Home's world is the first game on it; the rest move over game by game. |
 | `precache.js` | Spider IK's "cache every file this game needs" message to the service worker, so all levels work offline after one visit. |
 
 **Full-screen stage (required, owner 2026-11-08):** every game fills the whole screen edge to edge (inside safe areas), like Spider IK.

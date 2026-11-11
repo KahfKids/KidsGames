@@ -124,6 +124,20 @@ Themes are controlled via URL parameters:
 - Touch-optimized interfaces
 - Install prompts for standalone app experience
 
+## Rendering standard (every 2D game)
+
+One renderer for the whole catalog, so a fix or a speed-up in the kit reaches every game.
+
+- **2D games draw through `Kit.gfx`** (`js/kit/gfx.js`): make each picture once (Canvas2D or an `<img>`), hand it to the surface as a texture, then list what to draw each frame (`begin`, `draw`, `end`). The surface draws with **PixiJS on WebGL**, and with Canvas2D on a phone with no usable WebGL. A game never talks to PixiJS or a canvas context for its frame.
+- **Canvas2D is for making pictures**, not for the frame. The colouring game is the one exception (it needs the pixels).
+- **Quizzes, menus, HUD and sheets stay DOM** on top of the canvas.
+- **3D games use three.js** (not added yet). A page is 2D or 3D, never both renderers.
+- **PixiJS is pinned and local**: `js/vendor/pixi-8.22.0.min.js` (MIT). No CDN. To upgrade, add the new file, change `PIXI_FILE` in `gfx.js`, test every game on it, then delete the old file.
+- **Pixel density** comes from `Kit.gfx.dpr()`: at most 2, and 1.5 on phones with 2 GB of memory or less.
+- **Textures can be lost** (app in the background, memory short): a game that hands canvases to the surface registers `surface.onLost` and makes its pictures again.
+- Check a phone with `?perf=1` (Helping Home) and compare the old path with `?gfx=2d`.
+- **First game on the standard:** Helping Home's world (`games/helping-home/world/engine.js`). Its stations (wudu, salah, adhan, washing machine) are separate pages and not ported yet. The other kit games still draw their frame with Canvas2D.
+
 ## Kahf activity bridge (every game page)
 
 Every game page includes the shared bridge so the Kahf Kids app can count real learning:
