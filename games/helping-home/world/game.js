@@ -95,6 +95,7 @@
     S.onPrayerEnd = () => { const b = document.querySelector('.w-pray'); if (b) b.remove(); if (me.place === 'masjid' || me.place === 'home1') burst(me, 'heart', 3); };
     S.onPrayer = onPrayer; S.onWant = p => { if ((p.want.item === 'veg' || p.want.item === 'meal') && !ripeBed()) p.want.item = 'flower'; hudWants(); };
     const back = q.get('back'), start = back === 'salah' || back === 'adhan' ? ['home1', 240, 300] : back === 'wudu' ? ['home0', 230, 50] : back === 'washing-machine' || back === 'washer' ? ['home0', 230, 345] : G.av ? ['home0', 250, 215] : ['home1', 100, 100];
+    { const at = (q.get('at') || '').split(','); if (PL[at[0]]){ start[0] = at[0]; start[1] = +at[1] || 300; start[2] = +at[2] || 300; if (!G.av) G.av = { girl: false, skin: '#c98e62', top: C.red, head: C.pink, kufi: false }; } }   // test switch: ?at=street,300,300
     if (!G.av) G.av = { girl: false, skin: '#c98e62', top: C.red, head: C.pink, kufi: false, fresh: true };
     applyAv();
     me = S.addMe('me', start[0], start[1], start[2]); me.need = G.need; if (back === 'wudu') me.need.clean = 100; const c = S.freeSpot(me, PL[start[0]], start[1], start[2]); me.x = c[0]; me.y = c[1];
@@ -105,7 +106,7 @@
     if (G.av.fresh) openEditor(true);
     else if (back === 'salah'){ setTimeout(() => { praise(); burst(me, 'heart', 5); }, 900); }
     else if (back) setTimeout(() => burst(me, 'star', 4), 900);
-    if (q.get('perf')){ const e = el('div'); e.style.cssText = 'position:fixed;left:6px;bottom:6px;z-index:99;font:12px/1.2 monospace;background:rgba(0,0,0,.6);color:#fff;padding:3px 6px;border-radius:6px;pointer-events:none'; document.body.appendChild(e); perf = { el: e, last: performance.now(), t0: performance.now(), n: 0, worst: 0 }; }
+    if (q.get('perf')){ const e = el('div'); e.style.cssText = 'position:fixed;left:6px;bottom:6px;z-index:99;font:12px/1.2 monospace;background:rgba(0,0,0,.6);color:#fff;padding:3px 6px;border-radius:6px;pointer-events:none'; document.body.appendChild(e); perf = { el: e, last: performance.now(), t0: performance.now(), n: 0, worst: 0, err: '' }; addEventListener('error', ev => { perf.err = ' ERR ' + (ev.message || '') + ' ' + String(ev.filename || '').split('/').pop() + ':' + ev.lineno; }); const cw = console.warn; console.warn = (...a) => { perf.err = ' W ' + a.map(String).join(' ').slice(0, 90); cw.apply(console, a); }; }
     input(); requestAnimationFrame(loop);
     offline();
     if ('serviceWorker' in navigator && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) try { navigator.serviceWorker.getRegistration('/KidsGames/').then(r => r || navigator.serviceWorker.register('/KidsGames/sw.js', { scope: '/KidsGames/' })).catch(() => {}); } catch (e) {}
@@ -138,7 +139,7 @@
   // ?perf=1 : a small readout to check a real phone (frames per second, the longest frame of the last second, pictures being made, memory)
   let perf = null;
   function perfTick(t){ const d = t - perf.last; perf.last = t; perf.n++; if (d > perf.worst) perf.worst = d;
-    if (t - perf.t0 >= 1000){ const st = WE.stats(); perf.el.textContent = Math.round(perf.n*1000/(t - perf.t0)) + ' fps  worst ' + Math.round(perf.worst) + ' ms  q ' + st.queue + '  ' + st.mb + ' MB  x' + (window.devicePixelRatio || 1).toFixed(2) + ' ' + (WE.noise || '') + ' ' + (st.gfx || ''); perf.t0 = t; perf.n = 0; perf.worst = 0; } }
+    if (t - perf.t0 >= 1000){ const st = WE.stats(); perf.el.textContent = Math.round(perf.n*1000/(t - perf.t0)) + ' fps  worst ' + Math.round(perf.worst) + ' ms  q ' + st.queue + '  ' + st.mb + ' MB  x' + (window.devicePixelRatio || 1).toFixed(2) + ' ' + (WE.noise || '') + ' ' + (st.gfx || '') + ' ' + me.place + perf.err; perf.t0 = t; perf.n = 0; perf.worst = 0; } }
   function loop(t){
     requestAnimationFrame(loop);
     const dt = Math.min(.1, (t - lastT)/1000 || 0); lastT = t; if (document.hidden) return;
@@ -525,18 +526,18 @@
     const g = el('div', 'w-map'); for (const [pl, src] of [['home0', WE.figUrl('me', 'stand', 45, 96)], ['masjid', icUrl(IC.mosque)], ['school', icUrl(IC.pencil)], ['shop', itemUrl('bread', 96)], ['park', icUrl(IC.tree)], ['gran', WE.figUrl('dadi', 'stand', 45, 96)]]){
       const here = me.place === pl || (pl === 'home0' && (me.place === 'home1' || me.place === 'yard')), b = el('button', 'w-mb' + (here ? ' sel' : ''), `<img src="${src}">`);
       b.onclick = () => { sfx('tap'); guide = here ? null : { place: pl }; hudWants.k = ''; close(); }; g.appendChild(b); }
-    v.appendChild(g); document.body.appendChild(v); sfx('whoosh');
     if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage){   // inside the Kahf Kids app: a way back to the app
       const ex = el('button', 'w-x w-exit', '<svg viewBox="0 0 24 24" fill="none" stroke="#231e16" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H6M11 6l-6 6 6 6"/></svg><b>Exit</b>');
       ex.setAttribute('aria-label', 'Exit'); ex.onclick = () => { sfx('tap'); kahfNav('exit'); }; v.appendChild(ex);
     }
+    v.appendChild(g); document.body.appendChild(v); sfx('whoosh');
   }
-
   function kahfNav(action){ try { window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'kahfNav', v: 1, action })); } catch (e) {} }
+
   /* ---------- the buttons on screen ---------- */
   function buildHud(){
-    veil = el('div', 'w-veil on', '<i></i>'); document.body.appendChild(veil);
     if (window.ReactNativeWebView) kahfNav('exitReady');
+    veil = el('div', 'w-veil on', '<i></i>'); document.body.appendChild(veil);
     const top = el('div', 'w-top'); hud.clock = el('button', 'w-chip'); hud.sun = el('i'); hud.time = el('b', '', '0:00'); hud.fast = el('i', 'ff', IC.fast);
     hud.clock.append(hud.sun, hud.time, hud.fast); hud.clock.classList.toggle('fast', !!G.fast);
     hud.clock.onclick = () => { G.fast = !G.fast; save(); sfx('whoosh'); hud.clock.classList.toggle('fast', G.fast); if (G.fast) S.setSpeed(72); else { S.clock = { base: Date.now(), real0: S.t, speed: 1 }; } slow(); };

@@ -65,3 +65,7 @@ temp/
 # Backup files
 *.bak
 *.backup 
+
+# Local scratch pages and per-machine tool config: never published
+games/**/_*.html
+.claude/launch.json
