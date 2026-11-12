@@ -9,6 +9,7 @@
  *
  * Reported on its own (no page code needed):
  *   media_done  an audio or video played to the end (or 90%)
+ *   open        the page loaded (sent once)
  *   active      30 seconds of real use: the page is visible and the child
  *               tapped, typed or scrolled in the last 15 s, or media is playing
  *
@@ -17,7 +18,9 @@
  *   KahfBridge.complete()   the child finished a round, level, story or lesson
  *   KahfBridge.item(id)     the child opened one item (a dua, a name, a card)
  *
- * Message: JSON string { type: 'kahfActivity', v: 1, event, id?, seconds? }.
+ * Message: JSON string { type: 'kahfActivity', v: 1, event, page?, id?, seconds? }.
+ * `page` is the folder of a game or quiz (games/<page>/), so the app knows
+ * which one is open even inside a web iframe; other pages leave it out.
  * No personal data. The Kahf Kids app keeps an identical copy of this file
  * (expo-app/constants/kahf-bridge-script.ts) and injects it on native.
  */
@@ -29,9 +32,18 @@
   var lastInteraction = 0;
   var activeSeconds = 0;
   var playing = 0;
+  var page = (function () {
+    try {
+      var match = /\/games\/([^\/]+)\//.exec(window.location.pathname);
+      return match ? decodeURIComponent(match[1]).slice(0, 64) : null;
+    } catch (e) {
+      return null;
+    }
+  })();
 
   function post(event, extra) {
     var message = { type: 'kahfActivity', v: 1, event: event };
+    if (page) message.page = page;
     if (extra) {
       for (var key in extra) message[key] = extra[key];
     }
@@ -107,6 +119,8 @@
       post('active', { seconds: ACTIVE_REPORT_SECONDS });
     }
   }, 1000);
+
+  post('open');
 
   window.KahfBridge = {
     v: 1,
