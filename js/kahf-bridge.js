@@ -9,7 +9,7 @@
  *
  * Reported on its own (no page code needed):
  *   media_done  an audio or video played to the end (or 90%)
- *   open        the page loaded (sent once)
+ *   open        the page loaded (sent once, with the page's `title`)
  *   active      30 seconds of real use: the page is visible and the child
  *               tapped, typed or scrolled in the last 15 s, or media is playing
  *
@@ -18,7 +18,7 @@
  *   KahfBridge.complete()   the child finished a round, level, story or lesson
  *   KahfBridge.item(id)     the child opened one item (a dua, a name, a card)
  *
- * Message: JSON string { type: 'kahfActivity', v: 1, event, page?, id?, seconds? }.
+ * Message: JSON string { type: 'kahfActivity', v: 1, event, page?, title?, id?, seconds? }.
  * `page` is the folder of a game or quiz (games/<page>/), so the app knows
  * which one is open even inside a web iframe; other pages leave it out.
  * No personal data. The Kahf Kids app keeps an identical copy of this file
@@ -120,7 +120,9 @@
     }
   }, 1000);
 
-  post('open');
+  var title = '';
+  try { title = String(document.title || '').replace(/\s+/g, ' ').trim().slice(0, 80); } catch (e) { /* best effort */ }
+  post('open', title ? { title: title } : undefined);
 
   window.KahfBridge = {
     v: 1,
