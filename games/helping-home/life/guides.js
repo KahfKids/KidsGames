@@ -194,7 +194,7 @@
       this.cardG = this.add.graphics(); this.ui.add(this.cardG);
       this.cc = this.add.container(0, 0); this.ui.add(this.cc);                      // the card's content, made again for each step
       this.dots = this.add.container(0, 0); this.ui.add(this.dots);
-      this.exitB = roundBtn(this, this.ui, { frame: 'house', size: 50, fn: () => this.leave() });
+      this.exitB = roundBtn(this, this.ui, { key: 'ui-exit', size: 50, fn: () => this.leave() });      // the way out: a back arrow, as in the town
       this.backB = roundBtn(this, this.ui, { frame: 'arrow', size: 50, flip: true, fn: () => this.goBack() });
       this.nextB = roundBtn(this, this.ui, { frame: 'arrow', size: 72, tint: 0xd9f3dc, fn: () => this.goNext() });
       this.soundB = roundBtn(this, this.ui, { key: 'gd-speaker', size: 44, fn: () => this.replay() });

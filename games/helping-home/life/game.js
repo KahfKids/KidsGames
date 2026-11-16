@@ -147,10 +147,7 @@
     constructor() { super('Boot'); }
     preload() {
       if (!Q.has('img')) offThread(this.game);
-      const w = this.scale.width, h = this.scale.height;
-      this.add.rectangle(w / 2, h / 2, w * 0.3, h * 0.022, 0xffffff, 0.35);
-      const bar = this.add.rectangle(w * 0.35, h / 2, 1, h * 0.022, 0xffffff).setOrigin(0, 0.5);
-      this.load.on('progress', v => { bar.width = Math.max(1, w * 0.3 * v); });
+      const L = window.HHLoad; if (L) this.load.on('progress', v => L.to(0.3 + 0.3 * v));          // the page's loading screen (index.html) shows how far
       this.load.json('data', ROOT + 'life/data.json');
       this.load.json('hh-voice', ROOT + 'audio/index.json');                      // the recorded voices (iso/voice.js)
       Kit.snd.load(this, ROOT + 'audio/sfx/');                                      // every effect, one audio sprite
@@ -163,13 +160,15 @@
       Kit.play.tex(this, 'ui-glow', 128, 128, c => { const g = c.createRadialGradient(64, 64, 0, 64, 64, 64); g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(1, 'rgba(255,255,255,0)'); c.fillStyle = g; c.fillRect(0, 0, 128, 128); });
       Kit.play.tex(this, 'ui-pool', 128, 128, c => { const g = c.createRadialGradient(64, 64, 0, 64, 64, 64); [[0, 1], [0.25, 0.62], [0.5, 0.3], [0.75, 0.09], [1, 0]].forEach(q => g.addColorStop(q[0], 'rgba(255,255,255,' + q[1] + ')')); c.fillStyle = g; c.fillRect(0, 0, 128, 128); });      // lamplight on the ground: bright under the lamp, soon faint
       Kit.play.tex(this, 'ui-ring', 128, 128, c => { c.strokeStyle = '#fff'; c.lineWidth = 9; c.beginPath(); c.arc(64, 64, 54, 0, 7); c.stroke(); });
+      // the way out of the game: a back arrow (a house would read as "go home", and the doors to homes already show one)
+      Kit.play.tex(this, 'ui-exit', 96, 96, c => { c.strokeStyle = '#3a3050'; c.lineWidth = 13; c.lineCap = 'round'; c.lineJoin = 'round'; c.beginPath(); c.moveTo(80, 48); c.lineTo(20, 48); c.moveTo(44, 22); c.lineTo(18, 48); c.lineTo(44, 74); c.stroke(); }, 2);
       Kit.play.tex(this, 'ui-card', 520, 360, c => { c.shadowColor = 'rgba(30,20,60,.28)'; c.shadowBlur = 22; c.shadowOffsetY = 8; c.fillStyle = '#fffaf0'; c.beginPath(); c.roundRect(0, 0, 520, 360, 44); c.fill(); }, 30);
       Life.state = loadState();
       const gd = Q.get('guide');                                                   // ?guide=wudu|salah: straight into a guide (for testing)
-      if (gd && this.scene.get(gd === 'wudu' ? 'Wudu' : 'Salah')) { this.scene.start(gd === 'wudu' ? 'Wudu' : 'Salah', { back: () => Kit.play.exit() }); return; }
+      if (gd && this.scene.get(gd === 'wudu' ? 'Wudu' : 'Salah')) { if (window.HHLoad) HHLoad.done(); this.scene.start(gd === 'wudu' ? 'Wudu' : 'Salah', { back: () => Kit.play.exit() }); return; }
       // the Maker is launched, not started: this scene's loader must stay alive for go()
       const go = () => { makeWorld(); Life.makeYou(this, Life.state.you, () => this.scene.start('Place')); };
-      if (!Life.state.you) { if (this.scene.get('Maker') && !Q.has('nomaker')) { this.scene.launch('Maker', { first: true, done: go }); return; } Life.state.you = JSON.parse(JSON.stringify(YOU0)); }
+      if (!Life.state.you) { if (this.scene.get('Maker') && !Q.has('nomaker')) { this.scene.launch('Maker', { first: true, done: go }); this.scene.get('Maker').events.once('create', () => window.HHLoad && HHLoad.done()); return; } Life.state.you = JSON.parse(JSON.stringify(YOU0)); }
       go();
     }
   }
@@ -223,13 +222,14 @@
         const O = D.art.overview; if (O && this.textures.exists('overview.s')) this.under = this.lit(this.add.image(-O.ox, -O.oy, 'overview.s').setOrigin(0).setDisplaySize(O.w / O.scale, O.h / O.scale).setDepth(-50));
         // the open grass round the town, without end: one picture repeated (the engine's TileSprite), under everything
         if (D.art.field && this.textures.exists('field')) { const m = this.map, pad = Math.max(m.w, m.h) * 1.1; this.field = this.lit(this.add.tileSprite(m.x - pad, m.y - pad, m.w + pad * 2, m.h + pad * 2, 'field').setOrigin(0).setDepth(-60)); }
-        this.makeBuildings(); this.stream(); this.busy = false; this.sync(0, 0); this.centre(true); cam.fadeIn(320, sky.red, sky.green, sky.blue); };
+        this.makeBuildings(); this.stream(); this.busy = false; this.sync(0, 0); this.centre(true); cam.fadeIn(320, sky.red, sky.green, sky.blue); if (window.HHLoad) HHLoad.done(); };
       if (D.art.overview && D.art.overview.small && !this.textures.exists('overview.s')) this.load.image('overview.s', ART + 'overview.s' + EXT);
       if (D.art.field && !this.textures.exists('field')) this.load.image('field', ART + 'field' + EXT);
       { const t = this.target(); cam.centerOn(t.x, t.y); }                          // (before anything is asked for: only what is round the child is loaded)
       for (const lot in (D.art.buildings || {})) if (!this.textures.exists('b-' + lot + '.s')) this.load.image('b-' + lot + '.s', ART + 'b-' + lot + '.s' + EXT);
       if ((D.art.packs || []).indexOf('road') >= 0 && !this.textures.exists('t-road')) this.load.atlas({ key: 't-road', textureURL: ART + 't-road' + EXT, atlasURL: ART + 't-road.json' });
       this.stream();
+      if (window.HHLoad) { const L = HHLoad, f = v => L.to(0.62 + 0.38 * v); this.load.on('progress', f); this.load.once('complete', () => this.load.off('progress', f)); }
       if (this.load.list.size || this.load.isLoading()) { this.load.once('complete', go); this.load.start(); } else go();
     }
 
@@ -1073,7 +1073,7 @@
         c.on('pointerdown', () => { sfx('tap'); this.tweens.add({ targets: c, scale: c.scale * 0.9, duration: 70, yoyo: true }); });
         c.on('pointerup', fn); return c;
       };
-      this.exit = btn('house', () => Kit.play.exit());
+      this.exit = btn('house', () => Kit.play.exit()); this.exit.icon.setTexture('ui-exit').setScale(0.8);
       this.moon = btn('moon', () => this.pray());
       this.prayArc = this.ring('hud-ring-pray'); this.moon.add(this.prayArc); this.prayK = -2;
       this.hand = btn('hand', () => { w.drop(w.you); }).setVisible(false);
