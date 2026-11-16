@@ -18,6 +18,7 @@
   var K = SpArt.K, W = SpArt.W, H = SpArt.H, A = SpArt.A;
   var ROCK = 1, SOLID = 2, SPIDER = 4, LEG = 8, HAZ = 16, PICK = 32, BLOB = 64;
   var L1 = 26, L2 = 35, MAXR = L1 + L2, RB = 16, JUMP_BUFFER = 150, HOVER = 34;
+  var MAXV = 28;        // Matter's 60 Hz-normalized velocity: limit extreme spinner flings. The 120 Hz solver advances half this distance per step.
   var SPIN_SIZE = 100;
   // spinner motions: [costume, kind, ...] (r: turns in place, y / x: swings, o: circles the middle and faces the spider)
   var SP = { 1: [1, 'r', 235, 175, -1], 2: [2, 'r', -22, -4, -1.5], 3: [3, 'y', 150, 38, 0, 0], 4: [4, 'y', 150, 38, 180, 0], 5: [5, 'y', 300, 38, 0, 0], 6: [6, 'y', 100, 105, 0, 20], 7: [7, 'r', 20, 0, -1.5], 8: [8, 'x', 150, 40, 0, 0], 9: [6, 'y', 70, 100, 0, -60], 10: [9, 'x', 150, 40, 0, 0], 11: [10, 'y', 150, 43, 0, 0], 12: [11, 'r', 185, 15, -2], 13: [12, 'x', 90, 145, 0, 0, 1], 14: [13, 'x', 130, 40, 0, 0, 1], 15: [14, 'o', 70], 16: [14, 'o', -70], 17: [15, 'r', 180, 0, -1.2], 18: [16, 'y', 150, 38, 0, 0], 19: [17, 'y', 200, 52, 0, 0], 20: [18, 'y', 200, 52, 180, 0], 21: [19, 'r', 30, 50, 1], 22: [20, 'y', 225, 52, 180, 0], 23: [21, 'y', 225, 52, 0, 0], 24: [22, 'r', 0, 0, 1.8], 25: [23, 'r', 15, -10, 2.5] };
@@ -26,8 +27,9 @@
   var sfx = function (name, o) { Kit.snd.play(name, o); };
 
   class Cave extends Phaser.Scene {
-    // Matter only in this scene (the interface has no physics)
-    constructor() { super({ key: 'Cave', physics: { default: 'matter', matter: { gravity: { x: 0, y: 1.5 }, positionIterations: 6, velocityIterations: 4, constraintIterations: 4, debug: /[?&]phys/.test(location.search) } } }); }
+    // Matter owns the fixed-step accumulator. At 60 Hz a capped fling still crossed a 7 px wall in the pinned engine;
+    // 120 Hz physics passes that test while rendering stays at the screen's rate. Forces and jump impulse stay unchanged.
+    constructor() { super({ key: 'Cave', physics: { default: 'matter', matter: { runner: { delta: 1000 / 120 }, gravity: { x: 0, y: 1.5 }, positionIterations: 6, velocityIterations: 4, constraintIterations: 4, debug: /[?&]phys/.test(location.search) } } }); }
     init(d) { this.n = d.n; }
     preload() {
       var n = this.n, L = SpArt.D.L[n - 1];
@@ -87,23 +89,34 @@
     /* ---- bodies from traced outlines ----
        p: one outline [x,y,...] (or a picture name with its outlines), in that picture's pixels; s: level px per picture
        px. The engine splits concave outlines into convex parts and centres the body on its centre of mass; _c keeps
-       where that centre sits from the picture's own pivot, so the body can be turned round the pivot (put). */
+       where that centre sits from the picture's own pivot, so the body can be turned round the pivot (put).
+       Where the engine puts the body is not always the same: a body of several parts, or a convex outline, is centred on
+       the (0, 0) asked for, but a concave outline that came out as ONE part is returned where its points are (Matter
+       0.20 Bodies.fromVertices). Both are the outline moved by one shift, which the bounds tell, so _c is the centre
+       of mass plus that shift (before, the second kind was sent to (0, 0): the rock was gone from the level). */
     body(p, name, s, opt) {
       var sets, m = name ? A[name] : { x: 0, y: 0 };
       var outl = name ? this.cache.json.get('shapes').sprites[name].polys : [p];
       sets = outl.map(function (q) { var v = []; for (var i = 0; i < q.length; i += 2) v.push({ x: (q[i] - m.x) * s, y: (q[i + 1] - m.y) * s }); return v; });
-      var b = this.matter.add.fromVertices(0, 0, sets, opt), mnx = 1e9, mny = 1e9;
+      var b = this.matter.add.fromVertices(0, 0, sets, opt, false, 0.01, 1), mnx = 1e9, mny = 1e9;   // (parts under 1 px2 dropped, not the engine's 10: a small piece of rock is still rock)
       sets.forEach(function (v) { v.forEach(function (q) { mnx = Math.min(mnx, q.x); mny = Math.min(mny, q.y); }); });
-      b._c = { x: mnx - b.bounds.min.x, y: mny - b.bounds.min.y }; b._s = s;
+      b._c = { x: b.position.x + mnx - b.bounds.min.x, y: b.position.y + mny - b.bounds.min.y }; b._s = s;
       if (!name) this.Body.setPosition(b, { x: b._c.x, y: b._c.y });
       return b;
     }
     put(b, X, Y, ang) {
       var c = b._c, cs = Math.cos(ang), sn = Math.sin(ang), x = X + c.x * cs - c.y * sn, y = Y + c.x * sn + c.y * cs;
       if (b.isStatic) { this.Body.setAngle(b, ang); this.Body.setPosition(b, { x: x, y: y }); return; }
-      // a kinematic body: given the velocity that takes it there, so what it pushes is pushed smoothly
-      this.Body.setAngularVelocity(b, ang - b.angle); this.Body.setAngle(b, ang);
-      this.Body.setVelocity(b, { x: x - b.position.x, y: y - b.position.y }); this.Body.setPosition(b, { x: x, y: y });
+      // a kinematic body: given the velocity that takes it from where it was put last time, so what it pushes is pushed
+      // smoothly. (It was the distance from where the ENGINE left it, which is the target plus last step's velocity: the
+      // first call, from (0, 0), gave a velocity of hundreds of px, and since every step then threw the body that far
+      // past its target and every call turned it round, the error never died: the spinner was solid hundreds or
+      // thousands of px from its picture, for as long as every frame ran exactly one step: a steady 60 Hz phone.)
+      var l = b._last, da = 0, dx = 0, dy = 0;
+      if (l) { dx = x - l.x; dy = y - l.y; da = ang - l.a; da -= Math.round(da / (2 * Math.PI)) * 2 * Math.PI; }
+      b._last = { x: x, y: y, a: ang };
+      this.Body.setAngle(b, ang); this.Body.setPosition(b, { x: x, y: y });
+      this.Body.setAngularVelocity(b, da); this.Body.setVelocity(b, { x: dx, y: dy });
     }
     resize(b, s) { if (Math.abs(s / b._s - 1) < 0.004) return; var k = s / b._s; this.Body.scale(b, k, k); b._c.x *= k; b._c.y *= k; b._s = s; }
     kin(name, s, cat, mask, label) {
@@ -259,12 +272,21 @@
         fx += 70 * sx / held.length; fy += 70 * sy / held.length;
         var vn = v60x * up.x + v60y * up.y; fx -= 12 * vn * up.x; fy -= 12 * vn * up.y;
       }
+      var sp = Math.hypot(b.velocity.x, b.velocity.y); if (sp > MAXV) this.Body.setVelocity(b, { x: b.velocity.x * MAXV / sp, y: b.velocity.y * MAXV / sp });
       // gravity, lighter as more feet hold (the old 1500 x (1 - feet / 4)); the build's Matter ignores a body's gravityScale
       fy += 1500 * (1 - Math.min(1, held.length / 4));
       this.Body.applyForce(b, b.position, { x: fx * b.mass * 1e-6, y: fy * b.mass * 1e-6 });
     }
 
-    settle() { this.live = false; for (var i = 0; i < 40; i++) { this.legsStep(1 / 60); this.tweens.update(this.time.now, 16.7); this.matter.world.step(16.666); } this.live = true; }
+    // 40 steps with no stick, so the spider is hanging by its feet when play starts. The feet plant by tweens (the tween
+    // manager runs on the wall clock, which does not move inside this loop), so each step is completed here: before, no foot
+    // ever landed in settle, the spider fell the whole 40 steps (about 130 px) and play began wherever that left it
+    // (L10: in the electric trap under the start, again and again).
+    settle() {
+      this.live = false;
+      for (var i = 0; i < 40; i++) { this.legsStep(1 / 60); this.legs.forEach(function (l) { if (l.step) l.step.complete(); }); this.matter.world.step(16.666); }
+      this.live = true;
+    }
 
     /* ---- the level's things ---- */
     makeThings() {
@@ -405,9 +427,9 @@
         sfx('orb', { rate: 1 + 0.06 * Math.min(this.col, 5), pan: this.pan(t.b.position.x) });
         this.collect(this.col + 1);
         if (this.L.req && this.col === this.L.req) sfx('open', { delay: 0.25 });
-      } else if (o.label === 'elec' && t.img.alpha * 255 > 110) this.die();
-      else if (o.label === 'blob' && t.img.visible && t.img.alpha * 255 > 110) this.die();
-      else if (o.label === 'burst') this.die();
+      } else if (o.label === 'elec' && t.img.alpha * 255 > 110) this.dead = true;
+      else if (o.label === 'blob' && t.img.visible && t.img.alpha * 255 > 110) this.dead = true;
+      else if (o.label === 'burst') this.dead = true;
       else if (o.label === 'tele' && !this.tpc) {
         var twin = this.things.filter(function (q) { return q.kind === 'tele' && q !== t && q.q[2] === t.q[2]; })[0];
         if (!twin) return;
@@ -493,7 +515,7 @@
 
     update(time, dms) {
       var dt = Math.min(dms, 50) / 1000, b = this.sb, inp = this.inp, self = this;
-      if (inp.restart) { inp.restart = 0; this.die(); }
+      if (inp.restart || this.dead) { inp.restart = 0; this.dead = false; this.die(); }   // (a touch only says so: die() rebuilds the level and steps the engine, which cannot happen inside one of its own steps)
       if (this.won) { this.sync(); return; }
       this.jumpCool = Math.max(0, this.jumpCool - dt); this.footT -= dt;
       if (inp.jump) { inp.jump = 0; this.jumpAt = time; }

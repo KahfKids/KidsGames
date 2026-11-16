@@ -1,44 +1,52 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-  <title>Tower Blocks</title>
-  <meta name="description" content="Tap to drop glazed tile and carved stone blocks and stack the tallest tower you can, from golden dusk to a starry night." />
-  <meta name="theme-color" content="#2f2a72" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <link rel="manifest" href="/KidsGames/manifest.json" />
-  <link rel="apple-touch-icon" href="/KidsGames/icons/icon-192x192.png" />
-  <link rel="stylesheet" href="/KidsGames/js/kit/kit.css" />
-  <script src="/KidsGames/js/kahf-bridge.js" defer></script>
-  <style>
-    .tb-free { margin-top: 18px; width: 100%; }
-    @media (max-width: 400px) {
-      .kit-hud { gap: 5px; }
-      .kit-pill { padding: 0 10px; gap: 4px; font-size: 15px; }
-      .kit-pill svg, .kit-hearts svg { width: 16px !important; height: 16px !important; }
-    }
-    .tb-free small { opacity: 0.75; font-weight: 800; margin-left: 4px; }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Tower Blocks</title>
+<meta name="description" content="Tap to drop glazed tile and carved stone blocks and stack the tallest tower you can, from golden dusk to a starry night.">
+<meta name="theme-color" content="#2f2a72">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="/KidsGames/manifest.json">
+<link rel="icon" type="image/png" sizes="32x32" href="/KidsGames/icons/icon-32x32.png">
+<link rel="apple-touch-icon" href="/KidsGames/icons/icon-192x192.png">
+<style>html,body{margin:0;height:100%;background:#2f2a72;overflow:hidden;overscroll-behavior:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;touch-action:none}
+#kit-load{position:fixed;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;background:linear-gradient(#463c8c,#9a4f92 62%,#ff8c78);--p:0}
+#kit-load svg{width:min(34vw,34vh,180px);height:auto}
+#kit-load .bar{stroke-dasharray:100;stroke-dashoffset:calc(100 * (1 - var(--p)))}
+#kit-load .blk{animation:tb-bob 1.6s ease-in-out infinite;transform-origin:50px 50px}
+@keyframes tb-bob{0%,100%{transform:translateY(2px)}50%{transform:translateY(-3px)}}</style>
 </head>
 <body>
-  <canvas id="stage" class="kit-stage" aria-label="Tower Blocks game"></canvas>
-
-  <script src="/KidsGames/js/kit/core.js"></script>
-  <script src="/KidsGames/js/kit/fx.js"></script>
-  <script src="/KidsGames/js/kit/audio.js"></script>
-  <script src="/KidsGames/js/kit/ui.js"></script>
-  <script src="js/sounds.js"></script>
-  <script src="js/art.js"></script>
-  <script src="js/levels.js"></script>
-  <script src="js/game.js"></script>
-
-  <script>
-    if ("serviceWorker" in navigator && location.pathname.indexOf("/KidsGames/") === 0 && !/[?&](debug|nosw)\b/.test(location.search)) {
-      addEventListener("load", function () { navigator.serviceWorker.register("/KidsGames/sw.js").catch(function () {}); });
-    }
-  </script>
+<!-- Tower Blocks on Phaser 4 (MIT, pinned in js/vendor), started only by Kit.play (js/kit/play.js).
+     Blocks are TileSprites (the engine repeats the tile) in an isometric view, cut pieces fall under Arcade physics,
+     the camera follows the tower, recorded CC0 sounds through Kit.snd (audio/sfx, cut by tools/sound-cut.py).
+     game/art.js the paint box · game/sky.js the backdrop · game/tower.js the world and the rules · game/hud.js the
+     interface · game/main.js Boot and start. -->
+<!-- The loading picture: drawn by the page at once, before the engine downloads; a little tower of three blocks inside
+     a ring that fills (js/kit/load.js moves --p and takes it away when the first view is ready). No words. -->
+<div id="kit-load"><svg viewBox="0 0 100 100" aria-hidden="true">
+<circle cx="50" cy="50" r="44" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="6"/>
+<circle class="bar" cx="50" cy="50" r="44" fill="none" stroke="#ffe7a6" stroke-width="6" stroke-linecap="round" pathLength="100" transform="rotate(-90 50 50)"/>
+<g class="blk">
+<path d="M50 24l20 10-20 10-20-10z" fill="#ffe7a6"/><path d="M30 34v10l20 10V44z" fill="#1ba39c"/><path d="M70 34v10L50 54V44z" fill="#0b565b"/>
+<path d="M30 44v10l20 10V54z" fill="#d7a565"/><path d="M70 44v10L50 64V54z" fill="#8f5f2c"/>
+<path d="M30 54v10l20 10V64z" fill="#2b5fc4"/><path d="M70 54v10L50 74V64z" fill="#142c6a"/>
+</g>
+</svg></div>
+<script src="/KidsGames/js/kit/load.js"></script>
+<script src="/KidsGames/js/kahf-bridge.js" defer></script>
+<script src="/KidsGames/js/vendor/phaser-4.2.1.min.js" defer></script>
+<script src="/KidsGames/js/kit/core.js" defer></script>
+<script src="/KidsGames/js/kit/sound.js" defer></script>
+<script src="/KidsGames/js/kit/play.js" defer></script>
+<script src="game/levels.js" defer></script>
+<script src="game/art.js" defer></script>
+<script src="game/sky.js" defer></script>
+<script src="game/tower.js" defer></script>
+<script src="game/hud.js" defer></script>
+<script src="game/main.js" defer></script>
 </body>
 </html>

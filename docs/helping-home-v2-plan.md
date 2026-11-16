@@ -38,6 +38,7 @@ added to it during the build. What follows in this document is still the design;
   stuck, nobody through furniture). Both pass.
 - **Done 2026-11-11:** it is the main page, `offline.json` lists only what it loads (345 files, 9.6 MB), the old
   town, the old prayer pages and the rejected mini-games are removed, version files are at 1.8.0.
+- **Finished 2026-11-16 (1.8.6, 1.8.7), loading and the way out:** the page draws a loading picture at once (scripts deferred) instead of a long white screen, and it always leaves, even with an older `game.js` cached; the exit is a back arrow, not a house. The owner calls this the best performing game and the pattern for converting the others (`docs/phaser-standard.md` section 5a).
 - **Finished 2026-11-16 (1.8.5), the engine-first pass:** every sound is a CC0 recording played by Phaser (`js/kit/sound.js`,
   `audio/sfx/recipe.json`, cut by `tools/sound-cut.py`): 49 sounds, ambience per place and time, footsteps, animals, cars, the
   fountain, ducking under the adhan. The first sound no longer freezes a frame (130 ms, the audio context). Taps use the engine's

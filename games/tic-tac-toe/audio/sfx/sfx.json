@@ -1,0 +1,236 @@
+{
+ "resources": [
+  "sfx.m4a"
+ ],
+ "spritemap": {
+  "tap-1": {
+   "start": 0.09,
+   "end": 0.34,
+   "loop": false
+  },
+  "page-1": {
+   "start": 0.37,
+   "end": 0.82,
+   "loop": false
+  },
+  "pick-1": {
+   "start": 0.85,
+   "end": 1.14,
+   "loop": false
+  },
+  "pick-2": {
+   "start": 1.17,
+   "end": 1.46,
+   "loop": false
+  },
+  "pick-3": {
+   "start": 1.49,
+   "end": 1.78,
+   "loop": false
+  },
+  "trace-1": {
+   "start": 1.81,
+   "end": 2.45,
+   "loop": false
+  },
+  "trace-2": {
+   "start": 2.48,
+   "end": 3.12,
+   "loop": false
+  },
+  "place-1": {
+   "start": 3.15,
+   "end": 3.48,
+   "loop": false
+  },
+  "place-2": {
+   "start": 3.51,
+   "end": 3.84,
+   "loop": false
+  },
+  "place-3": {
+   "start": 3.87,
+   "end": 4.2,
+   "loop": false
+  },
+  "place-4": {
+   "start": 4.23,
+   "end": 4.56,
+   "loop": false
+  },
+  "wiggle-1": {
+   "start": 4.59,
+   "end": 4.93,
+   "loop": false
+  },
+  "winLine-1": {
+   "start": 4.96,
+   "end": 5.51,
+   "loop": false
+  },
+  "roundStart-1": {
+   "start": 5.54,
+   "end": 6.13,
+   "loop": false
+  },
+  "roundWin-1": {
+   "start": 6.16,
+   "end": 7.75,
+   "loop": false
+  },
+  "matchWin-1": {
+   "start": 7.78,
+   "end": 10.67,
+   "loop": false
+  },
+  "roundLose-1": {
+   "start": 10.7,
+   "end": 11.03,
+   "loop": false
+  },
+  "roundDraw-1": {
+   "start": 11.06,
+   "end": 11.75,
+   "loop": false
+  },
+  "robotThink-1": {
+   "start": 11.78,
+   "end": 12.37,
+   "loop": false
+  },
+  "robotWin-1": {
+   "start": 12.4,
+   "end": 12.706,
+   "loop": false
+  },
+  "land-1": {
+   "start": 12.736,
+   "end": 13.066,
+   "loop": false
+  },
+  "land-2": {
+   "start": 13.096,
+   "end": 13.426,
+   "loop": false
+  },
+  "land-3": {
+   "start": 13.456,
+   "end": 13.786,
+   "loop": false
+  },
+  "land-4": {
+   "start": 13.816,
+   "end": 14.146,
+   "loop": false
+  }
+ },
+ "sounds": {
+  "tap": {
+   "cat": "ui",
+   "takes": [
+    "tap-1"
+   ]
+  },
+  "page": {
+   "cat": "ui",
+   "takes": [
+    "page-1"
+   ]
+  },
+  "pick": {
+   "cat": "sfx",
+   "takes": [
+    "pick-1",
+    "pick-2",
+    "pick-3"
+   ]
+  },
+  "trace": {
+   "cat": "sfx",
+   "takes": [
+    "trace-1",
+    "trace-2"
+   ]
+  },
+  "place": {
+   "cat": "sfx",
+   "takes": [
+    "place-1",
+    "place-2",
+    "place-3",
+    "place-4"
+   ]
+  },
+  "wiggle": {
+   "cat": "sfx",
+   "takes": [
+    "wiggle-1"
+   ]
+  },
+  "winLine": {
+   "cat": "sfx",
+   "takes": [
+    "winLine-1"
+   ]
+  },
+  "roundStart": {
+   "cat": "sfx",
+   "takes": [
+    "roundStart-1"
+   ]
+  },
+  "roundWin": {
+   "cat": "sfx",
+   "takes": [
+    "roundWin-1"
+   ]
+  },
+  "matchWin": {
+   "cat": "sfx",
+   "takes": [
+    "matchWin-1"
+   ]
+  },
+  "roundLose": {
+   "cat": "sfx",
+   "takes": [
+    "roundLose-1"
+   ]
+  },
+  "roundDraw": {
+   "cat": "sfx",
+   "takes": [
+    "roundDraw-1"
+   ]
+  },
+  "robotThink": {
+   "cat": "sfx",
+   "takes": [
+    "robotThink-1"
+   ]
+  },
+  "robotWin": {
+   "cat": "sfx",
+   "takes": [
+    "robotWin-1"
+   ]
+  },
+  "land": {
+   "cat": "sfx",
+   "takes": [
+    "land-1",
+    "land-2",
+    "land-3",
+    "land-4"
+   ]
+  },
+  "amb-court": {
+   "cat": "amb",
+   "loop": {
+    "file": "amb-court.m4a",
+    "start": 0.1,
+    "end": 24.1
+   }
+  }
+ }
+}

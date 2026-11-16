@@ -1,0 +1,172 @@
+{
+ "ring": {
+  "f": "baked/ring",
+  "w": 1024,
+  "h": 512
+ },
+ "sun-glow": {
+  "f": "baked/sun-glow",
+  "w": 256,
+  "h": 256
+ },
+ "sun-rays": {
+  "f": "baked/sun-rays",
+  "w": 512,
+  "h": 512
+ },
+ "choice-ring": {
+  "f": "baked/choice-ring",
+  "w": 256,
+  "h": 256
+ },
+ "hint-glow": {
+  "f": "baked/hint-glow",
+  "w": 256,
+  "h": 256
+ },
+ "ui-pill9": {
+  "f": "baked/ui-pill9",
+  "w": 150,
+  "h": 150
+ },
+ "ui-panel9": {
+  "f": "baked/ui-panel9",
+  "w": 200,
+  "h": 200
+ },
+ "ui-btn9": {
+  "f": "baked/ui-btn9",
+  "w": 150,
+  "h": 150
+ },
+ "ui-btn9p": {
+  "f": "baked/ui-btn9p",
+  "w": 150,
+  "h": 150
+ },
+ "ui-plate": {
+  "f": "baked/ui-plate",
+  "w": 150,
+  "h": 150
+ },
+ "ui-big": {
+  "f": "baked/ui-big",
+  "w": 230,
+  "h": 230
+ },
+ "ui-tile": {
+  "f": "baked/ui-tile",
+  "w": 150,
+  "h": 150
+ },
+ "ui-tile-o": {
+  "f": "baked/ui-tile-o",
+  "w": 150,
+  "h": 150
+ },
+ "ic-exit": {
+  "f": "baked/ic-exit",
+  "w": 96,
+  "h": 96
+ },
+ "ic-back": {
+  "f": "baked/ic-back",
+  "w": 96,
+  "h": 96
+ },
+ "ic-next": {
+  "f": "baked/ic-next",
+  "w": 96,
+  "h": 96
+ },
+ "ic-retry": {
+  "f": "baked/ic-retry",
+  "w": 96,
+  "h": 96
+ },
+ "ic-grid": {
+  "f": "baked/ic-grid",
+  "w": 96,
+  "h": 96
+ },
+ "ic-snd": {
+  "f": "baked/ic-snd",
+  "w": 96,
+  "h": 96
+ },
+ "ic-mute": {
+  "f": "baked/ic-mute",
+  "w": 96,
+  "h": 96
+ },
+ "ic-pause": {
+  "f": "baked/ic-pause",
+  "w": 96,
+  "h": 96
+ },
+ "ic-close": {
+  "f": "baked/ic-close",
+  "w": 96,
+  "h": 96
+ },
+ "ic-play": {
+  "f": "baked/ic-play",
+  "w": 96,
+  "h": 96
+ },
+ "ic-play-d": {
+  "f": "baked/ic-play-d",
+  "w": 96,
+  "h": 96
+ },
+ "ic-lock": {
+  "f": "baked/ic-lock",
+  "w": 96,
+  "h": 96
+ },
+ "ic-orbit": {
+  "f": "baked/ic-orbit",
+  "w": 96,
+  "h": 96
+ },
+ "ic-star": {
+  "f": "baked/ic-star",
+  "w": 100,
+  "h": 100
+ },
+ "ic-star0": {
+  "f": "baked/ic-star0",
+  "w": 100,
+  "h": 100
+ },
+ "ic-star8": {
+  "f": "baked/ic-star8",
+  "w": 100,
+  "h": 100
+ },
+ "ic-heart": {
+  "f": "baked/ic-heart",
+  "w": 96,
+  "h": 96
+ },
+ "fx-star": {
+  "f": "baked/fx-star",
+  "w": 64,
+  "h": 64
+ },
+ "fx-spark": {
+  "f": "baked/fx-spark",
+  "w": 32,
+  "h": 32
+ },
+ "streak": {
+  "f": "baked/streak",
+  "w": 128,
+  "h": 8
+ },
+ "px": {
+  "f": "baked/px",
+  "w": 16,
+  "h": 16
+ }
+}

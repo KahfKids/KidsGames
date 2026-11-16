@@ -288,7 +288,7 @@
         c.on('pointerdown', function () { Kit.snd.play('tap'); self.tweens.add({ targets: c, scale: 0.9, duration: 70, yoyo: true }); }); c.on('pointerup', fn); return put(c);
       };
       // the card's own layout (design units, card 210..1710 x 20..1060): header row, then play on the left, levels on the right
-      plate('ic-back', 315, 120, function () { Kit.play.exit(); });
+      plate('ic-exit', 315, 120, function () { Kit.play.exit(); });
       if (running) plate('ic-close', 1605, 120, function () { self.backFromMenu(); });
       var tx = function (s, x, y, size, w, o) { return put(self.add.text(x, y, s, Object.assign({ fontFamily: 'system-ui, sans-serif', fontSize: size + 'px', fontStyle: w, color: '#f2f7f6' }, o || {})).setOrigin(0.5)); };
       tx('Spider IK', 960, 110, 72, '800');
@@ -335,7 +335,7 @@
     var th = SpArt.theme(this.n || 1), ch = SpArt.chap(this.n || 1);
     p.title = put(this.add.text(0, 0, 'Level ' + this.n + ' / ' + LEVELS, { fontFamily: 'system-ui, sans-serif', fontSize: '76px', fontStyle: '800', color: '#f2f7f6' }).setOrigin(0.5));
     p.sub = put(this.add.text(0, 0, ch === 4 ? 'Finale' : 'Chapter ' + (ch + 1), { fontFamily: 'system-ui, sans-serif', fontSize: '38px', fontStyle: '700', color: th[0] }).setOrigin(0.5));
-    p.exit = put(this.button('ic-back', function () { Kit.play.exit(); }));
+    p.exit = put(this.button('ic-exit', function () { Kit.play.exit(); }));
     // four big choices with their words under them; the first (resume) is the one the eye lands on
     var big = function (icon, label, fn, main) {
       var c = put(self.add.container(0, 0, [self.add.image(0, 0, main ? 'ui-big' : 'ui-plate').setScale(main ? 0.82 : 1.53), self.add.image(main ? 10 : 0, 0, icon).setScale(1.4).setTint(main ? 0x0c1b1e : 0xffffff)]).setSize(230, 230).setInteractive());

@@ -1,0 +1,285 @@
+{
+ "about": "2048 Garden's sound effects and garden bed, cut from CC0 recordings by tools/sound-cut.py, matched to the Spider IK and Helping Home recipes (same tap and page cuts; buttons -24 LUFS, frequent small sounds -29 to -30, rewards -21, bed -26). Times are seconds in the original, taken at each recording's own event boundaries (ffmpeg silencedetect). Credits in CREDITS.md.",
+ "out": "games/2048/audio/sfx",
+ "src": "../KidsGames-sounds/bigsoundbank",
+ "sounds": {
+  "tap": {
+   "bus": "ui",
+   "src": "0036-switch-desk-lamp.mp3",
+   "cuts": [
+    [
+     0.1,
+     0.16
+    ]
+   ],
+   "hp": 200,
+   "fade": [
+    0.002,
+    0.06
+   ],
+   "lufs": -24
+  },
+  "slide": {
+   "src": "0373-feet-slipper-on-floor.mp3",
+   "cuts": [
+    [
+     0.12,
+     0.3
+    ],
+    [
+     0.89,
+     0.28
+    ],
+    [
+     1.53,
+     0.3
+    ],
+    [
+     2.29,
+     0.3
+    ],
+    [
+     0.2,
+     0.3,
+     "1499-wooden-drawer-opening.mp3"
+    ],
+    [
+     0.42,
+     0.3,
+     "1499-wooden-drawer-opening.mp3"
+    ]
+   ],
+   "hp": 300,
+   "fade": [
+    0.04,
+    0.12
+   ],
+   "lufs": -30
+  },
+  "merge": {
+   "src": "1190-small-plate-set-on-table.mp3",
+   "cuts": [
+    [
+     0.36,
+     0.3
+    ],
+    [
+     1.04,
+     0.3
+    ],
+    [
+     1.33,
+     0.3
+    ]
+   ],
+   "hp": 200,
+   "fade": [
+    0.002,
+    0.1
+   ],
+   "lufs": -25
+  },
+  "merge-big": {
+   "src": "1189-large-plate-set-on-table.mp3",
+   "cuts": [
+    [
+     0.28,
+     0.35
+    ],
+    [
+     1.13,
+     0.35
+    ],
+    [
+     1.47,
+     0.35
+    ]
+   ],
+   "hp": 150,
+   "fade": [
+    0.002,
+    0.14
+   ],
+   "lufs": -21
+  },
+  "spawn": {
+   "src": "0627-cup-on-a-table.mp3",
+   "cuts": [
+    [
+     0.255,
+     0.2
+    ],
+    [
+     0.58,
+     0.2
+    ]
+   ],
+   "hp": 250,
+   "fade": [
+    0.002,
+    0.08
+   ],
+   "lufs": -29
+  },
+  "bump": {
+   "src": "0374-knock-on-a-light-door.mp3",
+   "cuts": [
+    [
+     0.02,
+     0.2
+    ]
+   ],
+   "hp": 150,
+   "fade": [
+    0.002,
+    0.1
+   ],
+   "lufs": -28
+  },
+  "undo": {
+   "src": "1798-whoosh-10.mp3",
+   "cuts": [
+    [
+     0.17,
+     0.24
+    ]
+   ],
+   "fade": [
+    0.003,
+    0.08
+   ],
+   "lufs": -24
+  },
+  "stuck": {
+   "src": "0576-canvas-bag-on-floor.mp3",
+   "cuts": [
+    [
+     0.08,
+     0.36
+    ]
+   ],
+   "hp": 100,
+   "fade": [
+    0.01,
+    0.2
+   ],
+   "lufs": -24
+  },
+  "shine": {
+   "src": "1384-drops-of-water-1.mp3",
+   "cuts": [
+    [
+     0.14,
+     0.3
+    ],
+    [
+     1.57,
+     0.3
+    ]
+   ],
+   "hp": 300,
+   "fade": [
+    0.002,
+    0.12
+   ],
+   "lufs": -21
+  },
+  "star": {
+   "src": "0582-four-dice-on-wooden-table.mp3",
+   "cuts": [
+    [
+     0.815,
+     0.12
+    ],
+    [
+     0.962,
+     0.12
+    ],
+    [
+     1.112,
+     0.12
+    ]
+   ],
+   "hp": 400,
+   "fade": [
+    0.001,
+    0.06
+   ],
+   "lufs": -21
+  },
+  "win": {
+   "src": "2363-applause-1.mp3",
+   "cuts": [
+    [
+     0.45,
+     1.7
+    ]
+   ],
+   "hp": 200,
+   "fade": [
+    0.2,
+    0.7
+   ],
+   "lufs": -21
+  },
+  "whoosh": {
+   "src": "1795-whoosh-3.mp3",
+   "cuts": [
+    [
+     0.11,
+     0.46
+    ]
+   ],
+   "fade": [
+    0.003,
+    0.12
+   ],
+   "lufs": -27
+  },
+  "page": {
+   "bus": "ui",
+   "src": "0164-turned-page.mp3",
+   "cuts": [
+    [
+     0.08,
+     0.36
+    ]
+   ],
+   "fade": [
+    0.005,
+    0.12
+   ],
+   "lufs": -22
+  },
+  "amb-0": {
+   "bus": "amb",
+   "src": "0222-awakening-birds.mp3",
+   "loop": [
+    30.0,
+    20.0
+   ],
+   "x": 1.5,
+   "lufs": -34
+  },
+  "amb-1": {
+   "bus": "amb",
+   "src": "0913-fountain-of-a-japanese-temple.mp3",
+   "loop": [
+    10.0,
+    30.0
+   ],
+   "x": 1.0,
+   "lufs": -33
+  },
+  "amb-2": {
+   "bus": "amb",
+   "src": "0908-wind-in-tall-grass.mp3",
+   "loop": [
+    10.0,
+    20.0
+   ],
+   "x": 2.0,
+   "lufs": -35
+  }
+ }
+}

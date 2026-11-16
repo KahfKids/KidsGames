@@ -1,0 +1,152 @@
+{
+ "sd-tq-26": {
+  "f": "baked/sd-tq-26",
+  "w": 104,
+  "h": 52
+ },
+ "tp-tq": {
+  "f": "baked/tp-tq",
+  "w": 104,
+  "h": 104
+ },
+ "sd-sd-26": {
+  "f": "baked/sd-sd-26",
+  "w": 104,
+  "h": 52
+ },
+ "tp-sd": {
+  "f": "baked/tp-sd",
+  "w": 104,
+  "h": 104
+ },
+ "sd-cb-26": {
+  "f": "baked/sd-cb-26",
+  "w": 104,
+  "h": 52
+ },
+ "tp-cb": {
+  "f": "baked/tp-cb",
+  "w": 104,
+  "h": 104
+ },
+ "sd-tc-26": {
+  "f": "baked/sd-tc-26",
+  "w": 104,
+  "h": 52
+ },
+ "tp-tc": {
+  "f": "baked/tp-tc",
+  "w": 104,
+  "h": 104
+ },
+ "sd-em-26": {
+  "f": "baked/sd-em-26",
+  "w": 104,
+  "h": 52
+ },
+ "tp-em": {
+  "f": "baked/tp-em",
+  "w": 104,
+  "h": 104
+ },
+ "sd-rs-26": {
+  "f": "baked/sd-rs-26",
+  "w": 104,
+  "h": 52
+ },
+ "tp-rs": {
+  "f": "baked/tp-rs",
+  "w": 104,
+  "h": 104
+ },
+ "sd-sf-26": {
+  "f": "baked/sd-sf-26",
+  "w": 104,
+  "h": 52
+ },
+ "tp-sf": {
+  "f": "baked/tp-sf",
+  "w": 104,
+  "h": 104
+ },
+ "sd-mb-26": {
+  "f": "baked/sd-mb-26",
+  "w": 104,
+  "h": 52
+ },
+ "tp-mb": {
+  "f": "baked/tp-mb",
+  "w": 104,
+  "h": 104
+ },
+ "sd-fd-34": {
+  "f": "baked/sd-fd-34",
+  "w": 104,
+  "h": 68
+ },
+ "tp-fd": {
+  "f": "baked/tp-fd",
+  "w": 104,
+  "h": 104
+ },
+ "sd-pl-14": {
+  "f": "baked/sd-pl-14",
+  "w": 104,
+  "h": 28
+ },
+ "sd-pl-12": {
+  "f": "baked/sd-pl-12",
+  "w": 104,
+  "h": 24
+ },
+ "tp-pl": {
+  "f": "baked/tp-pl",
+  "w": 104,
+  "h": 104
+ },
+ "plaza": {
+  "f": "baked/plaza",
+  "w": 1152,
+  "h": 582
+ },
+ "lantern": {
+  "f": "baked/lantern",
+  "w": 56,
+  "h": 144
+ },
+ "fx": {
+  "f": "baked/fx",
+  "w": 1024,
+  "h": 768
+ },
+ "ui": {
+  "f": "baked/ui",
+  "w": 1420,
+  "h": 560
+ },
+ "sk": {
+  "f": "baked/sk",
+  "w": 512,
+  "h": 545
+ },
+ "sky-far": {
+  "f": "baked/sky-far",
+  "w": 1500,
+  "h": 210
+ },
+ "sky-near": {
+  "f": "baked/sky-near",
+  "w": 1500,
+  "h": 210
+ },
+ "sky-lit": {
+  "f": "baked/sky-lit",
+  "w": 1500,
+  "h": 210
+ },
+ "stars": {
+  "f": "baked/stars",
+  "w": 1024,
+  "h": 1024
+ }
+}

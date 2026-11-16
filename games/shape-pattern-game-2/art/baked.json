@@ -1,0 +1,157 @@
+{
+ "ui": {
+  "f": "baked/ui",
+  "w": 1400,
+  "h": 1134
+ },
+ "w0-sky": {
+  "f": "baked/w0-sky",
+  "w": 1500,
+  "h": 570
+ },
+ "w0-far": {
+  "f": "baked/w0-far",
+  "w": 2048,
+  "h": 330
+ },
+ "w0-mid": {
+  "f": "baked/w0-mid",
+  "w": 2048,
+  "h": 640
+ },
+ "w0-ground": {
+  "f": "baked/w0-ground",
+  "w": 2048,
+  "h": 520
+ },
+ "w0-near": {
+  "f": "baked/w0-near",
+  "w": 2048,
+  "h": 170
+ },
+ "w0-wag0": {
+  "f": "baked/w0-wag0",
+  "w": 244,
+  "h": 160
+ },
+ "w0-wag1": {
+  "f": "baked/w0-wag1",
+  "w": 244,
+  "h": 160
+ },
+ "w0-eng": {
+  "f": "baked/w0-eng",
+  "w": 320,
+  "h": 305
+ },
+ "w0-wheel": {
+  "f": "baked/w0-wheel",
+  "w": 120,
+  "h": 120
+ },
+ "w0-pad": {
+  "f": "baked/w0-pad",
+  "w": 390,
+  "h": 390
+ },
+ "w1-sky": {
+  "f": "baked/w1-sky",
+  "w": 1500,
+  "h": 570
+ },
+ "w1-far": {
+  "f": "baked/w1-far",
+  "w": 2048,
+  "h": 330
+ },
+ "w1-mid": {
+  "f": "baked/w1-mid",
+  "w": 2048,
+  "h": 640
+ },
+ "w1-ground": {
+  "f": "baked/w1-ground",
+  "w": 2048,
+  "h": 520
+ },
+ "w1-near": {
+  "f": "baked/w1-near",
+  "w": 2048,
+  "h": 170
+ },
+ "w1-wag0": {
+  "f": "baked/w1-wag0",
+  "w": 244,
+  "h": 160
+ },
+ "w1-wag1": {
+  "f": "baked/w1-wag1",
+  "w": 244,
+  "h": 160
+ },
+ "w1-eng": {
+  "f": "baked/w1-eng",
+  "w": 320,
+  "h": 305
+ },
+ "w1-wheel": {
+  "f": "baked/w1-wheel",
+  "w": 120,
+  "h": 120
+ },
+ "w1-pad": {
+  "f": "baked/w1-pad",
+  "w": 390,
+  "h": 390
+ },
+ "w2-sky": {
+  "f": "baked/w2-sky",
+  "w": 1500,
+  "h": 570
+ },
+ "w2-far": {
+  "f": "baked/w2-far",
+  "w": 2048,
+  "h": 330
+ },
+ "w2-mid": {
+  "f": "baked/w2-mid",
+  "w": 2048,
+  "h": 640
+ },
+ "w2-ground": {
+  "f": "baked/w2-ground",
+  "w": 2048,
+  "h": 520
+ },
+ "w2-near": {
+  "f": "baked/w2-near",
+  "w": 2048,
+  "h": 170
+ },
+ "w2-wag0": {
+  "f": "baked/w2-wag0",
+  "w": 244,
+  "h": 160
+ },
+ "w2-wag1": {
+  "f": "baked/w2-wag1",
+  "w": 244,
+  "h": 160
+ },
+ "w2-eng": {
+  "f": "baked/w2-eng",
+  "w": 320,
+  "h": 305
+ },
+ "w2-wheel": {
+  "f": "baked/w2-wheel",
+  "w": 120,
+  "h": 120
+ },
+ "w2-pad": {
+  "f": "baked/w2-pad",
+  "w": 390,
+  "h": 390
+ }
+}

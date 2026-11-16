@@ -1,0 +1,255 @@
+{
+ "about": "Sharp Eyes: sound effects and three quiet beds, cut from CC0 recordings by tools/sound-cut.py. Times are seconds in the original (../KidsGames-sounds/bigsoundbank/<id>-<title>.mp3), at the recording's own event boundaries (ffmpeg silencedetect). Each sound matches what happens on screen; credits in ../CREDITS.md.",
+ "out": "games/30-seconds-challenge/audio/sfx",
+ "src": "../KidsGames-sounds/bigsoundbank",
+ "sounds": {
+  "tap": {
+   "bus": "ui",
+   "src": "0036-switch-desk-lamp.mp3",
+   "cuts": [
+    [
+     0.1,
+     0.16
+    ]
+   ],
+   "hp": 200,
+   "fade": [
+    0.002,
+    0.06
+   ],
+   "lufs": -24
+  },
+  "press": {
+   "src": "0582-four-dice-on-wooden-table.mp3",
+   "cuts": [
+    [
+     0.815,
+     0.08
+    ],
+    [
+     0.962,
+     0.08
+    ],
+    [
+     1.112,
+     0.08
+    ]
+   ],
+   "hp": 500,
+   "fade": [
+    0.001,
+    0.04
+   ],
+   "lufs": -30
+  },
+  "found": {
+   "src": "1074-bubbles-burst.mp3",
+   "cuts": [
+    [
+     0.18,
+     0.2
+    ],
+    [
+     1.505,
+     0.2
+    ],
+    [
+     2.83,
+     0.2
+    ]
+   ],
+   "fade": [
+    0.001,
+    0.08
+   ],
+   "lufs": -20
+  },
+  "fly": {
+   "src": "1795-whoosh-3.mp3",
+   "cuts": [
+    [
+     0.11,
+     0.46
+    ]
+   ],
+   "fade": [
+    0.003,
+    0.12
+   ],
+   "lufs": -24
+  },
+  "land": {
+   "src": "1384-drops-of-water-1.mp3",
+   "cuts": [
+    [
+     0.14,
+     0.3
+    ],
+    [
+     1.57,
+     0.3
+    ]
+   ],
+   "hp": 300,
+   "fade": [
+    0.002,
+    0.12
+   ],
+   "lufs": -22
+  },
+  "shuffle": {
+   "src": "2212-pages-that-turn-5.mp3",
+   "cuts": [
+    [
+     0.1,
+     0.8
+    ],
+    [
+     0.08,
+     0.36,
+     "0164-turned-page.mp3"
+    ]
+   ],
+   "hp": 150,
+   "fade": [
+    0.01,
+    0.2
+   ],
+   "lufs": -23
+  },
+  "bonk": {
+   "src": "0576-canvas-bag-on-floor.mp3",
+   "cuts": [
+    [
+     0.08,
+     0.3
+    ],
+    [
+     0.91,
+     0.3
+    ]
+   ],
+   "hp": 120,
+   "fade": [
+    0.002,
+    0.12
+   ],
+   "lufs": -25
+  },
+  "reveal": {
+   "src": "1798-whoosh-10.mp3",
+   "cuts": [
+    [
+     0.17,
+     0.24
+    ]
+   ],
+   "fade": [
+    0.003,
+    0.08
+   ],
+   "lufs": -23
+  },
+  "fail": {
+   "src": "0192-swirl-in-the-water.mp3",
+   "cuts": [
+    [
+     0.21,
+     0.78
+    ]
+   ],
+   "fade": [
+    0.01,
+    0.3
+   ],
+   "lufs": -22
+  },
+  "win": {
+   "src": "2363-applause-1.mp3",
+   "cuts": [
+    [
+     0.5,
+     1.9
+    ]
+   ],
+   "hp": 150,
+   "fade": [
+    0.05,
+    0.8
+   ],
+   "lufs": -22
+  },
+  "star": {
+   "src": "1384-drops-of-water-1.mp3",
+   "cuts": [
+    [
+     0.14,
+     0.3
+    ],
+    [
+     1.57,
+     0.3
+    ]
+   ],
+   "hp": 300,
+   "fade": [
+    0.002,
+    0.12
+   ],
+   "lufs": -20
+  },
+  "tick": {
+   "src": "0007-clock.mp3",
+   "cuts": [
+    [
+     0.22,
+     0.15
+    ],
+    [
+     1.215,
+     0.15
+    ],
+    [
+     2.215,
+     0.15
+    ]
+   ],
+   "hp": 500,
+   "fade": [
+    0.002,
+    0.07
+   ],
+   "lufs": -33
+  },
+  "bed-0": {
+   "bus": "amb",
+   "src": "0222-awakening-birds.mp3",
+   "loop": [
+    150.0,
+    20.0
+   ],
+   "x": 1.5,
+   "lufs": -35
+  },
+  "bed-1": {
+   "bus": "amb",
+   "src": "0913-fountain-of-a-japanese-temple.mp3",
+   "loop": [
+    14.0,
+    24.0
+   ],
+   "x": 2.0,
+   "lufs": -35
+  },
+  "bed-2": {
+   "bus": "amb",
+   "src": "0915-slightly-agitated-sea.mp3",
+   "loop": [
+    14.0,
+    24.0
+   ],
+   "x": 2.0,
+   "lufs": -34
+  }
+ }
+}

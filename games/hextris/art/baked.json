@@ -1,0 +1,47 @@
+{
+ "hx-ui": {
+  "f": "baked/hx-ui",
+  "w": 1024,
+  "h": 1168
+ },
+ "hx-tiles": {
+  "f": "baked/hx-tiles",
+  "w": 2048,
+  "h": 528
+ },
+ "hx-plate-0": {
+  "f": "baked/hx-plate-0",
+  "w": 1200,
+  "h": 1200
+ },
+ "hx-med-0": {
+  "f": "baked/hx-med-0",
+  "w": 269,
+  "h": 269
+ },
+ "hx-plate-1": {
+  "f": "baked/hx-plate-1",
+  "w": 1200,
+  "h": 1200
+ },
+ "hx-med-1": {
+  "f": "baked/hx-med-1",
+  "w": 269,
+  "h": 269
+ },
+ "hx-plate-2": {
+  "f": "baked/hx-plate-2",
+  "w": 1200,
+  "h": 1200
+ },
+ "hx-med-2": {
+  "f": "baked/hx-med-2",
+  "w": 269,
+  "h": 269
+ },
+ "hx-lantern": {
+  "f": "baked/hx-lantern",
+  "w": 135,
+  "h": 234
+ }
+}

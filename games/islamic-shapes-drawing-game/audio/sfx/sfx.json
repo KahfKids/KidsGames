@@ -1,0 +1,242 @@
+{
+ "resources": [
+  "sfx.m4a"
+ ],
+ "spritemap": {
+  "tap-1": {
+   "start": 0.09,
+   "end": 0.34,
+   "loop": false
+  },
+  "page-1": {
+   "start": 0.37,
+   "end": 0.82,
+   "loop": false
+  },
+  "tool-1": {
+   "start": 0.85,
+   "end": 1.14,
+   "loop": false
+  },
+  "tool-2": {
+   "start": 1.17,
+   "end": 1.46,
+   "loop": false
+  },
+  "tool-3": {
+   "start": 1.49,
+   "end": 1.8,
+   "loop": false
+  },
+  "pot-1": {
+   "start": 1.83,
+   "end": 2.2,
+   "loop": false
+  },
+  "pot-2": {
+   "start": 2.23,
+   "end": 2.62,
+   "loop": false
+  },
+  "fill-1": {
+   "start": 2.65,
+   "end": 2.94,
+   "loop": false
+  },
+  "fill-2": {
+   "start": 2.97,
+   "end": 3.26,
+   "loop": false
+  },
+  "fill-3": {
+   "start": 3.29,
+   "end": 3.58,
+   "loop": false
+  },
+  "fill-4": {
+   "start": 3.61,
+   "end": 3.9,
+   "loop": false
+  },
+  "wash-1": {
+   "start": 3.93,
+   "end": 4.57,
+   "loop": false
+  },
+  "wash-2": {
+   "start": 4.6,
+   "end": 5.24,
+   "loop": false
+  },
+  "erase-1": {
+   "start": 5.27,
+   "end": 5.81,
+   "loop": false
+  },
+  "erase-2": {
+   "start": 5.84,
+   "end": 6.38,
+   "loop": false
+  },
+  "undo-1": {
+   "start": 6.41,
+   "end": 6.8,
+   "loop": false
+  },
+  "undo-2": {
+   "start": 6.83,
+   "end": 7.22,
+   "loop": false
+  },
+  "clear-1": {
+   "start": 7.25,
+   "end": 7.89,
+   "loop": false
+  },
+  "save-1": {
+   "start": 7.92,
+   "end": 8.91,
+   "loop": false
+  },
+  "star-1": {
+   "start": 8.94,
+   "end": 9.33,
+   "loop": false
+  },
+  "star-2": {
+   "start": 9.36,
+   "end": 9.75,
+   "loop": false
+  },
+  "star-3": {
+   "start": 9.78,
+   "end": 10.17,
+   "loop": false
+  },
+  "win-1": {
+   "start": 10.2,
+   "end": 12.69,
+   "loop": false
+  },
+  "zoom-1": {
+   "start": 12.72,
+   "end": 13.05,
+   "loop": false
+  }
+ },
+ "sounds": {
+  "tap": {
+   "cat": "ui",
+   "takes": [
+    "tap-1"
+   ]
+  },
+  "page": {
+   "cat": "ui",
+   "takes": [
+    "page-1"
+   ]
+  },
+  "tool": {
+   "cat": "ui",
+   "takes": [
+    "tool-1",
+    "tool-2",
+    "tool-3"
+   ]
+  },
+  "pot": {
+   "cat": "ui",
+   "takes": [
+    "pot-1",
+    "pot-2"
+   ]
+  },
+  "fill": {
+   "cat": "sfx",
+   "takes": [
+    "fill-1",
+    "fill-2",
+    "fill-3",
+    "fill-4"
+   ]
+  },
+  "wash": {
+   "cat": "sfx",
+   "takes": [
+    "wash-1",
+    "wash-2"
+   ]
+  },
+  "erase": {
+   "cat": "sfx",
+   "takes": [
+    "erase-1",
+    "erase-2"
+   ]
+  },
+  "undo": {
+   "cat": "ui",
+   "takes": [
+    "undo-1",
+    "undo-2"
+   ]
+  },
+  "clear": {
+   "cat": "sfx",
+   "takes": [
+    "clear-1"
+   ]
+  },
+  "save": {
+   "cat": "ui",
+   "takes": [
+    "save-1"
+   ]
+  },
+  "star": {
+   "cat": "sfx",
+   "takes": [
+    "star-1",
+    "star-2",
+    "star-3"
+   ]
+  },
+  "win": {
+   "cat": "sfx",
+   "takes": [
+    "win-1"
+   ]
+  },
+  "zoom": {
+   "cat": "ui",
+   "takes": [
+    "zoom-1"
+   ]
+  },
+  "brush": {
+   "cat": "sfx",
+   "loop": {
+    "file": "brush.m4a",
+    "start": 0.1,
+    "end": 8.1
+   }
+  },
+  "rub": {
+   "cat": "sfx",
+   "loop": {
+    "file": "rub.m4a",
+    "start": 0.1,
+    "end": 4.1
+   }
+  },
+  "amb-room": {
+   "cat": "amb",
+   "loop": {
+    "file": "amb-room.m4a",
+    "start": 0.1,
+    "end": 24.1
+   }
+  }
+ }
+}

@@ -1,0 +1,233 @@
+{
+ "about": "Shape Patterns' sound effects, cut from CC0 recordings by tools/sound-cut.py. Times are seconds in the original (../KidsGames-sounds/bigsoundbank/<id>-<title>.mp3), picked at the recording's own event boundaries (onsets found with ffmpeg). Each sound matches what happens on screen: wooden dice for a piece clicking into its wagon, paper for lifting one, drops of water for a wagon lighting up, a steam locomotive for the train coming in and leaving. Credits in CREDITS.md.",
+ "out": "games/shape-pattern-game-2/audio/sfx",
+ "src": "../KidsGames-sounds/bigsoundbank",
+ "sounds": {
+  "tap": {
+   "bus": "ui",
+   "src": "0036-switch-desk-lamp.mp3",
+   "cuts": [
+    [
+     0.1,
+     0.16
+    ]
+   ],
+   "hp": 200,
+   "fade": [
+    0.002,
+    0.06
+   ],
+   "lufs": -24
+  },
+  "page": {
+   "bus": "ui",
+   "src": "0164-turned-page.mp3",
+   "cuts": [
+    [
+     0.08,
+     0.36
+    ]
+   ],
+   "fade": [
+    0.005,
+    0.12
+   ],
+   "lufs": -22
+  },
+  "pick": {
+   "bus": "ui",
+   "src": "0785-paper.mp3",
+   "cuts": [
+    [
+     0.42,
+     0.3
+    ],
+    [
+     1.28,
+     0.3
+    ]
+   ],
+   "hp": 150,
+   "fade": [
+    0.01,
+    0.14
+   ],
+   "lufs": -29
+  },
+  "swoosh": {
+   "src": "1795-whoosh-3.mp3",
+   "cuts": [
+    [
+     0.11,
+     0.4
+    ]
+   ],
+   "fade": [
+    0.003,
+    0.15
+   ],
+   "lufs": -27
+  },
+  "snap": {
+   "src": "0582-four-dice-on-wooden-table.mp3",
+   "cuts": [
+    [
+     4.95,
+     0.3
+    ],
+    [
+     8.03,
+     0.3
+    ],
+    [
+     13.94,
+     0.3
+    ],
+    [
+     18.15,
+     0.3
+    ]
+   ],
+   "hp": 200,
+   "fade": [
+    0.002,
+    0.12
+   ],
+   "lufs": -21
+  },
+  "wobble": {
+   "src": "0576-canvas-bag-on-floor.mp3",
+   "cuts": [
+    [
+     0.08,
+     0.3
+    ],
+    [
+     0.91,
+     0.3
+    ]
+   ],
+   "hp": 120,
+   "fade": [
+    0.002,
+    0.12
+   ],
+   "lufs": -28
+  },
+  "wagon": {
+   "src": "1384-drops-of-water-1.mp3",
+   "cuts": [
+    [
+     0.14,
+     0.3
+    ],
+    [
+     1.57,
+     0.3
+    ]
+   ],
+   "hp": 300,
+   "fade": [
+    0.002,
+    0.12
+   ],
+   "lufs": -23
+  },
+  "star": {
+   "src": "1074-bubbles-burst.mp3",
+   "cuts": [
+    [
+     0.18,
+     0.2
+    ],
+    [
+     1.505,
+     0.2
+    ],
+    [
+     2.83,
+     0.2
+    ]
+   ],
+   "fade": [
+    0.001,
+    0.08
+   ],
+   "lufs": -21
+  },
+  "win": {
+   "src": "0192-swirl-in-the-water.mp3",
+   "cuts": [
+    [
+     2.32,
+     0.95
+    ]
+   ],
+   "fade": [
+    0.01,
+    0.35
+   ],
+   "lufs": -19
+  },
+  "arrive": {
+   "src": "3015-steam-locomotive-stop.mp3",
+   "cuts": [
+    [
+     1.25,
+     1.45
+    ]
+   ],
+   "hp": 90,
+   "fade": [
+    0.3,
+    0.6
+   ],
+   "lufs": -29
+  },
+  "depart": {
+   "src": "3021-locomotive-a-vapeur-starting.mp3",
+   "cuts": [
+    [
+     26.0,
+     1.6
+    ]
+   ],
+   "hp": 90,
+   "fade": [
+    0.25,
+    0.7
+   ],
+   "lufs": -29
+  },
+  "amb-0": {
+   "bus": "amb",
+   "src": "0908-wind-in-tall-grass.mp3",
+   "loop": [
+    40.0,
+    24.0
+   ],
+   "x": 2.0,
+   "lufs": -38
+  },
+  "amb-1": {
+   "bus": "amb",
+   "src": "1020-field-cricket.mp3",
+   "loop": [
+    5.0,
+    14.0
+   ],
+   "x": 1.5,
+   "lufs": -38
+  },
+  "amb-2": {
+   "bus": "amb",
+   "src": "0266-sea-waves.mp3",
+   "loop": [
+    10.0,
+    20.0
+   ],
+   "x": 2.0,
+   "lufs": -38
+  }
+ }
+}

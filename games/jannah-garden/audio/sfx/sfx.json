@@ -1,0 +1,411 @@
+{
+ "resources": [
+  "sfx.m4a"
+ ],
+ "spritemap": {
+  "tap-1": {
+   "start": 0.09,
+   "end": 0.34,
+   "loop": false
+  },
+  "page-1": {
+   "start": 0.37,
+   "end": 0.82,
+   "loop": false
+  },
+  "soil-1": {
+   "start": 0.85,
+   "end": 1.16,
+   "loop": false
+  },
+  "soil-2": {
+   "start": 1.19,
+   "end": 1.48,
+   "loop": false
+  },
+  "soil-3": {
+   "start": 1.51,
+   "end": 1.82,
+   "loop": false
+  },
+  "soil-4": {
+   "start": 1.85,
+   "end": 2.16,
+   "loop": false
+  },
+  "leaf-1": {
+   "start": 2.19,
+   "end": 2.83,
+   "loop": false
+  },
+  "leaf-2": {
+   "start": 2.86,
+   "end": 3.35,
+   "loop": false
+  },
+  "leaf-3": {
+   "start": 3.38,
+   "end": 3.95,
+   "loop": false
+  },
+  "leaf-4": {
+   "start": 3.98,
+   "end": 4.62,
+   "loop": false
+  },
+  "leaf-5": {
+   "start": 4.65,
+   "end": 5.34,
+   "loop": false
+  },
+  "foliage-1": {
+   "start": 5.37,
+   "end": 6.46,
+   "loop": false
+  },
+  "foliage-2": {
+   "start": 6.49,
+   "end": 7.58,
+   "loop": false
+  },
+  "foliage-3": {
+   "start": 7.61,
+   "end": 8.3,
+   "loop": false
+  },
+  "splash-1": {
+   "start": 8.33,
+   "end": 9.07,
+   "loop": false
+  },
+  "splash-2": {
+   "start": 9.1,
+   "end": 9.79,
+   "loop": false
+  },
+  "splash-3": {
+   "start": 9.82,
+   "end": 10.24,
+   "loop": false
+  },
+  "pour-1": {
+   "start": 10.27,
+   "end": 11.66,
+   "loop": false
+  },
+  "pour-2": {
+   "start": 11.69,
+   "end": 13.08,
+   "loop": false
+  },
+  "ripple-1": {
+   "start": 13.11,
+   "end": 13.53,
+   "loop": false
+  },
+  "ripple-2": {
+   "start": 13.56,
+   "end": 13.9,
+   "loop": false
+  },
+  "ripple-3": {
+   "start": 13.93,
+   "end": 14.27,
+   "loop": false
+  },
+  "knock-1": {
+   "start": 14.3,
+   "end": 14.58,
+   "loop": false
+  },
+  "knock-2": {
+   "start": 14.61,
+   "end": 14.93,
+   "loop": false
+  },
+  "knock-3": {
+   "start": 14.96,
+   "end": 15.25,
+   "loop": false
+  },
+  "chirp-1": {
+   "start": 15.28,
+   "end": 15.82,
+   "loop": false
+  },
+  "chirp-2": {
+   "start": 15.85,
+   "end": 16.39,
+   "loop": false
+  },
+  "chirp-3": {
+   "start": 16.42,
+   "end": 16.93,
+   "loop": false
+  },
+  "chirp-4": {
+   "start": 16.96,
+   "end": 17.45,
+   "loop": false
+  },
+  "chirp-5": {
+   "start": 17.48,
+   "end": 17.97,
+   "loop": false
+  },
+  "birdfar-1": {
+   "start": 18.0,
+   "end": 18.54,
+   "loop": false
+  },
+  "birdfar-2": {
+   "start": 18.57,
+   "end": 19.16,
+   "loop": false
+  },
+  "birdfar-3": {
+   "start": 19.19,
+   "end": 19.63,
+   "loop": false
+  },
+  "birdfar-4": {
+   "start": 19.66,
+   "end": 20.1,
+   "loop": false
+  },
+  "glow-1": {
+   "start": 20.13,
+   "end": 20.44,
+   "loop": false
+  },
+  "glow-2": {
+   "start": 20.47,
+   "end": 20.76,
+   "loop": false
+  },
+  "glow-3": {
+   "start": 20.79,
+   "end": 21.08,
+   "loop": false
+  },
+  "flutter-1": {
+   "start": 21.11,
+   "end": 21.48,
+   "loop": false
+  },
+  "flutter-2": {
+   "start": 21.51,
+   "end": 21.88,
+   "loop": false
+  },
+  "basket-1": {
+   "start": 21.91,
+   "end": 22.4,
+   "loop": false
+  },
+  "basket-2": {
+   "start": 22.43,
+   "end": 22.89,
+   "loop": false
+  },
+  "soft-1": {
+   "start": 22.92,
+   "end": 23.25,
+   "loop": false
+  },
+  "goal-1": {
+   "start": 23.28,
+   "end": 23.67,
+   "loop": false
+  },
+  "goal-2": {
+   "start": 23.7,
+   "end": 24.09,
+   "loop": false
+  },
+  "goal-3": {
+   "start": 24.12,
+   "end": 24.51,
+   "loop": false
+  },
+  "star-1": {
+   "start": 24.54,
+   "end": 24.83,
+   "loop": false
+  },
+  "star-2": {
+   "start": 24.86,
+   "end": 25.15,
+   "loop": false
+  },
+  "win-1": {
+   "start": 25.18,
+   "end": 28.67,
+   "loop": false
+  }
+ },
+ "sounds": {
+  "tap": {
+   "cat": "ui",
+   "takes": [
+    "tap-1"
+   ]
+  },
+  "page": {
+   "cat": "ui",
+   "takes": [
+    "page-1"
+   ]
+  },
+  "soil": {
+   "cat": "sfx",
+   "takes": [
+    "soil-1",
+    "soil-2",
+    "soil-3",
+    "soil-4"
+   ]
+  },
+  "leaf": {
+   "cat": "sfx",
+   "takes": [
+    "leaf-1",
+    "leaf-2",
+    "leaf-3",
+    "leaf-4",
+    "leaf-5"
+   ]
+  },
+  "foliage": {
+   "cat": "sfx",
+   "takes": [
+    "foliage-1",
+    "foliage-2",
+    "foliage-3"
+   ]
+  },
+  "splash": {
+   "cat": "sfx",
+   "takes": [
+    "splash-1",
+    "splash-2",
+    "splash-3"
+   ]
+  },
+  "pour": {
+   "cat": "sfx",
+   "takes": [
+    "pour-1",
+    "pour-2"
+   ]
+  },
+  "ripple": {
+   "cat": "sfx",
+   "takes": [
+    "ripple-1",
+    "ripple-2",
+    "ripple-3"
+   ]
+  },
+  "knock": {
+   "cat": "sfx",
+   "takes": [
+    "knock-1",
+    "knock-2",
+    "knock-3"
+   ]
+  },
+  "chirp": {
+   "cat": "sfx",
+   "takes": [
+    "chirp-1",
+    "chirp-2",
+    "chirp-3",
+    "chirp-4",
+    "chirp-5"
+   ]
+  },
+  "birdfar": {
+   "cat": "sfx",
+   "takes": [
+    "birdfar-1",
+    "birdfar-2",
+    "birdfar-3",
+    "birdfar-4"
+   ]
+  },
+  "glow": {
+   "cat": "sfx",
+   "takes": [
+    "glow-1",
+    "glow-2",
+    "glow-3"
+   ]
+  },
+  "flutter": {
+   "cat": "sfx",
+   "takes": [
+    "flutter-1",
+    "flutter-2"
+   ]
+  },
+  "basket": {
+   "cat": "sfx",
+   "takes": [
+    "basket-1",
+    "basket-2"
+   ]
+  },
+  "soft": {
+   "cat": "sfx",
+   "takes": [
+    "soft-1"
+   ]
+  },
+  "goal": {
+   "cat": "sfx",
+   "takes": [
+    "goal-1",
+    "goal-2",
+    "goal-3"
+   ]
+  },
+  "star": {
+   "cat": "sfx",
+   "takes": [
+    "star-1",
+    "star-2"
+   ]
+  },
+  "win": {
+   "cat": "sfx",
+   "takes": [
+    "win-1"
+   ]
+  },
+  "amb-wind": {
+   "cat": "amb",
+   "loop": {
+    "file": "amb-wind.m4a",
+    "start": 0.1,
+    "end": 26.1
+   }
+  },
+  "amb-river": {
+   "cat": "amb",
+   "loop": {
+    "file": "amb-river.m4a",
+    "start": 0.1,
+    "end": 26.1
+   }
+  },
+  "amb-court": {
+   "cat": "amb",
+   "loop": {
+    "file": "amb-court.m4a",
+    "start": 0.1,
+    "end": 26.1
+   }
+  }
+ }
+}

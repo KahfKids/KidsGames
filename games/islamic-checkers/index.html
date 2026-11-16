@@ -1,37 +1,48 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-  <title>Checkers</title>
-  <meta name="description" content="Play checkers in a lantern-lit courtyard against six toy robots, from little Beep to Professor Cog, or with a friend on the same device." />
-  <meta name="theme-color" content="#0b1236" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <link rel="manifest" href="/KidsGames/manifest.json" />
-  <link rel="apple-touch-icon" href="/KidsGames/icons/icon-192x192.png" />
-  <link rel="stylesheet" href="/KidsGames/js/kit/kit.css" />
-  <link rel="stylesheet" href="/KidsGames/js/board/board.css" />
-  <script src="/KidsGames/js/kahf-bridge.js" defer></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Checkers</title>
+<meta name="description" content="Play checkers in a lantern-lit courtyard against six toy robots, from little Beep to Professor Cog, or with a friend on the same device.">
+<meta name="theme-color" content="#0b1236">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="/KidsGames/manifest.json">
+<link rel="icon" type="image/png" sizes="32x32" href="/KidsGames/icons/icon-32x32.png">
+<link rel="apple-touch-icon" href="/KidsGames/icons/icon-192x192.png">
+<style>html,body{margin:0;height:100%;background:#0b1236;overflow:hidden;overscroll-behavior:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;touch-action:none}
+#kit-load{position:fixed;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;background:#0b1236;--p:0}
+#kit-load svg{width:min(34vw,34vh,180px);height:auto}
+#kit-load .bar{stroke-dasharray:100;stroke-dashoffset:calc(100 * (1 - var(--p)))}
+#kit-load .disc{animation:ck-glow 1.6s ease-in-out infinite;transform-origin:50px 50px}
+@keyframes ck-glow{0%,100%{transform:scale(.92)}50%{transform:scale(1.04)}}</style>
 </head>
 <body>
-  <canvas id="stage" class="kit-stage" aria-label="Checkers game"></canvas>
-
-  <script src="/KidsGames/js/kit/core.js"></script>
-  <script src="/KidsGames/js/kit/fx.js"></script>
-  <script src="/KidsGames/js/kit/audio.js"></script>
-  <script src="/KidsGames/js/kit/ui.js"></script>
-  <script src="/KidsGames/js/board/art.js"></script>
-  <script src="/KidsGames/js/board/board.js"></script>
-  <script src="/KidsGames/js/board/robot-sounds.js"></script>
-  <script src="js/sounds.js"></script>
-  <script src="js/checkers.js"></script>
-
-  <script>
-    if ("serviceWorker" in navigator && location.pathname.indexOf("/KidsGames/") === 0 && !/[?&](debug|nosw)\b/.test(location.search)) {
-      addEventListener("load", function () { navigator.serviceWorker.register("/KidsGames/sw.js").catch(function () {}); });
-    }
-  </script>
+<!-- Courtyard Checkers on Phaser 4 (MIT, pinned in js/vendor), started only by Kit.play (js/kit/play.js), turn-based so the
+     loop rests while nothing moves. game/art.js the paint box · game/rules.js the rules and the computer · game/config.js
+     this game's words and opponents · game/board.js the board scene · game/hud.js the interface · game/main.js Boot and start.
+     Recorded CC0 sounds through Kit.snd (audio/sfx, cut by tools/sound-cut.py). -->
+<!-- The loading picture: drawn by the page at once, before the engine downloads; a golden disc with a star, inside a ring that
+     fills (js/kit/load.js moves --p and takes it away when the board is ready). No words. -->
+<div id="kit-load"><svg viewBox="0 0 100 100" aria-hidden="true">
+<circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="6"/>
+<circle class="bar" cx="50" cy="50" r="42" fill="none" stroke="#f6c453" stroke-width="6" stroke-linecap="round" pathLength="100" transform="rotate(-90 50 50)"/>
+<defs><radialGradient id="ck-g" cx=".38" cy=".38" r=".7"><stop offset="0" stop-color="#fff1b8"/><stop offset=".55" stop-color="#f6c453"/><stop offset="1" stop-color="#a8620f"/></radialGradient></defs>
+<g class="disc"><circle cx="50" cy="50" r="26" fill="url(#ck-g)" stroke="#7a4208" stroke-width="2"/><path d="M50 32l4.6 9.4 10.4 1.5-7.5 7.3 1.8 10.3L50 55.5l-9.3 4.9 1.8-10.3-7.5-7.3 10.4-1.5z" fill="#fff8e0"/></g>
+</svg></div>
+<script src="/KidsGames/js/kit/load.js"></script>
+<script src="/KidsGames/js/kahf-bridge.js" defer></script>
+<script src="/KidsGames/js/vendor/phaser-4.2.1.min.js" defer></script>
+<script src="/KidsGames/js/kit/core.js" defer></script>
+<script src="/KidsGames/js/kit/sound.js" defer></script>
+<script src="/KidsGames/js/kit/play.js" defer></script>
+<script src="game/art.js" defer></script>
+<script src="game/rules.js" defer></script>
+<script src="game/config.js" defer></script>
+<script src="game/board.js" defer></script>
+<script src="game/hud.js" defer></script>
+<script src="game/main.js" defer></script>
 </body>
 </html>

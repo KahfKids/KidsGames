@@ -161,11 +161,12 @@
       Kit.play.tex(this, 'ui-pool', 128, 128, c => { const g = c.createRadialGradient(64, 64, 0, 64, 64, 64); [[0, 1], [0.25, 0.62], [0.5, 0.3], [0.75, 0.09], [1, 0]].forEach(q => g.addColorStop(q[0], 'rgba(255,255,255,' + q[1] + ')')); c.fillStyle = g; c.fillRect(0, 0, 128, 128); });      // lamplight on the ground: bright under the lamp, soon faint
       Kit.play.tex(this, 'ui-ring', 128, 128, c => { c.strokeStyle = '#fff'; c.lineWidth = 9; c.beginPath(); c.arc(64, 64, 54, 0, 7); c.stroke(); });
       // the way out of the game: a back arrow (a house would read as "go home", and the doors to homes already show one)
-      Kit.play.tex(this, 'ui-exit', 96, 96, c => { c.strokeStyle = '#3a3050'; c.lineWidth = 13; c.lineCap = 'round'; c.lineJoin = 'round'; c.beginPath(); c.moveTo(80, 48); c.lineTo(20, 48); c.moveTo(44, 22); c.lineTo(18, 48); c.lineTo(44, 74); c.stroke(); }, 2);
+      Kit.play.tex(this, 'ui-back', 96, 96, c => { c.strokeStyle = '#3a3050'; c.lineWidth = 13; c.lineCap = 'round'; c.lineJoin = 'round'; c.beginPath(); c.moveTo(80, 48); c.lineTo(20, 48); c.moveTo(44, 22); c.lineTo(18, 48); c.lineTo(44, 74); c.stroke(); }, 2);   // back to the town
+      Kit.play.tex(this, 'ui-exit', 96, 96, c => Kit.play.exitIcon(c, 96, '#3a3050', 3.2), 2);                                // out of the game (kit's exit icon)
       Kit.play.tex(this, 'ui-card', 520, 360, c => { c.shadowColor = 'rgba(30,20,60,.28)'; c.shadowBlur = 22; c.shadowOffsetY = 8; c.fillStyle = '#fffaf0'; c.beginPath(); c.roundRect(0, 0, 520, 360, 44); c.fill(); }, 30);
       Life.state = loadState();
       const gd = Q.get('guide');                                                   // ?guide=wudu|salah: straight into a guide (for testing)
-      if (gd && this.scene.get(gd === 'wudu' ? 'Wudu' : 'Salah')) { if (window.HHLoad) HHLoad.done(); this.scene.start(gd === 'wudu' ? 'Wudu' : 'Salah', { back: () => Kit.play.exit() }); return; }
+      if (gd && this.scene.get(gd === 'wudu' ? 'Wudu' : 'Salah')) { if (window.HHLoad) HHLoad.done(); this.scene.start(gd === 'wudu' ? 'Wudu' : 'Salah', {}); return; }   // (no back: the guide's way out leaves the game, with the exit icon)
       // the Maker is launched, not started: this scene's loader must stay alive for go()
       const go = () => { makeWorld(); Life.makeYou(this, Life.state.you, () => this.scene.start('Place')); };
       if (!Life.state.you) { if (this.scene.get('Maker') && !Q.has('nomaker')) { this.scene.launch('Maker', { first: true, done: go }); this.scene.get('Maker').events.once('create', () => window.HHLoad && HHLoad.done()); return; } Life.state.you = JSON.parse(JSON.stringify(YOU0)); }

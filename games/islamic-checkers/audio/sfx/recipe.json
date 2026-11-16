@@ -1,0 +1,284 @@
+{
+ "about": "Courtyard Checkers' sound effects, cut from CC0 recordings by tools/sound-cut.py (BigSoundBank, Joseph Sardin). Times are seconds in the original (../KidsGames-sounds/bigsoundbank/<id>-<title>.mp3), picked at the recording's own event boundaries (ffmpeg silencedetect). Wooden pieces on a wooden board; a soft clap for a win; no music. Credits in ../CREDITS.md.",
+ "out": "games/islamic-checkers/audio/sfx",
+ "src": "../KidsGames-sounds/bigsoundbank",
+ "sounds": {
+  "tap": {
+   "bus": "ui",
+   "src": "0036-switch-desk-lamp.mp3",
+   "cuts": [
+    [
+     0.1,
+     0.16
+    ]
+   ],
+   "hp": 200,
+   "fade": [
+    0.002,
+    0.06
+   ],
+   "lufs": -24
+  },
+  "page": {
+   "bus": "ui",
+   "src": "0164-turned-page.mp3",
+   "cuts": [
+    [
+     0.08,
+     0.36
+    ]
+   ],
+   "fade": [
+    0.005,
+    0.12
+   ],
+   "lufs": -22
+  },
+  "pick": {
+   "src": "0087-key-placed-on-wooden-table.mp3",
+   "cuts": [
+    [
+     1.3,
+     0.2
+    ],
+    [
+     3.84,
+     0.2
+    ],
+    [
+     6.91,
+     0.2
+    ]
+   ],
+   "hp": 300,
+   "fade": [
+    0.002,
+    0.08
+   ],
+   "lufs": -31
+  },
+  "land": {
+   "src": "0087-key-placed-on-wooden-table.mp3",
+   "cuts": [
+    [
+     2.62,
+     0.24
+    ],
+    [
+     5.35,
+     0.24
+    ],
+    [
+     8.57,
+     0.24
+    ],
+    [
+     14.6,
+     0.24
+    ]
+   ],
+   "hp": 150,
+   "fade": [
+    0.002,
+    0.1
+   ],
+   "lufs": -27
+  },
+  "slide": {
+   "src": "1104-synthetic-coat-rubbed.mp3",
+   "cuts": [
+    [
+     1.36,
+     0.32
+    ],
+    [
+     5.84,
+     0.32
+    ]
+   ],
+   "hp": 350,
+   "fade": [
+    0.03,
+    0.12
+   ],
+   "lufs": -32
+  },
+  "hop": {
+   "src": "1797-whoosh-5.mp3",
+   "cuts": [
+    [
+     0.19,
+     0.17
+    ]
+   ],
+   "fade": [
+    0.005,
+    0.06
+   ],
+   "lufs": -30
+  },
+  "capture": {
+   "src": "0582-four-dice-on-wooden-table.mp3",
+   "cuts": [
+    [
+     3.6,
+     0.45
+    ],
+    [
+     4.88,
+     0.25
+    ]
+   ],
+   "hp": 200,
+   "fade": [
+    0.002,
+    0.12
+   ],
+   "lufs": -25
+  },
+  "crown": {
+   "src": "0087-key-placed-on-wooden-table.mp3",
+   "cuts": [
+    [
+     11.49,
+     0.5
+    ]
+   ],
+   "hp": 150,
+   "fade": [
+    0.002,
+    0.15
+   ],
+   "lufs": -23
+  },
+  "wiggle": {
+   "src": "0627-cup-on-a-table.mp3",
+   "cuts": [
+    [
+     0.22,
+     0.25
+    ]
+   ],
+   "hp": 150,
+   "fade": [
+    0.002,
+    0.1
+   ],
+   "lufs": -33
+  },
+  "roundStart": {
+   "src": "0582-four-dice-on-wooden-table.mp3",
+   "cuts": [
+    [
+     0.88,
+     0.65
+    ]
+   ],
+   "hp": 150,
+   "fade": [
+    0.002,
+    0.2
+   ],
+   "lufs": -29
+  },
+  "roundWin": {
+   "src": "2363-applause-1.mp3",
+   "cuts": [
+    [
+     0.38,
+     1.5
+    ]
+   ],
+   "hp": 200,
+   "fade": [
+    0.01,
+    0.5
+   ],
+   "lufs": -23
+  },
+  "matchWin": {
+   "src": "2363-applause-1.mp3",
+   "cuts": [
+    [
+     0.38,
+     2.8
+    ]
+   ],
+   "hp": 200,
+   "fade": [
+    0.01,
+    0.9
+   ],
+   "lufs": -21
+  },
+  "roundLose": {
+   "src": "1798-whoosh-10.mp3",
+   "cuts": [
+    [
+     0.17,
+     0.24
+    ]
+   ],
+   "fade": [
+    0.003,
+    0.1
+   ],
+   "lufs": -29
+  },
+  "roundDraw": {
+   "src": "0627-cup-on-a-table.mp3",
+   "cuts": [
+    [
+     0.22,
+     0.6
+    ]
+   ],
+   "hp": 150,
+   "fade": [
+    0.002,
+    0.2
+   ],
+   "lufs": -31
+  },
+  "robotThink": {
+   "src": "2909-servomotor-1-90-1.mp3",
+   "cuts": [
+    [
+     0.0,
+     0.5
+    ]
+   ],
+   "hp": 150,
+   "fade": [
+    0.01,
+    0.15
+   ],
+   "lufs": -34
+  },
+  "robotWin": {
+   "src": "2906-servomotor-1-30-2.mp3",
+   "cuts": [
+    [
+     0.0,
+     0.22
+    ]
+   ],
+   "hp": 150,
+   "fade": [
+    0.005,
+    0.08
+   ],
+   "lufs": -29
+  },
+  "amb-court": {
+   "bus": "amb",
+   "src": "0908-wind-in-tall-grass.mp3",
+   "loop": [
+    40.0,
+    24.0
+   ],
+   "x": 2.0,
+   "lufs": -39
+  }
+ }
+}

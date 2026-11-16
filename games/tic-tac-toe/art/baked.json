@@ -1,0 +1,32 @@
+{
+ "ui": {
+  "f": "baked/ui",
+  "w": 2048,
+  "h": 1056
+ },
+ "rob": {
+  "f": "baked/rob",
+  "w": 1040,
+  "h": 1290
+ },
+ "bg-land": {
+  "f": "baked/bg-land",
+  "w": 1920,
+  "h": 961
+ },
+ "bg-port": {
+  "f": "baked/bg-port",
+  "w": 1024,
+  "h": 2240
+ },
+ "board-grid-3": {
+  "f": "baked/board-grid-3",
+  "w": 1162,
+  "h": 1196
+ },
+ "pcs": {
+  "f": "baked/pcs",
+  "w": 1592,
+  "h": 297
+ }
+}

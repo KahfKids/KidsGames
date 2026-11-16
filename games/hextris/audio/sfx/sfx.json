@@ -1,0 +1,214 @@
+{
+ "resources": [
+  "sfx.m4a"
+ ],
+ "spritemap": {
+  "tap-1": {
+   "start": 0.09,
+   "end": 0.34,
+   "loop": false
+  },
+  "page-1": {
+   "start": 0.37,
+   "end": 0.82,
+   "loop": false
+  },
+  "rotate-1": {
+   "start": 0.85,
+   "end": 1.03,
+   "loop": false
+  },
+  "rotate-2": {
+   "start": 1.06,
+   "end": 1.24,
+   "loop": false
+  },
+  "rotate-3": {
+   "start": 1.27,
+   "end": 1.45,
+   "loop": false
+  },
+  "rotate-4": {
+   "start": 1.48,
+   "end": 1.66,
+   "loop": false
+  },
+  "land-1": {
+   "start": 1.69,
+   "end": 2.08,
+   "loop": false
+  },
+  "land-2": {
+   "start": 2.11,
+   "end": 2.5,
+   "loop": false
+  },
+  "clear-1": {
+   "start": 2.53,
+   "end": 2.82,
+   "loop": false
+  },
+  "clear-2": {
+   "start": 2.85,
+   "end": 3.14,
+   "loop": false
+  },
+  "clear-3": {
+   "start": 3.17,
+   "end": 3.46,
+   "loop": false
+  },
+  "clear-4": {
+   "start": 3.49,
+   "end": 3.78,
+   "loop": false
+  },
+  "clear-5": {
+   "start": 3.81,
+   "end": 4.1,
+   "loop": false
+  },
+  "glaze-1": {
+   "start": 4.13,
+   "end": 4.47,
+   "loop": false
+  },
+  "glaze-2": {
+   "start": 4.5,
+   "end": 4.89,
+   "loop": false
+  },
+  "warn-1": {
+   "start": 4.92,
+   "end": 5.26,
+   "loop": false
+  },
+  "save-1": {
+   "start": 5.29,
+   "end": 5.68,
+   "loop": false
+  },
+  "lose-1": {
+   "start": 5.71,
+   "end": 6.5,
+   "loop": false
+  },
+  "win-1": {
+   "start": 6.53,
+   "end": 8.32,
+   "loop": false
+  },
+  "star-1": {
+   "start": 8.35,
+   "end": 8.64,
+   "loop": false
+  },
+  "star-2": {
+   "start": 8.67,
+   "end": 8.94,
+   "loop": false
+  }
+ },
+ "sounds": {
+  "tap": {
+   "cat": "ui",
+   "takes": [
+    "tap-1"
+   ]
+  },
+  "page": {
+   "cat": "ui",
+   "takes": [
+    "page-1"
+   ]
+  },
+  "rotate": {
+   "cat": "sfx",
+   "takes": [
+    "rotate-1",
+    "rotate-2",
+    "rotate-3",
+    "rotate-4"
+   ]
+  },
+  "land": {
+   "cat": "sfx",
+   "takes": [
+    "land-1",
+    "land-2"
+   ]
+  },
+  "clear": {
+   "cat": "sfx",
+   "takes": [
+    "clear-1",
+    "clear-2",
+    "clear-3",
+    "clear-4",
+    "clear-5"
+   ]
+  },
+  "glaze": {
+   "cat": "sfx",
+   "takes": [
+    "glaze-1",
+    "glaze-2"
+   ]
+  },
+  "warn": {
+   "cat": "sfx",
+   "takes": [
+    "warn-1"
+   ]
+  },
+  "save": {
+   "cat": "sfx",
+   "takes": [
+    "save-1"
+   ]
+  },
+  "lose": {
+   "cat": "sfx",
+   "takes": [
+    "lose-1"
+   ]
+  },
+  "win": {
+   "cat": "sfx",
+   "takes": [
+    "win-1"
+   ]
+  },
+  "star": {
+   "cat": "sfx",
+   "takes": [
+    "star-1",
+    "star-2"
+   ]
+  },
+  "amb-0": {
+   "cat": "amb",
+   "loop": {
+    "file": "amb-0.m4a",
+    "start": 0.1,
+    "end": 16.1
+   }
+  },
+  "amb-1": {
+   "cat": "amb",
+   "loop": {
+    "file": "amb-1.m4a",
+    "start": 0.1,
+    "end": 14.1
+   }
+  },
+  "amb-2": {
+   "cat": "amb",
+   "loop": {
+    "file": "amb-2.m4a",
+    "start": 0.1,
+    "end": 20.1
+   }
+  }
+ }
+}

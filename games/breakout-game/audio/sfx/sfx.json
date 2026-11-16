@@ -1,0 +1,243 @@
+{
+ "resources": [
+  "sfx.m4a"
+ ],
+ "spritemap": {
+  "tap-1": {
+   "start": 0.09,
+   "end": 0.34,
+   "loop": false
+  },
+  "page-1": {
+   "start": 0.37,
+   "end": 0.82,
+   "loop": false
+  },
+  "launch-1": {
+   "start": 0.85,
+   "end": 1.11,
+   "loop": false
+  },
+  "bounce-1": {
+   "start": 1.14,
+   "end": 1.39,
+   "loop": false
+  },
+  "bounce-2": {
+   "start": 1.42,
+   "end": 1.67,
+   "loop": false
+  },
+  "bounce-3": {
+   "start": 1.7,
+   "end": 1.95,
+   "loop": false
+  },
+  "tick-1": {
+   "start": 1.98,
+   "end": 2.17,
+   "loop": false
+  },
+  "tick-2": {
+   "start": 2.2,
+   "end": 2.38,
+   "loop": false
+  },
+  "tick-3": {
+   "start": 2.41,
+   "end": 2.62,
+   "loop": false
+  },
+  "stone-1": {
+   "start": 2.65,
+   "end": 2.82,
+   "loop": false
+  },
+  "stone-2": {
+   "start": 2.85,
+   "end": 3.02,
+   "loop": false
+  },
+  "stone-3": {
+   "start": 3.05,
+   "end": 3.22,
+   "loop": false
+  },
+  "clink-1": {
+   "start": 3.25,
+   "end": 3.46,
+   "loop": false
+  },
+  "clink-2": {
+   "start": 3.49,
+   "end": 3.7,
+   "loop": false
+  },
+  "clink-3": {
+   "start": 3.73,
+   "end": 3.96,
+   "loop": false
+  },
+  "break-1": {
+   "start": 3.99,
+   "end": 4.42,
+   "loop": false
+  },
+  "break-2": {
+   "start": 4.45,
+   "end": 4.88,
+   "loop": false
+  },
+  "break-3": {
+   "start": 4.91,
+   "end": 5.3,
+   "loop": false
+  },
+  "power-1": {
+   "start": 5.33,
+   "end": 5.87,
+   "loop": false
+  },
+  "power-2": {
+   "start": 5.9,
+   "end": 6.44,
+   "loop": false
+  },
+  "power-3": {
+   "start": 6.47,
+   "end": 7.01,
+   "loop": false
+  },
+  "star-1": {
+   "start": 7.04,
+   "end": 7.35,
+   "loop": false
+  },
+  "star-2": {
+   "start": 7.38,
+   "end": 7.69,
+   "loop": false
+  },
+  "lose-1": {
+   "start": 7.72,
+   "end": 8.05,
+   "loop": false
+  },
+  "win-1": {
+   "start": 8.08,
+   "end": 10.17,
+   "loop": false
+  }
+ },
+ "sounds": {
+  "tap": {
+   "cat": "ui",
+   "takes": [
+    "tap-1"
+   ]
+  },
+  "page": {
+   "cat": "ui",
+   "takes": [
+    "page-1"
+   ]
+  },
+  "launch": {
+   "cat": "sfx",
+   "takes": [
+    "launch-1"
+   ]
+  },
+  "bounce": {
+   "cat": "sfx",
+   "takes": [
+    "bounce-1",
+    "bounce-2",
+    "bounce-3"
+   ]
+  },
+  "tick": {
+   "cat": "sfx",
+   "takes": [
+    "tick-1",
+    "tick-2",
+    "tick-3"
+   ]
+  },
+  "stone": {
+   "cat": "sfx",
+   "takes": [
+    "stone-1",
+    "stone-2",
+    "stone-3"
+   ]
+  },
+  "clink": {
+   "cat": "sfx",
+   "takes": [
+    "clink-1",
+    "clink-2",
+    "clink-3"
+   ]
+  },
+  "break": {
+   "cat": "sfx",
+   "takes": [
+    "break-1",
+    "break-2",
+    "break-3"
+   ]
+  },
+  "power": {
+   "cat": "sfx",
+   "takes": [
+    "power-1",
+    "power-2",
+    "power-3"
+   ]
+  },
+  "star": {
+   "cat": "sfx",
+   "takes": [
+    "star-1",
+    "star-2"
+   ]
+  },
+  "lose": {
+   "cat": "sfx",
+   "takes": [
+    "lose-1"
+   ]
+  },
+  "win": {
+   "cat": "sfx",
+   "takes": [
+    "win-1"
+   ]
+  },
+  "amb-0": {
+   "cat": "amb",
+   "loop": {
+    "file": "amb-0.m4a",
+    "start": 0.1,
+    "end": 14.1
+   }
+  },
+  "amb-1": {
+   "cat": "amb",
+   "loop": {
+    "file": "amb-1.m4a",
+    "start": 0.1,
+    "end": 20.1
+   }
+  },
+  "amb-2": {
+   "cat": "amb",
+   "loop": {
+    "file": "amb-2.m4a",
+    "start": 0.1,
+    "end": 20.1
+   }
+  }
+ }
+}

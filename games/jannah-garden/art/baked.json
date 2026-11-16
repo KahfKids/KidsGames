@@ -1,0 +1,37 @@
+{
+ "plants": {
+  "f": "baked/plants",
+  "w": 2048,
+  "h": 574
+ },
+ "bfly": {
+  "f": "baked/bfly",
+  "w": 480,
+  "h": 600
+ },
+ "ui": {
+  "f": "baked/ui",
+  "w": 2048,
+  "h": 938
+ },
+ "cloud0": {
+  "f": "baked/cloud0",
+  "w": 192,
+  "h": 96
+ },
+ "cloud1": {
+  "f": "baked/cloud1",
+  "w": 192,
+  "h": 96
+ },
+ "cloud2": {
+  "f": "baked/cloud2",
+  "w": 192,
+  "h": 96
+ },
+ "cloud3": {
+  "f": "baked/cloud3",
+  "w": 192,
+  "h": 96
+ }
+}

@@ -1,0 +1,241 @@
+{
+ "about": "Hextris sound effects, cut from CC0 recordings by tools/sound-cut.py. Times are seconds in the original (../KidsGames-sounds/bigsoundbank/<id>-<title>.mp3), picked at the recording's own event boundaries (ffmpeg silencedetect). Only taps, knocks, wood, stone, cloth, paper, water and air: no tuned or ringing sounds (no ceramic, glass or bells); credits in ../CREDITS.md.",
+ "out": "games/hextris/audio/sfx",
+ "src": "../KidsGames-sounds/bigsoundbank",
+ "sounds": {
+  "tap": {
+   "bus": "ui",
+   "src": "0036-switch-desk-lamp.mp3",
+   "cuts": [
+    [
+     0.1,
+     0.16
+    ]
+   ],
+   "hp": 200,
+   "fade": [
+    0.002,
+    0.06
+   ],
+   "lufs": -24
+  },
+  "page": {
+   "bus": "ui",
+   "src": "0164-turned-page.mp3",
+   "cuts": [
+    [
+     0.08,
+     0.36
+    ]
+   ],
+   "fade": [
+    0.005,
+    0.12
+   ],
+   "lufs": -22
+  },
+  "rotate": {
+   "src": "0582-four-dice-on-wooden-table.mp3",
+   "cuts": [
+    [
+     0.815,
+     0.09
+    ],
+    [
+     0.962,
+     0.09
+    ],
+    [
+     1.112,
+     0.09
+    ],
+    [
+     1.256,
+     0.09
+    ]
+   ],
+   "hp": 300,
+   "fade": [
+    0.001,
+    0.04
+   ],
+   "lufs": -27
+  },
+  "land": {
+   "src": "0576-canvas-bag-on-floor.mp3",
+   "cuts": [
+    [
+     0.08,
+     0.3
+    ],
+    [
+     0.91,
+     0.3
+    ]
+   ],
+   "hp": 120,
+   "fade": [
+    0.002,
+    0.12
+   ],
+   "lufs": -25
+  },
+  "clear": {
+   "src": "1074-bubbles-burst.mp3",
+   "cuts": [
+    [
+     0.18,
+     0.2
+    ],
+    [
+     1.505,
+     0.2
+    ],
+    [
+     2.83,
+     0.2
+    ],
+    [
+     4.32,
+     0.2
+    ],
+    [
+     5.72,
+     0.2
+    ]
+   ],
+   "fade": [
+    0.001,
+    0.08
+   ],
+   "lufs": -20
+  },
+  "glaze": {
+   "src": "1022-fall-of-stone.mp3",
+   "cuts": [
+    [
+     1.72,
+     0.25
+    ],
+    [
+     3.11,
+     0.3
+    ]
+   ],
+   "hp": 400,
+   "fade": [
+    0.003,
+    0.15
+   ],
+   "lufs": -27
+  },
+  "warn": {
+   "src": "0374-knock-on-a-light-door.mp3",
+   "cuts": [
+    [
+     2.76,
+     0.25
+    ]
+   ],
+   "hp": 120,
+   "fade": [
+    0.003,
+    0.1
+   ],
+   "lufs": -25
+  },
+  "save": {
+   "src": "1798-whoosh-10.mp3",
+   "cuts": [
+    [
+     0.15,
+     0.3
+    ]
+   ],
+   "fade": [
+    0.01,
+    0.12
+   ],
+   "lufs": -22
+  },
+  "lose": {
+   "src": "1795-whoosh-3.mp3",
+   "cuts": [
+    [
+     0.1,
+     0.7
+    ]
+   ],
+   "hp": 90,
+   "fade": [
+    0.03,
+    0.4
+   ],
+   "lufs": -23
+  },
+  "win": {
+   "src": "2363-applause-1.mp3",
+   "cuts": [
+    [
+     0.45,
+     1.7
+    ]
+   ],
+   "hp": 150,
+   "fade": [
+    0.15,
+    0.7
+   ],
+   "lufs": -23
+  },
+  "star": {
+   "src": "0582-four-dice-on-wooden-table.mp3",
+   "cuts": [
+    [
+     2.046,
+     0.2
+    ],
+    [
+     2.297,
+     0.18
+    ]
+   ],
+   "hp": 150,
+   "fade": [
+    0.002,
+    0.1
+   ],
+   "lufs": -23
+  },
+  "amb-0": {
+   "bus": "amb",
+   "src": "0913-fountain-of-a-japanese-temple.mp3",
+   "loop": [
+    20.0,
+    16.0
+   ],
+   "x": 1.5,
+   "lufs": -37
+  },
+  "amb-1": {
+   "bus": "amb",
+   "src": "1020-field-cricket.mp3",
+   "loop": [
+    5.0,
+    14.0
+   ],
+   "x": 1.5,
+   "lufs": -38
+  },
+  "amb-2": {
+   "bus": "amb",
+   "src": "0222-awakening-birds.mp3",
+   "loop": [
+    120.0,
+    20.0
+   ],
+   "x": 1.5,
+   "lufs": -38
+  }
+ }
+}

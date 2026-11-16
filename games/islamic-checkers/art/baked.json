@@ -1,0 +1,37 @@
+{
+ "ui": {
+  "f": "baked/ui",
+  "w": 2048,
+  "h": 1056
+ },
+ "rob": {
+  "f": "baked/rob",
+  "w": 1040,
+  "h": 1548
+ },
+ "bg-land": {
+  "f": "baked/bg-land",
+  "w": 1920,
+  "h": 961
+ },
+ "bg-port": {
+  "f": "baked/bg-port",
+  "w": 1024,
+  "h": 2240
+ },
+ "board-checkers-6": {
+  "f": "baked/board-checkers-6",
+  "w": 1162,
+  "h": 1196
+ },
+ "board-checkers-8": {
+  "f": "baked/board-checkers-8",
+  "w": 1162,
+  "h": 1196
+ },
+ "pcs": {
+  "f": "baked/pcs",
+  "w": 642,
+  "h": 191
+ }
+}

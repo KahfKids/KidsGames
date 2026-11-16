@@ -1,0 +1,112 @@
+{
+ "sprites": {
+  "f": "baked/sprites",
+  "w": 1100,
+  "h": 844
+ },
+ "bg0a": {
+  "f": "baked/bg0a",
+  "w": 2528,
+  "h": 520
+ },
+ "bg0b": {
+  "f": "baked/bg0b",
+  "w": 2528,
+  "h": 336
+ },
+ "bg0c": {
+  "f": "baked/bg0c",
+  "w": 2528,
+  "h": 336
+ },
+ "bg-glow": {
+  "f": "baked/bg-glow",
+  "w": 256,
+  "h": 256
+ },
+ "bg-moon": {
+  "f": "baked/bg-moon",
+  "w": 160,
+  "h": 160
+ },
+ "bg-sun": {
+  "f": "baked/bg-sun",
+  "w": 210,
+  "h": 210
+ },
+ "pillar0": {
+  "f": "baked/pillar0",
+  "w": 72,
+  "h": 1440
+ },
+ "frieze0": {
+  "f": "baked/frieze0",
+  "w": 368,
+  "h": 116
+ },
+ "tiles0": {
+  "f": "baked/tiles0",
+  "w": 960,
+  "h": 464
+ },
+ "bg1a": {
+  "f": "baked/bg1a",
+  "w": 2528,
+  "h": 520
+ },
+ "bg1b": {
+  "f": "baked/bg1b",
+  "w": 2528,
+  "h": 440
+ },
+ "bg1c": {
+  "f": "baked/bg1c",
+  "w": 2528,
+  "h": 312
+ },
+ "pillar1": {
+  "f": "baked/pillar1",
+  "w": 72,
+  "h": 1440
+ },
+ "frieze1": {
+  "f": "baked/frieze1",
+  "w": 368,
+  "h": 116
+ },
+ "tiles1": {
+  "f": "baked/tiles1",
+  "w": 960,
+  "h": 464
+ },
+ "bg2a": {
+  "f": "baked/bg2a",
+  "w": 2528,
+  "h": 520
+ },
+ "bg2b": {
+  "f": "baked/bg2b",
+  "w": 2528,
+  "h": 520
+ },
+ "bg2c": {
+  "f": "baked/bg2c",
+  "w": 2528,
+  "h": 216
+ },
+ "pillar2": {
+  "f": "baked/pillar2",
+  "w": 72,
+  "h": 1440
+ },
+ "frieze2": {
+  "f": "baked/frieze2",
+  "w": 368,
+  "h": 116
+ },
+ "tiles2": {
+  "f": "baked/tiles2",
+  "w": 960,
+  "h": 464
+ }
+}

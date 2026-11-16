@@ -1,0 +1,37 @@
+{
+ "mm-cards": {
+  "f": "baked/mm-cards",
+  "w": 2048,
+  "h": 1044
+ },
+ "mm-animals": {
+  "f": "baked/mm-animals",
+  "w": 1440,
+  "h": 1152
+ },
+ "mm-ui": {
+  "f": "baked/mm-ui",
+  "w": 1024,
+  "h": 470
+ },
+ "bg0": {
+  "f": "baked/bg0",
+  "w": 2044,
+  "h": 1316
+ },
+ "bg1": {
+  "f": "baked/bg1",
+  "w": 2044,
+  "h": 1316
+ },
+ "bg2": {
+  "f": "baked/bg2",
+  "w": 2044,
+  "h": 1316
+ },
+ "bg3": {
+  "f": "baked/bg3",
+  "w": 2044,
+  "h": 1316
+ }
+}

@@ -1,0 +1,230 @@
+{
+ "about": "Solar System's sound effects and its quiet bed of space, cut from CC0 recordings by tools/sound-cut.py. Times are seconds in the original (../KidsGames-sounds/bigsoundbank/<id>-<title>.mp3), picked at the recording's own event boundaries (ffmpeg silencedetect); the buttons and cards use the same cuts as Spider IK so every game is one family. Credits in ../CREDITS.md.",
+ "out": "games/solar-system/audio/sfx",
+ "src": "../KidsGames-sounds/bigsoundbank",
+ "sounds": {
+  "tap": {
+   "bus": "ui",
+   "src": "0036-switch-desk-lamp.mp3",
+   "cuts": [
+    [
+     0.1,
+     0.16
+    ]
+   ],
+   "hp": 200,
+   "fade": [
+    0.002,
+    0.06
+   ],
+   "lufs": -24
+  },
+  "page": {
+   "bus": "ui",
+   "src": "0164-turned-page.mp3",
+   "cuts": [
+    [
+     0.08,
+     0.36
+    ]
+   ],
+   "fade": [
+    0.005,
+    0.12
+   ],
+   "lufs": -22
+  },
+  "blip": {
+   "src": "0374-knock-on-a-light-door.mp3",
+   "cuts": [
+    [
+     5.7,
+     0.16
+    ],
+    [
+     6.16,
+     0.16
+    ]
+   ],
+   "hp": 250,
+   "fade": [
+    0.002,
+    0.08
+   ],
+   "lufs": -26
+  },
+  "tick": {
+   "src": "0582-four-dice-on-wooden-table.mp3",
+   "cuts": [
+    [
+     0.815,
+     0.08
+    ],
+    [
+     0.962,
+     0.08
+    ],
+    [
+     1.112,
+     0.08
+    ],
+    [
+     1.256,
+     0.08
+    ]
+   ],
+   "hp": 500,
+   "fade": [
+    0.001,
+    0.04
+   ],
+   "lufs": -31
+  },
+  "ask": {
+   "src": "1384-drops-of-water-1.mp3",
+   "cuts": [
+    [
+     0.14,
+     0.3
+    ],
+    [
+     1.57,
+     0.3
+    ]
+   ],
+   "hp": 300,
+   "fade": [
+    0.002,
+    0.12
+   ],
+   "lufs": -25
+  },
+  "whoom": {
+   "src": "1795-whoosh-3.mp3",
+   "cuts": [
+    [
+     0.11,
+     0.46
+    ]
+   ],
+   "fade": [
+    0.003,
+    0.12
+   ],
+   "lufs": -22
+  },
+  "whoosh": {
+   "src": "1798-whoosh-10.mp3",
+   "cuts": [
+    [
+     0.17,
+     0.24
+    ]
+   ],
+   "fade": [
+    0.003,
+    0.08
+   ],
+   "lufs": -24
+  },
+  "good": {
+   "src": "1384-drops-of-water-1.mp3",
+   "cuts": [
+    [
+     0.14,
+     0.3
+    ],
+    [
+     1.57,
+     0.3
+    ]
+   ],
+   "hp": 300,
+   "fade": [
+    0.002,
+    0.12
+   ],
+   "lufs": -19
+  },
+  "bump": {
+   "src": "0576-canvas-bag-on-floor.mp3",
+   "cuts": [
+    [
+     0.08,
+     0.3
+    ],
+    [
+     0.91,
+     0.3
+    ]
+   ],
+   "hp": 120,
+   "fade": [
+    0.002,
+    0.12
+   ],
+   "lufs": -28
+  },
+  "lose": {
+   "src": "0192-swirl-in-the-water.mp3",
+   "cuts": [
+    [
+     0.21,
+     0.78
+    ]
+   ],
+   "fade": [
+    0.01,
+    0.3
+   ],
+   "lufs": -24
+  },
+  "shoot": {
+   "src": "1797-whoosh-5.mp3",
+   "cuts": [
+    [
+     0.19,
+     0.17
+    ]
+   ],
+   "fade": [
+    0.005,
+    0.06
+   ],
+   "lufs": -32
+  },
+  "win": {
+   "src": "2363-applause-1.mp3",
+   "cuts": [
+    [
+     0.45,
+     2.2
+    ]
+   ],
+   "fade": [
+    0.05,
+    0.5
+   ],
+   "lufs": -22
+  },
+  "star": {
+   "src": "1384-drops-of-water-1.mp3",
+   "cuts": [
+    [
+     0.14,
+     0.3
+    ],
+    [
+     1.57,
+     0.3
+    ]
+   ],
+   "hp": 300,
+   "fade": [
+    0.002,
+    0.12
+   ],
+   "lufs": -20
+  }
+ }
+}

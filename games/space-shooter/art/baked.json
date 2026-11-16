@@ -1,0 +1,287 @@
+{
+ "sr": {
+  "f": "baked/sr",
+  "w": 1024,
+  "h": 1062
+ },
+ "ui": {
+  "f": "baked/ui",
+  "w": 1024,
+  "h": 1080
+ },
+ "stars0": {
+  "f": "baked/stars0",
+  "w": 512,
+  "h": 1024
+ },
+ "streaks": {
+  "f": "baked/streaks",
+  "w": 256,
+  "h": 512
+ },
+ "sc-0-moonlet82": {
+  "f": "baked/sc-0-moonlet82",
+  "w": 148,
+  "h": 148
+ },
+ "sc-0-station106": {
+  "f": "baked/sc-0-station106",
+  "w": 191,
+  "h": 191
+ },
+ "sc-0-moonlet149": {
+  "f": "baked/sc-0-moonlet149",
+  "w": 269,
+  "h": 269
+ },
+ "rock-0-66-0": {
+  "f": "baked/rock-0-66-0",
+  "w": 222,
+  "h": 222
+ },
+ "rock-0-66-1": {
+  "f": "baked/rock-0-66-1",
+  "w": 222,
+  "h": 222
+ },
+ "rock-0-66-2": {
+  "f": "baked/rock-0-66-2",
+  "w": 222,
+  "h": 222
+ },
+ "rock-0-34-0": {
+  "f": "baked/rock-0-34-0",
+  "w": 126,
+  "h": 126
+ },
+ "rock-0-34-1": {
+  "f": "baked/rock-0-34-1",
+  "w": 126,
+  "h": 126
+ },
+ "rock-0-34-2": {
+  "f": "baked/rock-0-34-2",
+  "w": 126,
+  "h": 126
+ },
+ "boss0": {
+  "f": "baked/boss0",
+  "w": 690,
+  "h": 510
+ },
+ "bdish": {
+  "f": "baked/bdish",
+  "w": 90,
+  "h": 36
+ },
+ "sc-1-rock53": {
+  "f": "baked/sc-1-rock53",
+  "w": 96,
+  "h": 96
+ },
+ "sc-1-rock74": {
+  "f": "baked/sc-1-rock74",
+  "w": 134,
+  "h": 134
+ },
+ "sc-1-rock96": {
+  "f": "baked/sc-1-rock96",
+  "w": 173,
+  "h": 173
+ },
+ "sc-1-rock118": {
+  "f": "baked/sc-1-rock118",
+  "w": 213,
+  "h": 213
+ },
+ "sc-1-rock139": {
+  "f": "baked/sc-1-rock139",
+  "w": 251,
+  "h": 251
+ },
+ "sc-1-darkrock264": {
+  "f": "baked/sc-1-darkrock264",
+  "w": 476,
+  "h": 476
+ },
+ "sc-1-darkrock384": {
+  "f": "baked/sc-1-darkrock384",
+  "w": 692,
+  "h": 692
+ },
+ "rock-1-66-0": {
+  "f": "baked/rock-1-66-0",
+  "w": 222,
+  "h": 222
+ },
+ "rock-1-66-1": {
+  "f": "baked/rock-1-66-1",
+  "w": 222,
+  "h": 222
+ },
+ "rock-1-66-2": {
+  "f": "baked/rock-1-66-2",
+  "w": 222,
+  "h": 222
+ },
+ "rock-1-34-0": {
+  "f": "baked/rock-1-34-0",
+  "w": 126,
+  "h": 126
+ },
+ "rock-1-34-1": {
+  "f": "baked/rock-1-34-1",
+  "w": 126,
+  "h": 126
+ },
+ "rock-1-34-2": {
+  "f": "baked/rock-1-34-2",
+  "w": 126,
+  "h": 126
+ },
+ "boss1": {
+  "f": "baked/boss1",
+  "w": 690,
+  "h": 570
+ },
+ "bdrill": {
+  "f": "baked/bdrill",
+  "w": 180,
+  "h": 180
+ },
+ "sc-2-icemoon82": {
+  "f": "baked/sc-2-icemoon82",
+  "w": 148,
+  "h": 148
+ },
+ "sc-2-rock74": {
+  "f": "baked/sc-2-rock74",
+  "w": 134,
+  "h": 134
+ },
+ "sc-2-rock96": {
+  "f": "baked/sc-2-rock96",
+  "w": 173,
+  "h": 173
+ },
+ "sc-2-rock118": {
+  "f": "baked/sc-2-rock118",
+  "w": 213,
+  "h": 213
+ },
+ "sc-2-darkrock264": {
+  "f": "baked/sc-2-darkrock264",
+  "w": 476,
+  "h": 476
+ },
+ "sc-2-darkrock384": {
+  "f": "baked/sc-2-darkrock384",
+  "w": 692,
+  "h": 692
+ },
+ "rock-2-66-0": {
+  "f": "baked/rock-2-66-0",
+  "w": 222,
+  "h": 222
+ },
+ "rock-2-66-1": {
+  "f": "baked/rock-2-66-1",
+  "w": 222,
+  "h": 222
+ },
+ "rock-2-66-2": {
+  "f": "baked/rock-2-66-2",
+  "w": 222,
+  "h": 222
+ },
+ "rock-2-34-0": {
+  "f": "baked/rock-2-34-0",
+  "w": 126,
+  "h": 126
+ },
+ "rock-2-34-1": {
+  "f": "baked/rock-2-34-1",
+  "w": 126,
+  "h": 126
+ },
+ "rock-2-34-2": {
+  "f": "baked/rock-2-34-2",
+  "w": 126,
+  "h": 126
+ },
+ "boss2": {
+  "f": "baked/boss2",
+  "w": 780,
+  "h": 480
+ },
+ "bring-back": {
+  "f": "baked/bring-back",
+  "w": 810,
+  "h": 210
+ },
+ "bring-front": {
+  "f": "baked/bring-front",
+  "w": 810,
+  "h": 210
+ },
+ "biris": {
+  "f": "baked/biris",
+  "w": 165,
+  "h": 165
+ },
+ "sc-3-gasball82": {
+  "f": "baked/sc-3-gasball82",
+  "w": 148,
+  "h": 148
+ },
+ "sc-3-gasball115": {
+  "f": "baked/sc-3-gasball115",
+  "w": 207,
+  "h": 207
+ },
+ "sc-3-rock96": {
+  "f": "baked/sc-3-rock96",
+  "w": 173,
+  "h": 173
+ },
+ "rock-3-66-0": {
+  "f": "baked/rock-3-66-0",
+  "w": 222,
+  "h": 222
+ },
+ "rock-3-66-1": {
+  "f": "baked/rock-3-66-1",
+  "w": 222,
+  "h": 222
+ },
+ "rock-3-66-2": {
+  "f": "baked/rock-3-66-2",
+  "w": 222,
+  "h": 222
+ },
+ "rock-3-34-0": {
+  "f": "baked/rock-3-34-0",
+  "w": 126,
+  "h": 126
+ },
+ "rock-3-34-1": {
+  "f": "baked/rock-3-34-1",
+  "w": 126,
+  "h": 126
+ },
+ "rock-3-34-2": {
+  "f": "baked/rock-3-34-2",
+  "w": 126,
+  "h": 126
+ },
+ "boss3": {
+  "f": "baked/boss3",
+  "w": 780,
+  "h": 450
+ },
+ "bwand": {
+  "f": "baked/bwand",
+  "w": 90,
+  "h": 120
+ }
+}

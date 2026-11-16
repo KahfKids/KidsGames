@@ -1,38 +1,49 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-  <title>Balloon Pop</title>
-  <meta name="description" content="Pop colourful balloons, collect good deeds and float through 24 levels in the garden, by the sea and under the lanterns." />
-  <meta name="theme-color" content="#4f9fea" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <link rel="manifest" href="/KidsGames/manifest.json" />
-  <link rel="icon" href="/KidsGames/icons/icon-192x192.png" />
-  <link rel="apple-touch-icon" href="/KidsGames/icons/icon-192x192.png" />
-  <link rel="stylesheet" href="/KidsGames/js/kit/kit.css" />
-  <link rel="stylesheet" href="css/game.css" />
-  <script src="/KidsGames/js/kahf-bridge.js" defer></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Balloon Pop</title>
+<meta name="description" content="Pop colourful balloons, collect good deeds and float through 24 levels in the garden, by the sea and under the lanterns.">
+<meta name="theme-color" content="#4f9fea">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="/KidsGames/manifest.json">
+<link rel="icon" href="/KidsGames/icons/icon-192x192.png">
+<link rel="apple-touch-icon" href="/KidsGames/icons/icon-192x192.png">
+<style>html,body{margin:0;height:100%;background:#8ccbf6;overflow:hidden;overscroll-behavior:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;touch-action:none}
+#kit-load{position:fixed;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;background:linear-gradient(#4f9fea,#8ccbf6 60%,#ffe9d2);--p:0}
+#kit-load svg{width:min(34vw,34vh,190px);height:auto}
+#kit-load .bar{stroke-dasharray:100;stroke-dashoffset:calc(100 * (1 - var(--p)))}
+#kit-load .bal{animation:bp-bob 1.8s ease-in-out infinite;transform-origin:50px 50px}
+@keyframes bp-bob{0%,100%{transform:translateY(3px) rotate(-3deg)}50%{transform:translateY(-4px) rotate(3deg)}}</style>
 </head>
 <body>
-  <canvas id="stage" class="kit-stage" aria-label="Balloon Pop game"></canvas>
-
-  <script src="/KidsGames/js/kit/core.js"></script>
-  <script src="/KidsGames/js/kit/fx.js"></script>
-  <script src="/KidsGames/js/kit/audio.js"></script>
-  <script src="/KidsGames/js/kit/ui.js"></script>
-  <script src="js/sounds.js"></script>
-  <script src="js/art.js"></script>
-  <script src="js/deeds.js"></script>
-  <script src="js/levels.js"></script>
-  <script src="js/game.js"></script>
-
-  <script>
-    if ("serviceWorker" in navigator && location.pathname.indexOf("/KidsGames/") === 0 && !/[?&](debug|nosw)\b/.test(location.search)) {
-      addEventListener("load", function () { navigator.serviceWorker.register("/KidsGames/sw.js").catch(function () {}); });
-    }
-  </script>
+<!-- Balloon Pop on Phaser 4 (MIT, pinned in js/vendor), started only by Kit.play (js/kit/play.js).
+     Arcade physics for the rising balloons, recorded CC0 sounds through Kit.snd (audio/sfx, cut by tools/sound-cut.py).
+     game/data.js levels and words · game/deeds.js and game/art.js the paint box · game/common.js saves and fitting
+     game/play.js one level · game/hud.js the interface · game/main.js Boot and start. -->
+<!-- The loading picture: drawn by the page at once, before the engine downloads; a balloon that bobs inside a ring that
+     fills (js/kit/load.js moves --p and takes it away when the first level is ready). No words. -->
+<div id="kit-load"><svg viewBox="0 0 100 100" aria-hidden="true">
+<circle cx="50" cy="50" r="44" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="6"/>
+<circle class="bar" cx="50" cy="50" r="44" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" pathLength="100" transform="rotate(-90 50 50)"/>
+<defs><radialGradient id="bp-g" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#ffb3bb"/><stop offset=".45" stop-color="#ff4d5e"/><stop offset="1" stop-color="#c92c47"/></radialGradient></defs>
+<g class="bal"><path d="M50 26C39 26 32 35 32 45 32 56 41 64 50 68 59 64 68 56 68 45 68 35 61 26 50 26Z" fill="url(#bp-g)"/><path d="M47 69 53 69 50 64Z" fill="#c92c47"/><path d="M50 69C46 74 54 78 50 83" fill="none" stroke="rgba(60,40,80,.55)" stroke-width="1.6" stroke-linecap="round"/></g>
+</svg></div>
+<script src="/KidsGames/js/kit/load.js"></script>
+<script src="/KidsGames/js/kahf-bridge.js" defer></script>
+<script src="/KidsGames/js/vendor/phaser-4.2.1.min.js" defer></script>
+<script src="/KidsGames/js/kit/core.js" defer></script>
+<script src="/KidsGames/js/kit/sound.js" defer></script>
+<script src="/KidsGames/js/kit/play.js" defer></script>
+<script src="game/data.js" defer></script>
+<script src="game/deeds.js" defer></script>
+<script src="game/art.js" defer></script>
+<script src="game/common.js" defer></script>
+<script src="game/play.js" defer></script>
+<script src="game/hud.js" defer></script>
+<script src="game/main.js" defer></script>
 </body>
 </html>

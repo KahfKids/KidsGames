@@ -1,0 +1,202 @@
+{
+ "resources": [
+  "sfx.m4a"
+ ],
+ "spritemap": {
+  "tap-1": {
+   "start": 0.09,
+   "end": 0.34,
+   "loop": false
+  },
+  "page-1": {
+   "start": 0.37,
+   "end": 0.82,
+   "loop": false
+  },
+  "pick-1": {
+   "start": 0.85,
+   "end": 1.24,
+   "loop": false
+  },
+  "pick-2": {
+   "start": 1.27,
+   "end": 1.66,
+   "loop": false
+  },
+  "swoosh-1": {
+   "start": 1.69,
+   "end": 2.18,
+   "loop": false
+  },
+  "snap-1": {
+   "start": 2.21,
+   "end": 2.6,
+   "loop": false
+  },
+  "snap-2": {
+   "start": 2.63,
+   "end": 3.02,
+   "loop": false
+  },
+  "snap-3": {
+   "start": 3.05,
+   "end": 3.44,
+   "loop": false
+  },
+  "snap-4": {
+   "start": 3.47,
+   "end": 3.86,
+   "loop": false
+  },
+  "wobble-1": {
+   "start": 3.89,
+   "end": 4.28,
+   "loop": false
+  },
+  "wobble-2": {
+   "start": 4.31,
+   "end": 4.7,
+   "loop": false
+  },
+  "wagon-1": {
+   "start": 4.73,
+   "end": 5.12,
+   "loop": false
+  },
+  "wagon-2": {
+   "start": 5.15,
+   "end": 5.54,
+   "loop": false
+  },
+  "star-1": {
+   "start": 5.57,
+   "end": 5.86,
+   "loop": false
+  },
+  "star-2": {
+   "start": 5.89,
+   "end": 6.18,
+   "loop": false
+  },
+  "star-3": {
+   "start": 6.21,
+   "end": 6.5,
+   "loop": false
+  },
+  "win-1": {
+   "start": 6.53,
+   "end": 7.57,
+   "loop": false
+  },
+  "arrive-1": {
+   "start": 7.6,
+   "end": 9.14,
+   "loop": false
+  },
+  "depart-1": {
+   "start": 9.17,
+   "end": 10.86,
+   "loop": false
+  }
+ },
+ "sounds": {
+  "tap": {
+   "cat": "ui",
+   "takes": [
+    "tap-1"
+   ]
+  },
+  "page": {
+   "cat": "ui",
+   "takes": [
+    "page-1"
+   ]
+  },
+  "pick": {
+   "cat": "ui",
+   "takes": [
+    "pick-1",
+    "pick-2"
+   ]
+  },
+  "swoosh": {
+   "cat": "sfx",
+   "takes": [
+    "swoosh-1"
+   ]
+  },
+  "snap": {
+   "cat": "sfx",
+   "takes": [
+    "snap-1",
+    "snap-2",
+    "snap-3",
+    "snap-4"
+   ]
+  },
+  "wobble": {
+   "cat": "sfx",
+   "takes": [
+    "wobble-1",
+    "wobble-2"
+   ]
+  },
+  "wagon": {
+   "cat": "sfx",
+   "takes": [
+    "wagon-1",
+    "wagon-2"
+   ]
+  },
+  "star": {
+   "cat": "sfx",
+   "takes": [
+    "star-1",
+    "star-2",
+    "star-3"
+   ]
+  },
+  "win": {
+   "cat": "sfx",
+   "takes": [
+    "win-1"
+   ]
+  },
+  "arrive": {
+   "cat": "sfx",
+   "takes": [
+    "arrive-1"
+   ]
+  },
+  "depart": {
+   "cat": "sfx",
+   "takes": [
+    "depart-1"
+   ]
+  },
+  "amb-0": {
+   "cat": "amb",
+   "loop": {
+    "file": "amb-0.m4a",
+    "start": 0.1,
+    "end": 24.1
+   }
+  },
+  "amb-1": {
+   "cat": "amb",
+   "loop": {
+    "file": "amb-1.m4a",
+    "start": 0.1,
+    "end": 14.1
+   }
+  },
+  "amb-2": {
+   "cat": "amb",
+   "loop": {
+    "file": "amb-2.m4a",
+    "start": 0.1,
+    "end": 20.1
+   }
+  }
+ }
+}

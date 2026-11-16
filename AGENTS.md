@@ -47,7 +47,7 @@ Decided by the owner on 2026-11-11: **every game and every quiz is built on Phas
 ### Content (kids' app, Islamic)
 
 14. **No faces in any art.** Spider IK is the one agreed exception and stays as it is.
-15. **No music.** No notes, melodies, jingles or instrument sounds. Sound effects are recorded natural sounds, played by Phaser's sound system through `js/kit/sound.js` (old kit pages: `js/kit/audio.js`).
+15. **No instrumental music** (owner, 2026-11-16): no guitar, piano, drums, synth tunes, bells or other instruments, and no recording with music behind it. Voices (humming, choirs, voice-only melodies), nature, environment, taps and mechanical sounds are allowed, as long as they fit the game and are calm for children. Sounds are real recordings, played by Phaser's sound system through `js/kit/sound.js` (old kit pages: `js/kit/audio.js`).
 16. **No rainbows** or rainbow-coloured effects.
 17. **Islamic content comes from the source**, looked up when it is written, never from memory (`docs/quiz-quality-plan.md`). Worship is never scored.
 18. **Words are each game's own choice** (owner, 2026-11-16: "every game is unique"). Use words where they help the game (titles, story, labels, tips) and pictures where they work better; keep what a game already had unless the owner says otherwise. No `alert()`. Touch first.

@@ -1,0 +1,362 @@
+{
+ "about": "Ramadan Maze's sound effects and night/garden/lane beds, cut from CC0 recordings by tools/sound-cut.py. Times are seconds in the original (../KidsGames-sounds/bigsoundbank/<id>-<title>.mp3), picked at the recording's own event boundaries (ffmpeg silencedetect). Each sound fits what happens on screen in the maze; credits in ../CREDITS.md.",
+ "out": "games/ramadan-maze/audio/sfx",
+ "src": "../KidsGames-sounds/bigsoundbank",
+ "sounds": {
+  "tap": {
+   "bus": "ui",
+   "src": "0036-switch-desk-lamp.mp3",
+   "cuts": [
+    [
+     0.1,
+     0.16
+    ]
+   ],
+   "hp": 200,
+   "fade": [
+    0.002,
+    0.06
+   ],
+   "lufs": -24
+  },
+  "page": {
+   "bus": "ui",
+   "src": "0164-turned-page.mp3",
+   "cuts": [
+    [
+     0.08,
+     0.36
+    ]
+   ],
+   "fade": [
+    0.005,
+    0.12
+   ],
+   "lufs": -22
+  },
+  "mark": {
+   "bus": "ui",
+   "src": "0374-knock-on-a-light-door.mp3",
+   "cuts": [
+    [
+     5.7,
+     0.16
+    ],
+    [
+     6.16,
+     0.16
+    ]
+   ],
+   "hp": 250,
+   "fade": [
+    0.002,
+    0.08
+   ],
+   "lufs": -25
+  },
+  "step-grass": {
+   "src": "1253-steps-in-the-grass-slow.mp3",
+   "cuts": [
+    [
+     1.95,
+     0.3
+    ],
+    [
+     3.84,
+     0.3
+    ],
+    [
+     4.8,
+     0.3
+    ]
+   ],
+   "hp": 120,
+   "fade": [
+    0.003,
+    0.1
+   ],
+   "lufs": -31
+  },
+  "step-stone": {
+   "src": "1318-fast-steps-on-concrete.mp3",
+   "cuts": [
+    [
+     0.94,
+     0.22
+    ],
+    [
+     1.22,
+     0.24
+    ],
+    [
+     1.93,
+     0.24
+    ]
+   ],
+   "hp": 150,
+   "fade": [
+    0.002,
+    0.08
+   ],
+   "lufs": -31
+  },
+  "step-tile": {
+   "src": "0376-footsteps-shoe-on-parquet.mp3",
+   "cuts": [
+    [
+     1.32,
+     0.3
+    ],
+    [
+     3.2,
+     0.3
+    ],
+    [
+     8.3,
+     0.3
+    ]
+   ],
+   "hp": 150,
+   "fade": [
+    0.002,
+    0.1
+   ],
+   "lufs": -31
+  },
+  "bump": {
+   "src": "0576-canvas-bag-on-floor.mp3",
+   "cuts": [
+    [
+     0.08,
+     0.3
+    ],
+    [
+     0.91,
+     0.3
+    ]
+   ],
+   "hp": 120,
+   "fade": [
+    0.002,
+    0.12
+   ],
+   "lufs": -27
+  },
+  "bump-leaf": {
+   "src": "0137-feet-in-leaves.mp3",
+   "cuts": [
+    [
+     0.14,
+     0.4
+    ],
+    [
+     9.35,
+     0.4
+    ]
+   ],
+   "hp": 200,
+   "fade": [
+    0.01,
+    0.15
+   ],
+   "lufs": -28
+  },
+  "hop": {
+   "src": "1797-whoosh-5.mp3",
+   "cuts": [
+    [
+     0.19,
+     0.17
+    ]
+   ],
+   "fade": [
+    0.005,
+    0.06
+   ],
+   "lufs": -25
+  },
+  "date": {
+   "src": "1190-small-plate-set-on-table.mp3",
+   "cuts": [
+    [
+     3.95,
+     0.45
+    ],
+    [
+     9.47,
+     0.5
+    ],
+    [
+     15.47,
+     0.5
+    ]
+   ],
+   "hp": 150,
+   "fade": [
+    0.002,
+    0.15
+   ],
+   "lufs": -20
+  },
+  "cup": {
+   "src": "1156-cold-water-in-mug.mp3",
+   "cuts": [
+    [
+     0.3,
+     0.6
+    ],
+    [
+     1.3,
+     0.6
+    ]
+   ],
+   "hp": 200,
+   "fade": [
+    0.03,
+    0.2
+   ],
+   "lufs": -21
+  },
+  "lantern": {
+   "src": "0030-fireplace-1.mp3",
+   "cuts": [
+    [
+     10.0,
+     0.9
+    ],
+    [
+     24.0,
+     0.9
+    ]
+   ],
+   "hp": 150,
+   "fade": [
+    0.15,
+    0.4
+   ],
+   "lufs": -23
+  },
+  "allfound": {
+   "src": "2363-applause-1.mp3",
+   "cuts": [
+    [
+     0.6,
+     1.1
+    ]
+   ],
+   "fade": [
+    0.1,
+    0.5
+   ],
+   "lufs": -25
+  },
+  "knock": {
+   "src": "0374-knock-on-a-light-door.mp3",
+   "cuts": [
+    [
+     5.7,
+     0.3
+    ],
+    [
+     6.16,
+     0.3
+    ]
+   ],
+   "fade": [
+    0.002,
+    0.1
+   ],
+   "lufs": -21
+  },
+  "door": {
+   "src": "1702-apartment-door-opening-1.mp3",
+   "cuts": [
+    [
+     0.08,
+     0.8
+    ]
+   ],
+   "fade": [
+    0.005,
+    0.25
+   ],
+   "lufs": -21
+  },
+  "home": {
+   "src": "2363-applause-1.mp3",
+   "cuts": [
+    [
+     0.45,
+     2.2
+    ]
+   ],
+   "fade": [
+    0.05,
+    0.8
+   ],
+   "lufs": -24
+  },
+  "dish": {
+   "src": "1192-cutlery-on-table.mp3",
+   "cuts": [
+    [
+     1.9,
+     0.55
+    ],
+    [
+     5.76,
+     0.45
+    ],
+    [
+     7.2,
+     0.45
+    ]
+   ],
+   "fade": [
+    0.002,
+    0.15
+   ],
+   "lufs": -25
+  },
+  "amb-garden": {
+   "bus": "amb",
+   "src": "0097-countryside.mp3",
+   "loop": [
+    88.0,
+    12.0
+   ],
+   "x": 1.5,
+   "lufs": -35
+  },
+  "amb-lanes": {
+   "bus": "amb",
+   "src": "0908-wind-in-tall-grass.mp3",
+   "loop": [
+    40.0,
+    24.0
+   ],
+   "x": 2.0,
+   "lufs": -37
+  },
+  "amb-night": {
+   "bus": "amb",
+   "src": "1020-field-cricket.mp3",
+   "loop": [
+    5.0,
+    8.0
+   ],
+   "x": 1.0,
+   "lufs": -38
+  },
+  "amb-house": {
+   "bus": "amb",
+   "src": "2458-sound-atmosphere-in-a-house.mp3",
+   "loop": [
+    20.0,
+    12.0
+   ],
+   "x": 1.5,
+   "lufs": -38
+  }
+ }
+}

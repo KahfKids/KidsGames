@@ -1,0 +1,242 @@
+{
+ "g48ui": {
+  "f": "baked/g48ui",
+  "w": 1024,
+  "h": 846
+ },
+ "g48-w0-sky": {
+  "f": "baked/g48-w0-sky",
+  "w": 4,
+  "h": 512
+ },
+ "g48-w0-halo": {
+  "f": "baked/g48-w0-halo",
+  "w": 256,
+  "h": 256
+ },
+ "g48-w0-disc": {
+  "f": "baked/g48-w0-disc",
+  "w": 128,
+  "h": 128
+ },
+ "g48-w0-fx": {
+  "f": "baked/g48-w0-fx",
+  "w": 480,
+  "h": 280
+ },
+ "g48-w0-far": {
+  "f": "baked/g48-w0-far",
+  "w": 1920,
+  "h": 400
+ },
+ "g48-w0-mid": {
+  "f": "baked/g48-w0-mid",
+  "w": 1116,
+  "h": 1140
+ },
+ "g48-w0-lawn": {
+  "f": "baked/g48-w0-lawn",
+  "w": 4,
+  "h": 256
+ },
+ "g48-w0-chan": {
+  "f": "baked/g48-w0-chan",
+  "w": 400,
+  "h": 88
+ },
+ "g48-w0-path": {
+  "f": "baked/g48-w0-path",
+  "w": 118,
+  "h": 118
+ },
+ "g48-w0-bush": {
+  "f": "baked/g48-w0-bush",
+  "w": 560,
+  "h": 320
+ },
+ "g48-w0-vine": {
+  "f": "baked/g48-w0-vine",
+  "w": 520,
+  "h": 720
+ },
+ "g48-w1-sky": {
+  "f": "baked/g48-w1-sky",
+  "w": 4,
+  "h": 512
+ },
+ "g48-w1-halo": {
+  "f": "baked/g48-w1-halo",
+  "w": 256,
+  "h": 256
+ },
+ "g48-w1-disc": {
+  "f": "baked/g48-w1-disc",
+  "w": 128,
+  "h": 128
+ },
+ "g48-w1-fx": {
+  "f": "baked/g48-w1-fx",
+  "w": 480,
+  "h": 280
+ },
+ "g48-w1-far": {
+  "f": "baked/g48-w1-far",
+  "w": 1920,
+  "h": 400
+ },
+ "g48-w1-mid": {
+  "f": "baked/g48-w1-mid",
+  "w": 1116,
+  "h": 1140
+ },
+ "g48-w1-lawn": {
+  "f": "baked/g48-w1-lawn",
+  "w": 4,
+  "h": 256
+ },
+ "g48-w1-chan": {
+  "f": "baked/g48-w1-chan",
+  "w": 400,
+  "h": 88
+ },
+ "g48-w1-path": {
+  "f": "baked/g48-w1-path",
+  "w": 118,
+  "h": 118
+ },
+ "g48-w1-bush": {
+  "f": "baked/g48-w1-bush",
+  "w": 560,
+  "h": 320
+ },
+ "g48-w1-vine": {
+  "f": "baked/g48-w1-vine",
+  "w": 520,
+  "h": 720
+ },
+ "g48-w2-sky": {
+  "f": "baked/g48-w2-sky",
+  "w": 4,
+  "h": 512
+ },
+ "g48-w2-halo": {
+  "f": "baked/g48-w2-halo",
+  "w": 256,
+  "h": 256
+ },
+ "g48-w2-disc": {
+  "f": "baked/g48-w2-disc",
+  "w": 128,
+  "h": 128
+ },
+ "g48-w2-fx": {
+  "f": "baked/g48-w2-fx",
+  "w": 480,
+  "h": 280
+ },
+ "g48-w2-far": {
+  "f": "baked/g48-w2-far",
+  "w": 1920,
+  "h": 400
+ },
+ "g48-w2-mid": {
+  "f": "baked/g48-w2-mid",
+  "w": 1116,
+  "h": 1140
+ },
+ "g48-w2-lawn": {
+  "f": "baked/g48-w2-lawn",
+  "w": 4,
+  "h": 256
+ },
+ "g48-w2-chan": {
+  "f": "baked/g48-w2-chan",
+  "w": 400,
+  "h": 88
+ },
+ "g48-w2-path": {
+  "f": "baked/g48-w2-path",
+  "w": 118,
+  "h": 118
+ },
+ "g48-w2-bush": {
+  "f": "baked/g48-w2-bush",
+  "w": 560,
+  "h": 320
+ },
+ "g48-w2-vine": {
+  "f": "baked/g48-w2-vine",
+  "w": 520,
+  "h": 720
+ },
+ "g48-tiles-3": {
+  "f": "baked/g48-tiles-3",
+  "w": 1408,
+  "h": 704
+ },
+ "g48-stone-3-0": {
+  "f": "baked/g48-stone-3-0",
+  "w": 352,
+  "h": 352
+ },
+ "g48-board-3-0": {
+  "f": "baked/g48-board-3-0",
+  "w": 1140,
+  "h": 1140
+ },
+ "g48-stone-3-1": {
+  "f": "baked/g48-stone-3-1",
+  "w": 352,
+  "h": 352
+ },
+ "g48-board-3-1": {
+  "f": "baked/g48-board-3-1",
+  "w": 1140,
+  "h": 1140
+ },
+ "g48-stone-3-2": {
+  "f": "baked/g48-stone-3-2",
+  "w": 352,
+  "h": 352
+ },
+ "g48-board-3-2": {
+  "f": "baked/g48-board-3-2",
+  "w": 1140,
+  "h": 1140
+ },
+ "g48-tiles-4": {
+  "f": "baked/g48-tiles-4",
+  "w": 1072,
+  "h": 536
+ },
+ "g48-stone-4-0": {
+  "f": "baked/g48-stone-4-0",
+  "w": 268,
+  "h": 268
+ },
+ "g48-board-4-0": {
+  "f": "baked/g48-board-4-0",
+  "w": 1140,
+  "h": 1140
+ },
+ "g48-stone-4-1": {
+  "f": "baked/g48-stone-4-1",
+  "w": 268,
+  "h": 268
+ },
+ "g48-board-4-1": {
+  "f": "baked/g48-board-4-1",
+  "w": 1140,
+  "h": 1140
+ },
+ "g48-stone-4-2": {
+  "f": "baked/g48-stone-4-2",
+  "w": 268,
+  "h": 268
+ },
+ "g48-board-4-2": {
+  "f": "baked/g48-board-4-2",
+  "w": 1140,
+  "h": 1140
+ }
+}

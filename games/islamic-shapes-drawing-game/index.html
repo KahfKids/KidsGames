@@ -1,41 +1,58 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-  <title>Colouring Book</title>
-  <meta name="description" content="Tap to fill and finger-paint 24 pages: lanterns, mosques, camels, gardens, boats and Islamic star patterns." />
-  <meta name="theme-color" content="#171246" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <link rel="manifest" href="/KidsGames/manifest.json" />
-  <link rel="apple-touch-icon" href="/KidsGames/icons/icon-192x192.png" />
-  <link rel="stylesheet" href="/KidsGames/js/kit/kit.css" />
-  <link rel="stylesheet" href="css/colour.css" />
-  <script src="/KidsGames/js/kahf-bridge.js" defer></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Colouring Book</title>
+<meta name="description" content="Tap to fill and finger-paint 24 pages: lanterns, mosques, camels, gardens, boats and Islamic star patterns.">
+<meta name="theme-color" content="#171246">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="/KidsGames/manifest.json">
+<link rel="icon" type="image/png" sizes="32x32" href="/KidsGames/icons/icon-32x32.png">
+<link rel="apple-touch-icon" href="/KidsGames/icons/icon-192x192.png">
+<style>html,body{margin:0;height:100%;background:#171246;overflow:hidden;overscroll-behavior:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;touch-action:none}
+#kit-load{position:fixed;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;background:#171246;--p:0}
+#kit-load svg{width:min(34vw,34vh,180px);height:auto}
+#kit-load .bar{stroke-dasharray:100;stroke-dashoffset:calc(100 * (1 - var(--p)))}
+#kit-load .drop{animation:cb-glow 1.6s ease-in-out infinite;transform-origin:50px 50px}
+@keyframes cb-glow{0%,100%{transform:scale(.92);opacity:.85}50%{transform:scale(1.05);opacity:1}}</style>
 </head>
 <body>
-  <canvas id="stage" class="kit-stage" aria-label="Colouring page"></canvas>
-
-  <script src="/KidsGames/js/kit/core.js"></script>
-  <script src="/KidsGames/js/kit/fx.js"></script>
-  <script src="/KidsGames/js/kit/audio.js"></script>
-  <script src="/KidsGames/js/kit/ui.js"></script>
-  <script src="js/sounds.js"></script>
-  <script src="js/geo.js"></script>
-  <script src="js/books.js"></script>
-  <script src="js/pages-ramadan.js"></script>
-  <script src="js/pages-nature.js"></script>
-  <script src="js/pages-things.js"></script>
-  <script src="js/pages-patterns.js"></script>
-  <script src="js/art.js"></script>
-  <script src="js/game.js"></script>
-
-  <script>
-    if ("serviceWorker" in navigator && location.pathname.indexOf("/KidsGames/") === 0 && !/[?&](debug|nosw)\b/.test(location.search)) {
-      addEventListener("load", function () { navigator.serviceWorker.register("/KidsGames/sw.js").catch(function () {}); });
-    }
-  </script>
+<!-- Colouring Book on Phaser 4 (MIT, pinned in js/vendor), started only by Kit.play (js/kit/play.js), rest: true (the
+     loop sleeps while the child is not touching the page). 24 pages of vector line art (game/pages-*.js, game/geo.js);
+     the colours and the brush go into the engine's own textures, recorded CC0 sounds through Kit.snd (audio/sfx).
+     game/art.js the paint box · game/model.js pages as regions · game/save.js saved pictures · game/paint.js the colour
+     layers · game/thumb.js small pictures · game/book.js the page and its tools · game/menu.js pause, pages, saved
+     pictures · game/main.js Boot and start. -->
+<!-- The loading picture: drawn by the page at once, before the engine downloads; a drop of paint that glows while its
+     ring fills (js/kit/load.js moves --p and takes it away when the first page is ready). No words. -->
+<div id="kit-load"><svg viewBox="0 0 100 100" aria-hidden="true">
+<circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,.14)" stroke-width="6"/>
+<circle class="bar" cx="50" cy="50" r="40" fill="none" stroke="#f6c453" stroke-width="6" stroke-linecap="round" pathLength="100" transform="rotate(-90 50 50)"/>
+<defs><radialGradient id="cb-g" cx=".38" cy=".38" r=".7"><stop offset="0" stop-color="#fff"/><stop offset=".5" stop-color="#ffb53a"/><stop offset="1" stop-color="#e8413c"/></radialGradient></defs>
+<path class="drop" d="M50 30C58 42 66 50 66 59a16 16 0 0 1-32 0c0-9 8-17 16-29z" fill="url(#cb-g)"/>
+</svg></div>
+<script src="/KidsGames/js/kit/load.js"></script>
+<script src="/KidsGames/js/kahf-bridge.js" defer></script>
+<script src="/KidsGames/js/vendor/phaser-4.2.1.min.js" defer></script>
+<script src="/KidsGames/js/kit/core.js" defer></script>
+<script src="/KidsGames/js/kit/sound.js" defer></script>
+<script src="/KidsGames/js/kit/play.js" defer></script>
+<script src="game/geo.js" defer></script>
+<script src="game/books.js" defer></script>
+<script src="game/pages-ramadan.js" defer></script>
+<script src="game/pages-nature.js" defer></script>
+<script src="game/pages-things.js" defer></script>
+<script src="game/pages-patterns.js" defer></script>
+<script src="game/art.js" defer></script>
+<script src="game/model.js" defer></script>
+<script src="game/save.js" defer></script>
+<script src="game/paint.js" defer></script>
+<script src="game/thumb.js" defer></script>
+<script src="game/book.js" defer></script>
+<script src="game/menu.js" defer></script>
+<script src="game/main.js" defer></script>
 </body>
 </html>

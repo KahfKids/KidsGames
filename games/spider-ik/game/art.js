@@ -80,7 +80,7 @@
     var tex = Kit.play.tex;
     tex(scene, 'ui-plate', 150, 150, function (c) { c.fillStyle = 'rgba(8,18,20,.72)'; c.beginPath(); c.arc(75, 75, 70, 0, 7); c.fill(); c.strokeStyle = 'rgba(255,255,255,.22)'; c.lineWidth = 4; c.stroke(); });
     var icon = function (k, draw) { tex(scene, k, 96, 96, function (c) { c.strokeStyle = '#f2f7f6'; c.fillStyle = '#f2f7f6'; c.lineWidth = 9; c.lineCap = 'round'; c.lineJoin = 'round'; c.scale(4, 4); c.lineWidth = 2.4; draw(c); }); };
-    icon('ic-back', function (c) { c.beginPath(); c.moveTo(19, 12); c.lineTo(6, 12); c.moveTo(11, 6); c.lineTo(5, 12); c.lineTo(11, 18); c.stroke(); });
+    icon('ic-exit', function (c) { Kit.play.exitIcon(c, 24, '#f2f7f6', 2.4); });          // the way out of the game (kit's exit icon)
     icon('ic-retry', function (c) { c.beginPath(); c.arc(12, 12, 8, Math.PI * 1.25, Math.PI * 3.05); c.stroke(); c.beginPath(); c.moveTo(4, 4); c.lineTo(4, 9.5); c.lineTo(9.5, 9.5); c.stroke(); });
     icon('ic-grid', function (c) { [[4, 4], [14, 4], [4, 14], [14, 14]].forEach(function (p) { c.beginPath(); c.roundRect(p[0], p[1], 6, 6, 1.5); c.stroke(); }); });
     icon('ic-snd', function (c) { c.beginPath(); c.moveTo(4, 9.5); c.lineTo(4, 14.5); c.lineTo(7.5, 14.5); c.lineTo(12, 18.5); c.lineTo(12, 5.5); c.lineTo(7.5, 9.5); c.closePath(); c.stroke(); c.beginPath(); c.arc(13, 12, 4, -0.9, 0.9); c.stroke(); c.beginPath(); c.arc(13, 12, 7.5, -0.9, 0.9); c.stroke(); });

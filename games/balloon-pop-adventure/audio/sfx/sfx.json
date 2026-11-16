@@ -1,0 +1,190 @@
+{
+ "resources": [
+  "sfx.m4a"
+ ],
+ "spritemap": {
+  "tap-1": {
+   "start": 0.09,
+   "end": 0.34,
+   "loop": false
+  },
+  "flip-1": {
+   "start": 0.37,
+   "end": 0.82,
+   "loop": false
+  },
+  "pop-1": {
+   "start": 0.85,
+   "end": 1.14,
+   "loop": false
+  },
+  "pop-2": {
+   "start": 1.17,
+   "end": 1.49,
+   "loop": false
+  },
+  "pop-3": {
+   "start": 1.52,
+   "end": 1.81,
+   "loop": false
+  },
+  "pop-4": {
+   "start": 1.84,
+   "end": 2.13,
+   "loop": false
+  },
+  "pop-5": {
+   "start": 2.16,
+   "end": 2.45,
+   "loop": false
+  },
+  "pop-6": {
+   "start": 2.48,
+   "end": 2.77,
+   "loop": false
+  },
+  "puff-1": {
+   "start": 2.8,
+   "end": 3.06,
+   "loop": false
+  },
+  "storm-1": {
+   "start": 3.09,
+   "end": 3.48,
+   "loop": false
+  },
+  "heart-1": {
+   "start": 3.51,
+   "end": 3.9,
+   "loop": false
+  },
+  "bye-1": {
+   "start": 3.93,
+   "end": 4.48,
+   "loop": false
+  },
+  "lose-1": {
+   "start": 4.51,
+   "end": 4.84,
+   "loop": false
+  },
+  "sparkle-1": {
+   "start": 4.87,
+   "end": 5.26,
+   "loop": false
+  },
+  "sparkle-2": {
+   "start": 5.29,
+   "end": 5.68,
+   "loop": false
+  },
+  "cardin-1": {
+   "start": 5.71,
+   "end": 6.1,
+   "loop": false
+  },
+  "win-1": {
+   "start": 6.13,
+   "end": 8.82,
+   "loop": false
+  }
+ },
+ "sounds": {
+  "tap": {
+   "cat": "ui",
+   "takes": [
+    "tap-1"
+   ]
+  },
+  "flip": {
+   "cat": "ui",
+   "takes": [
+    "flip-1"
+   ]
+  },
+  "pop": {
+   "cat": "sfx",
+   "takes": [
+    "pop-1",
+    "pop-2",
+    "pop-3",
+    "pop-4",
+    "pop-5",
+    "pop-6"
+   ]
+  },
+  "puff": {
+   "cat": "sfx",
+   "takes": [
+    "puff-1"
+   ]
+  },
+  "storm": {
+   "cat": "sfx",
+   "takes": [
+    "storm-1"
+   ]
+  },
+  "heart": {
+   "cat": "sfx",
+   "takes": [
+    "heart-1"
+   ]
+  },
+  "bye": {
+   "cat": "sfx",
+   "takes": [
+    "bye-1"
+   ]
+  },
+  "lose": {
+   "cat": "sfx",
+   "takes": [
+    "lose-1"
+   ]
+  },
+  "sparkle": {
+   "cat": "sfx",
+   "takes": [
+    "sparkle-1",
+    "sparkle-2"
+   ]
+  },
+  "cardin": {
+   "cat": "sfx",
+   "takes": [
+    "cardin-1"
+   ]
+  },
+  "win": {
+   "cat": "sfx",
+   "takes": [
+    "win-1"
+   ]
+  },
+  "amb-garden": {
+   "cat": "amb",
+   "loop": {
+    "file": "amb-garden.m4a",
+    "start": 0.1,
+    "end": 12.1
+   }
+  },
+  "amb-sea": {
+   "cat": "amb",
+   "loop": {
+    "file": "amb-sea.m4a",
+    "start": 0.1,
+    "end": 14.1
+   }
+  },
+  "amb-night": {
+   "cat": "amb",
+   "loop": {
+    "file": "amb-night.m4a",
+    "start": 0.1,
+    "end": 8.1
+   }
+  }
+ }
+}

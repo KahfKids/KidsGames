@@ -1,0 +1,301 @@
+{
+ "about": "Follow the Light's sounds, cut from CC0 recordings by tools/sound-cut.py. Times are seconds in the original (../KidsGames-sounds/bigsoundbank/<id>-<title>.mp3), picked at the recording's own event boundaries. Each lantern has its own natural sound, different in texture and not only in pitch (no notes, no tune, no instrument), so a child can tell them apart: l0 gold star = a die's click on a wooden table, l1 rose circle = a bubble's pop, l2 teal triangle = a knock on wood, l3 blue diamond = a ball's bounce, l4 violet flower = a rustle of paper, l5 orange drop = a drop of water. Credits in ../CREDITS.md.",
+ "out": "games/follow-the-light/audio/sfx",
+ "src": "../KidsGames-sounds/bigsoundbank",
+ "sounds": {
+  "tap": {
+   "bus": "ui",
+   "src": "0036-switch-desk-lamp.mp3",
+   "cuts": [
+    [
+     0.1,
+     0.16
+    ]
+   ],
+   "hp": 200,
+   "fade": [
+    0.002,
+    0.06
+   ],
+   "lufs": -25
+  },
+  "nudge": {
+   "bus": "ui",
+   "src": "0582-four-dice-on-wooden-table.mp3",
+   "cuts": [
+    [
+     0.1,
+     0.09
+    ]
+   ],
+   "hp": 500,
+   "fade": [
+    0.001,
+    0.05
+   ],
+   "lufs": -33
+  },
+  "whoosh": {
+   "bus": "ui",
+   "src": "1795-whoosh-3.mp3",
+   "cuts": [
+    [
+     0.11,
+     0.46
+    ]
+   ],
+   "fade": [
+    0.01,
+    0.2
+   ],
+   "lufs": -29
+  },
+  "l0": {
+   "src": "0582-four-dice-on-wooden-table.mp3",
+   "cuts": [
+    [
+     4.96,
+     0.13
+    ],
+    [
+     8.05,
+     0.13
+    ],
+    [
+     10.78,
+     0.13
+    ]
+   ],
+   "hp": 400,
+   "fade": [
+    0.001,
+    0.07
+   ],
+   "lufs": -25
+  },
+  "l1": {
+   "src": "1074-bubbles-burst.mp3",
+   "cuts": [
+    [
+     0.18,
+     0.2
+    ],
+    [
+     1.505,
+     0.2
+    ],
+    [
+     2.83,
+     0.2
+    ]
+   ],
+   "fade": [
+    0.001,
+    0.08
+   ],
+   "lufs": -22
+  },
+  "l2": {
+   "src": "0374-knock-on-a-light-door.mp3",
+   "cuts": [
+    [
+     0.02,
+     0.2
+    ],
+    [
+     0.32,
+     0.2
+    ],
+    [
+     0.64,
+     0.2
+    ]
+   ],
+   "hp": 120,
+   "fade": [
+    0.002,
+    0.08
+   ],
+   "lufs": -21
+  },
+  "l3": {
+   "src": "1045-ball-rebounds.mp3",
+   "cuts": [
+    [
+     0.15,
+     0.28
+    ],
+    [
+     3.09,
+     0.28
+    ],
+    [
+     5.93,
+     0.28
+    ]
+   ],
+   "hp": 100,
+   "fade": [
+    0.002,
+    0.12
+   ],
+   "lufs": -22
+  },
+  "l4": {
+   "src": "0785-paper.mp3",
+   "cuts": [
+    [
+     0.21,
+     0.45
+    ],
+    [
+     1.7,
+     0.35
+    ],
+    [
+     2.57,
+     0.45
+    ]
+   ],
+   "hp": 300,
+   "fade": [
+    0.03,
+    0.15
+   ],
+   "lufs": -27
+  },
+  "l5": {
+   "src": "1384-drops-of-water-1.mp3",
+   "cuts": [
+    [
+     3.01,
+     0.3
+    ],
+    [
+     4.44,
+     0.3
+    ],
+    [
+     5.87,
+     0.3
+    ]
+   ],
+   "hp": 300,
+   "fade": [
+    0.002,
+    0.12
+   ],
+   "lufs": -21
+  },
+  "oops": {
+   "src": "0576-canvas-bag-on-floor.mp3",
+   "cuts": [
+    [
+     0.08,
+     0.3
+    ]
+   ],
+   "hp": 120,
+   "fade": [
+    0.004,
+    0.14
+   ],
+   "lufs": -27
+  },
+  "lose": {
+   "src": "1798-whoosh-10.mp3",
+   "cuts": [
+    [
+     0.17,
+     0.24
+    ]
+   ],
+   "fade": [
+    0.01,
+    0.1
+   ],
+   "lufs": -26
+  },
+  "cheer": {
+   "src": "0192-swirl-in-the-water.mp3",
+   "cuts": [
+    [
+     0.21,
+     0.78
+    ]
+   ],
+   "fade": [
+    0.01,
+    0.3
+   ],
+   "lufs": -27
+  },
+  "win": {
+   "src": "0192-swirl-in-the-water.mp3",
+   "cuts": [
+    [
+     2.32,
+     0.95
+    ]
+   ],
+   "fade": [
+    0.01,
+    0.35
+   ],
+   "lufs": -24
+  },
+  "star": {
+   "src": "1384-drops-of-water-1.mp3",
+   "cuts": [
+    [
+     8.77,
+     0.3
+    ],
+    [
+     10.22,
+     0.3
+    ],
+    [
+     11.66,
+     0.3
+    ]
+   ],
+   "hp": 300,
+   "fade": [
+    0.002,
+    0.12
+   ],
+   "lufs": -24
+  },
+  "amb-0": {
+   "bus": "amb",
+   "src": "0913-fountain-of-a-japanese-temple.mp3",
+   "loop": [
+    40.0,
+    16.0
+   ],
+   "x": 1.5,
+   "lufs": -41
+  },
+  "amb-1": {
+   "bus": "amb",
+   "src": "1020-field-cricket.mp3",
+   "loop": [
+    18.0,
+    14.0
+   ],
+   "x": 1.5,
+   "lufs": -41
+  },
+  "amb-2": {
+   "bus": "amb",
+   "src": "0908-wind-in-tall-grass.mp3",
+   "loop": [
+    50.0,
+    20.0
+   ],
+   "x": 1.5,
+   "lufs": -42
+  }
+ }
+}

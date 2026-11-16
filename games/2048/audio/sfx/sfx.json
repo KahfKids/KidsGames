@@ -1,0 +1,254 @@
+{
+ "resources": [
+  "sfx.m4a"
+ ],
+ "spritemap": {
+  "tap-1": {
+   "start": 0.09,
+   "end": 0.34,
+   "loop": false
+  },
+  "slide-1": {
+   "start": 0.37,
+   "end": 0.76,
+   "loop": false
+  },
+  "slide-2": {
+   "start": 0.79,
+   "end": 1.16,
+   "loop": false
+  },
+  "slide-3": {
+   "start": 1.19,
+   "end": 1.58,
+   "loop": false
+  },
+  "slide-4": {
+   "start": 1.61,
+   "end": 2.0,
+   "loop": false
+  },
+  "slide-5": {
+   "start": 2.03,
+   "end": 2.42,
+   "loop": false
+  },
+  "slide-6": {
+   "start": 2.45,
+   "end": 2.84,
+   "loop": false
+  },
+  "merge-1": {
+   "start": 2.87,
+   "end": 3.26,
+   "loop": false
+  },
+  "merge-2": {
+   "start": 3.29,
+   "end": 3.68,
+   "loop": false
+  },
+  "merge-3": {
+   "start": 3.71,
+   "end": 4.1,
+   "loop": false
+  },
+  "merge-big-1": {
+   "start": 4.13,
+   "end": 4.57,
+   "loop": false
+  },
+  "merge-big-2": {
+   "start": 4.6,
+   "end": 5.04,
+   "loop": false
+  },
+  "merge-big-3": {
+   "start": 5.07,
+   "end": 5.51,
+   "loop": false
+  },
+  "spawn-1": {
+   "start": 5.54,
+   "end": 5.83,
+   "loop": false
+  },
+  "spawn-2": {
+   "start": 5.86,
+   "end": 6.15,
+   "loop": false
+  },
+  "bump-1": {
+   "start": 6.18,
+   "end": 6.47,
+   "loop": false
+  },
+  "undo-1": {
+   "start": 6.5,
+   "end": 6.83,
+   "loop": false
+  },
+  "stuck-1": {
+   "start": 6.86,
+   "end": 7.31,
+   "loop": false
+  },
+  "shine-1": {
+   "start": 7.34,
+   "end": 7.73,
+   "loop": false
+  },
+  "shine-2": {
+   "start": 7.76,
+   "end": 8.15,
+   "loop": false
+  },
+  "star-1": {
+   "start": 8.18,
+   "end": 8.39,
+   "loop": false
+  },
+  "star-2": {
+   "start": 8.42,
+   "end": 8.63,
+   "loop": false
+  },
+  "star-3": {
+   "start": 8.66,
+   "end": 8.87,
+   "loop": false
+  },
+  "win-1": {
+   "start": 8.9,
+   "end": 10.69,
+   "loop": false
+  },
+  "whoosh-1": {
+   "start": 10.72,
+   "end": 11.27,
+   "loop": false
+  },
+  "page-1": {
+   "start": 11.3,
+   "end": 11.75,
+   "loop": false
+  }
+ },
+ "sounds": {
+  "tap": {
+   "cat": "ui",
+   "takes": [
+    "tap-1"
+   ]
+  },
+  "slide": {
+   "cat": "sfx",
+   "takes": [
+    "slide-1",
+    "slide-2",
+    "slide-3",
+    "slide-4",
+    "slide-5",
+    "slide-6"
+   ]
+  },
+  "merge": {
+   "cat": "sfx",
+   "takes": [
+    "merge-1",
+    "merge-2",
+    "merge-3"
+   ]
+  },
+  "merge-big": {
+   "cat": "sfx",
+   "takes": [
+    "merge-big-1",
+    "merge-big-2",
+    "merge-big-3"
+   ]
+  },
+  "spawn": {
+   "cat": "sfx",
+   "takes": [
+    "spawn-1",
+    "spawn-2"
+   ]
+  },
+  "bump": {
+   "cat": "sfx",
+   "takes": [
+    "bump-1"
+   ]
+  },
+  "undo": {
+   "cat": "sfx",
+   "takes": [
+    "undo-1"
+   ]
+  },
+  "stuck": {
+   "cat": "sfx",
+   "takes": [
+    "stuck-1"
+   ]
+  },
+  "shine": {
+   "cat": "sfx",
+   "takes": [
+    "shine-1",
+    "shine-2"
+   ]
+  },
+  "star": {
+   "cat": "sfx",
+   "takes": [
+    "star-1",
+    "star-2",
+    "star-3"
+   ]
+  },
+  "win": {
+   "cat": "sfx",
+   "takes": [
+    "win-1"
+   ]
+  },
+  "whoosh": {
+   "cat": "sfx",
+   "takes": [
+    "whoosh-1"
+   ]
+  },
+  "page": {
+   "cat": "ui",
+   "takes": [
+    "page-1"
+   ]
+  },
+  "amb-0": {
+   "cat": "amb",
+   "loop": {
+    "file": "amb-0.m4a",
+    "start": 0.1,
+    "end": 20.1
+   }
+  },
+  "amb-1": {
+   "cat": "amb",
+   "loop": {
+    "file": "amb-1.m4a",
+    "start": 0.1,
+    "end": 30.1
+   }
+  },
+  "amb-2": {
+   "cat": "amb",
+   "loop": {
+    "file": "amb-2.m4a",
+    "start": 0.1,
+    "end": 20.1
+   }
+  }
+ }
+}

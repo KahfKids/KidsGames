@@ -64,6 +64,55 @@ function rdp(p, eps) {
 }
 const flat = p => p.reduce((a, q) => (a.push(q[0], q[1]), a), []);
 
+// Matter's decomposer (poly-decomp) only works on a SIMPLE outline: no repeated point, no collinear run, no zero-width spike
+// and no edge touching or crossing another. Douglas-Peucker on a pixel-edge loop can leave all of these (a one-pixel neck
+// pinched shut, a spike running back over its own edge), and then the engine returns a broken body: parts that are not
+// convex (a point query and the feet's casts miss rock inside them) or parts quietly dropped. So every outline is cleaned,
+// checked, and simplified less where it is not simple (down to the exact pixel loop), and cut in two where it pinches.
+function tidy(p) {
+  p = p.map(q => q.slice());
+  for (let again = true; again && p.length >= 3;) {
+    again = false;
+    for (let i = 0; i < p.length; i++) {
+      const n = p.length, a = p[(i + n - 1) % n], b = p[i], c = p[(i + 1) % n];
+      if ((a[0] === b[0] && a[1] === b[1]) || (b[0] - a[0]) * (c[1] - b[1]) - (b[1] - a[1]) * (c[0] - b[0]) === 0) { p.splice(i, 1); again = true; break; }
+    }
+  }
+  return p;
+}
+const orient = (a, b, c) => Math.sign((b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]));
+const onSeg = (a, b, c) => Math.min(a[0], b[0]) <= c[0] && c[0] <= Math.max(a[0], b[0]) && Math.min(a[1], b[1]) <= c[1] && c[1] <= Math.max(a[1], b[1]);
+function meet(a, b, c, d) {       // do segments ab and cd share any point (touching counts)
+  const o1 = orient(a, b, c), o2 = orient(a, b, d), o3 = orient(c, d, a), o4 = orient(c, d, b);
+  return (o1 !== o2 && o3 !== o4) || (!o1 && onSeg(a, b, c)) || (!o2 && onSeg(a, b, d)) || (!o3 && onSeg(c, d, a)) || (!o4 && onSeg(c, d, b));
+}
+function simple(p) {
+  const n = p.length;
+  for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) {
+    if (j === i + 1 || (i === 0 && j === n - 1)) continue;            // neighbours share their end point by design
+    if (meet(p[i], p[(i + 1) % n], p[j], p[(j + 1) % n])) return false;
+  }
+  return true;
+}
+// one pixel loop -> simple outlines (list), simplified as far as it stays simple
+const fixed = { eps: 0, split: 0, loops: 0 };
+function outlines(loop, eps) {
+  fixed.loops++;
+  for (const e of [eps, 0.6, 0.3, 0]) {
+    const s = tidy(e > 0 ? rdp(loop, e) : loop);
+    if (s.length < 3) return [];
+    if (simple(s)) { if (e !== eps) fixed.eps++; return [s]; }
+  }
+  // the exact pixel loop pinches shut at a corner it passes twice: cut it into the loops it is made of
+  const s = tidy(loop), seen = new Map();
+  for (let i = 0; i < s.length; i++) {
+    const k = s[i][0] * 4096 + s[i][1];
+    if (seen.has(k)) { const j = seen.get(k); fixed.split++; return outlines(s.slice(j, i), 0).concat(outlines(s.slice(0, j).concat(s.slice(i)), 0)); }
+    seen.set(k, i);
+  }
+  throw new Error('outline is not simple and has no pinch point: ' + JSON.stringify(s.slice(0, 8)));
+}
+
 // cells: whole rock -> one rectangle; empty -> nothing; else its outlines, split into four while it holds a hole
 function cell(solid, x0, y0, w, h, eps, acc) {
   let n = 0; for (let y = y0; y < y0 + h; y++) for (let x = x0; x < x0 + w; x++) if (solid(x, y)) n++;
@@ -76,7 +125,7 @@ function cell(solid, x0, y0, w, h, eps, acc) {
     cell(solid, x0, y0 + hh, hw, h - hh, eps, acc); cell(solid, x0 + hw, y0 + hh, w - hw, h - hh, eps, acc);
     return;
   }
-  for (const l of outer) { const s = rdp(l, eps); if (s.length >= 3 && Math.abs(area(s)) >= 4) acc.push(flat(s)); }
+  for (const l of outer) for (const s of outlines(l, eps)) if (Math.abs(area(s)) >= 4) acc.push(flat(s));
 }
 
 // ---- the old page's frame: the same seeded waves ----
@@ -125,7 +174,7 @@ for (let n = 1; n <= LEVELS; n++) {
   const rock = [];
   for (let y = 0; y < H; y += 180) for (let x = 0; x < W; x += 180) cell(solid, x, y, 180, 180, 1.0, rock);
   out.levels.push({ rock, edge: e });
-  console.log('level', n, rock.length, 'polygons,', rock.reduce((s, p) => s + p.length / 2, 0), 'points');
+  console.log('level', n, rock.length, 'polygons,', rock.reduce((s, p) => s + p.length / 2, 0), 'points; loops redone with finer detail:', fixed.eps, 'cut at a pinch:', fixed.split, 'of', fixed.loops);
 }
 
 // sprites: rasterise each SVG at 4x with ImageMagick, trace its outer outlines, back to SVG pixels

@@ -194,7 +194,7 @@
       this.cardG = this.add.graphics(); this.ui.add(this.cardG);
       this.cc = this.add.container(0, 0); this.ui.add(this.cc);                      // the card's content, made again for each step
       this.dots = this.add.container(0, 0); this.ui.add(this.dots);
-      this.exitB = roundBtn(this, this.ui, { key: 'ui-exit', size: 50, fn: () => this.leave() });      // the way out: a back arrow, as in the town
+      this.exitB = roundBtn(this, this.ui, { key: this.backFn ? 'ui-back' : 'ui-exit', size: 50, fn: () => this.leave() });      // back to the town, or out of the game when opened on its own
       this.backB = roundBtn(this, this.ui, { frame: 'arrow', size: 50, flip: true, fn: () => this.goBack() });
       this.nextB = roundBtn(this, this.ui, { frame: 'arrow', size: 72, tint: 0xd9f3dc, fn: () => this.goNext() });
       this.soundB = roundBtn(this, this.ui, { key: 'gd-speaker', size: 44, fn: () => this.replay() });
@@ -538,7 +538,7 @@
       // three round buttons with their words: the prayer, once more, home
       const by = r.y + r.h - 60, bx = [r.x + r.w * 0.2, r.x + r.w * 0.5, r.x + r.w * 0.8];
       const mkb = (x, frame, label, fn, tint) => { const b = roundBtn(this, this.cc, { frame, size: 56, fn, tint }); b.setPosition(x, by); const l = mk(this, this.cc, label, 13 * f, SOFT, { width: r.w * 0.3, w: '800' }); l.setPosition(x, by + 34); return b; };
-      if (this.scene.get('Salah')) mkb(bx[0], 'mat', T.finish.pray, () => { this.stopSay(); const back = this.backFn; this.scene.stop(this.scene.key); this.scene.start('Salah', { back: back || (() => Kit.play.exit()) }); }, 0xd9f3dc);
+      if (this.scene.get('Salah')) mkb(bx[0], 'mat', T.finish.pray, () => { this.stopSay(); const back = this.backFn; this.scene.stop(this.scene.key); this.scene.start('Salah', { back: back }); }, 0xd9f3dc);
       mkb(bx[1], 'drop', T.finish.again, () => { this.finished = false; this.nextB.setVisible(true); this.backB.setVisible(true); this.tapB.setVisible(true); this.i = 0; this.counts = {}; this.ran = {}; this.savedAt = {}; this.saved = 0; this.drawProgress(); this.show(0, true); });
       mkb(bx[2], 'house', '', () => this.leave());
     }

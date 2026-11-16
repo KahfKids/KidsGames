@@ -1,54 +1,51 @@
 <!DOCTYPE html>
 <!--
-  2048 Garden (Kahf Kids edition).
+  2048 Garden (Kahf Kids edition), on Phaser 4 (MIT, pinned in js/vendor), started only by Kit.play (js/kit/play.js).
   Based on 2048 by Gabriele Cirulli (https://github.com/gabrielecirulli/2048), MIT licence: see LICENSE.txt.
-  The merge rules (js/game_manager.js, js/grid.js, js/tile.js) come from that game, adapted here.
-  Garden art, levels, sounds and everything else are new, built on the Kahf KidsGames kit.
+  The merge rules (game/rules.js) come from that game, adapted here. Garden art, levels, sounds and everything else are new.
+  game/rules.js the 2048 rules (no engine) · game/levels.js the twelve levels · game/art.js the paint box ·
+  game/board.js the board scene · game/hud.js the interface · game/main.js Boot and start.
 -->
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-  <title>2048 Garden</title>
-  <meta name="description" content="Swipe the glazed garden tiles, join two the same and reach each goal tile, from 8 on a small tray to 256." />
-  <meta name="theme-color" content="#7cc6ef" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <link rel="manifest" href="/KidsGames/manifest.json" />
-  <link rel="icon" href="/KidsGames/icons/icon-192x192.png" />
-  <link rel="apple-touch-icon" href="/KidsGames/icons/icon-192x192.png" />
-  <link rel="stylesheet" href="/KidsGames/js/kit/kit.css" />
-  <style>
-    #g48-undo { position: relative; }
-    #g48-undo.g48-off { opacity: 0.45; }
-    #g48-undo.g48-shake { animation: g48-shake 0.35s; }
-    .g48-badge { position: absolute; top: -5px; right: -5px; min-width: 21px; height: 21px; padding: 0 5px; border-radius: 11px;
-      display: flex; align-items: center; justify-content: center; font: 800 13px/1 Nunito, system-ui, sans-serif;
-      color: #2a1606; background: linear-gradient(180deg, #ffd978, #f6c453); border: 2px solid rgba(20, 12, 40, 0.65); }
-    @keyframes g48-shake { 25% { transform: translateX(-4px); } 50% { transform: translateX(4px); } 75% { transform: translateX(-2px); } }
-  </style>
-  <script src="/KidsGames/js/kahf-bridge.js" defer></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>2048 Garden</title>
+<meta name="description" content="Swipe the glazed garden tiles, join two the same and reach each goal tile, from 8 on a small tray to 256.">
+<meta name="theme-color" content="#7cc6ef">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="/KidsGames/manifest.json">
+<link rel="icon" href="/KidsGames/icons/icon-192x192.png">
+<link rel="apple-touch-icon" href="/KidsGames/icons/icon-192x192.png">
+<style>html,body{margin:0;height:100%;background:#7cc6ef;overflow:hidden;overscroll-behavior:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;touch-action:none}
+#kit-load{position:fixed;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;background:#7cc6ef;--p:0}
+#kit-load svg{width:min(34vw,34vh,180px);height:auto}
+#kit-load .bar{stroke-dasharray:100;stroke-dashoffset:calc(100 * (1 - var(--p)))}
+#kit-load .tile{animation:g48-bob 1.6s ease-in-out infinite;transform-origin:50px 50px}
+@keyframes g48-bob{0%,100%{transform:scale(.94)}50%{transform:scale(1.04)}}</style>
 </head>
 <body>
-  <canvas id="stage" class="kit-stage" aria-label="2048 Garden game"></canvas>
-
-  <script src="/KidsGames/js/kit/core.js"></script>
-  <script src="/KidsGames/js/kit/fx.js"></script>
-  <script src="/KidsGames/js/kit/audio.js"></script>
-  <script src="/KidsGames/js/kit/ui.js"></script>
-  <script src="js/sounds.js"></script>
-  <script src="js/tile.js"></script>
-  <script src="js/grid.js"></script>
-  <script src="js/game_manager.js"></script>
-  <script src="js/art.js"></script>
-  <script src="js/levels.js"></script>
-  <script src="js/game.js"></script>
-
-  <script>
-    if ("serviceWorker" in navigator && location.pathname.indexOf("/KidsGames/") === 0 && !/[?&](debug|nosw)\b/.test(location.search)) {
-      addEventListener("load", function () { navigator.serviceWorker.register("/KidsGames/sw.js").catch(function () {}); });
-    }
-  </script>
+<!-- The loading picture: drawn by the page at once, before the engine downloads: a glazed tile in a ring that fills
+     (js/kit/load.js moves --p and takes it away when the first level is ready). No words. -->
+<div id="kit-load"><svg viewBox="0 0 100 100" aria-hidden="true">
+<circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="6"/>
+<circle class="bar" cx="50" cy="50" r="42" fill="none" stroke="#fffaf0" stroke-width="6" stroke-linecap="round" pathLength="100" transform="rotate(-90 50 50)"/>
+<defs><linearGradient id="g48-g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b9f2e0"/><stop offset=".5" stop-color="#3cc7bd"/><stop offset="1" stop-color="#2a9d96"/></linearGradient></defs>
+<g class="tile"><rect x="30" y="33" width="40" height="38" rx="9" fill="#1f7f79"/><rect x="30" y="29" width="40" height="38" rx="9" fill="url(#g48-g)"/><rect x="35" y="33" width="30" height="8" rx="4" fill="#fff" opacity=".45"/><path d="M50 40l3 7 7 .6-5.3 4.6 1.7 7-6.4-3.8-6.4 3.8 1.7-7-5.3-4.6 7-.6z" fill="#fffaf0" opacity=".9"/></g>
+</svg></div>
+<script src="/KidsGames/js/kit/load.js"></script>
+<script src="/KidsGames/js/kahf-bridge.js" defer></script>
+<script src="/KidsGames/js/vendor/phaser-4.2.1.min.js" defer></script>
+<script src="/KidsGames/js/kit/core.js" defer></script>
+<script src="/KidsGames/js/kit/sound.js" defer></script>
+<script src="/KidsGames/js/kit/play.js" defer></script>
+<script src="game/rules.js" defer></script>
+<script src="game/levels.js" defer></script>
+<script src="game/art.js" defer></script>
+<script src="game/board.js" defer></script>
+<script src="game/hud.js" defer></script>
+<script src="game/main.js" defer></script>
 </body>
 </html>

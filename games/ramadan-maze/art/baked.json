@@ -1,0 +1,107 @@
+{
+ "ui": {
+  "f": "baked/ui",
+  "w": 2048,
+  "h": 1626
+ },
+ "mzs": {
+  "f": "baked/mzs",
+  "w": 2048,
+  "h": 137
+ },
+ "bg0": {
+  "f": "baked/bg0",
+  "w": 512,
+  "h": 512
+ },
+ "mzh0": {
+  "f": "baked/mzh0",
+  "w": 2048,
+  "h": 232
+ },
+ "bg1": {
+  "f": "baked/bg1",
+  "w": 512,
+  "h": 512
+ },
+ "mzh1": {
+  "f": "baked/mzh1",
+  "w": 2048,
+  "h": 232
+ },
+ "bg2": {
+  "f": "baked/bg2",
+  "w": 512,
+  "h": 512
+ },
+ "mzh2": {
+  "f": "baked/mzh2",
+  "w": 2048,
+  "h": 232
+ },
+ "iftar-room": {
+  "f": "baked/iftar-room",
+  "w": 1920,
+  "h": 1080
+ },
+ "iftar-wall": {
+  "f": "baked/iftar-wall",
+  "w": 8,
+  "h": 1900
+ },
+ "iftar-pat": {
+  "f": "baked/iftar-pat",
+  "w": 256,
+  "h": 256
+ },
+ "iftar-lan0-120": {
+  "f": "baked/iftar-lan0-120",
+  "w": 180,
+  "h": 260
+ },
+ "iftar-lan0-200": {
+  "f": "baked/iftar-lan0-200",
+  "w": 180,
+  "h": 340
+ },
+ "iftar-lan1-120": {
+  "f": "baked/iftar-lan1-120",
+  "w": 180,
+  "h": 260
+ },
+ "iftar-lan1-200": {
+  "f": "baked/iftar-lan1-200",
+  "w": 180,
+  "h": 340
+ },
+ "iftar-lan2-120": {
+  "f": "baked/iftar-lan2-120",
+  "w": 180,
+  "h": 260
+ },
+ "iftar-lan2-200": {
+  "f": "baked/iftar-lan2-200",
+  "w": 180,
+  "h": 340
+ },
+ "iftar-lan3-120": {
+  "f": "baked/iftar-lan3-120",
+  "w": 180,
+  "h": 260
+ },
+ "iftar-lan3-200": {
+  "f": "baked/iftar-lan3-200",
+  "w": 180,
+  "h": 340
+ },
+ "iftar-lan4-120": {
+  "f": "baked/iftar-lan4-120",
+  "w": 180,
+  "h": 260
+ },
+ "iftar-lan4-200": {
+  "f": "baked/iftar-lan4-200",
+  "w": 180,
+  "h": 340
+ }
+}

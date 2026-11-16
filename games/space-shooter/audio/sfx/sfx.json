@@ -1,0 +1,303 @@
+{
+ "resources": [
+  "sfx.m4a"
+ ],
+ "spritemap": {
+  "tap-1": {
+   "start": 0.09,
+   "end": 0.34,
+   "loop": false
+  },
+  "page-1": {
+   "start": 0.37,
+   "end": 0.82,
+   "loop": false
+  },
+  "shot-1": {
+   "start": 0.85,
+   "end": 1.11,
+   "loop": false
+  },
+  "shot-2": {
+   "start": 1.14,
+   "end": 1.47,
+   "loop": false
+  },
+  "hit-1": {
+   "start": 1.5,
+   "end": 1.67,
+   "loop": false
+  },
+  "hit-2": {
+   "start": 1.7,
+   "end": 1.87,
+   "loop": false
+  },
+  "hit-3": {
+   "start": 1.9,
+   "end": 2.07,
+   "loop": false
+  },
+  "hit-4": {
+   "start": 2.1,
+   "end": 2.27,
+   "loop": false
+  },
+  "chip-1": {
+   "start": 2.3,
+   "end": 2.53,
+   "loop": false
+  },
+  "chip-2": {
+   "start": 2.56,
+   "end": 2.83,
+   "loop": false
+  },
+  "chip-3": {
+   "start": 2.86,
+   "end": 3.15,
+   "loop": false
+  },
+  "crack-1": {
+   "start": 3.18,
+   "end": 3.57,
+   "loop": false
+  },
+  "crack-2": {
+   "start": 3.6,
+   "end": 4.19,
+   "loop": false
+  },
+  "crack-3": {
+   "start": 4.22,
+   "end": 4.67,
+   "loop": false
+  },
+  "pop-1": {
+   "start": 4.7,
+   "end": 4.99,
+   "loop": false
+  },
+  "pop-2": {
+   "start": 5.02,
+   "end": 5.31,
+   "loop": false
+  },
+  "pop-3": {
+   "start": 5.34,
+   "end": 5.63,
+   "loop": false
+  },
+  "spark-1": {
+   "start": 5.66,
+   "end": 6.05,
+   "loop": false
+  },
+  "spark-2": {
+   "start": 6.08,
+   "end": 6.47,
+   "loop": false
+  },
+  "zap-1": {
+   "start": 6.5,
+   "end": 6.73,
+   "loop": false
+  },
+  "thud-1": {
+   "start": 6.76,
+   "end": 7.15,
+   "loop": false
+  },
+  "thud-2": {
+   "start": 7.18,
+   "end": 7.57,
+   "loop": false
+  },
+  "thud-3": {
+   "start": 7.6,
+   "end": 7.99,
+   "loop": false
+  },
+  "hurt-1": {
+   "start": 8.02,
+   "end": 8.41,
+   "loop": false
+  },
+  "hurt-2": {
+   "start": 8.44,
+   "end": 8.83,
+   "loop": false
+  },
+  "down-1": {
+   "start": 8.86,
+   "end": 9.3,
+   "loop": false
+  },
+  "down-2": {
+   "start": 9.33,
+   "end": 9.72,
+   "loop": false
+  },
+  "collect-1": {
+   "start": 9.75,
+   "end": 10.14,
+   "loop": false
+  },
+  "collect-2": {
+   "start": 10.17,
+   "end": 10.56,
+   "loop": false
+  },
+  "power-1": {
+   "start": 10.59,
+   "end": 11.63,
+   "loop": false
+  },
+  "shield-1": {
+   "start": 11.66,
+   "end": 12.53,
+   "loop": false
+  },
+  "warp-1": {
+   "start": 12.56,
+   "end": 13.11,
+   "loop": false
+  },
+  "whirr-1": {
+   "start": 13.14,
+   "end": 13.47,
+   "loop": false
+  },
+  "win-1": {
+   "start": 13.5,
+   "end": 14.54,
+   "loop": false
+  }
+ },
+ "sounds": {
+  "tap": {
+   "cat": "ui",
+   "takes": [
+    "tap-1"
+   ]
+  },
+  "page": {
+   "cat": "ui",
+   "takes": [
+    "page-1"
+   ]
+  },
+  "shot": {
+   "cat": "sfx",
+   "takes": [
+    "shot-1",
+    "shot-2"
+   ]
+  },
+  "hit": {
+   "cat": "sfx",
+   "takes": [
+    "hit-1",
+    "hit-2",
+    "hit-3",
+    "hit-4"
+   ]
+  },
+  "chip": {
+   "cat": "sfx",
+   "takes": [
+    "chip-1",
+    "chip-2",
+    "chip-3"
+   ]
+  },
+  "crack": {
+   "cat": "sfx",
+   "takes": [
+    "crack-1",
+    "crack-2",
+    "crack-3"
+   ]
+  },
+  "pop": {
+   "cat": "sfx",
+   "takes": [
+    "pop-1",
+    "pop-2",
+    "pop-3"
+   ]
+  },
+  "spark": {
+   "cat": "sfx",
+   "takes": [
+    "spark-1",
+    "spark-2"
+   ]
+  },
+  "zap": {
+   "cat": "sfx",
+   "takes": [
+    "zap-1"
+   ]
+  },
+  "thud": {
+   "cat": "sfx",
+   "takes": [
+    "thud-1",
+    "thud-2",
+    "thud-3"
+   ]
+  },
+  "hurt": {
+   "cat": "sfx",
+   "takes": [
+    "hurt-1",
+    "hurt-2"
+   ]
+  },
+  "down": {
+   "cat": "sfx",
+   "takes": [
+    "down-1",
+    "down-2"
+   ]
+  },
+  "collect": {
+   "cat": "sfx",
+   "takes": [
+    "collect-1",
+    "collect-2"
+   ]
+  },
+  "power": {
+   "cat": "sfx",
+   "takes": [
+    "power-1"
+   ]
+  },
+  "shield": {
+   "cat": "sfx",
+   "takes": [
+    "shield-1"
+   ]
+  },
+  "warp": {
+   "cat": "sfx",
+   "takes": [
+    "warp-1"
+   ]
+  },
+  "whirr": {
+   "cat": "sfx",
+   "takes": [
+    "whirr-1"
+   ]
+  },
+  "win": {
+   "cat": "sfx",
+   "takes": [
+    "win-1"
+   ]
+  }
+ }
+}

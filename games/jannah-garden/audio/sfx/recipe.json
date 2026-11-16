@@ -1,0 +1,423 @@
+{
+ "about": "Jannah Garden's sound effects and garden beds, cut from CC0 recordings by tools/sound-cut.py at the recordings' own event boundaries, in the levels of Spider IK and Helping Home (buttons -24, small frequent sounds -24 to -28, actions -18 to -22, rewards -19/-20, beds -26). tap and page are Spider IK's cuts. Credits in ../CREDITS.md.",
+ "out": "games/jannah-garden/audio/sfx",
+ "src": "../KidsGames-sounds/bigsoundbank",
+ "sounds": {
+  "tap": {
+   "bus": "ui",
+   "src": "0036-switch-desk-lamp.mp3",
+   "cuts": [
+    [
+     0.1,
+     0.16
+    ]
+   ],
+   "hp": 200,
+   "fade": [
+    0.002,
+    0.06
+   ],
+   "lufs": -24
+  },
+  "page": {
+   "bus": "ui",
+   "src": "0164-turned-page.mp3",
+   "cuts": [
+    [
+     0.08,
+     0.36
+    ]
+   ],
+   "fade": [
+    0.005,
+    0.12
+   ],
+   "lufs": -22
+  },
+  "soil": {
+   "src": "0576-canvas-bag-on-floor.mp3",
+   "cuts": [
+    [
+     0.08,
+     0.22
+    ],
+    [
+     0.91,
+     0.2
+    ],
+    [
+     2.53,
+     0.22
+    ],
+    [
+     3.35,
+     0.22
+    ]
+   ],
+   "hp": 90,
+   "fade": [
+    0.002,
+    0.1
+   ],
+   "lufs": -20
+  },
+  "leaf": {
+   "src": "0137-feet-in-leaves.mp3",
+   "cuts": [
+    [
+     2.73,
+     0.55
+    ],
+    [
+     4.45,
+     0.4
+    ],
+    [
+     6.23,
+     0.48
+    ],
+    [
+     12.12,
+     0.55
+    ],
+    [
+     7.15,
+     0.6
+    ]
+   ],
+   "hp": 400,
+   "fade": [
+    0.02,
+    0.18
+   ],
+   "lufs": -24
+  },
+  "foliage": {
+   "src": "0137-feet-in-leaves.mp3",
+   "cuts": [
+    [
+     0.35,
+     1.0
+    ],
+    [
+     28.4,
+     1.0
+    ],
+    [
+     47.08,
+     0.6
+    ]
+   ],
+   "hp": 300,
+   "fade": [
+    0.03,
+    0.3
+   ],
+   "lufs": -22
+  },
+  "splash": {
+   "src": "0192-swirl-in-the-water.mp3",
+   "cuts": [
+    [
+     1.62,
+     0.65
+    ],
+    [
+     8.12,
+     0.6
+    ],
+    [
+     3.62,
+     0.33
+    ]
+   ],
+   "fade": [
+    0.01,
+    0.2
+   ],
+   "lufs": -18
+  },
+  "pour": {
+   "src": "0818-watering-tomatoes.mp3",
+   "cuts": [
+    [
+     2.0,
+     1.3
+    ],
+    [
+     6.0,
+     1.3
+    ]
+   ],
+   "fade": [
+    0.15,
+    0.5
+   ],
+   "lufs": -21
+  },
+  "ripple": {
+   "src": "0192-swirl-in-the-water.mp3",
+   "cuts": [
+    [
+     3.62,
+     0.33
+    ],
+    [
+     6.18,
+     0.25
+    ],
+    [
+     7.03,
+     0.25
+    ]
+   ],
+   "fade": [
+    0.01,
+    0.12
+   ],
+   "lufs": -20
+  },
+  "knock": {
+   "src": "0374-knock-on-a-light-door.mp3",
+   "cuts": [
+    [
+     2.76,
+     0.19
+    ],
+    [
+     4.07,
+     0.23
+    ],
+    [
+     5.53,
+     0.2
+    ]
+   ],
+   "hp": 120,
+   "fade": [
+    0.002,
+    0.08
+   ],
+   "lufs": -20
+  },
+  "chirp": {
+   "src": "0222-awakening-birds.mp3",
+   "cuts": [
+    [
+     9.15,
+     0.45
+    ],
+    [
+     11.8,
+     0.45
+    ],
+    [
+     14.45,
+     0.42
+    ],
+    [
+     19.3,
+     0.4
+    ],
+    [
+     25.5,
+     0.4
+    ]
+   ],
+   "hp": 800,
+   "fade": [
+    0.005,
+    0.12
+   ],
+   "lufs": -24
+  },
+  "birdfar": {
+   "src": "0222-awakening-birds.mp3",
+   "cuts": [
+    [
+     26.7,
+     0.45
+    ],
+    [
+     27.6,
+     0.5
+    ],
+    [
+     28.65,
+     0.35
+    ],
+    [
+     30.0,
+     0.35
+    ]
+   ],
+   "hp": 800,
+   "fade": [
+    0.01,
+    0.15
+   ],
+   "lufs": -34
+  },
+  "glow": {
+   "src": "0030-fireplace-1.mp3",
+   "cuts": [
+    [
+     0.55,
+     0.22
+    ],
+    [
+     9.74,
+     0.2
+    ],
+    [
+     13.84,
+     0.2
+    ]
+   ],
+   "hp": 300,
+   "fade": [
+    0.002,
+    0.1
+   ],
+   "lufs": -24
+  },
+  "flutter": {
+   "src": "0785-paper.mp3",
+   "cuts": [
+    [
+     1.75,
+     0.28
+    ],
+    [
+     11.4,
+     0.28
+    ]
+   ],
+   "hp": 500,
+   "fade": [
+    0.01,
+    0.1
+   ],
+   "lufs": -28
+  },
+  "basket": {
+   "src": "0785-paper.mp3",
+   "cuts": [
+    [
+     2.65,
+     0.4
+    ],
+    [
+     17.65,
+     0.37
+    ]
+   ],
+   "hp": 200,
+   "fade": [
+    0.005,
+    0.15
+   ],
+   "lufs": -20
+  },
+  "soft": {
+   "src": "1798-whoosh-10.mp3",
+   "cuts": [
+    [
+     0.17,
+     0.24
+    ]
+   ],
+   "fade": [
+    0.003,
+    0.08
+   ],
+   "lufs": -25
+  },
+  "goal": {
+   "src": "1384-drops-of-water-1.mp3",
+   "cuts": [
+    [
+     4.45,
+     0.3
+    ],
+    [
+     5.88,
+     0.3
+    ],
+    [
+     7.3,
+     0.3
+    ]
+   ],
+   "hp": 300,
+   "fade": [
+    0.002,
+    0.15
+   ],
+   "lufs": -19
+  },
+  "star": {
+   "src": "1384-drops-of-water-1.mp3",
+   "cuts": [
+    [
+     10.18,
+     0.2
+    ],
+    [
+     7.3,
+     0.2
+    ]
+   ],
+   "hp": 300,
+   "fade": [
+    0.002,
+    0.12
+   ],
+   "lufs": -20
+  },
+  "win": {
+   "src": "2363-applause-1.mp3",
+   "cuts": [
+    [
+     0.4,
+     3.4
+    ]
+   ],
+   "fade": [
+    0.05,
+    1.0
+   ],
+   "lufs": -20
+  },
+  "amb-wind": {
+   "bus": "amb",
+   "src": "0908-wind-in-tall-grass.mp3",
+   "loop": [
+    4.0,
+    26.0
+   ],
+   "x": 1.5,
+   "lufs": -35
+  },
+  "amb-river": {
+   "bus": "amb",
+   "src": "0864-brooklet.mp3",
+   "loop": [
+    4.0,
+    26.0
+   ],
+   "x": 1.5,
+   "lufs": -35
+  },
+  "amb-court": {
+   "bus": "amb",
+   "src": "0913-fountain-of-a-japanese-temple.mp3",
+   "loop": [
+    4.0,
+    26.0
+   ],
+   "x": 1.5,
+   "lufs": -35
+  }
+ }
+}

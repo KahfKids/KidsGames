@@ -30,14 +30,24 @@
   var Kit = window.Kit = window.Kit || {};
   var MUTE_KEY = 'kahf-sound-muted', CAT = { ui: 1, sfx: 1, amb: 0.8, voice: 1 }, DUCK = { ui: 0.8, sfx: 0.6, amb: 0.35, voice: 1 };
   var PER = 3, LIMIT = 12, KEEP = 20000, GAP = 90;
-  var isMuted = false, game = null, sc = null, base = '', S = {}, live = [], ducks = 0, amb = { name: null, h: null }, voiceSnd = null, voiceDone = null;
+  var isMuted = false, game = null, sc = null, base = '', S = {}, live = [], ducks = 0, amb = { name: null, h: null }, voiceSnd = null, voiceDone = null, voiceId = 0;
 
   function muted() { try { return localStorage.getItem(MUTE_KEY) === '1'; } catch (e) { return false; } }
   function catVol(c) { return (CAT[c] == null ? 1 : CAT[c]) * (ducks ? (DUCK[c] == null ? 1 : DUCK[c]) : 1); }
   function db(v) { return Math.pow(10, v / 20); }
 
-  // a scene of the kit's own that never pauses: its loader fetches loops and voices, its tweens fade them
-  var Svc = { key: 'KitSound', active: true, visible: false, create: function () { sc = this; } };
+  // a scene of the kit's own: its loader fetches loops and voices, its tweens fade them, its clock times wait().
+  // It is paused whenever it has none of that to do (an empty running scene still costs every frame: its systems
+  // step and every touch is offered to its input), and resumed by work() before the kit hands it something.
+  var Svc = { key: 'KitSound', active: true, visible: false, create: function () {
+    sc = this; if (this.input) this.input.enabled = false;
+    this.events.on('update', function () {
+      if (sc.load.isLoading() || sc.tweens.getTweens().length || sc.time._pendingInsertion.length || sc.time._active.length) return;
+      if (!parked) { parked = true; sc.scene.pause(); }       // (queued: applied at the start of the next step)
+    });
+  } };
+  var parked = false;                                           // a pause asked for, applied or still queued
+  function work() { if (sc && parked) { parked = false; sc.scene.resume(); } }   // queued after it, so it wins
   function init(g) {
     game = g; if (!g || !g.sound) return;
     isMuted = muted(); g.sound.mute = isMuted; g.sound.pauseOnBlur = true;
@@ -58,7 +68,7 @@
       var L = sc.load, done = function (ok_) { L.off('filecomplete-audio-' + key, yes); L.off('loaderror', bad); res(ok_); };
       var yes = function () { done(true); }, bad = function (f) { if (f && f.key === key) done(false); };
       L.on('filecomplete-audio-' + key, yes); L.on('loaderror', bad);
-      L.audio(key, url); if (!L.isLoading()) L.start();
+      work(); L.audio(key, url); if (!L.isLoading()) L.start();
     });
   }
   // let go of a file's decoded audio once nothing has used it for KEEP ms
@@ -86,7 +96,7 @@
   function playing(cat) { return game.sound.getAllPlaying().filter(function (s) { return s.kitCat === cat; }); }
   function fade(snd, to, secs, then) {
     if (!sc) { snd.volume = to; if (then) then(); return; }
-    sc.tweens.killTweensOf(snd); sc.tweens.add({ targets: snd, volume: to, duration: Math.max(1, secs * 1000), onComplete: then });
+    work(); sc.tweens.killTweensOf(snd); sc.tweens.add({ targets: snd, volume: to, duration: Math.max(1, secs * 1000), onComplete: then });
   }
   function loop(name, o) {
     o = o || {}; var e = S[name], h = { on: true, snd: null, v: o.vol == null ? 1 : o.vol };
@@ -121,11 +131,11 @@
   function voice(url, o) {
     o = o || {}; stopVoice();
     if (!game) return Promise.resolve(false);
-    var key = 'kit-v-' + url;
+    var key = 'kit-v-' + url, id = voiceId;
     hold(key);
     return fetchAudio(key, url).then(function (got) {
       return new Promise(function (res) {
-        if (!got || isMuted) { release(key); res(false); return; }
+        if (!got || isMuted || id !== voiceId) { release(key); res(false); return; }
         var s = game.sound.add(key, { volume: catVol('voice') * (o.vol == null ? 1 : o.vol) }); s.kitCat = 'voice';
         var end = function (full) { if (voiceSnd !== s) return; voiceSnd = null; voiceDone = null; duck(false); s.destroy(); release(key); res(full); };
         voiceSnd = s; voiceDone = function () { s.stop(); end(false); };
@@ -134,15 +144,46 @@
       });
     });
   }
-  function stopVoice() { if (voiceDone) voiceDone(); }
+  function stopVoice() { voiceId++; if (voiceDone) voiceDone(); }
+
+  // Existing synthetic Arabic speech clips (MashaAllah, Barakallah...) for a Phaser game: Kit.snd.praise() a random one,
+  // Kit.snd.praise('mashaallah') a named one. The clips live in js/kit/praise-clips.js (embedded MP3); it is fetched the
+  // first time praise is wanted (or ahead with Kit.snd.praise.preload(), e.g. a few seconds after a level starts), kept
+  // offline, and played as a voice (effects duck under it). Silent when muted. Resolves like voice().
+  var praiseJs = null, praiseUrl = {};
+  function praiseLoad() {
+    if (window.Kit.praiseClips) return Promise.resolve();
+    if (!praiseJs) praiseJs = new Promise(function (ok) {
+      var el = document.createElement('script'); el.src = '/KidsGames/js/kit/praise-clips.js'; el.onload = el.onerror = function () { ok(); };
+      document.head.appendChild(el);
+      try { var sw = navigator.serviceWorker && navigator.serviceWorker.controller; if (sw) sw.postMessage({ type: 'CACHE_URLS', urls: [new URL(el.src, location.href).href] }); } catch (e) {}
+    });
+    return praiseJs;
+  }
+  function praise(name, o) {
+    stopVoice(); var id = voiceId;
+    return praiseLoad().then(function () {
+      if (id !== voiceId || isMuted) return false;
+      var P = window.Kit.praiseClips || {}, keys = Object.keys(P).filter(function (k) { return k !== 'voice'; });
+      if (!keys.length) return false;
+      if (!name || !P[name]) name = keys[Math.floor(Math.random() * keys.length)];
+      if (!praiseUrl[name]) {
+        var bin = atob(P[name]), a = new Uint8Array(bin.length);
+        for (var i = 0; i < bin.length; i++) a[i] = bin.charCodeAt(i);
+        praiseUrl[name] = URL.createObjectURL(new Blob([a], { type: 'audio/mpeg' }));
+      }
+      return voice(praiseUrl[name], o || { vol: 0.85 });
+    });
+  }
+  praise.preload = praiseLoad;
 
   Kit.snd = {
-    init: init, load: load, play: play, loop: loop, amb: setAmb, voice: voice, stopVoice: stopVoice,
+    init: init, load: load, play: play, loop: loop, amb: setAmb, voice: voice, stopVoice: stopVoice, praise: praise,
     // fetch voices ahead (the next lines of a guide), so they start at once; let go again if not played soon
     preload: function (urls) { if (!game) return; urls.forEach(function (u) { var k = 'kit-v-' + u; hold(k); fetchAudio(k, u).then(function () { release(k); }); }); },
     has: function (name) { return !!S[name]; },
     // a pause on the engine's clock (the kit's scene), as a Promise
-    wait: function (ms) { return new Promise(function (ok) { if (sc) sc.time.delayedCall(ms, ok); else ok(); }); },
+    wait: function (ms) { return new Promise(function (ok) { if (sc) { work(); sc.time.delayedCall(ms, ok); } else ok(); }); },
     // (kept here: Phaser's own `mute` reads the audio gain back, which changes only on the audio thread, a moment later)
     get muted() { return game ? isMuted : muted(); },
     setMuted: function (m) { isMuted = !!m; try { localStorage.setItem(MUTE_KEY, m ? '1' : '0'); } catch (e) {} if (game) game.sound.mute = isMuted; },

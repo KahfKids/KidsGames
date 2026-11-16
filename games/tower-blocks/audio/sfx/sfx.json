@@ -1,0 +1,227 @@
+{
+ "resources": [
+  "sfx.m4a"
+ ],
+ "spritemap": {
+  "tap-1": {
+   "start": 0.09,
+   "end": 0.34,
+   "loop": false
+  },
+  "stone-1": {
+   "start": 0.37,
+   "end": 0.88,
+   "loop": false
+  },
+  "stone-2": {
+   "start": 0.91,
+   "end": 1.42,
+   "loop": false
+  },
+  "stone-3": {
+   "start": 1.45,
+   "end": 1.96,
+   "loop": false
+  },
+  "stone-4": {
+   "start": 1.99,
+   "end": 2.5,
+   "loop": false
+  },
+  "stone-5": {
+   "start": 2.53,
+   "end": 3.04,
+   "loop": false
+  },
+  "tile-1": {
+   "start": 3.07,
+   "end": 3.38,
+   "loop": false
+  },
+  "tile-2": {
+   "start": 3.41,
+   "end": 3.72,
+   "loop": false
+  },
+  "tile-3": {
+   "start": 3.75,
+   "end": 4.06,
+   "loop": false
+  },
+  "tile-4": {
+   "start": 4.09,
+   "end": 4.4,
+   "loop": false
+  },
+  "perfect-1": {
+   "start": 4.43,
+   "end": 4.82,
+   "loop": false
+  },
+  "perfect-2": {
+   "start": 4.85,
+   "end": 5.24,
+   "loop": false
+  },
+  "slice-1": {
+   "start": 5.27,
+   "end": 5.82,
+   "loop": false
+  },
+  "grow-1": {
+   "start": 5.85,
+   "end": 6.11,
+   "loop": false
+  },
+  "crumble-1": {
+   "start": 6.14,
+   "end": 7.03,
+   "loop": false
+  },
+  "crumble-2": {
+   "start": 7.06,
+   "end": 7.95,
+   "loop": false
+  },
+  "crumble-3": {
+   "start": 7.98,
+   "end": 8.87,
+   "loop": false
+  },
+  "crumble-4": {
+   "start": 8.9,
+   "end": 9.79,
+   "loop": false
+  },
+  "miss-1": {
+   "start": 9.82,
+   "end": 10.21,
+   "loop": false
+  },
+  "miss-2": {
+   "start": 10.24,
+   "end": 10.63,
+   "loop": false
+  },
+  "over-1": {
+   "start": 10.66,
+   "end": 10.99,
+   "loop": false
+  },
+  "star-1": {
+   "start": 11.02,
+   "end": 11.31,
+   "loop": false
+  },
+  "star-2": {
+   "start": 11.34,
+   "end": 11.63,
+   "loop": false
+  },
+  "win-1": {
+   "start": 11.66,
+   "end": 14.15,
+   "loop": false
+  },
+  "cheer-1": {
+   "start": 14.18,
+   "end": 15.27,
+   "loop": false
+  }
+ },
+ "sounds": {
+  "tap": {
+   "cat": "ui",
+   "takes": [
+    "tap-1"
+   ]
+  },
+  "stone": {
+   "cat": "sfx",
+   "takes": [
+    "stone-1",
+    "stone-2",
+    "stone-3",
+    "stone-4",
+    "stone-5"
+   ]
+  },
+  "tile": {
+   "cat": "sfx",
+   "takes": [
+    "tile-1",
+    "tile-2",
+    "tile-3",
+    "tile-4"
+   ]
+  },
+  "perfect": {
+   "cat": "sfx",
+   "takes": [
+    "perfect-1",
+    "perfect-2"
+   ]
+  },
+  "slice": {
+   "cat": "sfx",
+   "takes": [
+    "slice-1"
+   ]
+  },
+  "grow": {
+   "cat": "sfx",
+   "takes": [
+    "grow-1"
+   ]
+  },
+  "crumble": {
+   "cat": "sfx",
+   "takes": [
+    "crumble-1",
+    "crumble-2",
+    "crumble-3",
+    "crumble-4"
+   ]
+  },
+  "miss": {
+   "cat": "sfx",
+   "takes": [
+    "miss-1",
+    "miss-2"
+   ]
+  },
+  "over": {
+   "cat": "sfx",
+   "takes": [
+    "over-1"
+   ]
+  },
+  "star": {
+   "cat": "sfx",
+   "takes": [
+    "star-1",
+    "star-2"
+   ]
+  },
+  "win": {
+   "cat": "sfx",
+   "takes": [
+    "win-1"
+   ]
+  },
+  "cheer": {
+   "cat": "sfx",
+   "takes": [
+    "cheer-1"
+   ]
+  },
+  "amb-wind": {
+   "cat": "amb",
+   "loop": {
+    "file": "amb-wind.m4a",
+    "start": 0.1,
+    "end": 24.1
+   }
+  }
+ }
+}

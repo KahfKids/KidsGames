@@ -1,44 +1,51 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-  <title>Star Rangers</title>
-  <meta name="description" content="Fly the ranger ship through 24 waves in four space worlds: dodge asteroids, catch stars and meet four friendly robot bosses." />
-  <meta name="theme-color" content="#02040f" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <link rel="manifest" href="/KidsGames/manifest.json" />
-  <link rel="icon" href="/KidsGames/icons/icon-192x192.png" />
-  <link rel="apple-touch-icon" href="/KidsGames/icons/icon-192x192.png" />
-  <link rel="stylesheet" href="/KidsGames/js/kit/kit.css" />
-  <script src="/KidsGames/js/kahf-bridge.js" defer></script>
-  <style>
-    /* six waves per world: 3 wide tiles per row on phones, one row of 6 on wider screens; the boss wave gets a gold ring */
-    .kit-levels { grid-template-columns: repeat(3, 1fr); }
-    .kit-lv { aspect-ratio: 1.45; }
-    .kit-levels .kit-lv:nth-child(6) { box-shadow: inset 0 0 0 3px rgba(246, 196, 83, 0.55); }
-    .kit-levels .kit-lv.cur:nth-child(6) { box-shadow: inset 0 0 0 40px rgba(255, 255, 255, 0.16), 0 0 0 3px var(--c, #f6c453); }
-    @media (min-width: 470px) { .kit-levels { grid-template-columns: repeat(6, 1fr); } .kit-lv { aspect-ratio: 1; } }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Star Rangers</title>
+<meta name="description" content="Fly the ranger ship through 24 waves in four space worlds: dodge asteroids, catch stars and meet four friendly robot bosses.">
+<meta name="theme-color" content="#02040f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="/KidsGames/manifest.json">
+<link rel="icon" href="/KidsGames/icons/icon-192x192.png">
+<link rel="apple-touch-icon" href="/KidsGames/icons/icon-192x192.png">
+<style>html,body{margin:0;height:100%;background:#02040f;overflow:hidden;overscroll-behavior:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;touch-action:none}
+#kit-load{position:fixed;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 30%,#10234f 0,#081330 45%,#02040f 100%);--p:0}
+#kit-load svg{width:min(34vw,34vh,180px);height:auto}
+#kit-load .bar{stroke-dasharray:100;stroke-dashoffset:calc(100 * (1 - var(--p)))}
+#kit-load .ship{animation:sr-hover 1.4s ease-in-out infinite;transform-origin:50px 50px}
+@keyframes sr-hover{0%,100%{transform:translateY(2px)}50%{transform:translateY(-3px)}}</style>
 </head>
 <body>
-  <canvas id="stage" class="kit-stage" aria-label="Star Rangers game"></canvas>
-
-  <script src="/KidsGames/js/kit/core.js"></script>
-  <script src="/KidsGames/js/kit/fx.js"></script>
-  <script src="/KidsGames/js/kit/audio.js"></script>
-  <script src="/KidsGames/js/kit/ui.js"></script>
-  <script src="js/sounds.js"></script>
-  <script src="js/art.js"></script>
-  <script src="js/levels.js"></script>
-  <script src="js/game.js"></script>
-
-  <script>
-    if ("serviceWorker" in navigator && location.pathname.indexOf("/KidsGames/") === 0 && !/[?&](debug|nosw)\b/.test(location.search)) {
-      addEventListener("load", function () { navigator.serviceWorker.register("/KidsGames/sw.js").catch(function () {}); });
-    }
-  </script>
+<!-- Star Rangers on Phaser 4 (MIT, pinned in js/vendor), started only by Kit.play (js/kit/play.js).
+     Arcade physics for the ship, bolts, robots, rocks and pick-ups; every picture painted once into textures
+     (game/art.js); recorded CC0 sounds through Kit.snd (audio/sfx, cut by tools/sound-cut.py).
+     game/common.js saves and fitting · game/waves.js the 24 waves · game/art.js the paint box · game/play.js a wave ·
+     game/hud.js the interface · game/main.js Boot and start. -->
+<!-- The loading picture: drawn by the page at once, before the engine downloads: a little ship over a ring that fills
+     (js/kit/load.js moves --p and takes it away when the first wave is ready). No words. -->
+<div id="kit-load"><svg viewBox="0 0 100 100" aria-hidden="true">
+<circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="5"/>
+<circle class="bar" cx="50" cy="50" r="42" fill="none" stroke="#8fd3ff" stroke-width="5" stroke-linecap="round" pathLength="100" transform="rotate(-90 50 50)"/>
+<g class="ship"><path d="M50 24c8 6 10 22 9 38-1 6-5 9-9 9s-8-3-9-9c-1-16 1-32 9-38z" fill="#f2f5fc" stroke="#1b1838" stroke-width="2.4"/>
+<path d="M41 52c-6 3-10 9-11 17 5 0 9-1 12-3zM59 52c6 3 10 9 11 17-5 0-9-1-12-3z" fill="#ff6b5e" stroke="#1b1838" stroke-width="2.4" stroke-linejoin="round"/>
+<ellipse cx="50" cy="42" rx="5" ry="8" fill="#3cc3e0" stroke="#1b1838" stroke-width="2"/>
+<path d="M45 72q5 9 10 0" fill="#ffd36b"/></g>
+</svg></div>
+<script src="/KidsGames/js/kit/load.js"></script>
+<script src="/KidsGames/js/kahf-bridge.js" defer></script>
+<script src="/KidsGames/js/vendor/phaser-4.2.1.min.js" defer></script>
+<script src="/KidsGames/js/kit/core.js" defer></script>
+<script src="/KidsGames/js/kit/sound.js" defer></script>
+<script src="/KidsGames/js/kit/play.js" defer></script>
+<script src="game/common.js" defer></script>
+<script src="game/waves.js" defer></script>
+<script src="game/art.js" defer></script>
+<script src="game/play.js" defer></script>
+<script src="game/hud.js" defer></script>
+<script src="game/main.js" defer></script>
 </body>
 </html>

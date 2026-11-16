@@ -1,0 +1,374 @@
+{
+ "about": "Memory Match: sound effects, cut from CC0 recordings by tools/sound-cut.py. Times are seconds in the original (../KidsGames-sounds/bigsoundbank/<id>-<title>.mp3), picked at the recording's own event boundaries (ffmpeg silencedetect). Card sounds are paper and cloth; animal cues are real animals; credits in ../CREDITS.md.",
+ "out": "games/animal-memory-match/audio/sfx",
+ "src": "../KidsGames-sounds/bigsoundbank",
+ "sounds": {
+  "tap": {
+   "bus": "ui",
+   "src": "0036-switch-desk-lamp.mp3",
+   "cuts": [
+    [
+     0.1,
+     0.16
+    ]
+   ],
+   "hp": 200,
+   "fade": [
+    0.002,
+    0.06
+   ],
+   "lufs": -24
+  },
+  "page": {
+   "bus": "ui",
+   "src": "0164-turned-page.mp3",
+   "cuts": [
+    [
+     0.08,
+     0.36
+    ]
+   ],
+   "fade": [
+    0.005,
+    0.12
+   ],
+   "lufs": -23
+  },
+  "flip": {
+   "src": "0785-paper.mp3",
+   "cuts": [
+    [
+     1.31,
+     0.22
+    ],
+    [
+     1.703,
+     0.36
+    ],
+    [
+     3.52,
+     0.33
+    ]
+   ],
+   "hp": 250,
+   "fade": [
+    0.004,
+    0.08
+   ],
+   "lufs": -27
+  },
+  "flipback": {
+   "src": "0785-paper.mp3",
+   "cuts": [
+    [
+     5.454,
+     0.16
+    ],
+    [
+     6.331,
+     0.17
+    ],
+    [
+     7.236,
+     0.27
+    ]
+   ],
+   "hp": 250,
+   "fade": [
+    0.004,
+    0.07
+   ],
+   "lufs": -30
+  },
+  "miss": {
+   "src": "1104-synthetic-coat-rubbed.mp3",
+   "cuts": [
+    [
+     0.348,
+     0.47
+    ],
+    [
+     1.393,
+     0.47
+    ]
+   ],
+   "hp": 150,
+   "fade": [
+    0.03,
+    0.2
+   ],
+   "lufs": -29
+  },
+  "match": {
+   "src": "1384-drops-of-water-1.mp3",
+   "cuts": [
+    [
+     0.14,
+     0.3
+    ],
+    [
+     1.57,
+     0.3
+    ],
+    [
+     2.97,
+     0.4
+    ]
+   ],
+   "hp": 300,
+   "fade": [
+    0.002,
+    0.12
+   ],
+   "lufs": -21
+  },
+  "deal": {
+   "src": "2212-pages-that-turn-5.mp3",
+   "cuts": [
+    [
+     0.0,
+     0.9
+    ]
+   ],
+   "hp": 200,
+   "fade": [
+    0.01,
+    0.25
+   ],
+   "lufs": -28
+  },
+  "win": {
+   "src": "2363-applause-1.mp3",
+   "cuts": [
+    [
+     0.416,
+     2.4
+    ]
+   ],
+   "hp": 150,
+   "fade": [
+    0.08,
+    0.9
+   ],
+   "lufs": -25
+  },
+  "cow": {
+   "src": "2382-cow-moos-2.mp3",
+   "cuts": [
+    [
+     0.289,
+     2.1
+    ]
+   ],
+   "fade": [
+    0.05,
+    0.4
+   ],
+   "lufs": -24
+  },
+  "goat": {
+   "src": "0279-bleating-goat-1.mp3",
+   "cuts": [
+    [
+     0.0,
+     0.95
+    ],
+    [
+     0.298,
+     0.67,
+     "0880-dwarf-goat-bleating.mp3"
+    ]
+   ],
+   "fade": [
+    0.02,
+    0.2
+   ],
+   "lufs": -24
+  },
+  "sheep": {
+   "src": "2343-sheep-1.mp3",
+   "cuts": [
+    [
+     0.117,
+     0.63
+    ]
+   ],
+   "fade": [
+    0.02,
+    0.15
+   ],
+   "lufs": -24
+  },
+  "locust": {
+   "src": "1020-field-cricket.mp3",
+   "cuts": [
+    [
+     0.187,
+     0.92
+    ]
+   ],
+   "hp": 500,
+   "fade": [
+    0.01,
+    0.2
+   ],
+   "lufs": -29
+  },
+  "quail": {
+   "src": "0453-annoyed-hen.mp3",
+   "cuts": [
+    [
+     0.2,
+     0.8
+    ]
+   ],
+   "fade": [
+    0.01,
+    0.2
+   ],
+   "lufs": -27
+  },
+  "fish": {
+   "src": "1074-bubbles-burst.mp3",
+   "cuts": [
+    [
+     0.18,
+     0.2
+    ],
+    [
+     1.505,
+     0.2
+    ],
+    [
+     2.83,
+     0.2
+    ]
+   ],
+   "fade": [
+    0.001,
+    0.08
+   ],
+   "lufs": -24
+  },
+  "whale": {
+   "src": "0192-swirl-in-the-water.mp3",
+   "cuts": [
+    [
+     3.456,
+     0.7
+    ]
+   ],
+   "fade": [
+    0.03,
+    0.3
+   ],
+   "lufs": -24
+  },
+  "bee": {
+   "src": "1000-bumblebee-1.mp3",
+   "cuts": [
+    [
+     1.0,
+     0.9
+    ]
+   ],
+   "hp": 150,
+   "fade": [
+    0.15,
+    0.3
+   ],
+   "lufs": -29
+  },
+  "frog": {
+   "src": "0819-one-frog.mp3",
+   "cuts": [
+    [
+     0.5,
+     0.22
+    ],
+    [
+     1.01,
+     0.19
+    ],
+    [
+     2.68,
+     0.27
+    ]
+   ],
+   "hp": 200,
+   "fade": [
+    0.01,
+    0.1
+   ],
+   "lufs": -26
+  },
+  "crow": {
+   "src": "2764-crow-1.mp3",
+   "cuts": [
+    [
+     0.0,
+     0.389
+    ]
+   ],
+   "fade": [
+    0.005,
+    0.1
+   ],
+   "lufs": -29
+  },
+  "horse": {
+   "src": "1212-little-neighing-call-1.mp3",
+   "cuts": [
+    [
+     0.104,
+     1.24
+    ]
+   ],
+   "fade": [
+    0.03,
+    0.3
+   ],
+   "lufs": -26
+  },
+  "amb-0": {
+   "bus": "amb",
+   "src": "0908-wind-in-tall-grass.mp3",
+   "loop": [
+    30.0,
+    20.0
+   ],
+   "x": 1.5,
+   "lufs": -39
+  },
+  "amb-1": {
+   "bus": "amb",
+   "src": "0222-awakening-birds.mp3",
+   "loop": [
+    90.0,
+    20.0
+   ],
+   "x": 1.5,
+   "lufs": -39
+  },
+  "amb-2": {
+   "bus": "amb",
+   "src": "0266-sea-waves.mp3",
+   "loop": [
+    30.0,
+    20.0
+   ],
+   "x": 1.5,
+   "lufs": -38
+  },
+  "amb-3": {
+   "bus": "amb",
+   "src": "1020-field-cricket.mp3",
+   "loop": [
+    5.0,
+    14.0
+   ],
+   "x": 1.5,
+   "lufs": -40
+  }
+ }
+}

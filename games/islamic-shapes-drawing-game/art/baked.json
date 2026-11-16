@@ -1,0 +1,52 @@
+{
+ "ui": {
+  "f": "baked/ui",
+  "w": 2048,
+  "h": 601
+ },
+ "ui-card": {
+  "f": "baked/ui-card",
+  "w": 1500,
+  "h": 1040
+ },
+ "paper": {
+  "f": "baked/paper",
+  "w": 1180,
+  "h": 1180
+ },
+ "bg-ramadan": {
+  "f": "baked/bg-ramadan",
+  "w": 8,
+  "h": 256
+ },
+ "bg-nature": {
+  "f": "baked/bg-nature",
+  "w": 8,
+  "h": 256
+ },
+ "bg-things": {
+  "f": "baked/bg-things",
+  "w": 8,
+  "h": 256
+ },
+ "bg-patterns": {
+  "f": "baked/bg-patterns",
+  "w": 8,
+  "h": 256
+ },
+ "bg-lat": {
+  "f": "baked/bg-lat",
+  "w": 230,
+  "h": 460
+ },
+ "fx-glow": {
+  "f": "baked/fx-glow",
+  "w": 256,
+  "h": 256
+ },
+ "fx-vig": {
+  "f": "baked/fx-vig",
+  "w": 256,
+  "h": 256
+ }
+}

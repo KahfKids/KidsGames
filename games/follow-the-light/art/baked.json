@@ -1,0 +1,27 @@
+{
+ "ftl-lan": {
+  "f": "baked/ftl-lan",
+  "w": 687,
+  "h": 1196
+ },
+ "ftl-ui": {
+  "f": "baked/ftl-ui",
+  "w": 1024,
+  "h": 913
+ },
+ "ftl-world-0": {
+  "f": "baked/ftl-world-0",
+  "w": 970,
+  "h": 741
+ },
+ "ftl-world-1": {
+  "f": "baked/ftl-world-1",
+  "w": 970,
+  "h": 741
+ },
+ "ftl-world-2": {
+  "f": "baked/ftl-world-2",
+  "w": 970,
+  "h": 741
+ }
+}
