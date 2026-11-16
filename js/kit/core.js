@@ -136,10 +136,14 @@
     el.style.touchAction = 'none';
   };
 
-  // Keyboard state (arrows/space) for desktop play.
+  // Keyboard state (arrows/space) for desktop play, for the old kit pages.
+  // On a Phaser page this must not cancel the event: Phaser 4.2.1 ignores a key event that is already cancelled, so
+  // Space and the arrows went dead in every Phaser game (found in Spider IK, 2026-11-16). Phaser stops the page
+  // scrolling itself for the keys a game captures (keyboard.addKeys).
   Kit.keys = {};
   addEventListener('keydown', function (e) {
     Kit.keys[e.key] = true;
+    if (Kit.play && Kit.play.game) return;
     if (e.key === ' ' || e.key.indexOf('Arrow') === 0) e.preventDefault();
   });
   addEventListener('keyup', function (e) { Kit.keys[e.key] = false; });

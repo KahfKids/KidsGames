@@ -24,7 +24,7 @@ Target, unchanged: **a steady 60 frames per second in the Kahf Kids app WebView 
    4.2.1 while finishing Helping Home, and so kept as kit code:
    - screen sharpness: the Scale Manager reads `devicePixelRatio` but never applies it, so `Kit.play` sizes the canvas;
    - AVIF: the engine only tests WebP, so a game tests AVIF once before it loads;
-   - decoding pictures off the main thread: the loader decodes on it (no `createImageBitmap`); Helping Home's `offThread`;
+   - decoding pictures off the main thread: the loader decodes on it (no `createImageBitmap`); `Kit.play.offThread(game)` in Boot's preload (lifted from Helping Home's `offThread`, 2026-11-16);
    - pinch zoom: none (drag, wheel and camera zoom are the engine's);
    - sound categories, ducking, take variation, a cap on overlapping sounds (`Kit.snd`, section 3a);
    - "the nearest thing within a finger's width" for a child's tap: game design, not a hit test.
@@ -33,6 +33,10 @@ Target, unchanged: **a steady 60 frames per second in the Kahf Kids app WebView 
    picture (`setInteractive({ pixelPerfect })` and `input.hitTestPointer`), timers (`time.delayedCall`), the `?perf`
    readout (a Text object), distances (`Phaser.Math.Distance`). A browser timer stays only where the engine's clock is
    wrong for the job: saving progress must happen while the page is hidden, when Phaser's clocks stop.
+   **Keys:** Phaser 4.2.1 ignores a key event that something else has already cancelled. `js/kit/core.js` used to
+   cancel Space and the arrows on every page (for the old kit games' scrolling), so they were dead in every Phaser
+   game; it now leaves them alone when a Phaser game runs (2026-11-16). Nothing else on a Phaser page may
+   `preventDefault` keys.
    **Pixel-perfect hit areas cost on every finger move**: Phaser tests each interactive object for "over" and "out" on
    each move, and a pixel-perfect test reads a pixel back from the graphics chip. Many of them (things in a town) are
    kept switched off and switched on only for the one `hitTestPointer` a tap needs (Helping Home's `hitArea` / `hitTest`).
@@ -47,11 +51,11 @@ Target, unchanged: **a steady 60 frames per second in the Kahf Kids app WebView 
 
 ## 3. Art
 
-- **Picture files are AVIF**, written by `enc.save` (Helping Home: `games/helping-home/tools/art/enc.py`), with a WebP copy beside each one. A game tests AVIF once before it loads anything and uses the WebP copies only in a WebView too old for it; the WebP copies are never in an offline list. Measured on Helping Home's sheets: about 45% smaller than WebP and closer to the render.
+- **Picture files are AVIF** (measure first: Spider IK's flat, already small lossy WebP caves saved only 13% as AVIF, a second lossy pass and a slower decode on phones, so they stay WebP, noted in its `art.js`), written by `enc.save` (Helping Home: `games/helping-home/tools/art/enc.py`), with a WebP copy beside each one. A game tests AVIF once before it loads anything and uses the WebP copies only in a WebView too old for it; the WebP copies are never in an offline list. Measured on Helping Home's sheets: about 45% smaller than WebP and closer to the render.
 - **Full games may render their art from 3D models** scripted in Blender (Helping Home's `tools/art/`: one isometric camera, baked to trimmed atlases, with half-size normal maps for backgrounds and furniture so the engine's lights shade them). Nothing is retouched by hand.
 
 - **A picture is made once.** Either an image file (an atlas when there are many), or, for a plain interface shape only (a card, a ring, a glow, a tick), painted once into the engine's canvas texture: `Kit.play.tex(scene, key, w, h, paint, pad)`, one texture pixel per design unit. A picture of a thing (a garment, a plant, a person) comes from the art pipeline, never from code: Helping Home's character maker shows the child's own rendered clothes, cropped from the layer sheets (`tools/art/you_boxes.py`). Nothing is painted, and no Graphics is rebuilt, per frame. A shape that changes now and then (a ring that fills) is the engine's canvas texture repainted only when its value moves, shown as an image (as the engine's Text is): a Graphics is rebuilt and drawn on its own every frame. Measured in Helping Home, the four need rings as Graphics cost 8 draw calls, about 0.75 ms of the graphics chip and over 1 ms of the CPU (6x slower) a frame; as images, nothing measurable.
-- Content rules are in `AGENTS.md`: no faces, no people, no music, no rainbows, no words a child must read in a game.
+- Content rules are in `AGENTS.md`: no faces, no people, no music, no rainbows. Words are each game's own choice (`AGENTS.md` rule 18).
 - A game's look is written in the header of its `art.js`. Helping Home's look (soft toys: round, light top and deeper bottom, gloss, soft shadow, no black outlines) is the house style until the owner picks another.
 
 ## 3a. Sound
@@ -63,6 +67,38 @@ Target, unchanged: **a steady 60 frames per second in the Kahf Kids app WebView 
 - **Play through `Kit.snd`** (`js/kit/sound.js`): `Kit.snd.load(this, dir)` in Boot's preload; `Kit.snd.play(name, { vol, pan })` picks a take (never the last one) with a little detune and level; `Kit.snd.loop`, `Kit.snd.amb` (one ambience bed, cross-faded), `Kit.snd.voice(url)` (a recorded voice: effects and ambience duck under it). Categories `ui`, `sfx`, `amb`, `voice`. At most 3 of one sound and 12 in all at once.
 - **What makes a place sound alive** (Helping Home, `listen` and `ambience` in `life/game.js`): every action of the child has its sound and repeats it while it lasts; footsteps fire on the walk animation's own frames (`animationupdate`) with the ground of the place; things far from the middle of the view are quieter and panned; a bed of sound for where the child is (town, park, fields, night, indoors, wind on the map).
 - **Make the audio context while the page loads, never on the first sound**: making it took about 130 ms, and the first door the child opened froze the game for that long (found with the CPU profiler). Phaser makes its own at boot.
+
+## 4a. The HUD (owner, 2026-11-16, from Spider IK; the `game-ui-ux` skill)
+
+Load the `game-ui-ux` skill for any HUD or menu. Spider IK's `game/hud.js` is the reference.
+
+**While playing, the screen is the game.**
+- One pause button, top-left in the safe area, on a dark plate (readable on any background; game-ui-ux asks 3:1
+  contrast for key visuals, so it never fades). No row of buttons over the play area.
+- Only the progress the player needs (Spider IK: the orbs still to find), beside the pause button, one gap apart.
+  Where it fits the fiction it is also shown in the world (diegetic): Spider IK's orbs circle the exit portal, dim
+  until taken. The HUD copy stays as the fallback the skill asks for.
+- Controls are never hidden (owner, 2026-11-16: hidden controls are hard to learn; input-systems: on-screen stick
+  and buttons sized for thumbs, through the same actions). On a touch screen the stick rests at its home bottom-left
+  (with its four arrows) and floats to wherever the thumb lands, returning when released; the jump button sits
+  bottom-right. Both are see-through rings (a whisper of dark fill, a white edge with a soft shadow, the stick's four
+  arrows) at 50% at rest and full when pressed: solid dark discs covered the cave and distracted; at 32% they vanished
+  on dark rock (owner, 2026-11-16).
+- Prompts follow the device last used (a touch or a key switches them at once, no restart): touch shows the on-screen
+  controls and "Drag here to crawl / Tap here to jump"; keys hide them and say "Arrow keys or WASD to crawl · Space to
+  jump". The first level teaches them (level-design: a teach beat) until each control has been used once, and the
+  pause screen repeats the controls for the device in use.
+- A level announces itself large in the middle for a moment, then leaves.
+
+**Everything else is a stack of screens over the paused game** (game-ui-ux section 4). The pause screen: the level as
+its title, the way out (back arrow) where the pause button was, and big labelled choices (Resume first and
+highlighted, Restart, Levels, Sound). The level map opens from it and closing the map pops back to it. Only the top
+screen takes input; the game scene is paused under them (`scene.pause`, asked for, not tested, because scene changes
+are queued to the next step).
+
+**Laid out properly:** groups anchored to the safe area (`view.s*`), one gap constant, every touch target at least
+150 units, text at least 26 px at 1080, menus with a header row (back, title, close) and content columns that never
+touch. Checked by screenshot at 375 x 812, 844 x 390 and 1024 x 768.
 
 ## 4. Feel (what makes it a game)
 
@@ -79,13 +115,21 @@ games/<id>/<name>/<scene>.js one Phaser scene per file; all state is set in crea
 games/<id>/<name>/main.js    the Boot scene and Kit.play.start
 ```
 
+### 5a. Loading and the way out (learned on Helping Home 1.8.6 and 1.8.7, 2026-11-16)
+
+- **The page draws before anything downloads.** Every `<script src>` is `defer` (they still run in order), and a loading picture sits inline in `index.html` above them: drawn with inline SVG and CSS on the game's own background colour, with no image file and no words. With plain script tags the WebView drew nothing until the 1.3 MB engine and the game had arrived: a long white screen on a first visit, and children left. Measured with the engine held back 6 s: the old page showed nothing until the game drew; the new one showed its loader at 28 ms (0.3 s on the live site).
+- **The loader never sits still and never lies.** It creeps a little while the engine downloads, then follows the engine's loader (`this.load.on('progress')` in Boot and in the first scene that loads the world), and only moves forward. The game removes it when the first view is ready, on **every** way in: the normal start, the first visit's dress-up screen, and a guide opened by link. Helping Home's is `HHLoad.to(v)` and `HHLoad.done()` in `games/helping-home/index.html`.
+- **A page and its scripts can come from different releases.** For up to ten minutes after a push, GitHub Pages lets a browser keep an older script, so a new `index.html` can run an old `game.js` (seen on the live site right after 1.8.6: the old script never removed the loader, which then covered the running game). Anything a new page expects from a script needs a fallback that works with the older script: Helping Home's loader also leaves once any scene past Boot is running and nothing is loading. Check the live page after every release.
+- **The way out is a back arrow** in the top-left corner (the same arrow as the kit's sorry screen; in a game with a pause screen, on the pause screen where the pause button was), never a house: in a game with homes in it, a house reads as "go home", and Helping Home's doors already used one. Guides and panels that lead back use the same arrow.
+- **The loader is in the kit (2026-11-16, Spider IK):** the page keeps its own inline picture (`<div id="kit-load">`, its CSS reading `--p`) and loads `js/kit/load.js` right after it, without `defer`; `Kit.play.start` makes it follow the engine's loaders, the game calls `Kit.load.done()` when its first view is ready, and it also leaves by itself once a scene past Boot runs with nothing loading. Helping Home still has its own copy until its next release.
+
 A scene object is used again each time the scene starts: keep no state outside `create()`. `?debug` exposes a test hook (`window.HHT` in Helping Home) and each scene has `this.dbg` with jumps to every state.
 
 ## 6. Done means
 
 1. Played through in a browser at a phone on its side (844 x 390), a tablet (1024 x 768) and upright; no console errors.
 2. Every state photographed (the test hook reaches each one) and looked at.
-3. Exit, the star or finish, and saving checked. `KahfBridge.complete()` is called when a round ends.
+3. Exit (a back arrow), the star or finish, and saving checked. The loader shows at once and leaves on every way in (section 5a). `KahfBridge.complete()` is called when a round ends.
 4. Measured, never guessed (performance-optimization): `NODE_PATH=<a checkout with playwright> node tools/perf-check.js <url> 6` throttles the CPU six times and reports the game's own work per frame idle and while dragging, draw calls, and the graphics chip's own time (`gpu`, through the browser's GPU timer: this machine's chip, so compare builds, not phones; on a phone the chip is usually what lags). `--mute` starts with sound off. Run three times and compare averages: one run varies by about 0.4 ms. Budget: p95 under 8 ms, no frame over 30 ms, no long texture upload (Helping Home 1.8.5 at night: idle 2.6 ms average, p95 3.7 ms, 2.4 ms of GPU, 31 draw calls; the live 1.8.4 was 3.9 ms, 2.8 ms of GPU, 38 draw calls). A long frame is profiled (Chrome's CPU profiler through CDP) before anything is changed.
 5. Run in the app on a budget Android phone before it is called finished: time to first picture, and frames per second.
 6. Release steps as in `AGENTS.md` (version bump; Helping Home: `make-offline.py`).
@@ -96,7 +140,8 @@ A scene object is used again each time the scene starts: keep no state outside `
 |------|----------|-------|
 | Helping Home: the life game (`games/helping-home/index.html`, `life/`; data in `tools/data/`, art tools in `tools/art/`) | **Phaser 4** | built 2026-11-11, finished 2026-11-16 (1.8.5): engine-first pass, recorded sound on Phaser, maker from rendered clothes, measured at 6x CPU; not yet measured on a real phone |
 | Helping Home: the old town, the four-job home, and the separate adhan, wudu, salah and washing machine pages | removed 2026-11-11 | replaced by the life game (in git history). `settings.html` (city and madhab) remains and is not yet linked from the game |
-| Breakout, 2048, Follow the Light, Hextris, Tower Blocks, Spider IK, the drawing game and the other kit games | Canvas2D kit | to rebuild as full games, one at a time |
+| Spider IK (`games/spider-ik/`: `game/`, shapes from `tools/trace.js`, sounds in `audio/sfx`) | **Phaser 4** + Matter | rebuilt 2026-11-16, not yet released: Matter physics, recorded CC0 sounds, Phaser interface; measured against the old page at 6x CPU; not yet on a real phone |
+| Breakout, 2048, Follow the Light, Hextris, Tower Blocks, the drawing game and the other kit games | Canvas2D kit | to rebuild as full games, one at a time |
 | Checkers, Tic Tac Toe (`js/board/`) | Canvas2D | to rebuild |
 | Quizzes (`js/quiz/`) | DOM | to rebuild on Phaser |
 

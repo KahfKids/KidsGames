@@ -106,7 +106,7 @@ A game is done when all of this is true, checked at 360×640, 375×812, a phone 
 - Holds 60 frames per second on the budget phone; the same speed on a 60 Hz and a 120 Hz screen.
 - Plays fully offline after one visit; makes no request to any other site.
 - Fills the whole screen inside the safe areas; no boxed play area.
-- Plays with one thumb, with no words to read; touch first, keys and mouse second.
+- Plays with one thumb; words only where the game wants them (each game decides, `AGENTS.md` rule 18); touch first, keys and mouse second.
 - Pauses when the app goes to the background.
 - Saves levels or stars and brings them back; calls `KahfBridge.complete()` on level complete.
 - Has sound with a mute that is remembered, and feedback on every tap, hit, win and loss.

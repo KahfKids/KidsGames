@@ -1,0 +1,23 @@
+{
+ "about": "Spider IK's sound effects and cave ambience, cut from CC0 recordings by tools/sound-cut.py. Times are seconds in the original (../KidsGames-sounds/bigsoundbank/<id>-<title>.mp3), picked at the recording's own event boundaries (ffmpeg silencedetect). Each sound matches what happens on screen in the caves; credits in ../CREDITS.md.",
+ "out": "games/spider-ik/audio/sfx",
+ "src": "../KidsGames-sounds/bigsoundbank",
+ "sounds": {
+  "tap":    { "bus": "ui",  "src": "0036-switch-desk-lamp.mp3", "cuts": [[0.10, 0.16]], "hp": 200, "fade": [0.002, 0.06], "lufs": -24 },
+  "page":   { "bus": "ui",  "src": "0164-turned-page.mp3", "cuts": [[0.08, 0.36]], "fade": [0.005, 0.12], "lufs": -22 },
+
+  "foot":   { "src": "0582-four-dice-on-wooden-table.mp3", "cuts": [[0.815, 0.08], [0.962, 0.08], [1.112, 0.08], [1.256, 0.08]], "hp": 500, "fade": [0.001, 0.04], "lufs": -31 },
+  "jump":   { "src": "1797-whoosh-5.mp3", "cuts": [[0.19, 0.17]], "fade": [0.005, 0.06], "lufs": -21 },
+  "land":   { "src": "0576-canvas-bag-on-floor.mp3", "cuts": [[0.08, 0.30], [0.91, 0.30]], "hp": 120, "fade": [0.002, 0.12], "lufs": -27 },
+  "orb":    { "src": "1384-drops-of-water-1.mp3", "cuts": [[0.14, 0.30], [1.57, 0.30]], "hp": 300, "fade": [0.002, 0.12], "lufs": -18 },
+  "open":   { "src": "0192-swirl-in-the-water.mp3", "cuts": [[0.21, 0.78]], "fade": [0.01, 0.3], "lufs": -21 },
+  "portal": { "src": "0192-swirl-in-the-water.mp3", "cuts": [[2.32, 0.95]], "fade": [0.01, 0.35], "lufs": -18 },
+  "tele":   { "src": "1795-whoosh-3.mp3", "cuts": [[0.11, 0.46]], "fade": [0.003, 0.12], "lufs": -19 },
+  "back":   { "src": "1798-whoosh-10.mp3", "cuts": [[0.17, 0.24]], "fade": [0.003, 0.08], "lufs": -21 },
+  "pop":    { "src": "1074-bubbles-burst.mp3", "cuts": [[0.18, 0.2], [1.505, 0.2], [2.83, 0.2]], "fade": [0.001, 0.08], "lufs": -19 },
+  "zap":    { "src": "2143-flashing-light-bulb-1.mp3", "cuts": [[0.105, 0.14]], "hp": 150, "fade": [0.001, 0.05], "lufs": -25 },
+
+  "hum":      { "src": "2118-neon-or-transformer-1.mp3", "loop": [1.0, 6.0], "x": 1.0, "lufs": -27 },
+  "amb-cave": { "bus": "amb", "src": "2136-cave-2.mp3", "loop": [5.0, 30.0], "x": 2.0, "lufs": -24 }
+ }
+}

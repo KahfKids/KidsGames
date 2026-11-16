@@ -50,7 +50,8 @@ Decided by the owner on 2026-11-11: **every game and every quiz is built on Phas
 15. **No music.** No notes, melodies, jingles or instrument sounds. Sound effects are recorded natural sounds, played by Phaser's sound system through `js/kit/sound.js` (old kit pages: `js/kit/audio.js`).
 16. **No rainbows** or rainbow-coloured effects.
 17. **Islamic content comes from the source**, looked up when it is written, never from memory (`docs/quiz-quality-plan.md`). Worship is never scored.
-18. **A game plays without words a child must read** (quizzes are the reading pages). No `alert()`. Touch first.
+18. **Words are each game's own choice** (owner, 2026-11-16: "every game is unique"). Use words where they help the game (titles, story, labels, tips) and pictures where they work better; keep what a game already had unless the owner says otherwise. No `alert()`. Touch first.
+18a. **The HUD is immersive and laid out properly** (owner, 2026-11-16; the `game-ui-ux` skill). While playing, the screen is the game: one pause button in a corner and only the progress the player needs, shown in the world where it can be (Spider IK: orbs circling the exit) with a small full-contrast copy in the HUD. Everything else (resume, restart, level map, sound, the way out) is on a pause screen pushed over the paused game, a stack of screens. Controls are never hidden (input-systems): on a touch screen the stick and buttons always show at their home, quiet at rest and bright when used, the stick floating to the thumb; prompts and tips follow the device last used (touch or keys); the first level teaches the controls until each is used; the pause screen repeats them. Nothing fades below 3:1 contrast. Anchored to the safe area, one gap constant, nothing touching, checked at 375 x 812, 844 x 390 and 1024 x 768 (full text: `docs/phaser-standard.md` section 4a).
 
 ### Releasing and safety
 

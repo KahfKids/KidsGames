@@ -126,6 +126,7 @@
       if (e && e.message && /WebGL|context/i.test(e.message) && !(game && game.isRunning)) sorry(e.message);
     });
     if (Kit.snd) Kit.snd.init(game);
+    if (Kit.load) Kit.load.watch(game);                  // the page's loading screen follows the engine's loaders (js/kit/load.js)
     if (Kit.host) Kit.host.ready();
     Kit.play.game = game;
     return game;
@@ -165,5 +166,32 @@
     return key;
   }
 
-  Kit.play = { W: W, H: H, start: start, fit: fit, tex: tex, exit: exit, sorry: sorry, dpr: dpr, sharp: sharp, game: null };
+  // Pictures decoded off the main thread (the engine's loader decodes on it, which stalls a frame on a phone for each
+  // big picture). The loader's image file also asks the browser for a decoded copy (createImageBitmap, on another
+  // thread); the upload to the graphics chip then uses that copy. Lifted from Helping Home (game.js offThread), which
+  // keeps its own copy until it is next released. Call once in Boot's preload: Kit.play.offThread(this.game).
+  function offThread(g) {
+    var gl = g.renderer && g.renderer.gl, IF = Phaser.Loader.FileTypes.ImageFile.prototype;
+    if (!gl || !window.createImageBitmap || IF.kitDecode || IF.lifeDecode) return; IF.kitDecode = true;
+    var texImage = gl.texImage2D, own = IF.onProcess, how = null;
+    gl.texImage2D = function () {
+      var a = arguments, im = a[a.length - 1], b = im && im._bmp;
+      if (!b) { if (!how && im instanceof HTMLImageElement) how = { imageOrientation: gl.getParameter(gl.UNPACK_FLIP_Y_WEBGL) ? 'flipY' : 'none', premultiplyAlpha: gl.getParameter(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL) ? 'premultiply' : 'none' }; return texImage.apply(gl, a); }
+      im._bmp = null; a[a.length - 1] = b;
+      var flip = gl.getParameter(gl.UNPACK_FLIP_Y_WEBGL); if (flip) gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);   // (the copy is already the right way up)
+      try { texImage.apply(gl, a); } catch (e) { a[a.length - 1] = im; if (flip) gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true); b.close(); return texImage.apply(gl, a); }
+      if (flip) gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true); b.close();
+    };
+    IF.onProcess = function () {
+      var self = this, blob = this.xhrLoader && this.xhrLoader.response;
+      if (how && blob instanceof Blob) {                                   // ready when both the <img> and the decoded copy are
+        var done = this.onProcessComplete, n = 2, bmp = null;
+        this.onProcessComplete = function () { if (--n) return; if (bmp) self.data._bmp = bmp; self.onProcessComplete = done; done.call(self); };
+        createImageBitmap(blob, how).then(function (b) { bmp = b; self.onProcessComplete(); }, function () { self.onProcessComplete(); });
+      }
+      own.call(this);
+    };
+  }
+
+  Kit.play = { W: W, H: H, start: start, fit: fit, tex: tex, exit: exit, sorry: sorry, dpr: dpr, sharp: sharp, offThread: offThread, game: null };
 })();
