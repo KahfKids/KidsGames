@@ -78,6 +78,17 @@ Game-dev skills from `gamedev-skills/awesome-gamedev-agent-skills` are installed
 | Matching, grids, sorting, undo, solvable levels | `puzzle` |
 | What is saved, slots, migration | `save-systems` (a saved-progress shape change is still an "ask first") |
 | A game's design doc | `game-docs` |
+| Sound layout and variation (effects only) | `audio-design` (no music, rule 15) |
+| Enemy and NPC behaviour, pathfinding | `game-ai`, `ai-behavior-trees-utility-ai` |
+| Seeded levels, loot, random generation | `procedural-gen` |
+| Branching talk and stories | `dialogue-systems`, `visual-novel` |
+| Physics feel and tunnelling | `physics-tuning` |
+| Camera follow, zoom, shake | `camera-systems` |
+| Visual effects in GLSL | `shader-programming` (phones: no full-screen filters, see `docs/helping-home-v2-plan.md`) |
+| Genres: jumping, runs, stats, defence, cards, survival | `platformer`, `roguelike`, `rpg`, `tower-defense`, `card-game`, `survival-crafting`, `fps-shooter` |
+| One-question prototype, timed jam | `prototype-fast`, `game-jam` |
+| Old PixiJS pages (small fixes only) | `pixijs-rendering` |
+| A 3D game (none yet; adding three.js is ask first) | `threejs-scene-setup`, `threejs-gltf-loading`, `threejs-materials-lighting` |
 
 **Where a skill's advice does not apply here:**
 
@@ -92,7 +103,7 @@ Game-dev skills from `gamedev-skills/awesome-gamedev-agent-skills` are installed
 | Outside fonts, CDNs, analytics | Never (rule 13) |
 | Art with faces, rainbow effects | Never (rules 14, 16) |
 
-`audio-design`, the PixiJS and three.js skills, and the genre skills not listed above are **not installed on purpose**. Add the three.js ones when the first 3D game starts (ask first, rule 5).
+**Not for this repo even though installed:** `steam-publish` and `itch-publish` (we deploy by pushing to GitHub Pages, rule 20), the Godot, Unity, Unreal and Roblox advice inside shared skills, and any skill step that adds music, a build step or an outside request. The skill list is long, so when two skills seem to fit, pick the one in the table above.
 
 ## How to work
 
