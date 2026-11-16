@@ -1,7 +1,12 @@
 # CLAUDE.md
 
-The rules for this repo are in **[AGENTS.md](./AGENTS.md)**. It is loaded here:
+All rules for this repo are in **[AGENTS.md](./AGENTS.md)**, loaded here:
 
 @AGENTS.md
 
-The two that matter most: **every 2D game is drawn by PixiJS and every 3D game by three.js, with no fallback** (`docs/game-standard.md`, `docs/pixi-performance.md`), and **a push to `main` is a production deploy, so push only when the owner asks.**
+## Claude Code specifics
+
+- **Engine:** every game and quiz is Phaser 4, vendored, started only by `Kit.play.start`. WebGL only, no fallback (`docs/phaser-standard.md`). PixiJS and Canvas2D exist only in old pages that get small fixes.
+- **Skills:** game-dev skills are in `.claude/skills/`. Skip the router's engine detection (there is no `package.json`) and use the task skill from the table in `AGENTS.md`. Where a skill disagrees with `AGENTS.md`, `AGENTS.md` wins.
+- **Git:** work on `main`, commit and push only when the owner asks. A push to `main` is a production deploy. Commit only your own files; the owner often has uncommitted work.
+- **Verify, don't assume:** run the page in the browser pane at 375 x 812, 844 x 390 and 1024 x 768 and read the console before saying a change works. Say what you could not test (for example a real Android phone).

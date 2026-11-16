@@ -61,7 +61,7 @@ A scene object is used again each time the scene starts: keep no state outside `
 
 | Page | Built on | State |
 |------|----------|-------|
-| Helping Home: the life game (`games/helping-home/index.html`, `life/`; data in `tools/data/`, art tools in `tools/art/`) | **Phaser 4** | built 2026-11-11: 17 places, people, animals, coins, school, vehicles, wudu and salah guides, engine lighting; not committed, not measured on a phone |
+| Helping Home: the life game (`games/helping-home/index.html`, `life/`; data in `tools/data/`, art tools in `tools/art/`) | **Phaser 4** | built and released 2026-11-11 (1.8.0, 1.8.1): 17 places, people, animals, coins, school, vehicles, wudu and salah guides; night is tints and glow pictures, not engine lights or filters (cost on phones). Phone measurement still owed: read `?perf` on a budget Android phone |
 | Helping Home: the old town, the four-job home, and the separate adhan, wudu, salah and washing machine pages | removed 2026-11-11 | replaced by the life game (in git history). `settings.html` (city and madhab) remains and is not yet linked from the game |
 | Breakout, 2048, Follow the Light, Hextris, Tower Blocks, Spider IK, the drawing game and the other kit games | Canvas2D kit | to rebuild as full games, one at a time |
 | Checkers, Tic Tac Toe (`js/board/`) | Canvas2D | to rebuild |
