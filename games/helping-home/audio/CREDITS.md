@@ -103,3 +103,65 @@ Every clip (Arabic wording, phrase boundaries, recitation style) needs a qualifi
 - salah/jalsa is cut from Qur'an 71:28 (a recitation, not a spoken du'a).
 - The salah words come from three voices: Zacker (most words), the Accra imam (salam) and Aaqib Azeez (jalsa, Qur'an).
 - salah/amin is a spoken word, not a prayer "amin".
+
+## S. Sound effects and ambience: Joseph Sardin, BigSoundBank.com (CC0 1.0)
+
+Every effect and ambience bed in `audio/sfx/` (one audio sprite `sfx.m4a` and the loops) is cut from recordings by Joseph Sardin
+on BigSoundBank.com, released under CC0 1.0 (licence page checked 2026-11-16: https://bigsoundbank.com/licenses.html). No credit is
+required; it is given gladly: "Additional sounds: Joseph SARDIN - BigSoundBank.com". The originals are kept outside the repo in
+`../KidsGames-sounds/bigsoundbank/` for other games. What was taken from each, and how, is in `audio/sfx/recipe.json`
+(`tools/sound-cut.py`: cut at the recording's own event boundaries, high-passed, faded, levelled: actions about -18 LUFS, the interface quieter at -23 to -25, beds -21 to -27, footsteps
+-26 to -28 and played softly; mono AAC).
+No music, no instruments: natural sounds only.
+
+| sounds in the game | recording | source |
+|---|---|---|
+| click, tap | switch desk lamp | https://bigsoundbank.com/switch-desk-lamp-s0036.html |
+| water | faucet hands | https://bigsoundbank.com/faucet-hands-s0041.html |
+| amb-day | countryside | https://bigsoundbank.com/countryside-s0097.html |
+| ride | bicycle rear wheel | https://bigsoundbank.com/bicycle-rear-wheel-s0140.html |
+| cook | frying pan 2 | https://bigsoundbank.com/frying-pan-2-s0144.html |
+| bath | fill bathtub | https://bigsoundbank.com/fill-bathtub-s0175.html |
+| splash | swirl in the water | https://bigsoundbank.com/swirl-in-the-water-s0192.html |
+| write | pencil | https://bigsoundbank.com/pencil-s0221.html |
+| duck | ducks | https://bigsoundbank.com/ducks-s0276.html |
+| goat | bleating goat 1 | https://bigsoundbank.com/bleating-goat-1-s0279.html |
+| rooster | song of rooster | https://bigsoundbank.com/song-of-rooster-s0283.html |
+| coin | coin in cup 1 | https://bigsoundbank.com/coin-in-cup-1-s0339.html |
+| knock, pop | knock on a light door | https://bigsoundbank.com/knock-on-a-light-door-s0374.html |
+| step-floor | footsteps shoe on parquet | https://bigsoundbank.com/footsteps-shoe-on-parquet-s0376.html |
+| hen | annoyed hen | https://bigsoundbank.com/annoyed-hen-s0453.html |
+| cook | small broth in a pot | https://bigsoundbank.com/small-broth-in-a-pot-s0492.html |
+| cat | little meow of a cat | https://bigsoundbank.com/little-meow-of-a-cat-s0494.html |
+| chalk | chalk on blackboard | https://bigsoundbank.com/chalk-on-blackboard-s0541.html |
+| bag | canvas bag on floor | https://bigsoundbank.com/canvas-bag-on-floor-s0576.html |
+| blocks | four dice on wooden table | https://bigsoundbank.com/four-dice-on-wooden-table-s0582.html |
+| turn | faucet 3 | https://bigsoundbank.com/faucet-3-s0652.html |
+| paper | paper | https://bigsoundbank.com/paper-s0785.html |
+| goat | dwarf goat bleating | https://bigsoundbank.com/dwarf-goat-bleating-s0880.html |
+| amb-wind | wind in tall grass | https://bigsoundbank.com/wind-in-tall-grass-s0908.html |
+| fountain | fountain of a japanese temple | https://bigsoundbank.com/fountain-of-a-japanese-temple-s0913.html |
+| dog | barking dog | https://bigsoundbank.com/barking-dog-s0916.html |
+| amb-night | field cricket | https://bigsoundbank.com/field-cricket-s1020.html |
+| kick | ball kicked | https://bigsoundbank.com/ball-kicked-s1044.html |
+| bounce | ball rebounds | https://bigsoundbank.com/ball-rebounds-s1045.html |
+| amb-park | parisian park children games | https://bigsoundbank.com/parisian-park-children-games-s1082.html |
+| swing | swing lightly loaded | https://bigsoundbank.com/swing-lightly-loaded-s1094.html |
+| cloth, soft | synthetic coat rubbed | https://bigsoundbank.com/synthetic-coat-rubbed-s1104.html |
+| eat | apple crunched 2 | https://bigsoundbank.com/apple-crunched-2-s1114.html |
+| sew | sewing machine slow speed | https://bigsoundbank.com/sewing-machine-slow-speed-s1115.html |
+| pour | cold water in mug | https://bigsoundbank.com/cold-water-in-mug-s1156.html |
+| dish | cutlery on table | https://bigsoundbank.com/cutlery-on-table-s1192.html |
+| step-grass | steps in the grass slow | https://bigsoundbank.com/steps-in-the-grass-slow-s1253.html |
+| step-stone | fast steps on concrete | https://bigsoundbank.com/fast-steps-on-concrete-s1318.html |
+| amb-town | village city center 1 | https://bigsoundbank.com/village-city-center-1-s1346.html |
+| drop, spark | drops of water 1 | https://bigsoundbank.com/drops-of-water-1-s1384.html |
+| bin | garbage bag in container | https://bigsoundbank.com/garbage-bag-in-container-s1523.html |
+| door | apartment door opening 1 | https://bigsoundbank.com/apartment-door-opening-1-s1702.html |
+| door | apartment door closing 1 | https://bigsoundbank.com/apartment-door-closing-1-s1704.html |
+| cat | meow cat 2 | https://bigsoundbank.com/meow-cat-2-s1890.html |
+| page | pages that turn 5 | https://bigsoundbank.com/pages-that-turn-5-s2212.html |
+| cow | cow moos 2 | https://bigsoundbank.com/cow-moos-2-s2382.html |
+| amb-house | sound atmosphere in a house | https://bigsoundbank.com/sound-atmosphere-in-a-house-s2458.html |
+| car | car passing 50km h 3 | https://bigsoundbank.com/car-passing-50km-h-3-s2987.html |
+| step-stair | step wooden staircase 1 | https://bigsoundbank.com/step-wooden-staircase-1-s3212.html |

@@ -207,6 +207,13 @@
     unhide(p) { p.hidden = false; const th = p.thing; if (th && th.k.states && th.k.act === 'bath') { th.state = th.k.states[0]; this.emit('state', th); } }
     stop(p) { this.release(p); p.path = []; p.then = null; p.state = 'idle'; p.pose = 'idle'; p.asleep = false; p.waitBus = null; p.wait = rnd(1, 3); }
     faceTo(p, q) { const dx = q.x - p.x, dy = q.y - p.y; p.face = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? '+x' : '-x') : (dy > 0 ? '+y' : '-y'); }
+    // facing while walking: the pictures face four ways, and a diagonal step is as much one way as the other, so the
+    // way already faced is kept until the other way clearly wins (else rounding swaps it, and the picture flips, each frame)
+    faceWalk(p, q) {
+      const dx = q.x - p.x, dy = q.y - p.y, ax = Math.abs(dx), ay = Math.abs(dy), f = p.face;
+      const keep = f === '+x' ? dx > 0 && ax >= ay * 0.5 : f === '-x' ? dx < 0 && ax >= ay * 0.5 : f === '+y' ? dy > 0 && ay >= ax * 0.5 : f === '-y' ? dy < 0 && ay >= ax * 0.5 : false;
+      if (!keep) this.faceTo(p, q);
+    }
     // is the keeper of this place (the shopkeeper, the baker, the teacher) at work here now? (not only while standing at the till)
     staffed(pid) { return this.people.some(o => { if (o.place !== pid || o.away || o.praying) return false; const b = this.block(o); return b && b.type === 'work' && b.place === pid; }); }
     allowed(p, k) { return !k.who || (k.who === 'kids' ? p.kid && !p.toddler : k.who === 'adults' ? !p.kid : k.who === 'toddler' ? p.toddler : true); }
@@ -340,22 +347,60 @@
       }
       return true;
     }
-    // someone on the road just ahead, or another vehicle: wait
-    blocked(v) {
-      const u = DIR[v.rot], fx = v.x + u[0] * v.len / 2, fy = v.y + u[1] * v.len / 2;
-      for (const q of this.walkers) { const rx = q.x - fx, ry = q.y - fy, ahead = rx * u[0] + ry * u[1]; if (ahead > -0.4 && ahead < 2.4 && Math.abs(rx * u[1] - ry * u[0]) < 0.9) return true; }
-      for (const o of this.vehicles()) {
-        if (o === v) continue; const rx = o.x - v.x, ry = o.y - v.y, ahead = rx * u[0] + ry * u[1], side = Math.abs(rx * u[1] - ry * u[0]);
-        if (ahead <= 0 || ahead > (o.len + v.len) / 2 + 0.9) continue;
-        if (side < 0.7 || (o.rot !== v.rot && side < 1.3 && o.id < v.id && o.v > 0.1)) return true;      // in my lane, or crossing my way at a junction
+    // where a vehicle will be after d more metres along its lane (it does not move)
+    along(v, d) {
+      const n = v.pts.length; let i = v.i, x = v.x, y = v.y;
+      while (true) {
+        if (i >= (v.loop ? n : n - 1)) { if (!v.loop) return null; i = 0; }
+        const q = v.pts[(i + 1) % n], dx = q[0] - x, dy = q[1] - y, L = Math.hypot(dx, dy);
+        if (L > d) return { x: x + dx / L * d, y: y + dy / L * d, rot: Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 0 : 180) : (dy > 0 ? 90 : 270) };
+        x = q[0]; y = q[1]; d -= L; i++;
       }
-      return false;
     }
-    drive(v, dt, vmax) { v.v = this.blocked(v) ? Math.max(0, v.v - 9 * dt) : Math.min(vmax, v.v + 3 * dt); return this.move(v, v.v * dt); }
+    /* Who may drive on. The road is cut into quarter-metre cells. Every vehicle's body holds the cells under it (a moving vehicle at a corner,
+       the cells it is about to swing through as well: the picture turns all at once); a vehicle
+       that drives on claims the cells its front will sweep before it could stop (a gap, plus its braking distance), round
+       corners and through junctions. A vehicle whose way ahead holds another's body or claim waits. Vehicles that were
+       moving claim first, so one already crossing a junction keeps it and the other waits at its edge; a ring of them
+       that have waited long for each other let the oldest through. Someone walking on the road
+       ahead stops a vehicle too. */
+    plan(dt) {
+      this.tPlan = (this.tPlan || 0) - dt; this.dPlan = (this.dPlan || 0) + dt; if (this.tPlan > 0) return;            // 20 times a second is enough
+      dt = this.dPlan; this.dPlan = 0; this.tPlan = 0.05;
+      const C = 4, vs = this.vehicles(), body = this.pB || (this.pB = new Map()), claim = this.pC || (this.pC = new Map()), swing = this.pS || (this.pS = new Map()), K = this.pK || (this.pK = []);
+      body.clear(); claim.clear(); swing.clear();
+      // the cells (number keys) under a len x wid box along rot, into K
+      const cells = (cx, cy, rot, len, wid) => { const h = rot % 180 === 0, hx = (h ? len : wid) / 2, hy = (h ? wid : len) / 2, y0 = Math.floor((cy - hy) * C), y1 = Math.floor((cy + hy - 1e-6) * C); K.length = 0;
+        for (let x = Math.floor((cx - hx) * C), x1 = Math.floor((cx + hx - 1e-6) * C); x <= x1; x++) for (let y = y0; y <= y1; y++) K.push((x + 4096) * 8192 + y + 4096); return K; };
+      const drives = v => v.pts && (!v.phase || v.phase === 'run' || v.phase === 'go' || v.phase === 'in');      // (the family car in its bay keeps its last lane)
+      for (const v of vs) {
+        for (const k of cells(v.x, v.y, v.rot, v.len, 0.7)) body.set(k, v);
+        const t = drives(v) && !v.blk && this.along(v, 0.5); if (t && t.rot !== v.rot) for (const k of cells(v.x, v.y, t.rot, v.len, 0.7)) if (!body.has(k)) swing.set(k, v);
+      }
+      vs.sort((p, q) => (p.blk ? 1 : 0) - (q.blk ? 1 : 0) || p.id - q.id);
+      for (const v of vs) {
+        if (!drives(v)) { v.blk = false; v.wait = 0; continue; }
+        const reach = 0.6 + v.v * v.v / 18 + v.v * 0.05, want = []; let by = null;          // (plus the way it goes before the next look)
+        for (let d = 0; d <= reach && !by; d += 0.25) {
+          const f = this.along(v, v.len / 2 + d); if (!f) break;
+          for (const k of cells(f.x, f.y, f.rot, 0.3, 0.7)) { const o = body.get(k) || claim.get(k) || swing.get(k); if (o && o !== v && o !== v.pass) { by = o; break; } want.push(k); }
+        }
+        // a ring of vehicles each waiting on the next (two noses in each other's way, or three round a junction): after a
+        // while the oldest of them goes first
+        if (by && (v.wait || 0) > 3) { let q = by, n = 0, old = v.id; while (q && q !== v && n < 8 && q.blk && drives(q)) { old = Math.min(old, q.id); q = q.by; n++; } if (q === v && old === v.id) { v.pass = by; by = null; } }
+        else if (v.pass && !v.pass.blk && v.pass.v > 0.1) v.pass = null;                                                                         // (until the other drives on)
+        if (!by) { const u = DIR[v.rot], fx = v.x + u[0] * v.len / 2, fy = v.y + u[1] * v.len / 2;
+          for (const q of this.walkers) { const rx = q.x - fx, ry = q.y - fy, ahead = rx * u[0] + ry * u[1]; if (ahead > -0.4 && ahead < 2.4 && Math.abs(rx * u[1] - ry * u[0]) < 0.6) { by = q; break; } } }
+        v.blk = !!by; v.by = by; v.wait = by ? (v.wait || 0) + dt : 0;
+        if (!by) for (const k of want) claim.set(k, v);
+      }
+    }
+    drive(v, dt, vmax) { v.v = v.blk ? Math.max(0, v.v - 9 * dt) : Math.min(vmax, v.v + 3 * dt); return this.move(v, v.v * dt); }
     stopSpot(zone) { const st = this.stops.find(x => x.zone === zone), pl = this.places[zone]; return st && pl.grid.spot(st.wait[0] - pl.at[0], st.wait[1] - pl.at[1]); }
     stepRoad(dt) {
       const L = this.lanes; if (!L) return;
       this.walkers = []; for (const p of this.people) if (!p.away && !p.hidden && this.places[p.place].roads.length) this.walkers.push(this.xy(p));
+      this.plan(dt);
       // cars and scooters come and go all the time, all over the town
       this.tCar -= dt;
       if (this.tCar <= 0) {
@@ -615,6 +660,8 @@
     }
     // the child joins the prayer of the place they are in
     joinPrayer(p) { const pr = this.prayers[p.place]; if (!pr || pr.stage === 'done' || p.praying) return false; return this.sendToPray(p, p.place); }
+    // the child changes their mind before the prayer has begun (walking there, or waiting while the others gather)
+    leavePrayer(p) { const pr = this.prayers[p.praying]; if (!pr || pr.stage !== 'gather') return false; pr.who = pr.who.filter(q => q !== p); this.endPraying(p); return true; }
     endPraying(p) { if (p.spot) { p.spot.by = null; p.spot = null; } p.praying = null; p.path = []; p.then = null; p.state = 'idle'; p.pose = 'idle'; p.wait = rnd(1, 4); }
     beginPrayer(pr, rakah) { pr.stage = 'pray'; pr.t = 0; pr.i = 0; pr.rakah = rakah; pr.steps = prayerSteps(rakah); this.emit('prayStart', pr.place); pr.who.forEach(p => { if (p.state === 'pray') { p.pose = pr.steps[0][0]; p.face = '-y'; } }); }
     stepPrayer(dt) {
@@ -665,7 +712,7 @@
           let left = p.speed * dt;
           while (left > 0 && p.path.length) {
             const q = p.path[0], d = dist(p, q);
-            if (d > 1e-4) this.faceTo(p, q);
+            if (d > 1e-4) this.faceWalk(p, q);
             if (d <= left) { p.x = q.x; p.y = q.y; p.path.shift(); left -= d; } else { p.x += (q.x - p.x) / d * left; p.y += (q.y - p.y) / d * left; left = 0; }
           }
           if (!p.path.length) { const f = p.then; p.then = null; if (p.state === 'walk') { p.state = 'idle'; p.pose = 'idle'; } if (f) f(); }

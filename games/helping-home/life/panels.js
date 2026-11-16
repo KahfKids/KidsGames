@@ -30,34 +30,13 @@
     scarves: ['#F6E3B8', '#FBF6EA', '#F2A7B5', '#BFD3B2', '#CDEBFF', '#F2C6C0', '#DDDDE6'],
     kinds: { boy: [{ set: 'boy-kurta' }, { set: 'boy-thobe' }], girl: [{ set: 'girl-hair' }, { set: 'girl-scarf' }] }
   };
-  // when an icon is not in the sheet yet: another icon that says nearly the same, or one painted here ('pn-i-...')
-  const ALT = { hand: ['salam'], drops: ['drop'], parcel: ['gift'], people: ['heart'], moneybox: ['coin'], abacus: ['seeds'], school: ['book'] };
-  const SELF = { roller: 'pn-i-roller', flower0: 'pn-i-fl0', flower1: 'pn-i-fl1', flower2: 'pn-i-fl2', flower3: 'pn-i-fl3', flower4: 'pn-i-fl4' };
-  function ref(name) {                                                                // -> [texture, frame]
-    const ic = (Lf().data.art.icons) || [], list = [name].concat(ALT[name] || []);
-    for (let i = 0; i < list.length; i++) if (ic.indexOf('i-' + list[i]) >= 0) return ['ui', 'i-' + list[i]];
-    return SELF[name] ? [SELF[name]] : ['ui', 'i-star'];
-  }
+  // an icon from the sheet the Blender pipeline renders (ui); a name it does not have shows the star
+  function ref(name) { const ic = (Lf().data.art.icons) || []; return ['ui', ic.indexOf('i-' + name) >= 0 ? 'i-' + name : 'i-star']; }
   const setPic = (img, name) => { const r = ref(name); img.setTexture(r[0], r[1]); return img; };
   const pic = (sc, name, x, y, s) => { const r = ref(name); return sc.add.image(x || 0, y || 0, r[0], r[1]).setScale(s || 1); };
 
-  /* ---------- the pictures painted here, once ---------- */
+  /* ---------- the pictures painted here, once: plain interface shapes only (cards, dots, rings, the tick and the cross) ---------- */
   const rr = (c, x, y, w, h, r) => { c.beginPath(); c.roundRect(x, y, w, h, r); };
-  const circ = (cx, cy, r) => 'M' + (cx - r) + ' ' + cy + 'a' + r + ' ' + r + ' 0 1 0 ' + (2 * r) + ' 0a' + r + ' ' + r + ' 0 1 0 -' + (2 * r) + ' 0z';
-  const W = '#ffffff', D = '#d2cfe0';
-  // white pictograms (tinted by the colour they stand for); each part is [colour, svg path, stroke width?]
-  const GLYPH = {
-    bust: [[W, circ(64, 38, 27) + 'M14 124C14 88 36 76 64 76C92 76 114 88 114 124Z']],
-    hair: [[W, 'M20 82C10 36 34 10 64 10C94 10 118 36 108 82C102 60 94 46 64 44C34 46 26 60 20 82Z'], [D, 'M36 44C48 30 80 30 92 44C80 38 48 38 36 44Z']],
-    hairlong: [[W, 'M64 8C26 8 10 40 16 88C18 108 12 118 8 124L42 124C34 104 36 72 44 58C54 50 74 50 84 58C92 72 94 104 86 124L120 124C116 118 110 108 112 88C118 40 102 8 64 8Z']],
-    cap: [[W, 'M14 88C14 44 40 26 64 26C88 26 114 44 114 88Z'], [D, 'M10 88H118V92H10Z'], [W, 'M10 92H118V106H10Z'], [W, circ(64, 22, 8)]],
-    shirt: [[W, 'M42 14L14 32L4 62L30 72L38 58L38 114L90 114L90 58L98 72L124 62L114 32L86 14C82 28 46 28 42 14Z'], [D, 'M42 14C46 28 82 28 86 14L90 16C84 36 44 36 38 16Z']],
-    trousers: [[W, 'M30 12H98L106 116H72L64 56L56 116H22Z'], [D, 'M30 12H98V22H30Z']],
-    dress: [[W, 'M46 12H82L88 44L118 118H10L40 44Z'], [D, 'M40 44H88V52H40Z']],
-    scarf: [['#fff', 'M64 8C102 8 116 40 110 74C108 92 114 106 122 122H6C14 106 20 92 18 74C12 40 26 8 64 8ZM64 28C50 28 42 40 42 54C42 70 52 82 64 82C76 82 86 70 86 54C86 40 78 28 64 28Z']],
-    kurta: [[W, 'M42 10L16 26L6 62L30 70L38 50L38 96L90 96L90 50L98 70L122 62L112 26L86 10C82 22 46 22 42 10Z'], [W, 'M40 98H62V122H40ZM66 98H88V122H66Z'], [D, 'M64 24V60']],
-    thobe: [[W, 'M42 8L16 24L6 60L30 68L38 46L32 124H96L90 46L98 68L122 60L112 24L86 8C82 20 46 20 42 8Z'], [D, 'M64 22V64']]
-  };
   function paintAll(sc) {
     const T = (k, w, h, f, pad) => Kit.play.tex(sc, k, w, h, f, pad);
     T('pn-card', 400, 300, c => {
@@ -80,35 +59,6 @@
       c.strokeStyle = '#fff'; c.lineWidth = 22; c.lineCap = 'round'; c.lineJoin = 'round'; c.beginPath(); c.moveTo(50, 92); c.lineTo(80, 122); c.lineTo(132, 60); c.stroke();
     }, 14);
     T('pn-x', 64, 64, c => { c.strokeStyle = '#e4606f'; c.lineWidth = 15; c.lineCap = 'round'; c.beginPath(); c.moveTo(10, 10); c.lineTo(54, 54); c.moveTo(54, 10); c.lineTo(10, 54); c.stroke(); });
-    for (const n in GLYPH) T('pn-g-' + n, 128, 128, c => { GLYPH[n].forEach(p => { c.fillStyle = p[0]; c.fill(new Path2D(p[1]), 'evenodd'); }); });
-    T('pn-g-nocap', 128, 128, c => {
-      c.fillStyle = '#cfcbdc'; c.fill(new Path2D('M16 88C16 46 40 28 64 28C88 28 112 46 112 88Z M12 90H116V106H12Z'));
-      c.strokeStyle = '#e4566c'; c.lineWidth = 11; c.lineCap = 'round'; c.beginPath(); c.arc(64, 66, 50, 0, 7); c.moveTo(30, 100); c.lineTo(98, 32); c.stroke();
-    });
-    // a painted roller (until the sheet has one)
-    T('pn-i-roller', 96, 96, c => {
-      c.lineCap = 'round'; c.lineJoin = 'round'; c.strokeStyle = '#7a5a40'; c.lineWidth = 7; c.beginPath(); c.moveTo(48, 50); c.lineTo(48, 62); c.stroke();
-      c.fillStyle = '#e88a3c'; rr(c, 42, 60, 12, 30, 5); c.fill();
-      const g = c.createLinearGradient(0, 8, 0, 40); g.addColorStop(0, '#8fb5ff'); g.addColorStop(1, '#4f7fe0'); c.fillStyle = g; rr(c, 10, 10, 66, 28, 12); c.fill();
-      c.strokeStyle = '#7a5a40'; c.lineWidth = 7; c.beginPath(); c.moveTo(76, 24); c.lineTo(84, 24); c.lineTo(84, 48); c.lineTo(48, 48); c.stroke();
-      c.fillStyle = 'rgba(255,255,255,.5)'; rr(c, 18, 14, 40, 7, 3.5); c.fill();
-    });
-    // friendship flowers, growing: a sprout, a bud, a small flower, a bloom, a bloom with leaves
-    for (let s = 0; s < 5; s++) T('pn-i-fl' + s, 96, 96, c => {
-      c.lineCap = 'round'; c.lineJoin = 'round';
-      const leaf = (x, y, a) => { c.save(); c.translate(x, y); c.rotate(a); c.fillStyle = '#5fb85a'; c.beginPath(); c.ellipse(0, 0, 14, 7, 0, 0, 7); c.fill(); c.restore(); };
-      c.fillStyle = '#b98a5a'; c.beginPath(); c.ellipse(48, 86, 24, 7, 0, 0, 7); c.fill();
-      c.strokeStyle = '#4fa24d'; c.lineWidth = 6; const top = [66, 58, 46, 36, 28][s];
-      c.beginPath(); c.moveTo(48, 84); c.lineTo(48, top); c.stroke();
-      leaf(38, 76, -0.6); leaf(58, 70, 0.6);
-      if (s >= 3) { leaf(36, 58, -0.8); leaf(60, 52, 0.8); }
-      if (s === 1) { c.fillStyle = '#f28fa8'; c.beginPath(); c.ellipse(48, top - 6, 8, 11, 0, 0, 7); c.fill(); }
-      if (s >= 2) {
-        const n = s === 2 ? 5 : 6, r = s === 2 ? 9 : s === 3 ? 12 : 14, pc = ['', '', '#f6c453', '#f28fa8', '#f28fa8'][s];
-        c.fillStyle = pc; for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2; c.beginPath(); c.arc(48 + Math.cos(a) * r, top + Math.sin(a) * r, r * 0.72, 0, 7); c.fill(); }
-        c.fillStyle = s === 2 ? '#f08a3c' : '#fff3b0'; c.beginPath(); c.arc(48, top, r * 0.6, 0, 7); c.fill();
-      }
-    });
   }
   // a card of the visible size w x h (the texture carries 44 units of shadow on every side)
   function nine(sc, key, w, h, inset) { return sc.add.nineslice(0, 0, key, undefined, w + 88, h + 88, inset, inset, inset, inset); }
@@ -126,23 +76,15 @@
     c.on('pointerup', () => { if (dn) { dn = false; c.fn(); } });
     return c;
   }
-  // the people's pictures: the `cast` atlas if it exists (asked for once, quietly), else a faceless bust on a plate
-  let castNo = false;
+  // the people's pictures: the `cast` atlas (rendered head-and-shoulders portraits), loaded by the scene's loader when first wanted
   function withCast(sc, cb) {
     if (sc.textures.exists('cast')) { cb(); return; }
-    if (castNo || !window.fetch) return;
-    fetch(ART + 'p/cast.json', { method: 'HEAD' }).then(r => {
-      if (!r.ok) { castNo = true; return; }
-      if (!sc.sys.isActive()) return;
-      sc.load.atlas('cast', ART + 'p/cast' + EXT(), ART + 'p/cast.json');
-      sc.load.once('complete', () => { if (sc.sys.isActive() && sc.textures.exists('cast')) cb(); });
-      sc.load.start();
-    }).catch(() => { castNo = true; });
+    sc.load.atlas('cast', ART + 'p/cast' + EXT(), ART + 'p/cast.json');
+    sc.load.once('complete', () => { if (sc.sys.isActive() && sc.textures.exists('cast')) cb(); });
+    if (!sc.load.isLoading()) sc.load.start();
   }
-  const BUST = [0xe9a07a, 0x7fb7d9, 0xb59ad6, 0x8ccf9d, 0xf1c05e, 0xe58aa0, 0x9fc9a0, 0xd8a0c8];
   function mkPortrait(sc, id, size) {
-    let h = 0; for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
-    const c = sc.add.container(0, 0), pl = sc.add.image(0, 0, 'ui-plate').setScale(size / 124), bust = sc.add.image(0, 4, 'pn-g-bust').setScale(size * 0.62 / 128).setTint(BUST[h % BUST.length]);
+    const c = sc.add.container(0, 0), pl = sc.add.image(0, 0, 'ui-plate').setScale(size / 124), bust = sc.add.image(0, -2, 'ui', ref('people')[1]).setScale(size * 0.5 / 128);
     const im = sc.add.image(0, 0, 'ui', 'i-star').setVisible(false);
     c.add([pl, bust, im]);
     c.fill = () => {
@@ -215,7 +157,17 @@
   }
 
   /* ---------- the character maker and the wardrobe ---------- */
-  const SETGLYPH = { 'boy-kurta': 'kurta', 'boy-thobe': 'thobe', 'girl-hair': 'hairlong', 'girl-scarf': 'scarf' };
+  /* A garment as a tab's or a swatch's picture: the child's own rendered layer (the same sprite frame the figure uses),
+     cropped to that piece (life/art/you/boxes.json, measured by tools/art/you_boxes.py) and tinted its colour. */
+  const tintOf = c => hex(window.Life && Life.tint ? Life.tint(c) : c);
+  function garment(sc, img, set, layer, col, size, tall) {      // tall: fit this height instead of the piece's own (one scale for pieces compared side by side)
+    const B = sc.cache.json.get('you-boxes'), b = B && B[set] && B[set][layer], key = 'pn-' + set + '-' + (layer === 'head' ? 'skin' : layer);
+    if (!b || !sc.textures.exists(key)) { img.setVisible(false); return img; }
+    const f = sc.textures.getFrame(key, 'idle');
+    img.setTexture(key, 'idle').setCrop(b[0], b[1], b[2], b[3]).setOrigin((b[0] + b[2] / 2) / f.realWidth, (b[1] + b[3] / 2) / f.realHeight)
+      .setScale(size / (tall || Math.max(b[2], b[3]))).setTint(col == null ? 0xffffff : col).setVisible(true);
+    return img;
+  }
   const genderOf = set => (set.indexOf('girl') === 0 ? 'girl' : 'boy');
   const NEWGIRL = { top: '#C96A7A', hair: '#33261C', scarf: '#F6E3B8', legs: '#2F5E9E', hat: '#FBF6EA' };
   function loadSet(sc, set) {
@@ -248,6 +200,9 @@
     }
     preload() {
       const D0 = Lf().data, U = D0.you || FALLBACK, cur = Lf().state && Lf().state.you;
+      this.load.json('you-boxes', ART + 'you/boxes.json');
+      // the tops of every set, for the swatches that change the sort of clothes
+      Object.keys(D0.art.you).forEach(st => { const k = 'pn-' + st + '-top'; if (!this.textures.exists(k)) this.load.atlas(k, ART + 'you/' + st + '-top' + EXT(), ART + 'you/' + st + '.json'); });
       if (this.first) { loadSet(this, ((U.kinds || FALLBACK.kinds).boy[0] || {}).set); loadSet(this, ((U.kinds || FALLBACK.kinds).girl[0] || {}).set); }
       else loadSet(this, (cur && D0.art.you[cur.set] ? cur.set : this.defaultLook('boy').set));
     }
@@ -285,30 +240,31 @@
     // ---- the tabs
     cats() {
       const L0 = this.look, A = Lf().data.art.you[L0.set], has = l => A.layers.indexOf(l) >= 0, g = genderOf(L0.set), U = this.U, out = [];
-      out.push({ id: 'skin', glyph: 'bust', col: 'skin', list: U.skins });
-      if (((U.kinds || {})[g] || []).length > 1) out.push({ id: 'kind', glyph: SETGLYPH[L0.set] || 'shirt', ink: true });
-      if (has('hair')) out.push({ id: 'hair', glyph: g === 'girl' ? 'hairlong' : 'hair', col: 'hair', list: U.hairs });
-      if (has('scarf')) out.push({ id: 'scarf', glyph: 'scarf', col: 'scarf', list: U.scarves });
-      if (has('hat')) out.push({ id: 'hat', glyph: 'cap', col: 'hat', list: U.hats, off: true });
-      out.push({ id: 'top', glyph: g === 'girl' ? 'dress' : 'shirt', col: 'top', list: U.tops });
-      if (has('legs')) out.push({ id: 'legs', glyph: 'trousers', col: 'legs', list: U.legs });
+      out.push({ id: 'skin', layer: 'head', col: 'skin', list: U.skins });
+      if (((U.kinds || {})[g] || []).length > 1) out.push({ id: 'kind', layer: 'top', col: 'top' });
+      if (has('hair')) out.push({ id: 'hair', layer: 'hair', col: 'hair', list: U.hairs });
+      if (has('scarf')) out.push({ id: 'scarf', layer: 'scarf', col: 'scarf', list: U.scarves });
+      if (has('hat')) out.push({ id: 'hat', layer: 'hat', col: 'hat', list: U.hats, off: true });
+      out.push({ id: 'top', layer: 'top', col: 'top', list: U.tops });
+      if (has('legs')) out.push({ id: 'legs', layer: 'legs', col: 'legs', list: U.legs });
       return out;
     }
     mkTab(i) {
-      const gl = this.add.image(0, -2, 'pn-g-bust').setScale(0.52), c = mkBtn(this, [gl], () => this.openCat(c.cid), 134);
+      const gl = this.add.image(0, -2, 'ui', 'i-star'), c = mkBtn(this, [gl], () => this.openCat(c.cid), 134);
       c.gl = gl; c.setVisible(false); this.root.add(c); return c;
     }
     mkSwatch(i) {
-      const dot = this.add.image(0, -2, 'pn-dot').setScale(0.785), gl = this.add.image(0, -2, 'pn-g-bust').setScale(0.6).setVisible(false), ring = this.add.image(0, 0, 'pn-ring').setTint(GREEN).setScale(1.04).setVisible(false);
-      const c = mkBtn(this, [dot, gl, ring], () => this.pick(c.item), 134); c.dot = dot; c.gl = gl; c.ring = ring; c.setVisible(false); this.root.add(c); return c;
+      const dot = this.add.image(0, -2, 'pn-dot').setScale(0.785), gl = this.add.image(0, -2, 'ui', 'i-star').setVisible(false), no = this.add.image(26, 24, 'pn-x').setScale(0.6).setVisible(false), ring = this.add.image(0, 0, 'pn-ring').setTint(GREEN).setScale(1.04).setVisible(false);
+      const c = mkBtn(this, [dot, gl, no, ring], () => this.pick(c.item), 134); c.dot = dot; c.gl = gl; c.no = no; c.ring = ring; c.setVisible(false); this.root.add(c); return c;
     }
     refresh(anim) {
       const cats = this.cats(), L0 = this.look;
       if (!cats.some(c => c.id === this.cat)) this.cat = 'skin';
       this.curCats = cats;
       this.tabs.forEach((t, i) => {
-        const c = cats[i]; t.setVisible(!!c); if (!c) return; t.cid = c.id; t.gl.setTexture('pn-g-' + c.glyph);
-        t.gl.setTint(c.col ? hex(L0.colors[c.col]) : INK).setAlpha(c.off && !L0.hat ? 0.4 : 1);
+        const c = cats[i]; t.setVisible(!!c); if (!c) return; t.cid = c.id;
+        if (c.id === 'kind') t.gl.setTexture('ui', ref('hanger')[1]).setCrop().setOrigin(0.5).setScale(0.6).clearTint().setVisible(true).setAlpha(1);
+        else garment(this, t.gl, L0.set, c.layer, tintOf(L0.colors[c.col]), 84).setAlpha(c.off && !L0.hat ? 0.4 : 1);
         const on = c.id === this.cat; t.pl.setTint(on ? 0xffe9a0 : 0xefeaf7); t.on = on; base(t, (t.sz || 1) * (on ? 1.12 : 1)); t.y = t.y0 || 0;
       });
       this.fillSwatches(anim);
@@ -316,17 +272,18 @@
     }
     fillSwatches(anim) {
       const cat = this.curCats.find(c => c.id === this.cat), L0 = this.look, items = [];
-      if (cat.id === 'kind') (this.U.kinds[genderOf(L0.set)] || []).forEach(k => items.push({ glyph: SETGLYPH[k.set] || 'shirt', sel: L0.set === k.set, kind: k.set }));
+      if (cat.id === 'kind') (this.U.kinds[genderOf(L0.set)] || []).forEach(k => items.push({ set: k.set, layer: 'top', sel: L0.set === k.set, kind: k.set }));
       else {
-        if (cat.off) items.push({ glyph: 'nocap', plain: true, sel: !L0.hat, none: true });
+        if (cat.off) items.push({ set: L0.set, layer: 'hat', sel: !L0.hat, none: true });
         cat.list.forEach(col => items.push({ col: col, key: cat.col, sel: L0.colors[cat.col].toLowerCase() === col.toLowerCase() && (!cat.off || L0.hat) }));
       }
       this.nItems = items.length;
+      const B = this.cache.json.get('you-boxes') || {}, tall = Math.max(1, ...items.filter(x => x.kind).map(x => ((B[x.set] || {}).top || [0, 0, 0, 0])[3]));
       this.sw.forEach((s, i) => {
         const it = items[i]; s.setVisible(!!it); if (!it) return; s.item = it;
-        s.dot.setVisible(!it.glyph); s.gl.setVisible(!!it.glyph); s.ring.setVisible(it.sel);
-        if (it.glyph) { s.gl.setTexture('pn-g-' + it.glyph).setTint(it.plain ? 0xffffff : INK); s.pl.setTint(it.sel ? 0xe4f7e8 : 0xffffff); }
-        else { s.dot.setTint(hex(it.col)); s.pl.setTint(0xffffff); }
+        s.dot.setVisible(!it.layer); s.ring.setVisible(it.sel); s.no.setVisible(!!it.none);
+        if (it.layer) { garment(this, s.gl, it.set, it.layer, it.none ? 0xa9a2bd : tintOf(L0.colors[it.layer]), it.kind ? 104 : 96, it.kind ? tall : 0).setAlpha(it.none ? 0.7 : 1); s.pl.setTint(it.sel ? 0xe4f7e8 : 0xffffff); }
+        else { s.gl.setVisible(false); s.dot.setTint(hex(it.col)); s.pl.setTint(0xffffff); }
         s.base = s.base || 1; base(s, (s.sz || 1) * (it.sel ? 1.1 : 1));
         if (anim) { s.setAlpha(0); this.tweens.add({ targets: s, alpha: 1, duration: 160, delay: i * 14 }); } else s.setAlpha(1);
       });
@@ -677,7 +634,7 @@
       this.root.add([this.glow, this.rug, this.rug2, this.rug3]);
       const P = Lx.data.art.people && Lx.data.art.people.you;
       if (this.textures.exists('you') && P) { this.me = this.add.sprite(0, 0, 'you', 'idle').setOrigin(P.ax / P.fw, P.ay / P.fh); this.meH = P.h * Lx.data.art.zpx; }
-      else { this.me = this.add.image(0, 0, 'pn-g-bust').setTint(INK); this.meH = 128; this.me.setOrigin(0.5, 1); }
+      else { this.me = this.add.image(0, 0, 'ui', ref('people')[1]); this.meH = 128; this.me.setOrigin(0.5, 1); }
       this.root.add(this.me); this.me.setInteractive(); this.me.on('pointerup', () => { if (this.me.setFrame && this.me.texture.has('wave')) { this.me.setFrame('wave'); sfx('spark'); this.time.delayedCall(900, () => { if (this.me.active) this.me.setFrame('idle'); }); } });
       this.rows = this.names.map(n => {
         const c = this.add.container(0, 0), pl = this.add.image(0, 0, 'ui-plate').setTint(mix(SKC[n] || 0xcccccc, 0xffffff, 0.8)), ic = pic(this, RU.SKILL_ICON[n] || 'star', 0, -3, 0.72), pips = [];

@@ -14,7 +14,7 @@ for u in re.findall(r'src="([^"?#]+)"', page):
 for sub in ('life', 'audio'):
     for root, dirs, names in os.walk(os.path.join(HERE, sub)):
         for n in sorted(names):
-            if n.startswith('_') or not n.endswith(KEEP): continue
+            if n.startswith('_') or not n.endswith(KEEP) or n == 'recipe.json': continue      # (recipe.json: the sound cutter's input, not played)
             if n.endswith('.webp') and os.sep + os.path.join('life', 'art') in root: continue   # only fetched by a WebView too old for AVIF
             u = '/KidsGames/' + os.path.relpath(os.path.join(root, n), REPO).replace(os.sep, '/')
             if u not in files: files.append(u)

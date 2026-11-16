@@ -25,7 +25,7 @@ These are not advice. A change that breaks one is not finished, however well it 
 Decided by the owner on 2026-11-11: **every game and every quiz is built on Phaser 4**, because the catalog is growing into full games. Full text: `docs/phaser-standard.md`.
 
 1. **Phaser 4 is the engine of every game and quiz.** Pinned in `js/vendor/phaser-4.2.1.min.js`. No CDN. A Phaser upgrade is the owner's decision.
-2. **Phaser is started only by `Kit.play.start`** (`js/kit/play.js`), so every game gets the same screen fitting, sharpness, Exit and error screen. After that, use Phaser as Phaser: scenes, its input, tweens, particles, cameras. Check what the pinned build already has before hand-writing drawing, lighting, effect, input or camera code.
+2. **Phaser is started only by `Kit.play.start`** (`js/kit/play.js`), so every game gets the same screen fitting, sharpness, Exit and error screen. After that, use Phaser as Phaser: scenes, its loader, input, tweens, particles, cameras, sound. **If Phaser can do it, Phaser does it** (owner, 2026-11-16); check the pinned build before hand-writing anything, and keep kit code only for what it lacks (`docs/phaser-standard.md` section 1 lists what was checked).
 3. **WebGL only. No fallback and no second drawing path.** A phone that cannot start it gets `Kit.play.sorry`.
 4. **Art is a picture made once**: an image file, or painted once with Canvas2D into a texture (`Kit.play.tex`). Nothing is painted per frame.
 5. **No other engine or drawing library.** The one exception is a 3D game, which uses three.js (`docs/game-standard.md` section 3). None exists yet, and adding three.js is an "ask first".
@@ -47,7 +47,7 @@ Decided by the owner on 2026-11-11: **every game and every quiz is built on Phas
 ### Content (kids' app, Islamic)
 
 14. **No faces in any art.** Spider IK is the one agreed exception and stays as it is.
-15. **No music.** No notes, melodies, jingles or instrument sounds. Sound effects are natural sounds (`js/kit/audio.js`).
+15. **No music.** No notes, melodies, jingles or instrument sounds. Sound effects are recorded natural sounds, played by Phaser's sound system through `js/kit/sound.js` (old kit pages: `js/kit/audio.js`).
 16. **No rainbows** or rainbow-coloured effects.
 17. **Islamic content comes from the source**, looked up when it is written, never from memory (`docs/quiz-quality-plan.md`). Worship is never scored.
 18. **A game plays without words a child must read** (quizzes are the reading pages). No `alert()`. Touch first.
@@ -96,7 +96,7 @@ Game-dev skills from `gamedev-skills/awesome-gamedev-agent-skills` are installed
 |--------------|------|
 | `import Phaser from 'phaser'`, npm, Vite, `package.json` | Vendored script, no build step, no `package.json` |
 | `type: Phaser.AUTO`, Canvas as a fallback | WebGL only (rule 3) |
-| `this.sound`, Web Audio, adaptive music | Phaser sound is off; `js/kit/audio.js`, natural sounds only (rule 15) |
+| `this.sound`, Web Audio, adaptive music | Phaser's sound, through `Kit.snd` (`js/kit/sound.js`): categories, ducking, variation; recordings cut by `tools/sound-cut.py`; no music (rule 15) |
 | HTML or DOM overlays for menus and HUD | Phaser inside a game (rule 7) |
 | `devicePixelRatio`, own resize code | `Kit.play.dpr()` and `Kit.play.fit` (1920 x 1080 design space) |
 | `npm run build`, `npm i playwright` | None. Serve the folder, test in a browser (see "Verify") |
@@ -137,6 +137,7 @@ A change is done when: it follows the hard rules, it was verified as above, the 
 | Any game work | `docs/phaser-standard.md` |
 | An old page still on the Canvas2D kit or PixiJS | `docs/game-standard.md`, `docs/pixi-performance.md` |
 | Art, feel, level design of games | `docs/game-quality-plan.md` |
+| Sourcing a new game asset | Check `docs/free-game-assets.md` and its free sources before paid or commissioned sources; verify the exact licence and preserve required credits |
 | Quizzes | `docs/quiz-quality-plan.md` |
 | Helping Home | the header of each file in `games/helping-home/life/`, `games/helping-home/tools/data/README.md` (the data format) and the status section at the top of `docs/helping-home-v2-plan.md` |
 
@@ -147,12 +148,12 @@ A change is done when: it follows the hard rules, it was verified as above, the 
 | `index.html` | the games hub |
 | `quizzes.html` | the quiz catalog |
 | `games/<id>/` | one game or one quiz per folder |
-| `js/kit/` | the shared kit: `play.js` (starts Phaser), `core.js` (saves, app, and the loop and input of the old kit games), `audio.js` (sound), and for pages not rebuilt yet `gfx.js` (PixiJS), `fx.js`, `ui.js`, `kit.css` |
+| `js/kit/` | the shared kit: `play.js` (starts Phaser), `core.js` (saves, app, and the loop and input of the old kit games), `sound.js` (sound for Phaser games), `audio.js` (sound for the old kit games), and for pages not rebuilt yet `gfx.js` (PixiJS), `fx.js`, `ui.js`, `kit.css` |
 | `js/vendor/` | pinned libraries: `phaser-4.2.1.min.js` (MIT), `pixi-8.22.0.min.js` (MIT, old pages only) |
 | `js/quiz/` | the quiz engine and `catalog.js` |
 | `js/board/` | the board-game kit (Checkers, Tic Tac Toe) |
 | `js/kahf-bridge.js` | reports a child's activity to the app |
-| `tools/` | `quiz-pages.js`, `quiz-check.js`, `quiz-refs.py`, `quiz-art/build.js` |
+| `tools/` | `quiz-pages.js`, `quiz-check.js`, `quiz-refs.py`, `quiz-art/build.js`, `sound-cut.py` (a game's sounds from the recordings), `perf-check.js` (frame times at a slow CPU) |
 | `sw.js`, `manifest.json` | service worker (offline, versions) and PWA manifest (see `PWA-README.md`) |
 | `read/` | the book reader (see `BOOK_UPDATE_README.md`, `ENVIRONMENT_SETUP.md`) |
 | `docs/` | the standards and the plans |

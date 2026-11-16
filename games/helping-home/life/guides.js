@@ -32,7 +32,7 @@
   const EXT = () => window.LifeExt || '.avif';
   const Q = new URLSearchParams(location.search);
   const Lf = () => window.Life;
-  const sfx = n => { try { Lf().sfx(n); } catch (e) { /* no sound */ } };
+  const sfx = n => { try { Lf().sfx(SND[n] || n); } catch (e) { /* no sound */ } };
   const UIF = 'ui-rounded, "SF Pro Rounded", "Nunito", system-ui, sans-serif';
   const ARF = '"Noto Naskh Arabic", "Geeza Pro", "Noto Sans Arabic", "Amiri Quran", "Amiri", "Traditional Arabic", serif';
   const INK = '#3a3050', SOFT = '#7b6a96', RC = '#ef7a4f', LC = '#8b78cf', RT = '#c4502b', LT = '#5b48a0', GOLD = 0xf4b829;
@@ -42,45 +42,17 @@
   const isGirl = () => { if (Q.has('girl')) return true; if (Q.has('boy')) return false; try { const y = window.Life && Life.state && Life.state.you; return !!(y && /^girl/.test(y.set || '')); } catch (e) { return false; } };
   const wait = (sc, ms) => new Promise(ok => sc.time.delayedCall(ms, ok));
 
-  // HHVoice reads Kit.sfx.ctx / Kit.sfx.out; the kit exposes them on Kit.sfx.lib (as pray/salah-shell.js does)
-  try {
-    if (window.Kit && Kit.sfx && Kit.sfx.lib && !('ctx' in Kit.sfx)) {
-      Object.defineProperty(Kit.sfx, 'ctx', { get: function () { return Kit.sfx.lib.ctx; } });
-      Object.defineProperty(Kit.sfx, 'out', { get: function () { return Kit.sfx.lib.out; } });
-    }
-  } catch (e) { /* the voice then only paces */ }
-
-  /* ---------- sounds: natural only (clicks, drops, running water) ---------- */
-  if (window.Kit && Kit.sfx) Kit.sfx.define({
-    gturn: (L, t) => { L.click(t, { freq: 1700, vol: 0.2 }); L.burst(t + 0.03, { dur: 0.14, freq: 900, sweepTo: 1500, q: 4, vol: 0.05 }); L.click(t + 0.16, { freq: 2300, vol: 0.14 }); },
-    gdrop: (L, t) => L.drop(t, { size: 1.1, vol: 0.2 }),
-    gdone: (L, t) => { L.drop(t, { size: 0.8, vol: 0.14 }); L.grains(t + 0.05, { n: 10, spread: 0.45, freq: 6500, vol: 0.07 }); },
-    gcloth: (L, t) => { L.whoosh(t, { dur: 0.9, from: 300, to: 1100, vol: 0.06, brown: true }); },
-    gdetent: (L, t) => L.click(t, { freq: 1100, vol: 0.2 })
-  });
-  const flow = { node: null, gain: null };
+  /* ---------- sounds: recordings, played by Phaser through the kit (js/kit/sound.js) ---------- */
+  const SND = { gturn: 'turn', gdrop: 'drop', gdone: 'pop', gcloth: 'cloth', gdetent: 'click' };
+  const flow = { h: null };
   function waterSound(on) {
-    const L = window.Kit && Kit.sfx && Kit.sfx.lib, c = L && L.ctx;
-    if (!c) return;
-    const now = c.currentTime;
-    if (on) {
-      if (flow.node || Kit.sfx.muted) return;
-      const len = c.sampleRate * 2, buf = c.createBuffer(1, len, c.sampleRate), d = buf.getChannelData(0);
-      let last = 0; for (let i = 0; i < len; i++) { const w = Math.random() * 2 - 1; last = (last + 0.08 * w) / 1.08; d[i] = last * 2.2 + w * 0.18; }
-      const s = c.createBufferSource(), bp = c.createBiquadFilter(), g = c.createGain();
-      s.buffer = buf; s.loop = true; bp.type = 'bandpass'; bp.frequency.value = 900; bp.Q.value = 0.6;
-      g.gain.setValueAtTime(0.0001, now); g.gain.exponentialRampToValueAtTime(0.16, now + 0.35);
-      s.connect(bp); bp.connect(g); g.connect(L.out || c.destination); s.start();
-      flow.node = s; flow.gain = g;
-    } else if (flow.node) {
-      const s = flow.node, g = flow.gain; flow.node = flow.gain = null;
-      try { g.gain.cancelScheduledValues(now); g.gain.setValueAtTime(g.gain.value, now); g.gain.exponentialRampToValueAtTime(0.0001, now + 0.3); s.stop(now + 0.35); } catch (e) { /* already stopped */ }
-    }
+    if (on) { if (!flow.h) flow.h = Kit.snd.loop('water', { fade: 0.35 }); }
+    else if (flow.h) { flow.h.stop(0.3); flow.h = null; }
   }
 
   /* ---------- recorded clips (never a device voice) ---------- */
   const hasMemo = {};
-  const clipOK = id => !!id && !(window.Kit && Kit.sfx && Kit.sfx.muted) && !!window.HHVoice && (() => { const c = Kit.sfx.lib && Kit.sfx.lib.ctx; return !c || c.state === 'running'; })();
+  const clipOK = id => !!id && !!window.HHVoice && !(window.Kit && Kit.snd && Kit.snd.muted);
   function hasClip(id) { if (!id || !window.HHVoice) return Promise.resolve(false); return hasMemo[id] || (hasMemo[id] = HHVoice.has(id).catch(() => false)); }
   // plays a clip once; resolves true when it was played to the end, false when there is none / sound is off / it was stopped early
   function playClip(id) {
@@ -342,6 +314,7 @@
     showPlace() { if (this.hidP) { this.hidP = false; try { this.scene.setVisible(true, 'Place'); } catch (e) { /* gone */ } } }
     cleanup() {
       this.stopSay(); waterSound(false); this.showPlace();
+      ['stream', 'splash'].forEach(n => this.anims.remove(this.akey + '-' + n));     // they point at this sheet's frames (a boy's or a girl's)
       try { this.textures.remove(this.akey); } catch (e) { /* already gone */ }
       if (this.onClean) this.onClean();
     }
@@ -383,13 +356,14 @@
       this.bench = this.pic('bench'); this.footb = this.pic('footbasin');
       this.child = this.pic('stand'); this.hitBox(this.child, 'stand');
       this.child.on('pointerdown', () => this.countOne());
-      this.stream = this.add.image(0, 0, this.akey, 'stream0').setOrigin(0.5, 0); this.splash = this.add.image(0, 0, this.akey, 'splash0');
+      // the running water: two pictures each, played as engine animations (they run on while hidden, at no cost to draw)
+      ['stream', 'splash'].forEach(n => { const k = this.akey + '-' + n; if (!this.anims.exists(k)) this.anims.create({ key: k, frames: [0, 1].map(i => ({ key: this.akey, frame: n + i })), frameRate: 6.7, repeat: -1 }); });
+      this.stream = this.add.sprite(0, 0, this.akey, 'stream0').setOrigin(0.5, 0).play(this.akey + '-stream'); this.splash = this.add.sprite(0, 0, this.akey, 'splash0').play(this.akey + '-splash');
       this.stageIn.add([this.stream, this.splash]); this.stream.setVisible(false); this.splash.setVisible(false);
       this.marks = this.add.container(0, 0); this.stageIn.add(this.marks);
       this.hitBox(this.basin, 'basin'); this.basin.on('pointerdown', () => this.toggleTap());
       this.tapB = roundBtn(this, this.ui, { frame: 'drops', size: 52, fn: () => this.toggleTap() });
       this.drops = this.add.container(0, 0); this.ui.add(this.drops);
-      this.time.addEvent({ delay: 150, loop: true, callback: () => { this.fl = !this.fl; if (this.tapOn) { this.stream.setFrame(this.fl ? 'stream1' : 'stream0'); this.splash.setFrame(this.fl ? 'splash1' : 'splash0'); } } });
       const s0 = Q.has('step') ? clamp(+Q.get('step') || 0, 0, this.last) : 0;
       this.i = s0;
       if (Q.get('fin') === '1') this.time.delayedCall(300, () => this.finish());

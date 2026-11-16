@@ -46,6 +46,12 @@
     try { document.hidden ? ctx.suspend() : ctx.resume(); } catch (e) {}
   });
   function ready() { var c = get(); return c && c.state === 'running' && !muted ? c : null; }
+  // Making the context (and the noise the effects are cut from) takes 100 ms or more on a phone. Done on the first
+  // sound, that froze the game for a frame the first time anything made a noise; it is made while the page loads
+  // instead. (It starts suspended until the first touch; unlock() resumes it.)
+  function warm() { var c = get(); if (c) { white(c); brown(c); } }
+  if (document.readyState === 'complete') setTimeout(warm, 0);
+  else addEventListener('load', function () { (window.requestIdleCallback || setTimeout)(warm); });
 
   function white(c) {
     if (!noiseBuf) {

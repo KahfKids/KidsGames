@@ -16,7 +16,9 @@
      around it (scene.view says how much), so paint backgrounds past the design space: 300 units left and right,
      200 above and below cover every phone and tablet.
    - Art is painted in design units, one texture pixel per unit (Kit.play.tex), so nothing needs a scale factor.
-   - Sound is the kit's (js/kit/audio.js, natural sounds only). Phaser's own sound system is off.
+   - Sound is Phaser's own (this.sound, its loader and cache), with js/kit/sound.js (Kit.snd) on top for what Phaser
+     has no word for: categories, ducking under a voice, take variation, a cap on overlapping sounds. Natural sounds
+     only, no music. (Phaser has no setting for screen sharpness, so the canvas size and zoom below are the kit's.)
    - The game pauses while the page is hidden.
 
    Use:
@@ -95,7 +97,7 @@
       scale: { mode: Phaser.Scale.NONE, width: s.w, height: s.h, zoom: 1 / s.d, autoRound: false },
       render: { antialias: true, antialiasGL: o.msaa !== false, powerPreference: 'default', failIfMajorPerformanceCaveat: false },
       input: { activePointers: 3, touch: { capture: true } },
-      audio: { noAudio: true },
+      audio: { disableWebAudio: false },
       fps: { smoothStep: true },
       scene: o.scenes
     };
@@ -123,6 +125,7 @@
     window.addEventListener('error', function (e) {
       if (e && e.message && /WebGL|context/i.test(e.message) && !(game && game.isRunning)) sorry(e.message);
     });
+    if (Kit.snd) Kit.snd.init(game);
     if (Kit.host) Kit.host.ready();
     Kit.play.game = game;
     return game;
@@ -155,12 +158,10 @@
     var tm = scene.textures;
     if (tm.exists(key)) return key;
     pad = pad || 0;
-    var c = document.createElement('canvas');
-    c.width = Math.ceil(w + pad * 2); c.height = Math.ceil(h + pad * 2);
-    var ctx = c.getContext('2d');
-    ctx.translate(pad, pad);
-    paint(ctx, w, h);
-    tm.addCanvas(key, c);
+    var t = tm.createCanvas(key, Math.ceil(w + pad * 2), Math.ceil(h + pad * 2));      // (the engine's canvas texture)
+    t.context.translate(pad, pad);
+    paint(t.context, w, h);
+    t.refresh();
     return key;
   }
 

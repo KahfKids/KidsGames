@@ -20,20 +20,25 @@
   const ADHAN = ['takbir1', 'takbir2', 'shahada1', 'shahada2', 'risala1', 'risala2', 'salah1', 'salah2', 'falah1', 'falah2', 'takbir3', 'tahlil'];
   const YOU0 = { set: 'boy-kurta', hat: true, colors: { skin: '#C98E62', top: '#3E8FD8', legs: '#2F5E9E', hair: '#33261C', hat: '#FBF6EA', scarf: '#F6E3B8' } };
   let D = null;
-  const sfx = (n, o) => { try { Kit.sfx.play(n, o); } catch (e) { /* no sound */ } };
-  if (window.Kit && Kit.sfx) Kit.sfx.define({
-    tap: (S, t) => S.click(t, { freq: 2400, vol: 0.18 }),
-    pop: (S, t) => S.glide(t, { from: 520, to: 1300, dur: 0.06, vol: 0.18 }),
-    soft: (S, t) => S.burst(t, { dur: 0.12, freq: 500, q: 0.7, vol: 0.18, brown: true }),
-    knock: (S, t) => S.knock(t, { size: 1.2, vol: 0.5 }),
-    spark: (S, t) => S.grains(t, { n: 12, spread: 0.3, freq: 7200, vol: 0.08 }),
-    click: (S, t) => S.click(t, { freq: 1500, vol: 0.28, dur: 0.03 }),
-    door: (S, t) => S.knock(t, { size: 0.7, vol: 0.3 })
-  });
+  /* What things sound like (recordings: audio/sfx/recipe.json). USE: by the picture of what a thing gives; LOOPS: a thing
+     that sounds for as long as it is used; ANIMAL: who has a voice (the rabbit, tortoise, camel, elephant and giraffe are
+     quiet ones); the beds of the outdoor places; the ground under the child's feet. */
+  const USE = { dates: 'eat', bowl: 'eat', fruit: 'eat', bread: 'eat', pot: 'cook', book: 'page', globe: 'page', pencil: 'write', blocks: 'blocks',
+    spade: 'blocks', ball: 'kick', swing: 'swing', can: 'pour', milk: 'pour', cushion: 'cloth', bed: 'cloth', shoes: 'cloth', shirt: 'cloth', thread: 'sew',
+    basket: 'bag', toy: 'bag', parcel: 'bag', seeds: 'bag', feedbag: 'bag', letter: 'paper', coin: 'coin', bin: 'bin', litter: 'bin', egg: 'hen', fish: 'cat', sprout: 'pour' };
+  const LOOPS = { drop: 'water', bath: 'bath' };
+  const ANIMAL = { cat: 'cat', hen: 'hen', dog: 'dog', cow: 'cow', goat: 'goat' };
+  const BED = { street: 'amb-town', plaza: 'amb-town', lane: 'amb-town', park: 'amb-park', green: 'amb-park', yard: 'amb-day', meadow: 'amb-day', zoo: 'amb-day' };
+  const STONE = { street: 1, plaza: 1, lane: 1 };
+  // every sound is a recording, played by Phaser's sound system through the kit (js/kit/sound.js; audio/sfx/recipe.json)
+  const sfx = (n, o) => { try { Kit.snd.play(n, o); } catch (e) { /* no sound */ } };
+
 
   /* ---------- what is kept between visits ---------- */
   const Life = window.Life = { YOU0: YOU0, sfx: sfx };
   let saveT = 0;
+  // (a browser timer, not the engine's: a save must still happen while the town is paused or the page is being hidden,
+  //  which is exactly when Phaser's clocks stop)
   Life.save = function () { clearTimeout(saveT); saveT = setTimeout(() => { try { localStorage.setItem(KEY, JSON.stringify(Life.state)); } catch (e) { /* private mode */ } }, 300); };
   function loadState() { let s = null; try { s = JSON.parse(localStorage.getItem(KEY)); } catch (e) { /* none */ } return s && s.v === 1 ? s : { v: 1, you: null, rules: null, at: null, dayOff: 0 }; }
   Life.ico = n => (D.art.icons.indexOf('i-' + n) >= 0 ? 'i-' + n : 'i-star');
@@ -147,6 +152,8 @@
       const bar = this.add.rectangle(w * 0.35, h / 2, 1, h * 0.022, 0xffffff).setOrigin(0, 0.5);
       this.load.on('progress', v => { bar.width = Math.max(1, w * 0.3 * v); });
       this.load.json('data', ROOT + 'life/data.json');
+      this.load.json('hh-voice', ROOT + 'audio/index.json');                      // the recorded voices (iso/voice.js)
+      Kit.snd.load(this, ROOT + 'audio/sfx/');                                      // every effect, one audio sprite
       this.load.atlas('ui', ART + 'ui' + EXT, ART + 'ui.json');
     }
     create() {
@@ -205,6 +212,9 @@
       this.time.addEvent({ delay: 9000, loop: true, callback: () => this.remind() });
       this.time.addEvent({ delay: 220, loop: true, callback: () => this.stream() });
       this.time.addEvent({ delay: 1000, loop: true, callback: () => this.watch() });
+      this.time.addEvent({ delay: 250, loop: true, callback: () => this.listen() });
+      this.time.addEvent({ delay: 1000, loop: true, callback: () => this.ambience() });
+      this.events.once('shutdown', () => { Kit.snd.amb(null); const u = this.useS || {}; [u.loop, u.ride, u.fount].forEach(h => h && h.stop(0.2)); });
       if (Q.has('debug')) window.LT = { game: this.game, world: w, rules: Life.rules, place: this, life: Life };
       // the first view: where the child is, loaded before anything is shown
       const cam = this.cameras.main, sky = cam.backgroundColor;
@@ -441,6 +451,7 @@
       const t = z.things[th.id] = { s: s, th: th, depth: s.depth, f: z.pl.foot(th), solid: k.solid === 'rect' || k.solid === 'circle',
         use: !!((k.slots && k.slots.length) || k.act || k.takes || k.source || k.item) };
       t.rank = own != null ? own : this.rank[th.place];
+      if (t.use) { this.hitArea(s); s._thing = t; s._z = z; }
       if (m.ay > 250 && m.w > 200) t.tall = { x0: p.x - m.w * 0.3, x1: p.x + m.w * 0.3, y0: p.y - m.ay, y1: p.y - 105 };      // a tree or the like: it goes see-through in front of someone
     }
     propLayer(rank) { const L = this.props || (this.props = {}); return L[rank] || (L[rank] = this.add.layer().setDepth(rank)); }
@@ -483,7 +494,7 @@
       for (const id in this.w.places) { const pl = this.w.places[id]; for (const t in pl.things) {
         const th = pl.things[t], lot = th.k.building, m = lot && D.art.buildings && D.art.buildings[lot]; if (!m || !this.textures.exists('b-' + lot + '.s')) continue;
         const p = this.at(pl, th.at[0], th.at[1]), L = this.propLayer(this.rank[id + '/' + t]);
-        const far = this.lit(this.add.image(p.x, p.y, 'b-' + lot + '.s').setOrigin(m.ax / m.w, m.ay / m.h).setScale(1 / m.far)); L.add(far);
+        const far = this.lit(this.add.image(p.x, p.y, 'b-' + lot + '.s').setOrigin(m.ax / m.w, m.ay / m.h).setScale(1 / m.far)); L.add(far); this.hitArea(far); far._lot = lot;
         this.bld[lot] = { th: th, pid: id, lot: lot, m: m, p: p, L: L, far: far, parts: (m.parts || []).map((q, i) => ({ q: q, key: 'b-' + lot + '-' + i, s: null })), a: 1, v: 1, x0: p.x - m.ax, y0: p.y - m.ay, k: pl.at[0] + pl.at[1] + th.at[0] + th.at[1] - (th.k.size[0] + th.k.size[1]) / 2 };
       } }
     }
@@ -512,7 +523,7 @@
     }
 
     /* ---------- decorating: in a room that allows it, things are dragged to new spots and won things are added ---------- */
-    dragOn(s, on) { if (on) { s.setInteractive(); this.input.setDraggable(s, true); } else if (s.input) { this.input.setDraggable(s, false); s.disableInteractive(); } }
+    dragOn(s, on) { if (on) { if (!s.input) this.hitArea(s); s._drag = true; s.input.enabled = true; this.input.setDraggable(s, true); } else if (s.input) { this.input.setDraggable(s, false); s._drag = false; s.input.enabled = false; } }
     decorate(on) {
       const pid = on ? this.pid : (this.decoPid || this.pid);
       this.deco = !!on && !!D.places[pid].decorate; this.closeRing(); if (on) this.w.stop(this.you);
@@ -610,9 +621,9 @@
       inp.on('pointerup', (ptr, over) => {
         const was = this.panned, any = inp.pointer1.isDown || inp.pointer2.isDown || (inp.mousePointer && inp.mousePointer.isDown);
         if (!any) { this.panned = false; pinch = 0; }
-        if (this.busy || was || any || over.length) return;
+        if (this.busy || was || any || over.some(o => !o._thing && o._lot == null)) return;          // (a badge or a button has its own tap)
         if (this.ring) { this.closeRing(); return; }
-        this.tap(ptr.worldX, ptr.worldY);
+        this.tap(ptr.worldX, ptr.worldY, ptr);
       });
       // decorating: a thing in the child's own room is dragged with the engine's own drag
       inp.on('dragstart', (ptr, s) => { if (s._tid && this.deco) this.grab(s._tid, ptr); });
@@ -627,7 +638,7 @@
       const k = c < pt.fajr - 30 || c > pt.maghrib + 70 ? 1 : c < pt.fajr + 40 ? 1 - (c - pt.fajr + 30) / 70 : c > pt.maghrib ? (c - pt.maghrib) / 70 : 0;
       const d = Math.min(1, k + (this.w.calling ? 0.06 : 0));
       const amb = d < 0.5 ? mix(0xffffff, 0xe6bfb0, d * 2) : mix(0xe6bfb0, 0x6474b0, (d - 0.5) * 2), out = this.lampsOn = Math.min(1, Math.max(0, (k - 0.1) * 1.6));
-      this.isLit = d > 0.01;
+      this.isLit = d > 0.01; this.nightK = k;
       if (amb !== this.amb) {                                                      // what belongs to no place: the field, the ground, the outsides of buildings, what is on the road
         this.amb = amb;
         [this.field, this.under, this.overview].forEach(o => { if (o) o.setTint(amb); }); if (this.gt) this.gt.forEach(e => { if (e.img) e.img.setTint(amb); });
@@ -675,39 +686,96 @@
     // something the light falls on (ground, walls, furniture, people, vehicles): it carries the colour of its place
     lit(o, z) { if (z) z.lit.push(o); if (o.setTint) o.setTint(z && z.tint != null ? z.tint : this.amb); return o; }
 
+    /* ---------- what the child hears (recordings played by Phaser, js/kit/sound.js) ---------- */
+    // how loud something at (x, y) on the map is now: full in the middle of the view, nothing past its edge, less when zoomed out
+    near(x, y) {
+      const v = this.cameras.main.worldView, d = Phaser.Math.Distance.Between(x, y * 1.6, v.centerX, v.centerY * 1.6) / Math.max(1, Math.max(v.width, v.height) * 0.6);
+      return Math.max(0, 1 - d) * Math.min(1, this.cameras.main.zoom / (LOD * this.zs * 1.6));
+    }
+    hear(name, x, y, o) { const n = this.near(x, y), v = this.cameras.main.worldView; if (n > 0.05) Kit.snd.play(name, Object.assign({ vol: n, pan: Phaser.Math.Clamp((x - v.centerX) / v.width * 1.4, -0.8, 0.8) }, o)); }
+    // four times a second: what the child is doing, their feet, the bicycle, cars going past
+    listen() {
+      if (this.busy) return;
+      const you = this.you, now = this.time.now, u = this.useS || (this.useS = {});
+      const th = you.state === 'use' ? you.thing : null, k = th && th.k, lp = k && LOOPS[k.icon], one = k && (k.lesson ? 'chalk' : th.kind === 'pondside' ? 'duck' : USE[k.icon]);
+      if (u.th !== th) { if (u.loop) { u.loop.stop(0.3); u.loop = null; } u.th = th; u.next = now; u.n = 0; if (lp) u.loop = Kit.snd.loop(lp, { fade: 0.3 }); }
+      if (one && !lp && now >= u.next) { Kit.snd.play(one, { vol: u.n ? 0.6 : 0.85 }); if (k.icon === 'bowl' && !u.n) Kit.snd.play('dish', { delay: 0.5, vol: 0.5 }); u.n = (u.n || 0) + 1; u.next = now + Phaser.Math.Between(4000, 7000); }      // (once as it starts, then now and then, softer: never a tick)
+      const ride = you.riding === 'bike' && you.state === 'walk';
+      if (ride && !u.ride) u.ride = Kit.snd.loop('ride', { vol: 0.7, fade: 0.2 }); else if (!ride && u.ride) { u.ride.stop(0.3); u.ride = null; }
+      // footsteps: on the walk's own frames (the engine's animation event), on the ground of the place
+      const ys = this.spr.get(you);
+      if (ys && !ys._steps) {
+        ys._steps = true;
+        ys.on('animationupdate', (a, f) => {
+          if (you.riding || a.key.indexOf('walk') < 0 || (f.index !== 2 && f.index !== 6)) return;
+          const pl = this.pl; Kit.snd.play(!pl ? 'step-grass' : pl.outdoor ? (STONE[pl.id] ? 'step-stone' : 'step-grass') : pl.id === 'landing' ? 'step-stair' : 'step-floor', { vol: 0.32 * this.near(ys.x, ys.y) });      // (a soft bed under everything, gone when the camera is far)
+        });
+      }
+      this.veh.forEach((s, v) => {
+        const n = this.near(s.x, s.y);
+        if (n > 0.45 && !s._heard && now > (u.car || 0)) { s._heard = true; u.car = now + 12000; this.hear('car', s.x, s.y, { vol: n * 0.55, rate: v.kind === 'bus' ? 0.8 : v.kind === 'scooter' ? 1.3 : 1 }); } else if (n < 0.12) s._heard = false;      // (one pass-by at a time, a few seconds apart)
+      });
+    }
+    // once a second: the bed of sound for where the child is, the fountain, an animal calling now and then, the rooster at first light
+    ambience() {
+      if (this.busy) return;
+      const cam = this.cameras.main, far = cam.zoom < LOD * this.zs, pl = this.pl, night = (this.nightK || 0) > 0.5, u = this.useS || (this.useS = {});
+      Kit.snd.amb(far ? 'amb-wind' : !pl || !pl.outdoor ? 'amb-house' : night ? 'amb-night' : BED[pl.id] || 'amb-day');
+      const P = this.w.places.plaza, F = P && Object.values(P.things).find(t => t.kind === 'fountain'), fq = F && this.at(P, F.at[0], F.at[1]), fv = fq ? this.near(fq.x, fq.y) : 0;
+      if (fv > 0.05 && !u.fount) u.fount = Kit.snd.loop('fountain', { vol: fv, fade: 1 }); else if (u.fount && fv <= 0.05) { u.fount.stop(1); u.fount = null; } else if (u.fount) u.fount.vol(fv, 0.9);
+      if (Math.random() < 0.04 && this.time.now > (u.call || 0)) {      // an animal calls now and then: about once in 25 s at most
+        u.call = this.time.now + 12000;
+        const a = []; this.spr.forEach((s, p) => { if (p.animal && ANIMAL[p.sprite] && s.visible && this.near(s.x, s.y) > 0.2) a.push([s, p]); });
+        const c = a[Phaser.Math.Between(0, a.length - 1)]; if (c) this.hear(ANIMAL[c[1].sprite], c[0].x, c[0].y, { vol: this.near(c[0].x, c[0].y) * 0.45 });
+        const K = this.w.places.park, dk = K && Object.values(K.things).filter(t => t.kind === 'duck'), d0 = dk && dk.length && dk[Phaser.Math.Between(0, dk.length - 1)];
+        if (d0 && !c) { const q = this.at(K, d0.at[0], d0.at[1]); this.hear('duck', q.x, q.y, { vol: this.near(q.x, q.y) * 0.4 }); }      // (the ducks on the pond are part of the park, not people)
+      }
+      if (this.wasNight && !night && pl && pl.outdoor) Kit.snd.play('rooster', { vol: 0.7 });
+      this.wasNight = night;
+    }
+
     /* ---------- the child's taps: a person first, then a thing that can be used, then the ground ---------- */
-    tap(wx, wy) {
-      if (this.you.praying || this.you.riding === 'bus') return;
-      const zoom = this.cameras.main.zoom, reach = Math.max(46, 34 * this.zs / zoom);
-      // someone (their whole height, and a finger's width either side)
+    /* The engine's pixel-perfect hit test (the shape of the picture, not its box), for usable things and buildings.
+       The hit areas are kept switched off and are switched on only for the one test a tap needs: while a finger drags
+       the map, Phaser would otherwise test every one of them on every move, and a pixel-perfect test reads a pixel back
+       from the graphics chip (measured: about 1 ms more a frame while dragging on a 6x slower CPU). */
+    hitArea(s) { s.setInteractive({ pixelPerfect: true, alphaTolerance: 41 }); s.input.enabled = false; (this.hits || (this.hits = new Set())).add(s); }
+    hitTest(ptr) {
+      const on = []; (this.hits || new Set()).forEach(s => { if (!s.active || !s.input) { this.hits.delete(s); return; } if (!s.input.enabled) { s.input.enabled = true; on.push(s); } });
+      const under = this.input.hitTestPointer(ptr); on.forEach(s => { if (s.input && !s._drag) s.input.enabled = false; }); return under;
+    }
+    tap(wx, wy, ptr) {
+      if (this.you.riding === 'bus') return;                                      // (the bus lets the child off at its next stop)
+      // before the prayer has begun, a tap elsewhere is a change of mind; once it has begun, the child stays to the end
+      if (this.you.praying) { if (!this.w.leavePrayer(this.you)) { this.prayNudge(); return; } }
+      const zoom = this.cameras.main.zoom, reach = Math.max(46, 34 * this.zs / zoom), D2 = Phaser.Math.Distance.Between;
+      // the child themself: whatever they are busy with stops (off the bicycle, up from the bed, down with what they carry)
+      const ys = this.spr.get(this.you), you = this.you;
+      if (ys && ys.visible && (you.riding === 'bike' || you.carry || you.state === 'use' || you.state === 'wait') && Math.abs(wx - ys.x) <= reach && wy <= ys.y + 14 && wy >= ys.y - Math.max(ys._h, 60 / zoom) - 18) { this.tapSelf(); return; }
+      // someone: their whole height and a finger's width either side (a child's tap lands a little off a small person)
       let who = null, best = 1e9;
       this.spr.forEach((s, p) => {
         if (p === this.you || !s.visible || s.alpha < 0.5) return; const h = Math.max(s._h, 60 / zoom);
         if (Math.abs(wx - s.x) > reach || wy > s.y + 14 || wy < s.y - h - 18) return;
-        const dd = Math.hypot(wx - s.x, (wy - (s.y - h / 2)) * 0.5); if (dd < best) { best = dd; who = p; }
+        const dd = D2(wx, wy * 0.5, s.x, (s.y - h / 2) * 0.5); if (dd < best) { best = dd; who = p; }
       });
       if (who) { this.tapPerson(who); return; }
-      // a thing that does something, by its own shape (the engine reads the picture's alpha); the one in front wins
-      let hit = null, hz = null, hd = -1e18, nearT = null, nearD = Math.max(40, 30 / zoom);
-      for (const id in this.Z) {
-        const z = this.Z[id]; if (z.state !== 'on' || !z.layer.visible) continue;
-        for (const tid in z.things) {
-          const t = z.things[tid], s = t.s; if (!t.use || s.alpha < 0.5) continue;
-          const lx = wx - s.x + s.displayOriginX, ly = wy - s.y + s.displayOriginY;
-          if (lx >= 0 && ly >= 0 && lx < s.width && ly < s.height) {
-            const a = this.textures.getPixelAlpha(Math.floor(lx), Math.floor(ly), s.texture.key, s.frame.name), d = this.rank[id] * 1e7 + t.depth;
-            if (a > 40 && d > hd) { hd = d; hit = t; hz = z; }
-          }
-          { const cx = s.x - s.displayOriginX + s.width / 2, cy = s.y - s.displayOriginY + s.height / 2, dd = Math.hypot(wx - cx, wy - cy); if (dd < nearD) { nearD = dd; nearT = t; } }
+      // what the engine finds under the finger, by the shape of each picture; of those, the one drawn in front
+      const under = ptr ? this.hitTest(ptr) : [], seen = o => o.alpha >= 0.5 && (!o.parentContainer || o.parentContainer.visible);
+      let hit = null, hd = -1e18;
+      under.forEach(o => { const t = o._thing; if (!t || !t.use || !seen(o) || o._z.state !== 'on' || !o._z.layer.visible) return; const d = this.rank[o._z.id] * 1e7 + t.depth; if (d > hd) { hd = d; hit = t; } });
+      // nothing exactly under it: a usable thing within a finger's width of the tap
+      if (!hit) {
+        let nearD = Math.max(40, 30 / zoom);
+        for (const id in this.Z) {
+          const z = this.Z[id]; if (z.state !== 'on' || !z.layer.visible) continue;
+          for (const tid in z.things) { const t = z.things[tid]; if (!t.use || t.s.alpha < 0.5) continue; const c = t.s.getCenter(), dd = D2(wx, wy, c.x, c.y); if (dd < nearD) { nearD = dd; hit = t; } }
         }
       }
-      hit = hit || nearT;
       if (hit) { this.tapThing(hit.th); return; }
       // a building's outside: go in by its door
-      for (const lot in this.bld) {
-        const s = this.bld[lot].far; if (this.bld[lot].v < 0.5) continue; const lx = (wx - s.x) / s.scaleX + s.displayOriginX, ly = (wy - s.y) / s.scaleY + s.displayOriginY;
-        if (lx >= 0 && ly >= 0 && lx < s.width && ly < s.height && this.textures.getPixelAlpha(Math.floor(lx), Math.floor(ly), s.texture.key) > 40) { const d = this.doorOf(lot); if (d) { this.goDoor(d); return; } }
-      }
+      const b = under.find(o => o._lot != null && this.bld[o._lot] && this.bld[o._lot].v >= 0.5);
+      if (b) { const d = this.doorOf(b._lot); if (d) { this.goDoor(d); return; } }
       // the ground: a room of the open building, or the town
       const f = this.floorAt(wx, wy); let pl = null;
       for (const id in this.Z) { const z = this.Z[id], q = z.pl; if (!q.outdoor && z.state === 'on' && z.layer.visible && f.x >= q.at[0] && f.y >= q.at[1] && f.x < q.at[0] + q.w && f.y < q.at[1] + q.d) pl = q; }
@@ -717,6 +785,15 @@
       }
       if (pl) this.tapFloor(pl, f.x - pl.at[0], f.y - pl.at[1]);
     }
+    tapSelf() {
+      const w = this.w, you = this.you; sfx('pop');
+      if (you.riding === 'bike') { w.stop(you); w.dismount(you); }
+      else if (you.state === 'use' || you.state === 'wait') w.stop(you);
+      else if (you.carry) w.drop(you);
+      const s = this.spr.get(you); if (s) { this.tweens.killTweensOf(s); s.setScale(1.06, 0.94); this.tweens.add({ targets: s, scaleX: 1, scaleY: 1, duration: 220, ease: 'Back.easeOut' }); }
+    }
+    // a tap while the prayer goes on: the moon shows how far it has come, and that it ends by itself
+    prayNudge() { this.game.events.emit('life-prayNudge'); }
     doorOf(lot) { for (const id in this.w.places) { const pl = this.w.places[id]; if (!pl.outdoor) continue; for (const k in pl.doors) { const d = pl.doors[k], to = this.w.places[d.to]; if (to && to.lot === lot) return d; } } return null; }
     // walk to a spot in any place, and then do something there
     reach(pid, x, y, then) { const w = this.w, you = this.you; w.stop(you); this.centreIfSeen(); return w.travel(you, pid, x, y, then); }
@@ -821,12 +898,12 @@
       const w = this.w, on = w.on, here = p => p && !p.away && p.place && this.shown(p.place), S = p => { const s = this.spr.get(p); return s && s.visible ? s : null; }, R = Life.rules, T = th => this.T(th);
       const hud = (n, a, b) => this.game.events.emit('life-' + n, a, b);
       on.want = (p, th) => { if (!p.you && here(p) && th.k.icon) this.bubble(p, th.k.icon); };
-      on.start = (p, th) => { if (!here(p)) return; if (p.you && th.k.lesson && R.staffed(p.place)) { const tch = w.here(p.place).find(o => o.slot && o.slot.staff), pid = p.place; ['book', 'abacus', 'pencil'].forEach((ic, i) => this.time.delayedCall(600 + i * 2600, () => { if (tch && tch.place === pid) this.bubble(tch, ic, 2200); })); } const t = T(th); if (t && th.k.pose === 'reach') this.tweens.add({ targets: t.s, angle: 2.2, duration: 220, yoyo: true, repeat: 2, ease: 'Sine.easeInOut' }); if (p.you && th.k.icon && S(p)) { this.rise(th.k.icon, S(p).x, S(p).y - 150, { scale: 0.46 }); sfx('pop'); } };
+      on.start = (p, th) => { if (!here(p)) return; if (!p.you && th.k && USE[th.k.icon] && Math.random() < 0.3) { const s = S(p); if (s) this.hear(USE[th.k.icon], s.x, s.y, { vol: this.near(s.x, s.y) * 0.3 }); } if (p.you && th.k.lesson && R.staffed(p.place)) { const tch = w.here(p.place).find(o => o.slot && o.slot.staff), pid = p.place; ['book', 'abacus', 'pencil'].forEach((ic, i) => this.time.delayedCall(600 + i * 2600, () => { if (tch && tch.place === pid) this.bubble(tch, ic, 2200); })); } const t = T(th); if (t && th.k.pose === 'reach') this.tweens.add({ targets: t.s, angle: 2.2, duration: 220, yoyo: true, repeat: 2, ease: 'Sine.easeInOut' }); if (p.you && th.k.icon && S(p)) { this.rise(th.k.icon, S(p).x, S(p).y - 150, { scale: 0.46 }); sfx('pop'); } };
       on.end = (p, th) => { if (p.you && th && S(p)) { this.rise('star', S(p).x, S(p).y - 160, { scale: 0.4 }); sfx('spark'); } };
       on.full = (p, th) => { const t = T(th); if (t && p.you) { this.tweens.add({ targets: t.s, x: t.s.x + 6, duration: 50, yoyo: true, repeat: 3 }); sfx('soft'); } };
       on.no = on.full; on.hands = (p) => { if (p.you) { sfx('soft'); hud('hands'); } };
       on.kick = (p, th) => {
-        const t = T(th); if (!t) return; sfx('knock'); const pl = w.places[th.place];
+        const t = T(th); if (!t) return; this.hear('kick', t.s.x, t.s.y); this.time.delayedCall(650, () => { if (t.s.active) this.hear('bounce', t.s.x, t.s.y, { vol: this.near(t.s.x, t.s.y) * 0.7 }); }); const pl = w.places[th.place];
         const s = w.freeSpot(th.place, null), to = this.at(pl, s.x, s.y), x0 = t.s.x, y0 = t.s.y; th.at = [s.x, s.y];
         this.tweens.addCounter({ from: 0, to: 1, duration: 700, ease: 'Sine.easeOut', onUpdate: tw => { if (!t.s.active) return; const k = tw.getValue(); t.s.x = x0 + (to.x - x0) * k; t.s.y = y0 + (to.y - y0) * k - Math.abs(Math.sin(k * Math.PI * 2.5)) * 46 * (1 - k); t.s.setDepth(t.s.y); t.depth = t.s.y; t.s.angle = k * 540; } });
       };
@@ -836,13 +913,13 @@
       on.take = (p, th) => { const t = T(th); if (t) { delete this.Z[th.place].things[th.id]; t.s.destroy(); } if (p.you) { sfx('pop'); hud('carry'); } };
       on.got = (p) => { if (p.you) hud('carry'); };
       on.drop = (p) => { if (p.you) { sfx('soft'); hud('carry'); } };
-      on.put = (p, th, item) => { const t = T(th); if (t && here(p)) { this.rise(item, t.s.x, t.s.y - 90, { scale: 0.4, up: -40, dur: 500 }); this.tweens.add({ targets: t.s, scaleY: 1.1, duration: 110, yoyo: true }); sfx('knock'); } if (p.you) hud('carry'); };
+      on.put = (p, th, item) => { const t = T(th); if (t && here(p)) { this.rise(item, t.s.x, t.s.y - 90, { scale: 0.4, up: -40, dur: 500 }); this.tweens.add({ targets: t.s, scaleY: 1.1, duration: 110, yoyo: true }); sfx(USE[th.k.icon] || 'bag'); } if (p.you) hud('carry'); };
       const hearts = (p, q) => { const a = S(p), b = S(q); if (!a || !b) return; sfx('spark'); this.puff('heart', (a.x + b.x) / 2, Math.min(a.y, b.y) - 170, 3, 0.34, 90); };
       on.salam = (p, q) => { if (here(p) && (p.you || q.you)) hearts(p, q); else if (here(p)) this.bubble(p, 'salam', 1500); };
       on.hug = hearts;
       on.gift = (p, q, item) => { const a = S(p), b = S(q); if (!a || !b) return; hearts(p, q); const i = this.add.image(a.x, a.y - 110, 'ui', Life.ico(item)).setScale(0.4).setDepth(OVER); this.tweens.add({ targets: i, x: b.x, y: b.y - 120, duration: 500, ease: 'Sine.easeInOut', onComplete: () => i.destroy() }); hud('carry'); };
       on.cross = (p, from, to) => {
-        if (p.you) { const a = w.places[from], b = w.places[to]; if (!(a && b && a.outdoor && b.outdoor)) sfx('door'); if (this.deco) this.decorate(false); this.focus(); if (this.hint === to) this.guide(null); }
+        if (p.you) { const a = w.places[from], b = w.places[to]; if (a && b && !a.outdoor && !b.outdoor && a.lot === b.lot && (a.floor || 0) !== (b.floor || 0)) sfx('step-stair'); else if (!(a && b && a.outdoor && b.outdoor)) sfx('door'); if (this.deco) this.decorate(false); this.focus(); if (this.hint === to) this.guide(null); }
         else if (this.Z[to] && this.Z[to].state === 'on' && this.wantSheet(p) && !this.load.isLoading()) this.load.start();
       };
       on.back = p => { if (here(p) && this.wantSheet(p) && !this.load.isLoading()) this.load.start(); };
@@ -861,21 +938,21 @@
       on.card = c => hud('card', c); on.cardsDone = () => hud('cheer', 'star');
       on.grow = (th, what) => { const t = T(th); if (t) { this.rise(what === 'pick' ? 'veg' : what === 'water' ? 'drop' : 'sprout', t.s.x, t.s.y - 80, { scale: 0.5 }); sfx(what === 'water' ? 'soft' : 'pop'); } hud('carry'); };
       const heart3 = (x, y) => this.puff('heart', x, y, 3, 0.3, 70);
-      on.feed = (p, th) => { const t = T(th); if (t) { heart3(t.s.x, t.s.y - 60); sfx('knock'); } if (p && p.you) hud('carry'); };
+      on.feed = (p, th) => { const t = T(th); if (t) { heart3(t.s.x, t.s.y - 60); sfx('bag'); const an = w.people.find(a => a.animal && a.food === th.id && ANIMAL[a.sprite]); if (an) this.time.delayedCall(900, () => { const s = S(an); if (s) this.hear(ANIMAL[an.sprite], s.x, s.y); }); } if (p && p.you) hud('carry'); };
       on.need = (p, th, item) => { if (p.you) { sfx('soft'); this.bubble(this.you, item, 2400); } };      // "bring this first"
       on.notyet = (p, th) => { on.full(p, th); };
       on.fedok = (p, th) => { const t = T(th); if (t) this.rise('heart', t.s.x, t.s.y - 60, { scale: 0.3 }); };
       on.collect = (p, th, item) => { const t = T(th); if (t) this.rise(th.k.icon || item, t.s.x, t.s.y - 80, { scale: 0.4, up: -40, dur: 500 }); sfx('pop'); if (p.you) hud('carry'); };
-      on.pet = (p, q) => { const s = S(q); if (s) heart3(s.x, s.y - D.art.people[q.sprite].h * D.art.zpx - 30); sfx('pop'); };
+      on.pet = (p, q) => { const s = S(q); if (s) heart3(s.x, s.y - D.art.people[q.sprite].h * D.art.zpx - 30); sfx('pop'); if (ANIMAL[q.sprite]) sfx(ANIMAL[q.sprite], { delay: 0.3 }); };
       on.far = () => sfx('soft');
       on.fed = th => { const t = T(th); if (t) heart3(t.s.x, t.s.y - 60); };
       on.day = () => { hud('day'); this.light(); };
       // money and learning
-      on.coins = (total, d, icon) => { hud('coins', total, d); if (d > 0 && S(this.you)) { this.puff('coin', S(this.you).x, S(this.you).y - 150, Math.min(5, d), 0.32, 80); sfx('spark'); } };
+      on.coins = (total, d, icon) => { hud('coins', total, d); if (d > 0 && S(this.you)) { this.puff('coin', S(this.you).x, S(this.you).y - 150, Math.min(5, d), 0.32, 80); sfx('coin'); sfx('spark', { delay: 0.15, vol: 0.6 }); } };
       on.poor = th => { sfx('soft'); hud('poor'); const t = T(th); if (t) this.tweens.add({ targets: t.s, x: t.s.x + 6, duration: 50, yoyo: true, repeat: 3 }); };
       on.closed = (p, th) => { sfx('soft'); const t = T(th); if (t) this.rise('cross', t.s.x, t.s.y - 110, { scale: 0.5 }); };
-      on.bought = (p, th, item) => { hud('carry'); sfx('click'); const st = w.here(p.place).find(o => o.slot && o.slot.staff), a = S(p), b = st && S(st); if (a && b) { const i = this.add.image(a.x, a.y - 110, 'ui', Life.ico('coin')).setScale(0.34).setDepth(OVER); this.tweens.add({ targets: i, x: b.x, y: b.y - 120, duration: 450, ease: 'Sine.easeInOut', onComplete: () => i.destroy() }); this.bubble(st, 'heart', 1400); } };
-      on.gave = th => { const t = T(th); if (t) { this.rise('coin', t.s.x, t.s.y - 120, { scale: 0.36, up: -50, dur: 500 }); this.time.delayedCall(450, () => { if (t.s.active) this.rise('heart', t.s.x, t.s.y - 90, { scale: 0.4 }); }); } sfx('spark'); };
+      on.bought = (p, th, item) => { hud('carry'); sfx('coin'); sfx('bag', { delay: 0.3 }); const st = w.here(p.place).find(o => o.slot && o.slot.staff), a = S(p), b = st && S(st); if (a && b) { const i = this.add.image(a.x, a.y - 110, 'ui', Life.ico('coin')).setScale(0.34).setDepth(OVER); this.tweens.add({ targets: i, x: b.x, y: b.y - 120, duration: 450, ease: 'Sine.easeInOut', onComplete: () => i.destroy() }); this.bubble(st, 'heart', 1400); } };
+      on.gave = th => { sfx('coin'); const t = T(th); if (t) { this.rise('coin', t.s.x, t.s.y - 120, { scale: 0.36, up: -50, dur: 500 }); this.time.delayedCall(450, () => { if (t.s.active) this.rise('heart', t.s.x, t.s.y - 90, { scale: 0.4 }); }); } sfx('spark'); };
       on.shop = () => hud('open', 'Shop');
       on.skill = (name, lv, up) => { hud('skill', name, up ? lv : 0); };
       on.ride = p => { if (!p.you) return; sfx('click'); hud('carry'); const b = this.pl.things.bike; Life.state.bike = p.riding === 'bike' ? null : (b ? { place: this.pid, at: b.at } : Life.state.bike); Life.save(); };
@@ -885,16 +962,12 @@
     }
     // the recorded adhan, phrase by phrase, quietly. Never a device voice. The prayer waits until it has been heard.
     adhan(name) {
-      const c0 = this.w.calling; if (!c0) return;
-      let S = null, ctx = null; try { S = Kit.sfx; ctx = S.lib.ctx; } catch (e) { /* no sound */ }
-      if (!ctx || ctx.state !== 'running' || S.muted) return;
+      const c0 = this.w.calling; if (!c0 || Kit.snd.muted) return;
       c0.hold = true;
       const list = ADHAN.slice(); if (name === 'fajr') list.splice(10, 0, 'fajr1', 'fajr2');
       const next = () => {
         if (this.w.calling !== c0) return; const n = list.shift(); if (!n) { c0.hold = false; return; }
-        fetch(BASE + 'audio/adhan-' + n + '.m4a').then(r => r.arrayBuffer()).then(a => ctx.decodeAudioData(a, b => {
-          if (this.w.calling !== c0) return; const s = ctx.createBufferSource(), g = ctx.createGain(); g.gain.value = 0.6; s.buffer = b; s.connect(g); g.connect(S.lib.out || ctx.destination); s.onended = next; s.start();
-        }, () => { c0.hold = false; })).catch(() => { c0.hold = false; });
+        Kit.snd.voice(BASE + 'audio/adhan-' + n + '.m4a', { vol: 0.75 }).then(heard => { if (this.w.calling !== c0) return; if (heard) next(); else c0.hold = false; });
       };
       next();
     }
@@ -940,6 +1013,9 @@
         else if (p.pose === 'salam' || p.pose === 'wave') f = back ? 'idleB' : p.pose;
         else f = p.carry ? (back ? 'carryB' : 'carry') : (back ? 'idleB' : 'idle');
         if (f !== s._key) { s._key = f; if (f[0] === '@') s.play(key + '-' + f.slice(1), true); else { s.anims.stop(); s.setFrame(f); } }
+        // the legs keep pace with the ground: one walk cycle covers a set share of the body's height (a person's stride, an
+        // animal's four-legged gait), so a slow tortoise steps slowly and the child on a sporty day steps quicker
+        if (f[0] === '@' && s.anims.currentAnim) { const h = (D.art.people[p.you ? 'you' : p.sprite] || { h: 1.2 }).h, k = p.animal ? 1.04 : 0.48; s.anims.timeScale = Phaser.Math.Clamp(p.speed * s.anims.currentAnim.duration / 1000 / (k * h), 0.25, 1.8); }
         s.setFlipX(flip).setVisible(!p.hidden);
         const bob = walking && p.carry ? Math.abs(Math.sin(time / 110)) * 5 : 0;
         s.setPosition(pos.x, pos.y - bob);
@@ -947,7 +1023,14 @@
         // in front of or behind each piece of furniture, by which side of it the person is on
         let depth = pos.y; const z = this.Z[p.place], things = z ? z.things : null;
         if (things) {
-          if (p.state === 'use' && p.slot && p.thing && things[p.thing.id]) depth = things[p.thing.id].depth + (p.slot.over ? 1 : -1);
+          // someone using a thing is drawn in front of it or behind it by where they are: on its near side in front, on its
+          // far side behind, and on (or in) something flat, a sandpit, a rug, cushions, always on top; a seat inside the
+          // footprint keeps what the data says (`over`)
+          if (p.state === 'use' && p.slot && p.thing && things[p.thing.id]) {
+            const t = things[p.thing.id], q = t.f, sl = p.slot, fr = !!q && (sl.x >= q[2] - 0.05 || sl.y >= q[3] - 0.05), bk = !!q && (sl.x <= q[0] + 0.05 || sl.y <= q[1] + 0.05);
+            const over = p.thing.k.solid === 'none' || (fr && !bk) || (!(bk && !fr) && sl.over);
+            depth = t.depth + (over ? 1 : -1);
+          }
           else for (const id in things) {
             const t = things[id]; if (!t.solid) continue; const q = t.f;
             const front = p.x >= q[2] - 0.05 || p.y >= q[3] - 0.05, behind = p.x <= q[0] + 0.05 || p.y <= q[1] + 0.05;
@@ -978,7 +1061,7 @@
     }
   }
 
-  /* The interface: your four needs, the call to prayer, what you carry, the way out, and the doors to the panels. */
+  /* The interface: your four needs, the call to prayer, what you carry, the way out, the doors to the panels, sound on/off. */
   class Hud extends Phaser.Scene {
     constructor() { super('Hud'); }
     create() {
@@ -992,13 +1075,14 @@
       };
       this.exit = btn('house', () => Kit.play.exit());
       this.moon = btn('moon', () => this.pray());
+      this.prayArc = this.ring('hud-ring-pray'); this.moon.add(this.prayArc); this.prayK = -2;
       this.hand = btn('hand', () => { w.drop(w.you); }).setVisible(false);
       this.bike = btn('bike', () => { w.stop(w.you); w.dismount(w.you); }).setVisible(false);
       this.find = btn('follow', () => { const p = P(); if (p) p.centre(); }, 0.62).setVisible(false);       // back to the child, after looking round
       this.mapB = btn('map', () => { const p = P(); if (p && !p.busy) p.mapView(); }, 0.62);                   // the whole town
       this.panels = [['album', 'Album'], ['people', 'Friends'], ['star', 'Today']].filter(p => this.scene.get(p[1])).map(p => btn(p[0], () => this.open(p[1]), 0.62));
       this.gauges = [['food', 'dates', 0xf2a03d], ['rest', 'cushion', 0x5b8def], ['fun', 'ball', 0x3fb37f], ['clean', 'drop', 0x4fb6d9]].map(g => {
-        const c = this.add.container(0, 0), arc = this.add.graphics();
+        const c = this.add.container(0, 0), arc = this.ring('hud-ring-' + g[0]);
         c.add([this.add.image(0, 0, 'ui-plate').setScale(0.8), arc, this.add.image(0, -4, 'ui', Life.ico(g[1])).setScale(0.46)]);
         return { c: c, arc: arc, need: g[0], col: g[2], v: -1 };
       });
@@ -1007,7 +1091,18 @@
       this.purse = this.add.container(0, 0); this.coinTxt = this.add.text(18, -6, String(R.s.coins), { fontFamily: 'ui-rounded, "SF Pro Rounded", "Nunito", system-ui, sans-serif', fontSize: '58px', fontStyle: '800', color: '#7a4a16' }).setOrigin(0, 0.5);
       this.purse.add([this.add.image(40, 0, 'ui-plate').setScale(1.5, 0.62), this.add.image(-42, -4, 'ui', Life.ico('coin')).setScale(0.5), this.coinTxt]);
       this.me = this.scene.get('Me') ? btn('pencil', () => this.open('Me'), 0.6) : null;
+      // sound on and off (remembered; Phaser's own mute, so the guides and the call to prayer follow it): a speaker with
+      // its waves, or crossed out, painted once
+      const spk = (key, on) => { if (!this.textures.exists(key)) Kit.play.tex(this, key, 96, 96, c => {
+        c.fillStyle = '#3a3050'; c.fill(new Path2D('M10 36h17l21-18v60L27 60H10z')); c.strokeStyle = '#3a3050'; c.lineWidth = 8; c.lineCap = 'round'; c.beginPath();
+        if (on) { c.arc(44, 48, 18, -0.9, 0.9); c.stroke(); c.beginPath(); c.arc(44, 48, 34, -0.85, 0.85); } else { c.moveTo(60, 36); c.lineTo(84, 60); c.moveTo(84, 36); c.lineTo(60, 60); }
+        c.stroke(); }, 2); };
+      spk('hud-snd-on', true); spk('hud-snd-off', false);
+      this.sndB = btn('star', () => { Kit.snd.setMuted(!Kit.snd.muted); this.sndIcon(); if (!Kit.snd.muted) sfx('tap'); }, 0.62);
+      this.sndIcon = () => this.sndB.icon.setTexture(Kit.snd.muted ? 'hud-snd-off' : 'hud-snd-on').setScale(0.95).setAlpha(Kit.snd.muted ? 0.75 : 1);
+      this.sndIcon();
       const on = (n, f) => { ev.on('life-' + n, f, this); };
+      on('prayNudge', () => { this.tweens.killTweensOf(this.moon); this.moon.setScale(1); this.tweens.add({ targets: this.moon, scale: 1.2, duration: 160, yoyo: true, repeat: 1 }); });
       on('coins', (total, d) => { this.coinTxt.setText(String(total)); this.tweens.add({ targets: this.purse, scale: this.purse.scale * 1.18, duration: 110, yoyo: true }); });
       on('poor', () => this.tweens.add({ targets: this.purse, x: this.purse.x + 10, duration: 50, yoyo: true, repeat: 3 }));
       on('skill', (name, lv) => { this.cheer(RU.SKILL_ICON[name] || 'star', !lv); if (lv) sfx('spark'); });
@@ -1019,15 +1114,16 @@
       on('unlock', id => this.unlock(id));
       this.events.once('shutdown', () => ['adhan', 'carry', 'hands', 'wish', 'open', 'cheer', 'sticker', 'unlock', 'coins', 'poor', 'skill', 'follow'].forEach(n => ev.off('life-' + n, undefined, this)));
       this.place(); this.carry(); this.showWishes();
+      this.needs(); this.time.addEvent({ delay: 250, loop: true, callback: () => this.needs() });
       if (Q.has('perf')) {
-        const el = document.createElement('div'); el.style.cssText = 'position:fixed;left:8px;bottom:8px;z-index:9;font:600 12px/1.3 ui-monospace,monospace;color:#fff;background:rgba(0,0,0,.55);padding:4px 8px;border-radius:8px;pointer-events:none';
-        document.body.appendChild(el);
+        const el = this.add.text(0, 0, '', { fontFamily: 'ui-monospace, monospace', fontSize: '22px', fontStyle: '600', color: '#ffffff', backgroundColor: 'rgba(0,0,0,0.55)', padding: { x: 10, y: 6 } }).setOrigin(0, 1).setDepth(99);
+        const putEl = () => el.setPosition(this.view.sl + 12, this.view.sb - 12); putEl(); this.scale.on('resize', putEl); this.events.once('shutdown', () => this.scale.off('resize', putEl));
         // (how many times a frame the renderer hands pictures to the graphics chip, and how long the game's own work takes)
         const gl = this.game.renderer.gl, st = window.LTP = { dc: 0, fr: 0, ms: 0, t: 0, up: 0, ups: 0 };
         ['drawArrays', 'drawElements'].forEach(n => { const f = gl[n]; gl[n] = function () { st.dc++; return f.apply(gl, arguments); }; });
         { const f = gl.texImage2D; gl.texImage2D = function () { const t = Date.now(), r = f.apply(gl, arguments), d = Date.now() - t; st.ups += d; if (d > st.up) st.up = d; return r; }; }      // (handing a new picture to the chip: the longest one is how long the game stops when something loads)
         this.game.events.on('prestep', () => { st.t = performance.now(); }); this.game.events.on('postrender', () => { st.ms += performance.now() - st.t; st.fr++; });
-        this.time.addEvent({ delay: 500, loop: true, callback: () => { const c = Math.floor(w.clock), fr = st.fr || 1, cv = this.game.canvas; el.textContent = Math.round(this.game.loop.actualFps) + ' fps · ' + Math.round(st.dc / fr) + ' draws · ' + (st.ms / fr).toFixed(1) + ' ms · ' + cv.width + 'x' + cv.height + ' · load ' + st.up + '/' + st.ups + ' ms · ' + (P() ? Object.keys(P().Z).filter(k => P().Z[k].state === 'on').length + ' places · ' + Math.round(this.textures.getTextureKeys().reduce((n, k) => { const t = this.textures.get(k), im = t.getSourceImage(); return n + (im ? im.width * im.height : 0) * (t.dataSource && t.dataSource.length ? 1.25 : 1); }, 0) * 4 / 1e6) + ' MB · z' + P().cameras.main.zoom.toFixed(2) + ' · ' + P().pid : '') + ' · ' + Math.floor(c / 60) + ':' + ('0' + c % 60).slice(-2); st.dc = st.fr = st.ms = 0; } });
+        this.time.addEvent({ delay: 500, loop: true, callback: () => { const c = Math.floor(w.clock), fr = st.fr || 1, cv = this.game.canvas; el.setText(Math.round(this.game.loop.actualFps) + ' fps · ' + Math.round(st.dc / fr) + ' draws · ' + (st.ms / fr).toFixed(1) + ' ms · ' + cv.width + 'x' + cv.height + ' · load ' + st.up + '/' + st.ups + ' ms · ' + (P() ? Object.keys(P().Z).filter(k => P().Z[k].state === 'on').length + ' places · ' + Math.round(this.textures.getTextureKeys().reduce((n, k) => { const t = this.textures.get(k), im = t.getSourceImage(); return n + (im ? im.width * im.height : 0) * (t.dataSource && t.dataSource.length ? 1.25 : 1); }, 0) * 4 / 1e6) + ' MB · z' + P().cameras.main.zoom.toFixed(2) + ' · ' + P().pid : '') + ' · ' + Math.floor(c / 60) + ':' + ('0' + c % 60).slice(-2) + ' · ' + Kit.snd.held()); st.dc = st.fr = st.ms = 0; } });
       }
     }
     open(name) { if (!this.scene.get(name) || this.scene.isActive(name)) return; sfx('pop'); this.scene.launch(name); }
@@ -1083,16 +1179,31 @@
       this.gauges.forEach((g, i) => g.c.setPosition(v.sr - 90 - i * 136, v.st + 92));
       this.purse.setPosition(v.sl + 262, v.st + 96).setScale(0.82);
       if (this.me && this.panels.indexOf(this.me) < 0) this.panels.push(this.me);
+      if (this.sndB && this.panels.indexOf(this.sndB) < 0) this.panels.push(this.sndB);
       this.panels.forEach((c, i) => c.setPosition(v.sl + 100, v.st + 250 + i * 132).setScale(0.74));
       this.wishes.forEach((c, i) => c.setPosition(v.sr - 96, v.st + 250 + i * 128));
     }
-    update() {
+    /* A ring that fills (a need, the prayer): the engine's canvas texture, one per ring, repainted only when its value
+       moves (as the engine's own Text is), and shown as a plain image, so it is drawn in the same batch as the other
+       pictures. (Drawn as Graphics, the five rings were rebuilt and drawn on their own every frame: measured, 8 draw
+       calls and about 0.75 ms of the graphics chip's time a frame, a third of the whole picture.) */
+    ring(key) { if (!this.textures.exists(key)) this.textures.createCanvas(key, 150, 150); return this.add.image(0, -4, key); }
+    paintRing(img, r, col, v) {
+      const t = img.texture, c = t.context, m = 75; c.clearRect(0, 0, 150, 150); c.lineWidth = 12;
+      c.strokeStyle = '#e7e0f2'; c.beginPath(); c.arc(m, m, r, 0, Math.PI * 2); c.stroke();
+      if (v > 0) { c.strokeStyle = '#' + col.toString(16).padStart(6, '0'); c.beginPath(); c.arc(m, m, r, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * v); c.stroke(); }
+      t.refresh();
+    }
+    // the need rings: looked at four times a second (the engine's timer), redrawn only when a value has moved
+    needs() {
       const you = Life.world.you;
       this.gauges.forEach(g => {
         const v = Math.round(you.needs[g.need] * 50) / 50; if (v === g.v) return; g.v = v;
-        g.arc.clear(); g.arc.lineStyle(12, 0xe7e0f2, 1); g.arc.beginPath(); g.arc.arc(0, -4, 56, 0, Math.PI * 2); g.arc.strokePath();
-        g.arc.lineStyle(12, g.col, 1); g.arc.beginPath(); g.arc.arc(0, -4, 56, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * v); g.arc.strokePath();
+        this.paintRing(g.arc, 56, g.col, v);
       });
+      // while the child prays: how far the prayer has come, round the moon
+      const w = Life.world, pr = you.praying && w.prayers[you.praying], k = pr && pr.stage === 'pray' && pr.steps ? Math.min(1, (pr.i + Math.min(1, pr.t / pr.steps[pr.i][1])) / pr.steps.length) : -1, q = Math.round(k * 60) / 60;
+      if (q !== this.prayK) { this.prayK = q; this.prayArc.setVisible(q >= 0); if (q >= 0) this.paintRing(this.prayArc, 64, 0x8d6fd1, q); }
     }
   }
 

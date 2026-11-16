@@ -10,11 +10,32 @@ Target, unchanged: **a steady 60 frames per second in the Kahf Kids app WebView 
 2. **Phaser is started only by `Kit.play.start({ scenes, color })`** (`js/kit/play.js`). It decides, the same for every game:
    - WebGL only. No Canvas fallback. No WebGL: `Kit.play.sorry` (a picture and a way out).
    - Sharpness: canvas pixels = screen pixels x `Kit.play.dpr()` (at most 2; 1.5 on phones with 2 GB or less).
-   - Phaser's sound system is off. Sound is the kit's (`js/kit/audio.js`): natural sounds only, one mute setting.
+   - Phaser's sound system is on (2026-11-16). `Kit.snd` (`js/kit/sound.js`) sits on top of it for what Phaser has no word for (section 3a). The old kit pages keep `js/kit/audio.js`.
    - It tells the app the page has its own Exit (`Kit.host.ready`). `Kit.play.exit()` leaves.
 3. **After that, use Phaser as Phaser**: scenes, game objects, its input and drag, tweens, particles, cameras, physics when a game needs it. Do not wrap it in a home-made layer.
    **Engine first (owner, 2026-11-11: "dont hand roll ... use the engine to its fullest").** Before writing drawing, lighting, effect, input or camera code, check what the pinned build has (names survive in the minified file: `grep -o 'addConeLight:function([^)]*)' js/vendor/phaser-4.2.1.min.js`) and use it. In 4.2.1 that includes: Lights (ambient colour, point and cone lights, normal maps through the loader's `normalMap`, self-shadow), PointLight objects, particles, camera and object filters (Vignette, ColorMatrix, Glow, Blur, Bokeh, Shadow, Displacement, and bloom through `Phaser.Actions.AddEffectBloom`), DynamicTexture, NineSlice, tweens, drag input, camera pan/zoom/fade. It has no day and night cycle, no volumetric light rays, no path finding and no life-sim logic: those are built from the parts above, or written by hand (and then kept free of the engine so they can be tested in Node).
-   A painted overlay or a glow picture standing in for lighting counts as hand-rolled.
+   A painted overlay or a glow picture standing in for lighting counts as hand-rolled. One measured exception (Helping Home,
+   2026-11-16): a lamp's pool of light on the ground stays a gradient image with the engine's SCREEN blend. The engine's
+   `PointLight` falls off in a circle on the screen and adds its light, so on the ground it burns to white discs at any
+   strength tried; it is right for small glows (the lamp heads use it), and the per-pixel Lights stay out (six times the draw
+   calls, the lag of 2026-11-11). Night is each picture's own tint.
+   **If Phaser can do it, Phaser does it (owner, 2026-11-16).** "Other games do it this way" is no reason: Helping Home is
+   the reference, and what it does the other games will do. Kit code is only for what the pinned build lacks. Checked in
+   4.2.1 while finishing Helping Home, and so kept as kit code:
+   - screen sharpness: the Scale Manager reads `devicePixelRatio` but never applies it, so `Kit.play` sizes the canvas;
+   - AVIF: the engine only tests WebP, so a game tests AVIF once before it loads;
+   - decoding pictures off the main thread: the loader decodes on it (no `createImageBitmap`); Helping Home's `offThread`;
+   - pinch zoom: none (drag, wheel and camera zoom are the engine's);
+   - sound categories, ducking, take variation, a cap on overlapping sounds (`Kit.snd`, section 3a);
+   - "the nearest thing within a finger's width" for a child's tap: game design, not a hit test.
+   And taken back from hand-written code to the engine: sound and voices (`this.sound`, its loader and cache), loading the
+   portraits (the loader, not a `fetch`), pictures painted once (`textures.createCanvas`), hit tests on the shape of a
+   picture (`setInteractive({ pixelPerfect })` and `input.hitTestPointer`), timers (`time.delayedCall`), the `?perf`
+   readout (a Text object), distances (`Phaser.Math.Distance`). A browser timer stays only where the engine's clock is
+   wrong for the job: saving progress must happen while the page is hidden, when Phaser's clocks stop.
+   **Pixel-perfect hit areas cost on every finger move**: Phaser tests each interactive object for "over" and "out" on
+   each move, and a pixel-perfect test reads a pixel back from the graphics chip. Many of them (things in a town) are
+   kept switched off and switched on only for the one `hitTestPointer` a tap needs (Helping Home's `hitArea` / `hitTest`).
 4. **Version 4 differs from version 3.** Before using an API from memory, check `skills/v3-to-v4-migration` in the Phaser package or the Phaser 4 docs. Known traps: `setTintFill` is gone (`setTintMode`), masks are filters, `RenderTexture` needs `render()`, `Math.TAU` is now 2π, `Geom.Point` is gone.
 
 ## 2. One design space
@@ -29,9 +50,19 @@ Target, unchanged: **a steady 60 frames per second in the Kahf Kids app WebView 
 - **Picture files are AVIF**, written by `enc.save` (Helping Home: `games/helping-home/tools/art/enc.py`), with a WebP copy beside each one. A game tests AVIF once before it loads anything and uses the WebP copies only in a WebView too old for it; the WebP copies are never in an offline list. Measured on Helping Home's sheets: about 45% smaller than WebP and closer to the render.
 - **Full games may render their art from 3D models** scripted in Blender (Helping Home's `tools/art/`: one isometric camera, baked to trimmed atlases, with half-size normal maps for backgrounds and furniture so the engine's lights shade them). Nothing is retouched by hand.
 
-- **A picture is made once.** Either an image file (an atlas when there are many), or painted once with Canvas2D into a texture: `Kit.play.tex(scene, key, w, h, paint, pad)`, one texture pixel per design unit. Nothing is painted, and no Graphics is rebuilt, per frame (one small Graphics for something fluid is fine).
+- **A picture is made once.** Either an image file (an atlas when there are many), or, for a plain interface shape only (a card, a ring, a glow, a tick), painted once into the engine's canvas texture: `Kit.play.tex(scene, key, w, h, paint, pad)`, one texture pixel per design unit. A picture of a thing (a garment, a plant, a person) comes from the art pipeline, never from code: Helping Home's character maker shows the child's own rendered clothes, cropped from the layer sheets (`tools/art/you_boxes.py`). Nothing is painted, and no Graphics is rebuilt, per frame. A shape that changes now and then (a ring that fills) is the engine's canvas texture repainted only when its value moves, shown as an image (as the engine's Text is): a Graphics is rebuilt and drawn on its own every frame. Measured in Helping Home, the four need rings as Graphics cost 8 draw calls, about 0.75 ms of the graphics chip and over 1 ms of the CPU (6x slower) a frame; as images, nothing measurable.
 - Content rules are in `AGENTS.md`: no faces, no people, no music, no rainbows, no words a child must read in a game.
 - A game's look is written in the header of its `art.js`. Helping Home's look (soft toys: round, light top and deeper bottom, gloss, soft shadow, no black outlines) is the house style until the owner picks another.
+
+## 3a. Sound
+
+- **Recordings, never synthesis.** Every effect and ambience is a real recording of a natural sound. No music, no instruments, no chimes.
+- **The originals** live beside the repo, not in it: `../KidsGames-sounds/<source>/` (Helping Home's: 52 CC0 recordings from BigSoundBank.com, see its README). Ask the owner before downloading more; credit each in the game's `audio/CREDITS.md`.
+- **Cut by a script, the same way every time:** a game lists its sounds in `audio/sfx/recipe.json` (which recording, which seconds, which category) and `python3 tools/sound-cut.py <recipe>` writes them. Cuts are taken at the recording's own event boundaries (`ffmpeg silencedetect`). Each take is high-passed, faded and levelled to one loudness (loudest 400 ms at about -20 LUFS, true peak under -1.5 dBTP; ambience beds about -30 LUFS integrated): audio-design's mobile mix of about -18 LUFS. Mono AAC, 48 kbit/s.
+- **One audio sprite for the one-shots** (`sfx.m4a` + Phaser's `sfx.json`): one request and one decode at boot (Helping Home: 79 takes of 39 sounds, 64 s, 440 KB, about 12 MB decoded). **Loops are files of their own**, loaded when first wanted and dropped from the cache 20 s after they stop; each carries 0.1 s of its own sound before and after its loop marker, so the AAC encoder's lead-in silence never sits in the loop.
+- **Play through `Kit.snd`** (`js/kit/sound.js`): `Kit.snd.load(this, dir)` in Boot's preload; `Kit.snd.play(name, { vol, pan })` picks a take (never the last one) with a little detune and level; `Kit.snd.loop`, `Kit.snd.amb` (one ambience bed, cross-faded), `Kit.snd.voice(url)` (a recorded voice: effects and ambience duck under it). Categories `ui`, `sfx`, `amb`, `voice`. At most 3 of one sound and 12 in all at once.
+- **What makes a place sound alive** (Helping Home, `listen` and `ambience` in `life/game.js`): every action of the child has its sound and repeats it while it lasts; footsteps fire on the walk animation's own frames (`animationupdate`) with the ground of the place; things far from the middle of the view are quieter and panned; a bed of sound for where the child is (town, park, fields, night, indoors, wind on the map).
+- **Make the audio context while the page loads, never on the first sound**: making it took about 130 ms, and the first door the child opened froze the game for that long (found with the CPU profiler). Phaser makes its own at boot.
 
 ## 4. Feel (what makes it a game)
 
@@ -40,7 +71,8 @@ Every touch answers at once with a sound, a squash and something flying. Things 
 ## 5. A game's files
 
 ```
-games/<id>/index.html        loads kahf-bridge.js, Phaser, kit/core.js, kit/audio.js, kit/play.js, then the game
+games/<id>/index.html        loads kahf-bridge.js, Phaser, kit/core.js, kit/sound.js, kit/play.js, then the game
+games/<id>/audio/sfx/        recipe.json (what tools/sound-cut.py cuts), sfx.m4a + sfx.json, the loops
 games/<id>/<name>/art.js     the paint box and shared pictures
 games/<id>/<name>/common.js  saves, sounds, helpers shared by the scenes
 games/<id>/<name>/<scene>.js one Phaser scene per file; all state is set in create()
@@ -54,14 +86,15 @@ A scene object is used again each time the scene starts: keep no state outside `
 1. Played through in a browser at a phone on its side (844 x 390), a tablet (1024 x 768) and upright; no console errors.
 2. Every state photographed (the test hook reaches each one) and looked at.
 3. Exit, the star or finish, and saving checked. `KahfBridge.complete()` is called when a round ends.
-4. Run in the app on a budget Android phone before it is called finished: time to first picture, and frames per second.
-5. Release steps as in `AGENTS.md` (version bump; Helping Home: `make-offline.py`).
+4. Measured, never guessed (performance-optimization): `NODE_PATH=<a checkout with playwright> node tools/perf-check.js <url> 6` throttles the CPU six times and reports the game's own work per frame idle and while dragging, draw calls, and the graphics chip's own time (`gpu`, through the browser's GPU timer: this machine's chip, so compare builds, not phones; on a phone the chip is usually what lags). `--mute` starts with sound off. Run three times and compare averages: one run varies by about 0.4 ms. Budget: p95 under 8 ms, no frame over 30 ms, no long texture upload (Helping Home 1.8.5 at night: idle 2.6 ms average, p95 3.7 ms, 2.4 ms of GPU, 31 draw calls; the live 1.8.4 was 3.9 ms, 2.8 ms of GPU, 38 draw calls). A long frame is profiled (Chrome's CPU profiler through CDP) before anything is changed.
+5. Run in the app on a budget Android phone before it is called finished: time to first picture, and frames per second.
+6. Release steps as in `AGENTS.md` (version bump; Helping Home: `make-offline.py`).
 
 ## 7. Where each page stands
 
 | Page | Built on | State |
 |------|----------|-------|
-| Helping Home: the life game (`games/helping-home/index.html`, `life/`; data in `tools/data/`, art tools in `tools/art/`) | **Phaser 4** | built and released 2026-11-11 (1.8.0, 1.8.1): 17 places, people, animals, coins, school, vehicles, wudu and salah guides; night is tints and glow pictures, not engine lights or filters (cost on phones). Phone measurement still owed: read `?perf` on a budget Android phone |
+| Helping Home: the life game (`games/helping-home/index.html`, `life/`; data in `tools/data/`, art tools in `tools/art/`) | **Phaser 4** | built 2026-11-11, finished 2026-11-16 (1.8.5): engine-first pass, recorded sound on Phaser, maker from rendered clothes, measured at 6x CPU; not yet measured on a real phone |
 | Helping Home: the old town, the four-job home, and the separate adhan, wudu, salah and washing machine pages | removed 2026-11-11 | replaced by the life game (in git history). `settings.html` (city and madhab) remains and is not yet linked from the game |
 | Breakout, 2048, Follow the Light, Hextris, Tower Blocks, Spider IK, the drawing game and the other kit games | Canvas2D kit | to rebuild as full games, one at a time |
 | Checkers, Tic Tac Toe (`js/board/`) | Canvas2D | to rebuild |

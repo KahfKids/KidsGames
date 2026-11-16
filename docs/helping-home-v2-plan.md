@@ -38,7 +38,18 @@ added to it during the build. What follows in this document is still the design;
   stuck, nobody through furniture). Both pass.
 - **Done 2026-11-11:** it is the main page, `offline.json` lists only what it loads (345 files, 9.6 MB), the old
   town, the old prayer pages and the rejected mini-games are removed, version files are at 1.8.0.
-- **Not done:** not committed, nothing run in the app or on a phone, `settings.html` is not linked from the game, sound not listened to, Ramadan and Eid
+- **Finished 2026-11-16 (1.8.5), the engine-first pass:** every sound is a CC0 recording played by Phaser (`js/kit/sound.js`,
+  `audio/sfx/recipe.json`, cut by `tools/sound-cut.py`): 49 sounds, ambience per place and time, footsteps, animals, cars, the
+  fountain, ducking under the adhan. The first sound no longer freezes a frame (130 ms, the audio context). Taps use the engine's
+  pixel-perfect hit test; the maker shows the child's rendered clothes; no picture of a thing is painted in code any more.
+  Measured with `tools/perf-check.js` at 6x CPU, at night, three runs: idle 2.6 ms of game work a frame (live 1.8.4: 3.9),
+  2.4 ms of the graphics chip (live 2.8), 31 draw calls (live 38), nothing over 30 ms. The win: the need rings are images
+  repainted on change, not Graphics rebuilt every frame. Also in this pass: cars wait for each other at corners and
+  junctions (road cells claimed ahead), people face steadily and step at their walking speed, a person using a thing is
+  drawn in front of or behind it by where they stand, tapping the child stops what they are doing (bicycle, bed, carrying),
+  a prayer can be left until it begins (then the moon shows how far it has come), a sound on/off button, and a calmer mix
+  (no applause or bubbles, fewer and softer repeats, events about 5 dB over the bed instead of 30).
+- **Not done:** nothing run in the app or on a phone, `settings.html` is not linked from the game, the sounds not listened to by a person (picked by measurement), Ramadan and Eid
   not built, adab moments with words left out (no reviewed text).
 - **For a teacher:** every item marked TEACHER REVIEW in `life/world.js` and `life/guides.js`, the Friday talk
   before dhuhr, and the pictures of the prayer positions in the guides.
