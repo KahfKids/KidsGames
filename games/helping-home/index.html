@@ -37,12 +37,17 @@
     if (gone) return;
     var creep = 0.3 * (1 - Math.exp(-(Date.now() - t0) / 4000));            // while the engine downloads: never still
     var v = Math.max(want, creep); shown += (v - shown) * 0.12;
+    // a safety net: a cached older game.js never calls done(), so once any scene past Boot is up and nothing is
+    // loading, go anyway (a loader that never leaves is worse than none)
+    var g = window.Kit && Kit.play && Kit.play.game, ss = g && g.isRunning && g.scene.getScenes(true).filter(function (s) { var k = s.sys.settings.key; return k !== 'Boot' && k !== 'KitSound'; });
+    if (ss && ss.length && !ss.some(function (s) { return s.load && s.load.isLoading(); }) && Date.now() - (window.HHLoad.t || 0) > 1500) { window.HHLoad.done(); return; }
     var h = 66 * shown; lvl.setAttribute('y', 164 - h); lvl.setAttribute('height', h);
     requestAnimationFrame(draw);
   }
   requestAnimationFrame(draw);
   window.HHLoad = {
-    to: function (v) { if (v > want) want = Math.min(1, v); },
+    t: 0,
+    to: function (v) { window.HHLoad.t = Date.now(); if (v > want) want = Math.min(1, v); },
     done: function () { if (gone) return; want = 1; gone = true; lvl.setAttribute('y', 98); lvl.setAttribute('height', 66); el.style.opacity = '0'; el.style.pointerEvents = 'none'; setTimeout(function () { el.remove(); }, 400); }
   };
 })();
