@@ -1,0 +1,150 @@
+{
+ "resources": [
+  "sfx.m4a"
+ ],
+ "spritemap": {
+  "tap-1": {
+   "start": 0.09,
+   "end": 0.34,
+   "loop": false
+  },
+  "page-1": {
+   "start": 0.37,
+   "end": 0.82,
+   "loop": false
+  },
+  "correct-1": {
+   "start": 0.85,
+   "end": 1.24,
+   "loop": false
+  },
+  "correct-2": {
+   "start": 1.27,
+   "end": 1.66,
+   "loop": false
+  },
+  "wrong-1": {
+   "start": 1.69,
+   "end": 2.08,
+   "loop": false
+  },
+  "wrong-2": {
+   "start": 2.11,
+   "end": 2.5,
+   "loop": false
+  },
+  "place-1": {
+   "start": 2.53,
+   "end": 2.86,
+   "loop": false
+  },
+  "place-2": {
+   "start": 2.89,
+   "end": 3.22,
+   "loop": false
+  },
+  "place-3": {
+   "start": 3.25,
+   "end": 3.58,
+   "loop": false
+  },
+  "place-4": {
+   "start": 3.61,
+   "end": 3.94,
+   "loop": false
+  },
+  "locked-1": {
+   "start": 3.97,
+   "end": 4.31,
+   "loop": false
+  },
+  "star-1": {
+   "start": 4.34,
+   "end": 4.55,
+   "loop": false
+  },
+  "star-2": {
+   "start": 4.58,
+   "end": 4.79,
+   "loop": false
+  },
+  "star-3": {
+   "start": 4.82,
+   "end": 5.03,
+   "loop": false
+  },
+  "slide-1": {
+   "start": 5.06,
+   "end": 5.32,
+   "loop": false
+  },
+  "win-1": {
+   "start": 5.35,
+   "end": 7.14,
+   "loop": false
+  }
+ },
+ "sounds": {
+  "tap": {
+   "cat": "ui",
+   "takes": [
+    "tap-1"
+   ]
+  },
+  "page": {
+   "cat": "ui",
+   "takes": [
+    "page-1"
+   ]
+  },
+  "correct": {
+   "cat": "sfx",
+   "takes": [
+    "correct-1",
+    "correct-2"
+   ]
+  },
+  "wrong": {
+   "cat": "sfx",
+   "takes": [
+    "wrong-1",
+    "wrong-2"
+   ]
+  },
+  "place": {
+   "cat": "sfx",
+   "takes": [
+    "place-1",
+    "place-2",
+    "place-3",
+    "place-4"
+   ]
+  },
+  "locked": {
+   "cat": "ui",
+   "takes": [
+    "locked-1"
+   ]
+  },
+  "star": {
+   "cat": "sfx",
+   "takes": [
+    "star-1",
+    "star-2",
+    "star-3"
+   ]
+  },
+  "slide": {
+   "cat": "ui",
+   "takes": [
+    "slide-1"
+   ]
+  },
+  "win": {
+   "cat": "sfx",
+   "takes": [
+    "win-1"
+   ]
+  }
+ }
+}

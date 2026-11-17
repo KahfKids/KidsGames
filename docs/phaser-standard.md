@@ -63,6 +63,31 @@ Measured on all sixteen conversions; each is in `js/kit/play.js` or `js/kit/soun
 - **`Kit.snd.praise(name)`**: the shared Arabic praise clips (`js/kit/praise-clips.js`: mashaallah, subhanallah, alhamdulillah, ahsant, barakallah, allahuakbar), loaded the first time or ahead with `Kit.snd.praise.preload()`, played as a voice (effects duck under it), cancelled by `Kit.snd.stopVoice()`. A game stops it when its card closes, the page changes or the game pauses.
 - **The HUD and the camera**: a game that moves its interface into the play scene (one scene draws for less than two) must keep the interface still when the camera shakes (Breakout and Balloon Pop move the interface container back by the shake offset while a shake runs).
 
+## 2b. Learned on the quizzes (2026-11-17)
+
+- **Rest: a scene registered and never started** sits in status INIT, and the kit counted that as "still starting", so
+  the loop of any game with such a scene never slept (the quiz's Play scene waits unstarted while the child is on the
+  map: 20 ms of main thread a second at 6x CPU). Fixed in `rest()`: only START, LOADING and CREATING count.
+- **An engine timer or `delayedCall` counts as moving**, so a plain wait (a pause before the next question, a clock
+  that ticks once a second) keeps the loop drawing the same picture at the screen's rate. A wait with nothing moving
+  is a browser timer that calls `Kit.play.wake()` when it fires (the quiz's `later()`); measured in the lightning round:
+  262 frames an answer before, 113 after.
+- **Text costs**: the engine measures a font for every new Text by drawing it and reading the pixels back unless the
+  style carries `metrics`, and `add.text(...).setResolution(d)` draws the words twice. The quiz passes `resolution`
+  and cached `metrics` in the style: 4.1 ms to 1.6 ms a label at 6x CPU.
+- **NineSlice in 4.2.1**: a three-slice (top and bottom 0) throws when resized; use small top and bottom slices. A
+  Container's own `w` is the engine's (the transform's w, reset by `setPosition`): keep sizes in other names.
+- **Quiz layout**: a quiz is read on an upright phone as much as on its side, so it lays itself out in screen points
+  (one root container per scene at `view.l, view.t`, scaled by `view.pt`; Text at `Kit.play.dpr()` is then one texture
+  pixel per screen pixel), not in the fixed 1920 x 1080 frame. A game's own choice (memory: game-aware sizing).
+- **Measured against the DOM quizzes** (Quran Explorer, 844 x 390 and 375 x 812, 6x CPU, this Mac): at rest on the map
+  or a question the new engine is lower (0.03 to 0.05 ms of main thread a second, no frames drawn; the DOM page 0.1 to
+  0.3). Tapping as fast as possible (the lightning round, an answer every 2 s) they are about level: 49 to 57 ms an
+  answer against 47 to 50 at 120 Hz, 21 to 26 ms a second against 22 to 25 at 60 Hz. Words drawn into textures and the
+  canvas being redrawn while things move are the cost the DOM page did not have (its CSS animations ran off the main
+  thread). Ready to tap after about 1.0 s against 0.5 s from a local server at 6x CPU: the engine's parse, once a
+  visit; the loading picture shows at once.
+
 ## 3. Art
 
 - **Picture files are AVIF** (measure first: Spider IK's flat, already small lossy WebP caves saved only 13% as AVIF, a second lossy pass and a slower decode on phones, so they stay WebP, noted in its `art.js`), written by `enc.save` (Helping Home: `games/helping-home/tools/art/enc.py`), with a WebP copy beside each one. A game tests AVIF once before it loads anything and uses the WebP copies only in a WebView too old for it. Offline storage keeps only the selected format: AVIF on supporting WebViews, WebP on older ones, never both copies (AGENTS.md rule 13 requires those WebViews to work offline too). Measured on Helping Home's sheets: about 45% smaller than WebP and closer to the render.
@@ -158,7 +183,7 @@ A scene object is used again each time the scene starts: keep no state outside `
 | Spider IK (`games/spider-ik/`: `game/`, shapes from `tools/trace.js`, sounds in `audio/sfx`) | **Phaser 4** + Matter | rebuilt 2026-11-16, not yet released: Matter physics, recorded CC0 sounds, Phaser interface; measured against the old page at 6x CPU; not yet on a real phone |
 | 2048, Sharp Eyes, Memory Match, Balloon Pop, Breakout, Follow the Light, Hextris, Jannah Garden, Ramadan Maze, Shape Patterns, Solar System, Space Shooter, Tower Blocks and the drawing game | **Phaser 4** | conversions implemented locally 2026-11-16; browser and offline acceptance in progress; strict old/new performance gate not yet met for every game; not released |
 | Checkers and Tic Tac Toe (`game/` in each game) | **Phaser 4** | conversions implemented locally 2026-11-16; board rules preserved; not released. `js/board/` remains for legacy pages |
-| Quizzes (`js/quiz/`) | DOM | to rebuild on Phaser |
+| Quizzes (`js/quiz/`: `quiz.js` rules and saves, `game.js` the Phaser scenes; every `games/<id>/` with a `data.js`) | **Phaser 4** | rebuilt 2026-11-17 (1.9.0): all 29 quizzes on one engine; recorded sounds (`js/quiz/audio`); saves unchanged; measured against the DOM engine at 6x CPU (section 2b); not yet on a real phone |
 
 ## 8. Not decided yet (the owner's call)
 

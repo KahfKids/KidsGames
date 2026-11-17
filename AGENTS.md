@@ -151,7 +151,7 @@ A change is done when: it follows the hard rules, it was verified as above, the 
 | `games/<id>/` | one game or one quiz per folder |
 | `js/kit/` | the shared kit: `play.js` (starts Phaser), `core.js` (saves, app, and the loop and input of the old kit games), `sound.js` (sound for Phaser games), `audio.js` (sound for the old kit games), and for pages not rebuilt yet `gfx.js` (PixiJS), `fx.js`, `ui.js`, `kit.css` |
 | `js/vendor/` | pinned libraries: `phaser-4.2.1.min.js` (MIT), `pixi-8.22.0.min.js` (MIT, old pages only) |
-| `js/quiz/` | the quiz engine and `catalog.js` |
+| `js/quiz/` | the quiz engine on Phaser (`quiz.js` rules and saves, `game.js` the scenes, `audio/` its sounds) and `catalog.js` |
 | `js/board/` | the board-game kit (Checkers, Tic Tac Toe) |
 | `js/kahf-bridge.js` | reports a child's activity to the app |
 | `tools/` | `quiz-pages.js`, `quiz-check.js`, `quiz-refs.py`, `quiz-art/build.js`, `sound-cut.py` (a game's sounds from the recordings), `perf-check.js` (frame times at a slow CPU) |

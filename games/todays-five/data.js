@@ -1,7 +1,7 @@
 /* Today's Five: data.js — one short mixed round a day.
    It has no questions of its own. It loads the banks of the quizzes this child opened most recently
    (or three starter quizzes on a first visit) and lets the engine pick five from them for the child's level.
-   The other banks are fetched when the page runs, so the page shows a spinner until they arrive. */
+   The other banks are fetched when the page runs; the page's loading picture stays until they arrive. */
 (function () {
   'use strict';
   var KQ = window.KahfQuiz, ID = 'todays-five';
@@ -30,9 +30,7 @@
   KQ.run = function (id) {
     if (id !== ID) return realRun(id);
     var ids = sources(), left = ids.length;
-    var wait = document.createElement('div');
-    wait.className = 'qz-load'; wait.innerHTML = '<div class="qz-spin"></div>';
-    document.body.appendChild(wait);
+    var wait = document.getElementById('kit-load');
     function ready() {
       var bank = [], gens = [];
       ids.forEach(function (q) {
@@ -44,8 +42,10 @@
       KQ.last = cfg;
       if (!bank.length && !gens.length) {                  // nothing arrived at all (offline with no copy saved)
         var bn = /^bn/i.test(navigator.language || '');
-        wait.innerHTML = '<p>' + (bn ? 'লোড হয়নি। ইন্টারনেট সংযোগ দেখো।' : 'Could not load. Please check the internet.') + '</p><button class="kit-btn primary">' + (bn ? 'আবার চেষ্টা করো' : 'Try again') + '</button>';
-        wait.querySelector('button').onclick = function () { location.reload(); };
+        if (wait) {
+          wait.innerHTML = '<p>' + (bn ? 'লোড হয়নি। ইন্টারনেট সংযোগ দেখো।' : 'Could not load. Please check the internet.') + '</p><button>' + (bn ? 'আবার চেষ্টা করো' : 'Try again') + '</button>';
+          wait.querySelector('button').onclick = function () { location.reload(); };
+        }
         return;
       }
       cfg.bank = bank;
@@ -57,7 +57,6 @@
           return out;
         };
       }
-      wait.remove();
       realRun(ID);
     }
     if (!left) return ready();

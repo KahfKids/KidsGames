@@ -182,8 +182,8 @@
       if (g.scene._queue && g.scene._queue.length) return false;      // scenes asked to start, stop, launch: not done yet
       a = g.scene.scenes;
       for (i = 0; i < a.length; i++) {
-        var st = a[i].sys.settings.status;                              // a scene still starting (init, loading, creating)
-        if (st > 0 && st < 5) return false;
+        var st = a[i].sys.settings.status;                              // a scene still starting (start, loading, creating)
+        if (st > 1 && st < 5) return false;                             // (not INIT: a scene registered and never started stays there, and kept the loop awake)
         if (busy(a[i])) return false;
       }
       return true;

@@ -1,6 +1,6 @@
-const CACHE_NAME = 'kidsgames-v1.8.9';
-const STATIC_CACHE = 'kidsgames-static-v1.8.9';
-const GAMES_CACHE = 'kidsgames-games-v1.8.9';
+const CACHE_NAME = 'kidsgames-v1.9.0';
+const STATIC_CACHE = 'kidsgames-static-v1.9.0';
+const GAMES_CACHE = 'kidsgames-games-v1.9.0';
 const PREMIUM_CACHE = 'kidsgames-premium-v1.3.5';
 
 // Core files that should be cached immediately
@@ -216,7 +216,9 @@ async function cacheFirst(request, cacheName) {
   const cache = await caches.open(cacheName);
   // Helping Home opens its pages with a query (?from=house, ?back=wudu): the saved copy has none, so match by path
   const byPath = new URL(request.url).pathname.startsWith('/KidsGames/games/helping-home/');
-  const cached = await cache.match(request, byPath ? { ignoreSearch: true } : undefined);
+  let cached = await cache.match(request, byPath ? { ignoreSearch: true } : undefined);
+  // a game page opened with a query (?level=3, ?q=...) when only its plain address was saved: the same page, offline too
+  if (!cached && request.mode === 'navigate') cached = await cache.match(request, { ignoreSearch: true });
 
   if (cached) {
     return cached;

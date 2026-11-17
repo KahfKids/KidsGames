@@ -147,10 +147,9 @@ Same idea as `js/board/`: one engine on top of `js/kit/`; each quiz is a small p
 
 | Part | What it does |
 |------|--------------|
-| `quiz.js` | Runs a stop, picks questions by band and mastery, awards stars, saves with `Kit.store`, and makes the bridge calls in section 8. |
-| `types.js` | The seven question types, drawn on the full-screen stage. |
-| `path.js` | The journey map with stops, stars and boss stops. Launch goes straight to the next unplayed stop. |
-| `quiz.css` | Layout on `kit.css`: safe areas, big tap targets, Bengali and Arabic text sizing. |
+| `quiz.js` | The rules, no drawing: picks questions by band and mastery, awards stars, saves with `Kit.store`, the bank builder and check (run in Node by `tools/quiz-check.js`). |
+| `game.js` | Phaser 4 (2026-11-17, the Phaser standard): the journey map, the six question types, the answer bar, the sheets (band, stickers, lightning round, pause, finished), the bridge calls in section 8. |
+| `audio/` | The shared recorded sounds (`recipe.json`, cut by `tools/sound-cut.py`; credits beside them). |
 | `<quiz>/data.js`, `<quiz>/art.js` | Question bank and SVG pictures in the Kahf world style. |
 
 **Voice:** questions and "why" lines are spoken through `Kit.say`. Whether the app WebView has a usable voice on Android and iOS, in English and Bengali, must be checked on phones first. If it doesn't, Seedling needs recorded clips.
@@ -179,7 +178,7 @@ The quizzes run inside the Kahf Kids app's WebView first. What the app does toda
 | Memory | no more than one world's art held at a time |
 
 **How**
-- **Text in the DOM, effects on canvas.** Bengali and Arabic need the browser's text shaping, so questions and answers are real text; the path map, particles and confetti use the kit canvas.
+- **Text in the engine (2026-11-17).** Since the Phaser rebuild, words are the engine's Text, drawn with the browser's own canvas text, so Bengali and Arabic keep the browser's shaping. Particles, confetti and the map are the engine's too.
 - Animate only `transform` and `opacity`. No `backdrop-filter`, no large blurred shadows, no CSS filters on moving things (they stutter in Android WebView).
 - **No idle loop.** The frame loop runs only while something is moving, so a child reading a question costs no battery.
 - Art is SVG drawn once into bitmaps at the screen's real pixel ratio and reused (the Helping Home approach: full sharpness, no per-frame vector work). Each world's art loads when that world opens.
@@ -279,11 +278,22 @@ current design and only its tiles and thumbnails change (so the three-shelf page
 catalog page, in sections 4 to 6 are replaced by: stickers inside each quiz, and Today's five as its own tile);
 thumbnails are generated with Codex `gpt-6-luna` at high effort; no subagents.
 
+**2026-11-17: every quiz on Phaser 4 (release 1.9.0).** One engine for all 29 (`js/quiz/game.js` on `js/quiz/quiz.js`),
+started by `Kit.play.start` like every game; DOM engine (`quiz.css`, synthesised `sounds.js`) removed. Same map, types,
+words, saves and bridge calls; recorded sounds; one pause button and the progress while playing, everything else on the
+pause sheet; keys (1 to 4, Y, N, Enter, Esc, M); every picture a question or sticker uses is cached for offline after one
+visit. Checked on every quiz at 375 x 812, 844 x 390 and 1024 x 768 in a browser; measured against the DOM engine (see
+`docs/phaser-standard.md` section 2b). Not run on a real phone or in the app. Short Surahs' recitation (94 ayat, Al-Husary's
+teaching recitation) is now kept in `games/short-surahs/audio/ayah/` (6.5 MB, `tools/ayah-clips.sh`), so no quiz asks
+another site and it plays offline (checked: cached after one visit, played to the end with the network off). everyayah.com
+states no licence for these files; see that folder's `CREDITS.md`. The service worker now also finds a saved game page
+opened with a query (`?q=`, `?level=`) when offline.
+
 ## 14. How a quiz is built now (working notes)
 
 | Piece | Where | Notes |
 |-------|-------|-------|
-| Engine | `js/quiz/quiz.js`, `quiz.css`, `sounds.js`, `themes.js` | Seven question types (choice, yesno, sort, order, match, place, plus `audio` on any question), stickers, lightning round, daily mode, level-up offer. |
+| Engine | `js/quiz/quiz.js` (rules), `game.js` (Phaser), `audio/`, `themes.js` | Seven question types (choice, yesno, sort, order, match, place, plus `audio` on any question), stickers, lightning round, daily mode, level-up offer. |
 | Catalog list | `js/quiz/catalog.js` | One entry per quiz: id, shelf, title, theme, stop name, stops, bossEvery, bands, sticker cards. All 28 plus `todays-five` are listed; a quiz is live once `games/<id>/data.js` exists. |
 | Questions | `games/<id>/data.js` | Written with `KahfQuiz.bank()` (`B.c`, `B.yn`, `B.sort`, `B.order`, `B.match`, `B.place`, `B.facts`, `B.pairs`), ending in `KahfQuiz.define(id, { bank })`. A quiz can also give `gen(band, n, ctx)` to make questions fresh (Number Garden). |
 | Shared data | `js/quiz/surahs.js`, `js/quiz/scenes.js` | Surah table from quran.com. Scenes file is generated. |

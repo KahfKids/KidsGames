@@ -1,46 +1,54 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-  <title>World Explorer</title>
-  <meta name="description" content="Continents, oceans, countries and famous places." />
-  <meta name="theme-color" content="#0a4470" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <link rel="manifest" href="/KidsGames/manifest.json" />
-  <link rel="apple-touch-icon" href="/KidsGames/icons/icon-192x192.png" />
-  <link rel="stylesheet" href="/KidsGames/js/kit/kit.css" />
-  <link rel="stylesheet" href="/KidsGames/js/quiz/quiz.css" />
-  <style>:root { --qz-bg-top: #0a4470; --qz-bg-bot: #1489b8; }</style>
-  <script src="/KidsGames/js/kahf-bridge.js" defer></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>World Explorer</title>
+<meta name="description" content="Continents, oceans, countries and famous places.">
+<meta name="theme-color" content="#0a4470">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="/KidsGames/manifest.json">
+<link rel="icon" href="/KidsGames/icons/icon-192x192.png">
+<link rel="apple-touch-icon" href="/KidsGames/icons/icon-192x192.png">
+<style>html,body{margin:0;height:100%;background:#0a4470;overflow:hidden;overscroll-behavior:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;touch-action:none}
+#kit-load{position:fixed;inset:0;z-index:10;display:flex;flex-direction:column;gap:18px;align-items:center;justify-content:center;background:linear-gradient(#0a4470,#1489b8);--p:0;color:#fffaf0;font:800 18px system-ui,sans-serif;text-align:center;padding:24px}
+#kit-load svg{width:min(34vw,34vh,170px);height:auto}
+#kit-load .bar{stroke-dasharray:100;stroke-dashoffset:calc(100 * (1 - var(--p)))}
+#kit-load .st{animation:qz-turn 2.4s ease-in-out infinite;transform-origin:50px 50px}
+@keyframes qz-turn{50%{transform:rotate(18deg) scale(1.06)}}
+#kit-load button{min-height:52px;padding:0 24px;border-radius:26px;border:0;font:900 19px system-ui,sans-serif;background:#ffe08a;color:#2a1606}</style>
 </head>
 <body>
-  <div id="qz-load" class="qz-load"><div class="qz-spin"></div></div>
-  <script src="/KidsGames/js/kit/core.js"></script>
-  <script src="/KidsGames/js/kit/fx.js"></script>
-  <script src="/KidsGames/js/kit/audio.js"></script>
-  <script src="/KidsGames/js/kit/ui.js"></script>
-  <script src="/KidsGames/js/quiz/quiz.js"></script>
-  <script src="/KidsGames/js/quiz/sounds.js"></script>
-  <script src="/KidsGames/js/quiz/themes.js"></script>
-  <script src="/KidsGames/js/quiz/catalog.js"></script>
-  <script src="/KidsGames/js/quiz/scenes.js"></script>
-  <script src="data.js"></script>
-  <script>
-    (function () {
-      var box = document.getElementById("qz-load");
-      if (window.KahfQuiz && KahfQuiz.defs && KahfQuiz.defs["world-explorer"] && window.Kit) { box.remove(); KahfQuiz.run("world-explorer"); }
-      else {   // a file did not arrive (the iPhone app is online only): say so and offer to try again
-        var bn = /^bn/i.test(navigator.language || "");
-        box.innerHTML = "<p>" + (bn ? "লোড হয়নি। ইন্টারনেট সংযোগ দেখো।" : "Could not load. Please check the internet.") + "</p><button class=\"kit-btn primary\">" + (bn ? "আবার চেষ্টা করো" : "Try again") + "</button>";
-        box.querySelector("button").onclick = function () { location.reload(); };
-      }
-      if ("serviceWorker" in navigator && location.pathname.indexOf("/KidsGames/") === 0 && !/[?&](debug|nosw)\b/.test(location.search)) {
-        addEventListener("load", function () { navigator.serviceWorker.register("/KidsGames/sw.js").catch(function () {}); });
-      }
-    })();
-  </script>
+<!-- World Explorer: a quiz on the shared Phaser 4 quiz engine (js/quiz/game.js), started only by Kit.play.
+     Made by tools/quiz-pages.js from js/quiz/catalog.js. Do not edit by hand. -->
+<!-- The loading picture, drawn by the page at once: a star in a ring that fills (js/kit/load.js moves --p). No words. -->
+<div id="kit-load"><svg viewBox="0 0 100 100" aria-hidden="true">
+<circle cx="50" cy="50" r="44" fill="none" stroke="rgba(255,255,255,.14)" stroke-width="5"/>
+<circle class="bar" cx="50" cy="50" r="44" fill="none" stroke="#ffe08a" stroke-width="5" stroke-linecap="round" pathLength="100" transform="rotate(-90 50 50)"/>
+<path class="st" d="M50 26l6.5 13.4 14.7 2.1-10.6 10.4 2.5 14.6L50 59.6l-13.1 6.9 2.5-14.6-10.6-10.4 14.7-2.1z" fill="#ffe08a"/>
+</svg></div>
+<script src="/KidsGames/js/kit/load.js"></script>
+<script src="/KidsGames/js/kahf-bridge.js" defer></script>
+<script src="/KidsGames/js/vendor/phaser-4.2.1.min.js" defer></script>
+<script src="/KidsGames/js/kit/core.js" defer></script>
+<script src="/KidsGames/js/kit/sound.js" defer></script>
+<script src="/KidsGames/js/kit/play.js" defer></script>
+<script src="/KidsGames/js/quiz/quiz.js" defer></script>
+<script src="/KidsGames/js/quiz/themes.js" defer></script>
+<script src="/KidsGames/js/quiz/catalog.js" defer></script>
+<script src="/KidsGames/js/quiz/scenes.js" defer></script>
+<script src="data.js" defer></script>
+<script src="/KidsGames/js/quiz/game.js" defer></script>
+<script>
+  addEventListener("DOMContentLoaded", function () {
+    if (window.Phaser && window.KahfQuiz && KahfQuiz.play && KahfQuiz.defs && KahfQuiz.defs["world-explorer"] && window.Kit && Kit.play) { KahfQuiz.run("world-explorer"); return; }
+    // a file did not arrive (the iPhone app is online only): say so and offer to try again
+    var box = document.getElementById("kit-load"), bn = /^bn/i.test(navigator.language || "");
+    box.innerHTML = "<p>" + (bn ? "লোড হয়নি। ইন্টারনেট সংযোগ দেখো।" : "Could not load. Please check the internet.") + "</p><button>" + (bn ? "আবার চেষ্টা করো" : "Try again") + "</button>";
+    box.querySelector("button").onclick = function () { location.reload(); };
+  });
+</script>
 </body>
 </html>
