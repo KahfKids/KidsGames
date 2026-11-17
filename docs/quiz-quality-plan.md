@@ -21,7 +21,7 @@ Owner rules carried over: full-screen stage, no faces in any art, no music, ever
 | 6 | Ramadan Quest | Scrap the page, **keep the content** | 120 questions in English and Bengali, no CDN. Still a text card with four buttons. |
 
 All six share one template (gradient, white card, four text buttons), one question type, reading-only play, and timers or lives instead of teaching.
-There is nothing in the code worth keeping. What is worth keeping: Ramadan Quest's bilingual bank, the better Science questions, and the 120 Bengali questions in `Quiz Questions.md`.
+There is nothing in the code worth keeping. What is worth keeping: Ramadan Quest's bilingual bank, the better Science questions, and the 120 Bengali questions in `Quiz Questions.md` (removed on 2026-11-17 once the new quizzes had written and sourced their own; it is in git history).
 
 ---
 
@@ -267,7 +267,7 @@ Owner direction (2026-11-10): there is no one else to review or record, so Claud
 **2026-11-10: Q0 and Q1 built, not yet committed or deployed.**
 - **Q0:** Math Challenge leftovers removed (microphone iframe, Cloudflare injector, saved scripts, screen-recorder CSS). Tailwind compiled into Geography, History and Science; Google Fonts links removed from all five. No quiz page requests another site.
 - **Engine:** `js/quiz/quiz.js` and `js/quiz/quiz.css`. Journey map, five question types (choice, yes or no, sort, put in order, match), three bands, English and Bengali, stars, mastery, bridge calls. `?q=<id>` opens a stop with one question first, for checking.
-- **Ramadan Nights:** `games/ramadan-nights/`. 68 questions (20 Seedling, 26 Explorer, 22 Champion), each with a reference that was opened and read. `games/ramadan-quest/` is now a redirect.
+- **Ramadan Nights:** `games/ramadan-nights/`. 68 questions (20 Seedling, 26 Explorer, 22 Champion), each with a reference that was opened and read. `games/ramadan-quest/` was a redirect until 2026-11-17, when the six old quiz redirects were removed.
 - **Not built yet:** "tap the place" questions, the lightning round, Today's five, the sticker book, `KahfBridge.item()` calls, recitation audio.
 - **Known gaps:** the bank is 68 questions, short of the 120 target, and bands 2 and 3 are mostly text choice; more sort, order and match questions are needed. Not tested on a real phone or inside the Kahf app. The catalog tile still uses the old Ramadan Quest thumbnail.
 

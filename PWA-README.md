@@ -33,7 +33,7 @@ The service worker implements different caching strategies:
 - Maintains security while enabling offline access
 
 ### 3. Icons and Assets
-- **Icon Generator**: `/icons/icon-fallbacks.html` - Generate all required PWA icons
+- **Icons**: the sizes the manifest and pages use are in `/icons/` (the old icon generators were removed on 2026-11-17; they are in git history)
 - **Placeholder Icons**: Basic icons created for immediate PWA functionality
 - **Custom Icons**: Can be generated using the icon generator tool
 
@@ -51,8 +51,6 @@ KidsGames/
 ├── sw.js                      # Service worker
 ├── browserconfig.xml          # Microsoft browser configuration
 ├── icons/                     # PWA icons directory
-│   ├── icon-generator.html    # Icon generation tool
-│   ├── simple-icon.svg        # Base SVG icon
 │   └── icon-*.png             # Generated icons
 ├── index.html                 # Main hub with PWA meta tags
 ├── games/                     # Free games (14 games)
@@ -83,7 +81,7 @@ KidsGames/
 ## Usage Instructions
 
 ### 1. Generate Icons (One-time setup)
-Open `/icons/icon-fallbacks.html` in a browser and download all generated icons to the `/icons/` directory.
+The icons are already in `/icons/`. To make new ones, restore the generators from git history (`icons/icon-fallbacks.html`).
 
 ### 2. Deploy to GitHub Pages
 Commit all changes and push to your GitHub repository. The PWA will work automatically on GitHub Pages.

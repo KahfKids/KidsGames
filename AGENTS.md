@@ -29,7 +29,7 @@ Decided by the owner on 2026-11-11: **every game and every quiz is built on Phas
 3. **WebGL only. No fallback and no second drawing path.** A phone that cannot start it gets `Kit.play.sorry`.
 4. **Art is a picture made once**: an image file, or painted once with Canvas2D into a texture (`Kit.play.tex`). Nothing is painted per frame.
 5. **No other engine or drawing library.** The one exception is a 3D game, which uses three.js (`docs/game-standard.md` section 3). None exists yet, and adding three.js is an "ask first".
-6. **Pages not rebuilt yet stay as they are**: the Canvas2D kit games, `js/board/` and the PixiJS pages. They get small fixes only and are never ported to PixiJS. A game that is reworked is rebuilt on Phaser. The table is in `docs/phaser-standard.md` section 7.
+6. **Every page is on Phaser now.** The old Canvas2D kit, `js/board/` and PixiJS were removed on 2026-11-17, together with the games no catalog linked and the book reader. A new game is built on Phaser; nothing is ported to another engine. The table is in `docs/phaser-standard.md` section 7.
 7. **Hub pages are DOM** (`index.html`, `quizzes.html`). Inside a game, what the child sees and touches is Phaser.
 
 ### The kit
@@ -47,7 +47,7 @@ Decided by the owner on 2026-11-11: **every game and every quiz is built on Phas
 ### Content (kids' app, Islamic)
 
 14. **No faces in any art.** Spider IK is the one agreed exception and stays as it is.
-15. **No instrumental music** (owner, 2026-11-16): no guitar, piano, drums, synth tunes, bells or other instruments, and no recording with music behind it. Voices (humming, choirs, voice-only melodies), nature, environment, taps and mechanical sounds are allowed, as long as they fit the game and are calm for children. Sounds are real recordings, played by Phaser's sound system through `js/kit/sound.js` (old kit pages: `js/kit/audio.js`).
+15. **No instrumental music** (owner, 2026-11-16): no guitar, piano, drums, synth tunes, bells or other instruments, and no recording with music behind it. Voices (humming, choirs, voice-only melodies), nature, environment, taps and mechanical sounds are allowed, as long as they fit the game and are calm for children. Sounds are real recordings, played by Phaser's sound system through `js/kit/sound.js`.
 16. **No rainbows** or rainbow-coloured effects.
 17. **Islamic content comes from the source**, looked up when it is written, never from memory (`docs/quiz-quality-plan.md`). Worship is never scored.
 18. **Words are each game's own choice** (owner, 2026-11-16: "every game is unique"). Use words where they help the game (titles, story, labels, tips) and pictures where they work better; keep what a game already had unless the owner says otherwise. No `alert()`. Touch first.
@@ -88,7 +88,6 @@ Game-dev skills from `gamedev-skills/awesome-gamedev-agent-skills` are installed
 | Visual effects in GLSL | `shader-programming` (phones: no full-screen filters, see `docs/helping-home-v2-plan.md`) |
 | Genres: jumping, runs, stats, defence, cards, survival | `platformer`, `roguelike`, `rpg`, `tower-defense`, `card-game`, `survival-crafting`, `fps-shooter` |
 | One-question prototype, timed jam | `prototype-fast`, `game-jam` |
-| Old PixiJS pages (small fixes only) | `pixijs-rendering` |
 | A 3D game (none yet; adding three.js is ask first) | `threejs-scene-setup`, `threejs-gltf-loading`, `threejs-materials-lighting` |
 
 **Where a skill's advice does not apply here:**
@@ -136,7 +135,6 @@ A change is done when: it follows the hard rules, it was verified as above, the 
 | When | Read |
 |------|------|
 | Any game work | `docs/phaser-standard.md` |
-| An old page still on the Canvas2D kit or PixiJS | `docs/game-standard.md`, `docs/pixi-performance.md` |
 | Art, feel, level design of games | `docs/game-quality-plan.md` |
 | Sourcing a new game asset | Check `docs/free-game-assets.md` and its free sources before paid or commissioned sources; verify the exact licence and preserve required credits |
 | Quizzes | `docs/quiz-quality-plan.md` |
@@ -149,18 +147,16 @@ A change is done when: it follows the hard rules, it was verified as above, the 
 | `index.html` | the games hub |
 | `quizzes.html` | the quiz catalog |
 | `games/<id>/` | one game or one quiz per folder |
-| `js/kit/` | the shared kit: `play.js` (starts Phaser), `core.js` (saves, app, and the loop and input of the old kit games), `sound.js` (sound for Phaser games), `audio.js` (sound for the old kit games), and for pages not rebuilt yet `gfx.js` (PixiJS), `fx.js`, `ui.js`, `kit.css` |
-| `js/vendor/` | pinned libraries: `phaser-4.2.1.min.js` (MIT), `pixi-8.22.0.min.js` (MIT, old pages only) |
+| `js/kit/` | the shared kit: `play.js` (starts Phaser), `core.js` (saves, talking to the app), `sound.js` (sound), `load.js` (the loading screen), `praise-clips.js` (recorded praise) |
+| `js/vendor/` | pinned libraries: `phaser-4.2.1.min.js` (MIT) |
 | `js/quiz/` | the quiz engine on Phaser (`quiz.js` rules and saves, `game.js` the scenes, `audio/` its sounds) and `catalog.js` |
-| `js/board/` | the board-game kit (Checkers, Tic Tac Toe) |
 | `js/kahf-bridge.js` | reports a child's activity to the app |
 | `tools/` | `quiz-pages.js`, `quiz-check.js`, `quiz-refs.py`, `quiz-art/build.js`, `sound-cut.py` (a game's sounds from the recordings), `perf-check.js` (frame times at a slow CPU) |
 | `sw.js`, `manifest.json` | service worker (offline, versions) and PWA manifest (see `PWA-README.md`) |
-| `read/` | the book reader (see `BOOK_UPDATE_README.md`, `ENVIRONMENT_SETUP.md`) |
 | `docs/` | the standards and the plans |
 | `.claude/skills/`, `skills-lock.json` | the installed game-dev skills |
 
-Folders under `games/` that no page links to are leftovers, not part of the catalog. Do not link them again or build on them.
+Every folder under `games/` is a game the hub shows or a quiz in the catalog. A game taken off a catalog is removed, not left behind (it stays in git history).
 
 ## Commands
 
@@ -181,7 +177,7 @@ python3 games/helping-home/tools/check-data.py          # Helping Home data
 node games/helping-home/tools/life-test.js 3 20         # Helping Home: three simulated days
 ```
 
-Useful page switches: `?perf=1` (Helping Home: frame rate, memory, renderer), `?nosw` (kit games: no service worker), `?debug` (Phaser games: test hook).
+Useful page switches: `?perf=1` (Helping Home: frame rate, memory, renderer), `?nosw` (no service worker), `?debug` (Phaser games: test hook).
 
 ## Release checklist
 

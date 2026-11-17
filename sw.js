@@ -1,6 +1,6 @@
-const CACHE_NAME = 'kidsgames-v1.9.0';
-const STATIC_CACHE = 'kidsgames-static-v1.9.0';
-const GAMES_CACHE = 'kidsgames-games-v1.9.0';
+const CACHE_NAME = 'kidsgames-v1.9.1';
+const STATIC_CACHE = 'kidsgames-static-v1.9.1';
+const GAMES_CACHE = 'kidsgames-games-v1.9.1';
 const PREMIUM_CACHE = 'kidsgames-premium-v1.3.5';
 
 // Core files that should be cached immediately
@@ -10,72 +10,9 @@ const STATIC_ASSETS = [
   '/KidsGames/quizzes.html',
   '/KidsGames/manifest.json',
   '/KidsGames/sw.js',
-  '/KidsGames/sw.js',
-  '/KidsGames/A_Brief_Illustrated_Guide_To_Understanding_Islam.png',
-  '/KidsGames/appicon.png',
   '/KidsGames/favicon.ico',
-  '/KidsGames/121.png',
   '/KidsGames/garden-2048.jpg',
-  '/KidsGames/30s-chellenge.jpeg',
-  '/KidsGames/601.png',
-  '/KidsGames/603.png',
-  '/KidsGames/606.png',
-  '/KidsGames/701.png',
-  '/KidsGames/704.png',
-  '/KidsGames/705.png',
-  '/KidsGames/707.png',
-  '/KidsGames/708.png',
-  '/KidsGames/709.png',
-  '/KidsGames/711.png',
-  '/KidsGames/712.png',
-  '/KidsGames/713.png',
-  '/KidsGames/714.png',
-  '/KidsGames/716.png',
-  '/KidsGames/718.png',
-  '/KidsGames/720.png',
-  '/KidsGames/721.png',
-  '/KidsGames/722.png',
-  '/KidsGames/723.png',
-  '/KidsGames/804_text_1.png',
-  '/KidsGames/807_text.png',
-  '/KidsGames/808_text.png',
-  '/KidsGames/809_text.png',
-  '/KidsGames/810_text.png',
-  '/KidsGames/Allah_made_everything.png',
-  '/KidsGames/Allah_made_me_special.png',
-  '/KidsGames/Bedtime_with_a_guard_from_Allah.png',
-  '/KidsGames/Bee-Not-So-Busy-FKB-Kids-Stories.png',
-  '/KidsGames/Dhul_Hijjah_and_Hajj_2024_Z.png',
-  '/KidsGames/I_love_Allah_eBook_Premium_Final.png',
-  '/KidsGames/Islamic_Learning_october.png',
-  '/KidsGames/Life-of-Muhammad-PUBH-in-story.png',
-  '/KidsGames/Muharram_and_Ashura.png',
-  '/KidsGames/Ramadan_Planner.png',
-  '/KidsGames/SholoApril.png',
-  '/KidsGames/SholoJanuary.png',
-  '/KidsGames/Sholo_4_-_June-August_2023.png',
-  '/KidsGames/Sholo_December.png',
-  '/KidsGames/Sholo_March_1.png',
-  '/KidsGames/Sholo_September.png',
-  '/KidsGames/That-Worked.png',
-  '/KidsGames/The-story-of-Adam-for-children.png',
-  '/KidsGames/The_Power_of_Bismillah_new.png',
-  '/KidsGames/Urdu_kid_Story_09.png',
-  '/KidsGames/a_day_in_the_life_of_a_muslim_child.png',
-  '/KidsGames/aa34aa2_aaa_aaaa34_a_aaa34aa_aa34a_aa2aa_a_aaaaa_aaa34a__a_a_a34a2aa34a__aa2_aaaa34.png',
-  '/KidsGames/allah_is_the_creator.png',
-  '/KidsGames/amazing-science-adventures.png',
   '/KidsGames/memory-match.jpg',
-  '/KidsGames/aqeedah_course_for_children.png',
-  '/KidsGames/arithmetic-speed-drill.jpeg',
-  '/KidsGames/baby-s-first-science-book.png',
-  '/KidsGames/balloon-pop-adventure.jpeg',
-  '/KidsGames/checkers.jpeg',
-  '/KidsGames/chess.jpeg',
-  '/KidsGames/connect-4.png',
-  '/KidsGames/dua_for_kids_-_Aussie_Muslim_Kids_wwwaussiemuslimkidsweeblycom.png',
-  '/KidsGames/eating_etiquettes.png',
-  '/KidsGames/flappy-bird.png',
   '/KidsGames/hextris.jpg',
   '/KidsGames/tower-blocks.jpg',
   '/KidsGames/helping-home.jpg',
@@ -93,16 +30,13 @@ const STATIC_ASSETS = [
   '/KidsGames/colouring-book.jpg',
   '/KidsGames/shape-patterns.jpg',
   '/KidsGames/games/ramadan-maze/index.html',
-  '/KidsGames/ramadan-quest.png',
-  '/KidsGames/games/ramadan-quest/index.html',
   '/KidsGames/games/ramadan-nights/index.html',
   '/KidsGames/icons/shortcut-ramadan-quest.png',
 ];
 
 // Game directories to cache on-demand
 const GAME_PATHS = [
-  '/KidsGames/games/',
-  '/KidsGames/read/'
+  '/KidsGames/games/'
 ];
 
 // Premium games secret pattern

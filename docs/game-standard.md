@@ -1,6 +1,8 @@
 # Game standard
 
 > **Replaced on 2026-11-11 by `docs/phaser-standard.md`: every game and quiz is now built on Phaser 4.** This file still describes the pages that are not rebuilt yet (the Canvas2D kit games and Helping Home's PixiJS pages) and the rule for a 3D game (section 3). Do not port anything to PixiJS any more.
+>
+> **2026-11-17:** every page is on Phaser now. The Canvas2D kit (`js/kit/audio.js`, `fx.js`, `gfx.js`, `ui.js`, `pen.js`, `kit.css`), `js/board/` and PixiJS were removed with the last pages that used them; they are in git history. This file is kept for the 3D rule (section 3) and as the record of how those pages were built.
 
 Set by the owner on 2026-11-11. **These are rules, not advice.** Every new game, every rebuilt game and every change to an existing game follows them. `AGENTS.md` has the short list; this file is the full text.
 

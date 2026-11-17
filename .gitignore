@@ -69,3 +69,6 @@ temp/
 # Local scratch pages and per-machine tool config: never published
 games/**/_*.html
 .claude/launch.json
+
+# Serena (another coding assistant) project files
+.serena/

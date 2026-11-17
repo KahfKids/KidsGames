@@ -2,6 +2,8 @@
 
 How to keep a game at 60 frames per second on a budget Android phone. Part of the game standard (`docs/game-standard.md`).
 
+> **2026-11-17:** no page uses PixiJS any more; it and the kit drawing files were removed (they are in git history). Kept as a record of what was measured, much of which still applies to Phaser.
+
 Sources: the PixiJS 8 guides, read on 2026-11-11 for the pinned version 8.22.0, and what porting Helping Home taught us. Lines marked *(PixiJS)* are PixiJS's own advice; the rest is ours.
 
 - https://pixijs.com/8.x/guides/concepts/performance-tips
